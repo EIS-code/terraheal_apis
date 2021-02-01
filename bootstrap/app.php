@@ -3,7 +3,7 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
-    dirname(__DIR__)
+    dirname(__DIR__, 2)
 ))->bootstrap();
 
 date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
@@ -23,9 +23,15 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-// $app->withFacades();
+$app->withFacades();
 
-// $app->withEloquent();
+$app->withEloquent();
+
+$app->configure('services');
+
+$app->configure('mail');
+
+$app->configure('auth');
 
 /*
 |--------------------------------------------------------------------------
@@ -91,9 +97,17 @@ $app->configure('app');
 |
 */
 
-// $app->register(App\Providers\AppServiceProvider::class);
+$app->register(App\Providers\AppServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
+
+$app->register(Illuminate\Notifications\NotificationServiceProvider::class);
+
+$app->register(\Illuminate\Auth\Passwords\PasswordResetServiceProvider::class);
+
+$app->register(\Illuminate\Mail\MailServiceProvider::class);
+
+$app->alias('mailer', \Illuminate\Contracts\Mail\Mailer::class);
 
 /*
 |--------------------------------------------------------------------------
