@@ -17,6 +17,8 @@ use App\Therapist;
 config(['auth.defaults.guard' => 'therapists']);
 config(['auth.defaults.passwords' => 'therapist']);
 
+// $router->get('password/reset', ['as' => 'password.reset', 'uses' => 'Therapist\Auth\ForgotPasswordController@postReset']);
+
 $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 'therapist'], function () use($router) {
     $router->post('/signin', function(Request $request) {
         $controller = new \App\Http\Controllers\Therapist\TherapistController();
@@ -24,7 +26,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         return $controller->signIn(Therapist::IS_NOT_FREELANCER, $request);
     });
 
-    $router->post('/signin/forgot', 'Auth\ForgotPasswordController@generateResetToken');
+    $router->post('/signin/forgot', 'Auth\ForgotPasswordController@sendResetLinkEmail');
 
     $router->group(['prefix' => 'freelancer'], function () use($router) {
         $router->post('/signin', function(Request $request) {

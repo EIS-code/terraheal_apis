@@ -6,10 +6,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 
 class Therapist extends BaseModel implements CanResetPasswordContract
 {
-    use CanResetPassword;
+    use CanResetPassword, Notifiable;
 
     protected $fillable = [
         'name',
@@ -126,5 +128,20 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         }
 
         return $default;
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $classPasswordNotification = new ResetPasswordNotification($token);
+
+        $classPasswordNotification::$createUrlCallback = 'toMailContentsUrl';
+
+        $this->notify($classPasswordNotification);
     }
 }

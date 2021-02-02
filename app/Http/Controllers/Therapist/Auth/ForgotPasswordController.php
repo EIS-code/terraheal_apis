@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Therapist\Auth;
 use App\Http\Controllers\Controller as BaseController;
 use App\Traits\ResetsPasswords;
 use Illuminate\Auth\Passwords\PasswordBrokerManager;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
-use APp\Therapist;
+use App\Therapist;
+use Illuminate\Support\Facades\Validator;
 
 class ForgotPasswordController extends BaseController
 {
@@ -22,6 +24,14 @@ class ForgotPasswordController extends BaseController
     */
 
     use ResetsPasswords;
+
+    public $errorMsg = [
+        'swr' => "Something went wrong! Please try again after an hour."
+    ];
+
+    public $successMsg = [
+        'password.reset' => "Password reset successfully! Check your mailbox."
+    ];
 
     // 1. Send reset password email
     public function generateResetToken(Request $request)
@@ -86,17 +96,27 @@ class ForgotPasswordController extends BaseController
         return $passwordBrokerManager->broker();
     }
 
-    protected function sendResetLinkResponse(Request $request, $response)
+    protected function validateSendResetLinkEmail(Request $request)
     {
-        $user  = [];
-        $model = new Therapist();
-        $email = $request->get('email', false);
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email', 'exists:' . Therapist::getTableName() . ',email']
+        ]);
 
-        return $this->returnSuccess(trans($response));
+        if ($validator->fails()) {
+            return $this->returnError($validator->errors()->first());
+        }
+
+        return $this->returnSuccess(__("Success"));
     }
 
-    protected function sendResetLinkFailedResponse(Request $request, $response)
+    /**
+     * Reset the given user's password.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function postReset(Request $request)
     {
-        return $this->returnError(trans($response));
+        return $this->getReset($request);
     }
 }

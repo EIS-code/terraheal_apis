@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Validator;
 
 trait ResetsPasswords
 {
@@ -71,7 +72,11 @@ trait ResetsPasswords
      */
     public function sendResetLinkEmail(Request $request)
     {
-        $this->validateSendResetLinkEmail($request);
+        $check = $this->validateSendResetLinkEmail($request)->getData();
+
+        if ($check->code == $this->errorCode) {
+            return $this->returnError($check->msg);
+        }
 
         $broker = $this->getBroker();
 
@@ -97,7 +102,15 @@ trait ResetsPasswords
      */
     protected function validateSendResetLinkEmail(Request $request)
     {
-        $this->validate($request, ['email' => 'required|email']);
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnError($validator->errors()->first());;
+        }
+
+        return $this->returnSuccess(__("Success"));
     }
 
     /**
@@ -141,7 +154,7 @@ trait ResetsPasswords
      */
     protected function getSendResetLinkEmailSuccessResponse($response)
     {
-        return redirect()->back()->with('status', trans($response));
+        return $this->returnSuccess($this->successMsg['password.reset']);
     }
 
     /**
@@ -152,7 +165,7 @@ trait ResetsPasswords
      */
     protected function getSendResetLinkEmailFailureResponse($response)
     {
-        return redirect()->back()->withErrors(['email' => trans($response)]);
+        return $this->returnError($this->errorMsg['swr']);
     }
 
     /**

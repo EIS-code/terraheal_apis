@@ -107,7 +107,21 @@ $app->register(\Illuminate\Auth\Passwords\PasswordResetServiceProvider::class);
 
 $app->register(\Illuminate\Mail\MailServiceProvider::class);
 
+$app->middleware([\Illuminate\Session\Middleware\StartSession::class,]);
+
+$app->singleton(Illuminate\Session\SessionManager::class, function () use ($app) {
+    return $app->loadComponent('session', Illuminate\Session\SessionServiceProvider::class, 'session');
+});
+
+$app->singleton('session.store', function () use ($app) {
+    return $app->loadComponent('session', Illuminate\Session\SessionServiceProvider::class, 'session.store');
+});
+
 $app->alias('mailer', \Illuminate\Contracts\Mail\Mailer::class);
+
+$app->alias('mail.manager', Illuminate\Mail\MailManager::class);
+
+$app->alias('mail.manager', Illuminate\Contracts\Mail\Factory::class);
 
 /*
 |--------------------------------------------------------------------------
