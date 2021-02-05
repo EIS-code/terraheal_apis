@@ -100,6 +100,7 @@ $app->configure('app');
 $app->register(App\Providers\AppServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
+$app->register(App\Providers\ModelServiceProvider::class);
 
 $app->register(Illuminate\Notifications\NotificationServiceProvider::class);
 

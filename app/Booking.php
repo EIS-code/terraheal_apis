@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Validator;
 use App\User;
 use App\Shop;
 use App\SessionType;
+use App\BookingInfo;
+use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 class Booking extends BaseModel
 {
@@ -75,6 +78,16 @@ class Booking extends BaseModel
         return $this->hasMany('App\BookingInfo', 'booking_id', 'id');
     }
 
+    public function bookingInfoWithFilters($type = 'today')
+    {
+        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['booking_id', 'id as booking_info_id', 'massage_date', 'massage_time', 'user_people_id'])
+                    ->where(function($query) use($type) {
+                        $query->filterDatas();
+                    })->with(['userPeople' => function($query) {
+                        return $query->filterDatas();
+                    }]);
+    }
+
     public function bookingInfoWithBookingMassages()
     {
         return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->with('bookingMassages');
@@ -88,5 +101,22 @@ class Booking extends BaseModel
     public function user()
     {
         return $this->hasOne('App\User', 'id', 'user_id');
+    }
+
+    public function filterDatas(Builder $builder)
+    {
+        $request        = request();
+        $bookingType    = $request->get('booking_type');
+        $sessionType    = $request->get('session_type');
+
+        if (isset($bookingType) && !empty(self::$bookingTypes[$bookingType])) {
+            $builder->where('booking_type', (string)$bookingType);
+        }
+
+        if (!empty($sessionType)) {
+            $builder->where('session_id', (string)$sessionType);
+        }
+
+        return $builder;
     }
 }

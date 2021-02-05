@@ -35,4 +35,11 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             return $controller->signIn(Therapist::IS_FREELANCER, $request);
         });
     });
+
+    $router->group(['prefix' => 'booking'], function () use($router) {
+        $router->post('/', 'TherapistController@getGlobalResponse');
+        $router->post('/list/today', 'TherapistController@getTodayBooking');
+        $router->post('/list/future', 'TherapistController@getFutureBooking');
+        $router->post('/list/past', 'TherapistController@getPastBooking');
+    });
 });

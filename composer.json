@@ -11,7 +11,8 @@
         "illuminate/notifications": "^7.30",
         "illuminate/session": "^7.30",
         "illuminate/view": "^7.30",
-        "laravel/lumen-framework": "^7.0"
+        "laravel/lumen-framework": "^7.0",
+        "laravel/scout": "^8.6"
     },
     "require-dev": {
         "fzaninotto/faker": "^1.9.1",
