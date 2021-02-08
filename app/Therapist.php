@@ -118,16 +118,12 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     {
         $default = 'images/therapist.png';
 
+        // For set default image.
         if (empty($value)) {
-            return $default;
+            $value = $default;
         }
 
-        /*$profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
-        if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value)) {
-            return Storage::disk($this->fileSystem)->url($profilePhotoPath . $value);
-        }*/
-
-        return $default;
+        return cleanUrl(self::$storage . $this->profilePhotoPath . 'therapist.png');
     }
 
     /**
