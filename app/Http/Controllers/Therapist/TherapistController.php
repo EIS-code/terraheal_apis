@@ -16,6 +16,7 @@ use App\MassageTiming;
 use App\MassagePreferenceOption;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Hash;
 
 class TherapistController extends BaseController
 {
@@ -48,11 +49,12 @@ class TherapistController extends BaseController
         }
 
         if (!empty($email) && !empty($password)) {
-            $getTherapist = $model->where(['email' => $email, 'is_freelancer' => $isFreelancer])->first();
+            $getTherapist = $model->where(['email' => $email, 'is_freelancer' => (string)$isFreelancer])->first();
 
             if (!empty($getTherapist) && Hash::check($password, $getTherapist->password)) {
                 $getTherapist = $getTherapist->first();
-                return $this->returnSuccess($this->successMsg['login'], $this->getGlobalResponse($getTherapist->id));
+
+                return $this->returnSuccess(__($this->successMsg['login']), $getTherapist);
             } else {
                 return $this->returnError($this->errorMsg['loginBoth']);
             }
