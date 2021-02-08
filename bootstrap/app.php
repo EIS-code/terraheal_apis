@@ -6,6 +6,10 @@ if ($_SERVER['HTTP_HOST'] == 'evolution_terraheal_api') {
     (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
         dirname(__DIR__, 2)
     ))->bootstrap();
+} else {
+    (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
+        dirname(__DIR__, 1)
+    ))->bootstrap();
 }
 
 echo "<pre>";print_r($_ENV);exit;
