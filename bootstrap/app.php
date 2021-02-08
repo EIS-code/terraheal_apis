@@ -8,6 +8,8 @@ if ($_SERVER['HTTP_HOST'] == 'evolution_terraheal_api') {
     ))->bootstrap();
 }
 
+echo "<pre>";print_r($_ENV);exit;
+
 date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
 
 /*
