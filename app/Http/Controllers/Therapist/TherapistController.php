@@ -140,7 +140,7 @@ class TherapistController extends BaseController
             });
         }
 
-        return $return;
+        return array_values($return->toArray());
     }
 
     public function getTodayBooking(Request $request)
