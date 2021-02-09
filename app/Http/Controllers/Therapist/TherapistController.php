@@ -128,9 +128,15 @@ class TherapistController extends BaseController
                     unset($return[$index]);
                 } elseif (request()->get('client_name', false) && empty($data->bookingInfoWithFilters[0]->userPeople)) {
                     unset($return[$index]);
+                } elseif (empty($data->bookingInfoWithFilters[0]->therapist) || $data->bookingInfoWithFilters[0]->therapist->shop_id !== $data->shop_id) {
+                    unset($return[$index]);
                 } else {
                     if (!empty($data->bookingInfoWithFilters[0]->userPeople)) {
                         unset($data->bookingInfoWithFilters[0]->userPeople);
+                    }
+
+                    if (!empty($data->bookingInfoWithFilters[0]->therapist)) {
+                        unset($data->bookingInfoWithFilters[0]->therapist);
                     }
 
                     $data->booking_infos = $data->bookingInfoWithFilters;
@@ -151,10 +157,6 @@ class TherapistController extends BaseController
 
         $this->filter($data);
 
-        if (!empty($data) && !$data->isEmpty()) {
-            $data = array_values($data->toArray());
-        }
-
         return $this->returns('booking.today.found.successfully', $data);
     }
 
@@ -165,10 +167,6 @@ class TherapistController extends BaseController
         $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
 
         $this->filter($data);
-
-        if (!empty($data) && !$data->isEmpty()) {
-            $data = array_values($data->toArray());
-        }
 
         return $this->returns('booking.future.found.successfully', $data);
     }
@@ -181,10 +179,6 @@ class TherapistController extends BaseController
 
         $this->filter($data);
 
-        if (!empty($data) && !$data->isEmpty()) {
-            $data = array_values($data->toArray());
-        }
-
         return $this->returns('booking.past.found.successfully', $data);
     }
 
@@ -192,8 +186,8 @@ class TherapistController extends BaseController
     {
         $message = __($this->successMsg[$message]);
 
-        if (!empty($with) && (is_array($with) || !$with->isEmpty())) {
-            return $this->returnSuccess($message, $with);
+        if (!empty($with) && !$with->isEmpty()) {
+            return $this->returnSuccess($message, array_values($with->toArray()));
         }
 
         return $this->returnNull();
