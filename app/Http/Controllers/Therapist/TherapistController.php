@@ -184,10 +184,12 @@ class TherapistController extends BaseController
 
     public function returns($message = NULL, $with = NULL)
     {
-        $message = __($this->successMsg[$message]);
+        $message = !empty($this->successMsg[$message]) ? __($this->successMsg[$message]) : __($this->returnNullMsg);
 
         if (!empty($with) && !$with->isEmpty()) {
             return $this->returnSuccess($message, array_values($with->toArray()));
+        } elseif (!empty($message)) {
+            return $this->returnSuccess($message);
         }
 
         return $this->returnNull();

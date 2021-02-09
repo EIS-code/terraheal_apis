@@ -64,3 +64,4 @@ Route::get('password/reset/{token}', [
 ]);*/
 
 include("therapists.php");
+include("news.php");
