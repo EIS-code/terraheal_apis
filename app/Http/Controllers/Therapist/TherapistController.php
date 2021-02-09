@@ -137,7 +137,7 @@ class TherapistController extends BaseController
 
                     unset($data->bookingInfoWithFilters);
                 }
-            });
+            })->toArray();
         }
 
         return array_values($return->toArray());
