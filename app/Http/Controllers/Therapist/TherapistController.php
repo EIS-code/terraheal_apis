@@ -137,10 +137,10 @@ class TherapistController extends BaseController
 
                     unset($data->bookingInfoWithFilters);
                 }
-            })->toArray();
+            });
         }
 
-        return array_values($return->toArray());
+        return $return;
     }
 
     public function getTodayBooking(Request $request)
@@ -150,6 +150,10 @@ class TherapistController extends BaseController
         $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
 
         $this->filter($data);
+
+        if (!empty($data) && !$data->isEmpty()) {
+            $data = array_values($data->toArray());
+        }
 
         return $this->returns('booking.today.found.successfully', $data);
     }
@@ -162,6 +166,10 @@ class TherapistController extends BaseController
 
         $this->filter($data);
 
+        if (!empty($data) && !$data->isEmpty()) {
+            $data = array_values($data->toArray());
+        }
+
         return $this->returns('booking.future.found.successfully', $data);
     }
 
@@ -173,6 +181,10 @@ class TherapistController extends BaseController
 
         $this->filter($data);
 
+        if (!empty($data) && !$data->isEmpty()) {
+            $data = array_values($data->toArray());
+        }
+
         return $this->returns('booking.past.found.successfully', $data);
     }
 
@@ -180,7 +192,7 @@ class TherapistController extends BaseController
     {
         $message = __($this->successMsg[$message]);
 
-        if (!empty($with) && !$with->isEmpty()) {
+        if (!empty($with) && (is_array($with) || !$with->isEmpty())) {
             return $this->returnSuccess($message, $with);
         }
 
