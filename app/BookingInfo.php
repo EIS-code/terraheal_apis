@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Validator;
 use App\UserPeople;
 use App\Therapist;
 use App\Room;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 class BookingInfo extends BaseModel
 {
@@ -122,5 +124,34 @@ class BookingInfo extends BaseModel
     public function userPeople()
     {
         return $this->hasOne('App\UserPeople', 'id', 'user_people_id');
+    }
+
+    public function filterDatas(Builder $query, $type = 'today')
+    {
+        $request        = request();
+        $now            = Carbon::now();
+        $therapistId    = $request->get('therapist_id');
+        $massageDate    = $type == 'today' ? NULL : $request->get('massage_date');
+
+        switch ($type) {
+            case 'future':
+                $query->whereDate('massage_date', '>=', $now);
+                break;
+            case 'past':
+                $query->whereDate('massage_date', '<', $now);
+                break;
+            case 'today':
+            default:
+                $query->whereDate('massage_date', '=', $now);
+                break;
+        }
+
+        $query->where('therapist_id', $therapistId);
+
+        if (!empty($massageDate)) {
+            $query->whereDate('massage_date', $massageDate);
+        }
+
+        return $query;
     }
 }

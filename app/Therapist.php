@@ -2,14 +2,16 @@
 
 namespace App;
 
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use Illuminate\Support\Facades\Validator;
 
 class Therapist extends BaseModel implements CanResetPasswordContract
 {
-    use CanResetPassword;
+    use CanResetPassword, Notifiable;
 
     protected $fillable = [
         'name',
@@ -114,17 +116,28 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
     public function getProfilePhotoAttribute($value)
     {
-        $default = asset('images/therapist.png');
+        $default = 'images/therapist.png';
 
+        // For set default image.
         if (empty($value)) {
-            return $default;
+            $value = $default;
         }
 
-        $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
-        if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value)) {
-            return Storage::disk($this->fileSystem)->url($profilePhotoPath . $value);
-        }
+        return cleanUrl(self::$storage . $this->profilePhotoPath . 'therapist.png');
+    }
 
-        return $default;
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $classPasswordNotification = new ResetPasswordNotification($token);
+
+        $classPasswordNotification::$createUrlCallback = 'toMailContentsUrl';
+
+        $this->notify($classPasswordNotification);
     }
 }

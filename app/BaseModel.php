@@ -15,6 +15,15 @@ class BaseModel extends Model
 
     protected $hidden = ['is_removed', 'created_at', 'updated_at'];
 
+    public static $storage = NULL;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        static::getStorage();
+    }
+
     public function addHidden($fields)
     {
         if (is_array($fields)) {
@@ -40,5 +49,10 @@ class BaseModel extends Model
         } catch(Exception $exception) {}
 
         return parent::newQuery();
+    }
+
+    public static function getStorage()
+    {
+        return self::$storage = rtrim(env('APP_URL'), '/') . '/' . 'storage/';
     }
 }

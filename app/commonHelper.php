@@ -46,3 +46,45 @@ function inArrayRecursive(string $needle, array $haystack, bool $strict = false,
 
     return false;
 }
+
+function toMailContentsUrl($notifiable, $token)
+{
+    if (!empty(env('APP_URL', false))) {
+        $url = rtrim(env('APP_URL'), '/') . '/password/reset/' . $token . '?email=' . $notifiable->getEmailForPasswordReset() . '&model=' . $notifiable::getTableName();
+    } else {
+        $url = url(route('password.reset', [
+            'token' => $token,
+            'email' => $notifiable->getEmailForPasswordReset(),
+            'model' => $notifiable::getTableName()
+        ], false));
+    }
+
+    return $url;
+}
+
+function cleanUrl(string $url)
+{
+    if (empty($url)) {
+        return $url;
+    }
+
+    $url = trim($url, '/');
+
+    // If scheme not included, prepend it
+    if (!preg_match('#^http(s)?://#', $url)) {
+        $url = 'http://' . $url;
+    }
+
+    $urlParts = parse_url($url);
+
+    // Remove trailing or inside multiple slashes.
+    $url = preg_replace('/(\/+)/','/',$urlParts['path']);
+
+    // Remove www
+    $url = $urlParts['scheme'] . "://" . preg_replace('/^www\./', '', $urlParts['host']) . $urlParts['path'];
+
+    // Replace forward slashes to backward slashes.
+    $url = str_ireplace('\\', '/', $url);
+
+    return $url;
+}

@@ -2,9 +2,15 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-(new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
-    dirname(__DIR__, 2)
-))->bootstrap();
+if (!empty($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] == 'evolution_terraheal_api') {
+    (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
+        dirname(__DIR__, 2)
+    ))->bootstrap();
+} else {
+    (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
+        dirname(__DIR__, 1)
+    ))->bootstrap();
+}
 
 date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
 
@@ -100,6 +106,7 @@ $app->configure('app');
 $app->register(App\Providers\AppServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
+$app->register(App\Providers\ModelServiceProvider::class);
 
 $app->register(Illuminate\Notifications\NotificationServiceProvider::class);
 
@@ -107,7 +114,21 @@ $app->register(\Illuminate\Auth\Passwords\PasswordResetServiceProvider::class);
 
 $app->register(\Illuminate\Mail\MailServiceProvider::class);
 
+// $app->middleware([\Illuminate\Session\Middleware\StartSession::class,]);
+
+/*$app->singleton(Illuminate\Session\SessionManager::class, function () use ($app) {
+    return $app->loadComponent('session', Illuminate\Session\SessionServiceProvider::class, 'session');
+});*/
+
+/*$app->singleton('session.store', function () use ($app) {
+    return $app->loadComponent('session', Illuminate\Session\SessionServiceProvider::class, 'session.store');
+});*/
+
 $app->alias('mailer', \Illuminate\Contracts\Mail\Mailer::class);
+
+$app->alias('mail.manager', Illuminate\Mail\MailManager::class);
+
+$app->alias('mail.manager', Illuminate\Contracts\Mail\Factory::class);
 
 /*
 |--------------------------------------------------------------------------

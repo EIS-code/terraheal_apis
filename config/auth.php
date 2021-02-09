@@ -71,7 +71,7 @@ return [
             'model' => App\Superadmin::class,
         ],
 
-        'therapists' => [
+        'therapist' => [
             'driver' => 'eloquent',
             'model' => App\Therapist::class,
         ],
