@@ -9,13 +9,9 @@
         "guzzlehttp/guzzle": "^7.2",
         "illuminate/mail": "^7.30",
         "illuminate/notifications": "^7.30",
-<<<<<<< HEAD
-        "laravel/lumen-framework": "^7.0"
-=======
         "illuminate/view": "^7.30",
         "laravel/lumen-framework": "^7.0",
         "laravel/scout": "^8.6"
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     },
     "require-dev": {
         "fzaninotto/faker": "^1.9.1",
@@ -29,14 +25,10 @@
         ],
         "psr-4": {
             "App\\": "app/"
-<<<<<<< HEAD
-        }
-=======
         },
         "files": [
             "app/commonHelper.php"
         ]
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     },
     "autoload-dev": {
         "classmap": [
