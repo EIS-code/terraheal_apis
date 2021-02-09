@@ -2,7 +2,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-if ($_SERVER['HTTP_HOST'] == 'evolution_terraheal_api') {
+if (!empty($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] == 'evolution_terraheal_api') {
     (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
         dirname(__DIR__, 2)
     ))->bootstrap();
