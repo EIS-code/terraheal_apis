@@ -33,6 +33,25 @@ class BaseModel extends Model
         }
     }
 
+    public function removeHidden($fields)
+    {
+        if (is_array($fields)) {
+            foreach ($fields as $field) {
+                if (in_array($field, $this->hidden)) {
+                    $key = array_search($field, $this->hidden);
+
+                    unset($this->hidden[$key]);
+                }
+            }
+        } elseif (is_string($fields)) {
+            if (in_array($fields, $this->hidden)) {
+                $key = array_search($fields, $this->hidden);
+
+                unset($this->hidden[$key]);
+            }
+        }
+    }
+
     public static function getTableName()
     {
         return with(new static)->getTable();
@@ -54,5 +73,14 @@ class BaseModel extends Model
     public static function getStorage()
     {
         return self::$storage = rtrim(env('APP_URL'), '/') . '/' . 'storage/';
+    }
+
+    public function getUpdatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
     }
 }

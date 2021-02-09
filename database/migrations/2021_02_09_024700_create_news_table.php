@@ -18,7 +18,7 @@ class CreateNewsTable extends Migration
             $table->string('title');
             $table->string('sub_title')->nullable();
             $table->text('description')->nullable();
-            $table->boolean('is_read', ['0', '1'])->default('0')->comment('0: Nope, 1: Yes');
+            $table->enum('is_read', ['0', '1'])->default('0')->comment('0: Nope, 1: Yes');
             $table->timestamps();
         });
     }

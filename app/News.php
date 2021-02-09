@@ -35,5 +35,7 @@ class News extends BaseModel
         parent::__construct();
 
         $this->addHidden('is_read');
+
+        $this->removeHidden('updated_at');
     }
 }
