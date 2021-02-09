@@ -5,8 +5,15 @@ namespace App\Http\Controllers\Therapist\Auth;
 use App\Http\Controllers\Controller as BaseController;
 use App\Traits\ResetsPasswords;
 use Illuminate\Auth\Passwords\PasswordBrokerManager;
+<<<<<<< HEAD
 use Illuminate\Http\Request;
 use APp\Therapist;
+=======
+use Illuminate\Support\Facades\Password;
+use Illuminate\Http\Request;
+use App\Therapist;
+use Illuminate\Support\Facades\Validator;
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 class ForgotPasswordController extends BaseController
 {
@@ -23,6 +30,17 @@ class ForgotPasswordController extends BaseController
 
     use ResetsPasswords;
 
+<<<<<<< HEAD
+=======
+    public $errorMsg = [
+        'swr' => "Something went wrong! Please try again after an hour."
+    ];
+
+    public $successMsg = [
+        'password.reset' => "Password reset successfully! Check your mailbox."
+    ];
+
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     // 1. Send reset password email
     public function generateResetToken(Request $request)
     {
@@ -86,6 +104,7 @@ class ForgotPasswordController extends BaseController
         return $passwordBrokerManager->broker();
     }
 
+<<<<<<< HEAD
     protected function sendResetLinkResponse(Request $request, $response)
     {
         $user  = [];
@@ -98,5 +117,29 @@ class ForgotPasswordController extends BaseController
     protected function sendResetLinkFailedResponse(Request $request, $response)
     {
         return $this->returnError(trans($response));
+=======
+    protected function validateSendResetLinkEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'email', 'exists:' . Therapist::getTableName() . ',email']
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnError($validator->errors()->first());
+        }
+
+        return $this->returnSuccess(__("Success"));
+    }
+
+    /**
+     * Reset the given user's password.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function postReset(Request $request)
+    {
+        return $this->getReset($request);
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     }
 }

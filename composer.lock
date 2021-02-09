@@ -4,7 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+<<<<<<< HEAD
     "content-hash": "07fbd69271b35ff7fa904b1d62c7adfe",
+=======
+    "content-hash": "7ba3dd5f37e65afa46a13abef6a4062e",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     "packages": [
         {
             "name": "brick/math",
@@ -1970,6 +1974,74 @@
             "time": "2020-09-15T14:53:08+00:00"
         },
         {
+<<<<<<< HEAD
+=======
+            "name": "laravel/scout",
+            "version": "v8.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/scout.git",
+                "reference": "54070f7b68fed15f25e61e68884c4110496b8aa1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/scout/zipball/54070f7b68fed15f25e61e68884c4110496b8aa1",
+                "reference": "54070f7b68fed15f25e61e68884c4110496b8aa1",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/bus": "^6.0|^7.0|^8.0",
+                "illuminate/contracts": "^6.0|^7.0|^8.0",
+                "illuminate/database": "^6.0|^7.0|^8.0",
+                "illuminate/http": "^6.0|^7.0|^8.0",
+                "illuminate/pagination": "^6.0|^7.0|^8.0",
+                "illuminate/queue": "^6.0|^7.0|^8.0",
+                "illuminate/support": "^6.0|^7.0|^8.0",
+                "php": "^7.2|^8.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.0",
+                "phpunit/phpunit": "^8.0|^9.3"
+            },
+            "suggest": {
+                "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^2.2)."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "8.x-dev"
+                },
+                "laravel": {
+                    "providers": [
+                        "Laravel\\Scout\\ScoutServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Laravel\\Scout\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "Laravel Scout provides a driver based solution to searching your Eloquent models.",
+            "keywords": [
+                "algolia",
+                "laravel",
+                "search"
+            ],
+            "time": "2021-01-19T15:30:52+00:00"
+        },
+        {
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             "name": "league/commonmark",
             "version": "1.5.7",
             "source": {
@@ -2979,6 +3051,7 @@
         },
         {
             "name": "symfony/console",
+<<<<<<< HEAD
             "version": "v5.2.2",
             "source": {
                 "type": "git",
@@ -2989,6 +3062,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/console/zipball/d62ec79478b55036f65e2602e282822b8eaaff0a",
                 "reference": "d62ec79478b55036f65e2602e282822b8eaaff0a",
+=======
+            "version": "v5.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/console.git",
+                "reference": "89d4b176d12a2946a1ae4e34906a025b7b6b135a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/console/zipball/89d4b176d12a2946a1ae4e34906a025b7b6b135a",
+                "reference": "89d4b176d12a2946a1ae4e34906a025b7b6b135a",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
                 "shasum": ""
             },
             "require": {
@@ -3069,11 +3154,19 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2021-01-27T10:15:41+00:00"
         },
         {
             "name": "symfony/css-selector",
             "version": "v5.2.2",
+=======
+            "time": "2021-01-28T22:06:19+00:00"
+        },
+        {
+            "name": "symfony/css-selector",
+            "version": "v5.2.3",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/css-selector.git",
@@ -3199,6 +3292,7 @@
         },
         {
             "name": "symfony/error-handler",
+<<<<<<< HEAD
             "version": "v5.2.2",
             "source": {
                 "type": "git",
@@ -3209,6 +3303,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/error-handler/zipball/4fd4a377f7b7ec7c3f3b40346a1411e0a83f9d40",
                 "reference": "4fd4a377f7b7ec7c3f3b40346a1411e0a83f9d40",
+=======
+            "version": "v5.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/error-handler.git",
+                "reference": "48f18b3609e120ea66d59142c23dc53e9562c26d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/error-handler/zipball/48f18b3609e120ea66d59142c23dc53e9562c26d",
+                "reference": "48f18b3609e120ea66d59142c23dc53e9562c26d",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
                 "shasum": ""
             },
             "require": {
@@ -3261,11 +3367,19 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2021-01-27T10:15:41+00:00"
         },
         {
             "name": "symfony/event-dispatcher",
             "version": "v5.2.2",
+=======
+            "time": "2021-01-28T22:06:19+00:00"
+        },
+        {
+            "name": "symfony/event-dispatcher",
+            "version": "v5.2.3",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/event-dispatcher.git",
@@ -3423,6 +3537,7 @@
         },
         {
             "name": "symfony/finder",
+<<<<<<< HEAD
             "version": "v5.2.2",
             "source": {
                 "type": "git",
@@ -3433,6 +3548,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/finder/zipball/196f45723b5e618bf0e23b97e96d11652696ea9e",
                 "reference": "196f45723b5e618bf0e23b97e96d11652696ea9e",
+=======
+            "version": "v5.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/finder.git",
+                "reference": "4adc8d172d602008c204c2e16956f99257248e03"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/4adc8d172d602008c204c2e16956f99257248e03",
+                "reference": "4adc8d172d602008c204c2e16956f99257248e03",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
                 "shasum": ""
             },
             "require": {
@@ -3477,7 +3604,11 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2021-01-27T10:01:46+00:00"
+=======
+            "time": "2021-01-28T22:06:19+00:00"
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
         },
         {
             "name": "symfony/http-client-contracts",
@@ -3557,6 +3688,7 @@
         },
         {
             "name": "symfony/http-foundation",
+<<<<<<< HEAD
             "version": "v5.2.2",
             "source": {
                 "type": "git",
@@ -3567,6 +3699,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/http-foundation/zipball/16dfa5acf8103f0394d447f8eea3ea49f9e50855",
                 "reference": "16dfa5acf8103f0394d447f8eea3ea49f9e50855",
+=======
+            "version": "v5.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/http-foundation.git",
+                "reference": "20c554c0f03f7cde5ce230ed248470cccbc34c36"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/20c554c0f03f7cde5ce230ed248470cccbc34c36",
+                "reference": "20c554c0f03f7cde5ce230ed248470cccbc34c36",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
                 "shasum": ""
             },
             "require": {
@@ -3623,6 +3767,7 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2021-01-27T11:19:04+00:00"
         },
         {
@@ -3637,6 +3782,22 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/http-kernel/zipball/831b51e9370ece0febd0950dd819c63f996721c7",
                 "reference": "831b51e9370ece0febd0950dd819c63f996721c7",
+=======
+            "time": "2021-02-03T04:42:09+00:00"
+        },
+        {
+            "name": "symfony/http-kernel",
+            "version": "v5.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/http-kernel.git",
+                "reference": "89bac04f29e7b0b52f9fa6a4288ca7a8f90a1a05"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/http-kernel/zipball/89bac04f29e7b0b52f9fa6a4288ca7a8f90a1a05",
+                "reference": "89bac04f29e7b0b52f9fa6a4288ca7a8f90a1a05",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
                 "shasum": ""
             },
             "require": {
@@ -3732,6 +3893,7 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2021-01-27T14:45:46+00:00"
         },
         {
@@ -3746,6 +3908,22 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/mime/zipball/37bade585ea100d235c031b258eff93b5b6bb9a9",
                 "reference": "37bade585ea100d235c031b258eff93b5b6bb9a9",
+=======
+            "time": "2021-02-03T04:51:58+00:00"
+        },
+        {
+            "name": "symfony/mime",
+            "version": "v5.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/mime.git",
+                "reference": "7dee6a43493f39b51ff6c5bb2bd576fe40a76c86"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/7dee6a43493f39b51ff6c5bb2bd576fe40a76c86",
+                "reference": "7dee6a43493f39b51ff6c5bb2bd576fe40a76c86",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
                 "shasum": ""
             },
             "require": {
@@ -3811,7 +3989,11 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2021-01-25T14:08:25+00:00"
+=======
+            "time": "2021-02-02T06:10:15+00:00"
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -4517,7 +4699,11 @@
         },
         {
             "name": "symfony/process",
+<<<<<<< HEAD
             "version": "v5.2.2",
+=======
+            "version": "v5.2.3",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
@@ -4652,7 +4838,11 @@
         },
         {
             "name": "symfony/string",
+<<<<<<< HEAD
             "version": "v5.2.2",
+=======
+            "version": "v5.2.3",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
@@ -4732,7 +4922,11 @@
         },
         {
             "name": "symfony/translation",
+<<<<<<< HEAD
             "version": "v5.2.2",
+=======
+            "version": "v5.2.3",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation.git",
@@ -4897,7 +5091,11 @@
         },
         {
             "name": "symfony/var-dumper",
+<<<<<<< HEAD
             "version": "v5.2.2",
+=======
+            "version": "v5.2.3",
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/var-dumper.git",

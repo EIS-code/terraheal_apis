@@ -46,3 +46,21 @@ function inArrayRecursive(string $needle, array $haystack, bool $strict = false,
 
     return false;
 }
+<<<<<<< HEAD
+=======
+
+function toMailContentsUrl($notifiable, $token)
+{
+    if (!empty(env('APP_URL', false))) {
+        $url = rtrim(env('APP_URL'), '/') . '/password/reset/' . $token . '?email=' . $notifiable->getEmailForPasswordReset() . '&model=' . $notifiable::getTableName();
+    } else {
+        $url = url(route('password.reset', [
+            'token' => $token,
+            'email' => $notifiable->getEmailForPasswordReset(),
+            'model' => $notifiable::getTableName()
+        ], false));
+    }
+
+    return $url;
+}
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85

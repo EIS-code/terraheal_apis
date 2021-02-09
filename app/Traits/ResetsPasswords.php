@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
+<<<<<<< HEAD
+=======
+use Illuminate\Support\Facades\Validator;
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 trait ResetsPasswords
 {
@@ -71,7 +75,15 @@ trait ResetsPasswords
      */
     public function sendResetLinkEmail(Request $request)
     {
+<<<<<<< HEAD
         $this->validateSendResetLinkEmail($request);
+=======
+        $check = $this->validateSendResetLinkEmail($request)->getData();
+
+        if ($check->code == $this->errorCode) {
+            return $this->returnError($check->msg);
+        }
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
         $broker = $this->getBroker();
 
@@ -97,7 +109,19 @@ trait ResetsPasswords
      */
     protected function validateSendResetLinkEmail(Request $request)
     {
+<<<<<<< HEAD
         $this->validate($request, ['email' => 'required|email']);
+=======
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnError($validator->errors()->first());;
+        }
+
+        return $this->returnSuccess(__("Success"));
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     }
 
     /**
@@ -141,7 +165,11 @@ trait ResetsPasswords
      */
     protected function getSendResetLinkEmailSuccessResponse($response)
     {
+<<<<<<< HEAD
         return redirect()->back()->with('status', trans($response));
+=======
+        return $this->returnSuccess($this->successMsg['password.reset']);
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     }
 
     /**
@@ -152,7 +180,11 @@ trait ResetsPasswords
      */
     protected function getSendResetLinkEmailFailureResponse($response)
     {
+<<<<<<< HEAD
         return redirect()->back()->withErrors(['email' => trans($response)]);
+=======
+        return $this->returnError($this->errorMsg['swr']);
+>>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     }
 
     /**
