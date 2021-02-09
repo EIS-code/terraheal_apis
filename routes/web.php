@@ -15,8 +15,6 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-<<<<<<< HEAD
-=======
 // Authentication Routes...
 /*Route::get('login', [
   'as' => 'login',
@@ -65,5 +63,4 @@ Route::get('password/reset/{token}', [
   'uses' => 'Auth\RegisterController@register'
 ]);*/
 
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 include("therapists.php");

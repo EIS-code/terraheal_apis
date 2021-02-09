@@ -71,11 +71,7 @@ return [
             'model' => App\Superadmin::class,
         ],
 
-<<<<<<< HEAD
-        'therapists' => [
-=======
         'therapist' => [
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             'driver' => 'eloquent',
             'model' => App\Therapist::class,
         ],

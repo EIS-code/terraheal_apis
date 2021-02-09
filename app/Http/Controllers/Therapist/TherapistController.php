@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Therapist;
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\Therapist;
-<<<<<<< HEAD
-=======
 use App\UserPeople;
 use App\SessionType;
 use App\Booking;
@@ -19,7 +17,6 @@ use App\MassagePreferenceOption;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 class TherapistController extends BaseController
 {
@@ -31,15 +28,11 @@ class TherapistController extends BaseController
     ];
 
     public $successMsg = [
-<<<<<<< HEAD
-        'login' => "Therapist found successfully !"
-=======
         'login' => "Therapist found successfully !",
         'booking.details.found.successfully' => "Bookings found successfully !",
         'booking.today.found.successfully' => "Today bookings found successfully !",
         'booking.future.found.successfully' => "Future bookings found successfully !",
         'booking.past.found.successfully' => "Past bookings found successfully !",
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -56,20 +49,12 @@ class TherapistController extends BaseController
         }
 
         if (!empty($email) && !empty($password)) {
-<<<<<<< HEAD
-            $getTherapist = $model->where(['email' => $email, 'is_freelancer' => $isFreelancer])->first();
-
-            if (!empty($getTherapist) && Hash::check($password, $getTherapist->password)) {
-                $getTherapist = $getTherapist->first();
-                return $this->returnSuccess($this->successMsg['login'], $this->getGlobalResponse($getTherapist->id));
-=======
             $getTherapist = $model->where(['email' => $email, 'is_freelancer' => (string)$isFreelancer])->first();
 
             if (!empty($getTherapist) && Hash::check($password, $getTherapist->password)) {
                 $getTherapist = $getTherapist->first();
 
                 return $this->returnSuccess(__($this->successMsg['login']), $getTherapist);
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
             } else {
                 return $this->returnError($this->errorMsg['loginBoth']);
             }
@@ -78,11 +63,6 @@ class TherapistController extends BaseController
         return $this->returnNull();
     }
 
-<<<<<<< HEAD
-    public function forgot(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
-    {
-        $model = new Therapist();
-=======
     public function getGlobalResponse(Request $request)
     {
         $id   = $request->get('booking_info_id');
@@ -205,6 +185,5 @@ class TherapistController extends BaseController
         }
 
         return $this->returnNull();
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     }
 }

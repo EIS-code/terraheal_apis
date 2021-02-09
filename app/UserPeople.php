@@ -5,11 +5,7 @@ namespace App;
 use Illuminate\Support\Facades\Validator;
 use App\User;
 use App\UserGenderPreference;
-<<<<<<< HEAD
-use Illuminate\Support\Facades\Storage;
-=======
 use Illuminate\Database\Eloquent\Builder;
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 class UserPeople extends BaseModel
 {
@@ -57,25 +53,12 @@ class UserPeople extends BaseModel
 
     public function getPhotoAttribute($value)
     {
-<<<<<<< HEAD
-        $default = asset('images/user-people.png');
-=======
         $default = 'images/user-people.png';
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
         if (empty($value)) {
             return $default;
         }
 
-<<<<<<< HEAD
-        $photoPath = (str_ireplace("\\", "/", $this->photoPath));
-        if (Storage::disk($this->fileSystem)->exists($photoPath . $value)) {
-            return Storage::disk($this->fileSystem)->url($photoPath . $value);
-        }
-
-        return $default;
-    }
-=======
         /* TODO : Set main project storage link */
         /*$photoPath = (str_ireplace("\\", "/", $this->photoPath));
         if (Storage::disk($this->fileSystem)->exists($photoPath . $value)) {
@@ -95,5 +78,4 @@ class UserPeople extends BaseModel
 
         return $builder;
     }
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 }

@@ -5,15 +5,10 @@ namespace App\Http\Controllers\Therapist\Auth;
 use App\Http\Controllers\Controller as BaseController;
 use App\Traits\ResetsPasswords;
 use Illuminate\Auth\Passwords\PasswordBrokerManager;
-<<<<<<< HEAD
-use Illuminate\Http\Request;
-use APp\Therapist;
-=======
 use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
 use App\Therapist;
 use Illuminate\Support\Facades\Validator;
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 class ForgotPasswordController extends BaseController
 {
@@ -30,8 +25,6 @@ class ForgotPasswordController extends BaseController
 
     use ResetsPasswords;
 
-<<<<<<< HEAD
-=======
     public $errorMsg = [
         'swr' => "Something went wrong! Please try again after an hour."
     ];
@@ -40,7 +33,6 @@ class ForgotPasswordController extends BaseController
         'password.reset' => "Password reset successfully! Check your mailbox."
     ];
 
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     // 1. Send reset password email
     public function generateResetToken(Request $request)
     {
@@ -104,20 +96,6 @@ class ForgotPasswordController extends BaseController
         return $passwordBrokerManager->broker();
     }
 
-<<<<<<< HEAD
-    protected function sendResetLinkResponse(Request $request, $response)
-    {
-        $user  = [];
-        $model = new Therapist();
-        $email = $request->get('email', false);
-
-        return $this->returnSuccess(trans($response));
-    }
-
-    protected function sendResetLinkFailedResponse(Request $request, $response)
-    {
-        return $this->returnError(trans($response));
-=======
     protected function validateSendResetLinkEmail(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -140,6 +118,5 @@ class ForgotPasswordController extends BaseController
     public function postReset(Request $request)
     {
         return $this->getReset($request);
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     }
 }

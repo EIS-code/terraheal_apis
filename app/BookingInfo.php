@@ -6,11 +6,8 @@ use Illuminate\Support\Facades\Validator;
 use App\UserPeople;
 use App\Therapist;
 use App\Room;
-<<<<<<< HEAD
-=======
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 class BookingInfo extends BaseModel
 {
@@ -128,8 +125,6 @@ class BookingInfo extends BaseModel
     {
         return $this->hasOne('App\UserPeople', 'id', 'user_people_id');
     }
-<<<<<<< HEAD
-=======
 
     public function filterDatas(Builder $query, $type = 'today')
     {
@@ -159,5 +154,4 @@ class BookingInfo extends BaseModel
 
         return $query;
     }
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 }

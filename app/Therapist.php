@@ -2,23 +2,16 @@
 
 namespace App;
 
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
-<<<<<<< HEAD
-
-class Therapist extends BaseModel implements CanResetPasswordContract
-{
-    use CanResetPassword;
-=======
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use Illuminate\Support\Facades\Validator;
 
 class Therapist extends BaseModel implements CanResetPasswordContract
 {
     use CanResetPassword, Notifiable;
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
     protected $fillable = [
         'name',
@@ -123,31 +116,14 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
     public function getProfilePhotoAttribute($value)
     {
-<<<<<<< HEAD
-        $default = asset('images/therapist.png');
-=======
         $default = 'images/therapist.png';
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
+        // For set default image.
         if (empty($value)) {
-            return $default;
+            $value = $default;
         }
 
-<<<<<<< HEAD
-        $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
-        if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value)) {
-            return Storage::disk($this->fileSystem)->url($profilePhotoPath . $value);
-        }
-
-        return $default;
-    }
-=======
-        /*$profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
-        if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value)) {
-            return Storage::disk($this->fileSystem)->url($profilePhotoPath . $value);
-        }*/
-
-        return $default;
+        return cleanUrl(self::$storage . $this->profilePhotoPath . 'therapist.png');
     }
 
     /**
@@ -164,5 +140,4 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         $this->notify($classPasswordNotification);
     }
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 }

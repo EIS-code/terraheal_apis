@@ -2,11 +2,6 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-<<<<<<< HEAD
-(new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
-    dirname(__DIR__, 2)
-))->bootstrap();
-=======
 if ($_SERVER['HTTP_HOST'] == 'evolution_terraheal_api') {
     (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
         dirname(__DIR__, 2)
@@ -16,7 +11,6 @@ if ($_SERVER['HTTP_HOST'] == 'evolution_terraheal_api') {
         dirname(__DIR__, 1)
     ))->bootstrap();
 }
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
 
@@ -112,10 +106,7 @@ $app->configure('app');
 $app->register(App\Providers\AppServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
-<<<<<<< HEAD
-=======
 $app->register(App\Providers\ModelServiceProvider::class);
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 $app->register(Illuminate\Notifications\NotificationServiceProvider::class);
 
@@ -123,19 +114,15 @@ $app->register(\Illuminate\Auth\Passwords\PasswordResetServiceProvider::class);
 
 $app->register(\Illuminate\Mail\MailServiceProvider::class);
 
-<<<<<<< HEAD
-$app->alias('mailer', \Illuminate\Contracts\Mail\Mailer::class);
+// $app->middleware([\Illuminate\Session\Middleware\StartSession::class,]);
 
-=======
-$app->middleware([\Illuminate\Session\Middleware\StartSession::class,]);
-
-$app->singleton(Illuminate\Session\SessionManager::class, function () use ($app) {
+/*$app->singleton(Illuminate\Session\SessionManager::class, function () use ($app) {
     return $app->loadComponent('session', Illuminate\Session\SessionServiceProvider::class, 'session');
-});
+});*/
 
-$app->singleton('session.store', function () use ($app) {
+/*$app->singleton('session.store', function () use ($app) {
     return $app->loadComponent('session', Illuminate\Session\SessionServiceProvider::class, 'session.store');
-});
+});*/
 
 $app->alias('mailer', \Illuminate\Contracts\Mail\Mailer::class);
 
@@ -143,7 +130,6 @@ $app->alias('mail.manager', Illuminate\Mail\MailManager::class);
 
 $app->alias('mail.manager', Illuminate\Contracts\Mail\Factory::class);
 
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 /*
 |--------------------------------------------------------------------------
 | Load The Application Routes

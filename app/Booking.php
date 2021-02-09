@@ -6,12 +6,9 @@ use Illuminate\Support\Facades\Validator;
 use App\User;
 use App\Shop;
 use App\SessionType;
-<<<<<<< HEAD
-=======
 use App\BookingInfo;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 
 class Booking extends BaseModel
 {
@@ -81,8 +78,6 @@ class Booking extends BaseModel
         return $this->hasMany('App\BookingInfo', 'booking_id', 'id');
     }
 
-<<<<<<< HEAD
-=======
     public function bookingInfoWithFilters($type = 'today')
     {
         return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['booking_id', 'id as booking_info_id', 'massage_date', 'massage_time', 'user_people_id'])
@@ -93,7 +88,6 @@ class Booking extends BaseModel
                     }]);
     }
 
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
     public function bookingInfoWithBookingMassages()
     {
         return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->with('bookingMassages');
@@ -108,8 +102,6 @@ class Booking extends BaseModel
     {
         return $this->hasOne('App\User', 'id', 'user_id');
     }
-<<<<<<< HEAD
-=======
 
     public function filterDatas(Builder $builder)
     {
@@ -127,5 +119,4 @@ class Booking extends BaseModel
 
         return $builder;
     }
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
 }

@@ -46,8 +46,6 @@ function inArrayRecursive(string $needle, array $haystack, bool $strict = false,
 
     return false;
 }
-<<<<<<< HEAD
-=======
 
 function toMailContentsUrl($notifiable, $token)
 {
@@ -63,4 +61,30 @@ function toMailContentsUrl($notifiable, $token)
 
     return $url;
 }
->>>>>>> a1af10094a4c25489d0fb294eb5811e66c43dd85
+
+function cleanUrl(string $url)
+{
+    if (empty($url)) {
+        return $url;
+    }
+
+    $url = trim($url, '/');
+
+    // If scheme not included, prepend it
+    if (!preg_match('#^http(s)?://#', $url)) {
+        $url = 'http://' . $url;
+    }
+
+    $urlParts = parse_url($url);
+
+    // Remove trailing or inside multiple slashes.
+    $url = preg_replace('/(\/+)/','/',$urlParts['path']);
+
+    // Remove www
+    $url = $urlParts['scheme'] . "://" . preg_replace('/^www\./', '', $urlParts['host']) . $urlParts['path'];
+
+    // Replace forward slashes to backward slashes.
+    $url = str_ireplace('\\', '/', $url);
+
+    return $url;
+}
