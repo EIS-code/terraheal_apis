@@ -80,12 +80,12 @@ class Booking extends BaseModel
 
     public function bookingInfoWithFilters($type = 'today')
     {
-        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['booking_id', 'id as booking_info_id', 'massage_date', 'massage_time', 'user_people_id'])
+        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['booking_id', 'id as booking_info_id', 'massage_date', 'massage_time', 'user_people_id', 'therapist_id'])
                     ->where(function($query) use($type) {
                         $query->filterDatas();
                     })->with(['userPeople' => function($query) {
                         return $query->filterDatas();
-                    }]);
+                    }, 'therapist']);
     }
 
     public function bookingInfoWithBookingMassages()
