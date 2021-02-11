@@ -114,6 +114,11 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         return $this->hasMany('App\TherapistSelectedTherapy', 'therapist_id', 'id');
     }
 
+    public function bookingInfos()
+    {
+        return $this->hasMany('App\BookingInfo', 'therapist_id', 'id');
+    }
+
     public function getProfilePhotoAttribute($value)
     {
         $default = 'images/therapist.png';
