@@ -32,12 +32,12 @@ $router->get('/', function () use ($router) {
 ]);*/
 
 // Password Reset Routes...
-Route::post('password/email', [
+$router->post('password/email', [
   'as' => 'password.email',
   'uses' => 'Therapist\Auth\ForgotPasswordController@sendResetLinkEmail'
 ]);
 
-Route::get('password/reset', [
+$router->get('password/reset', [
   'as' => 'password.request',
   'uses' => 'Therapist\Auth\ForgotPasswordController@showLinkRequestForm'
 ]);
@@ -47,21 +47,23 @@ Route::get('password/reset', [
   'uses' => 'App\Traits\ResetsPasswords@reset'
 ]);*/
 
-Route::get('password/reset/{token}', [
+$router->get('password/reset/{token}', [
   'as' => 'password.reset',
   'uses' => 'App\Traits\ResetsPasswords@showResetForm'
 ]);
 
 // Registration Routes...
-/*Route::get('register', [
+/*$router->get('register', [
   'as' => 'register',
   'uses' => 'Auth\RegisterController@showRegistrationForm'
 ]);*/
 
-/*Route::post('register', [
+/*$router->post('register', [
   'as' => '',
   'uses' => 'Auth\RegisterController@register'
 ]);*/
 
-include("therapists.php");
-include("news.php");
+$router->group(['middleware' => ['auth']], function () use($router) {
+    include("therapists.php");
+    include("news.php");
+});
