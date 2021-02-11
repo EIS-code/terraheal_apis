@@ -189,7 +189,7 @@ class TherapistController extends BaseController
         $id     = (int)$request->get('id', false);
 
         if (!empty($id)) {
-            $data = $model::select('massage_date', 'massage_time', 'id as booking_info_id')->with('therapist')->get();
+            $data = $model::select('massage_date', 'massage_time', 'id as booking_info_id')->has('therapist')->get();
 
             return $this->returns('calender.get.successfully', $data);
         }
@@ -203,8 +203,6 @@ class TherapistController extends BaseController
 
         if (!empty($with) && !$with->isEmpty()) {
             return $this->returnSuccess($message, array_values($with->toArray()));
-        } elseif (!empty($message)) {
-            return $this->returnSuccess($message);
         }
 
         return $this->returnNull();

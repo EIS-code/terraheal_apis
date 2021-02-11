@@ -61,9 +61,19 @@ class BaseModel extends Model
         try {
             $tableFillables = $this->fillable;
             $tableColumns   = \Schema::getColumnListing(parent::getTable());
+            $where          = [];
+
+            // Default shop_id.
+            $shopId = (int)request()->get('shop_id', false);
+
+            if (!empty($shopId) && in_array('shop_id', $tableFillables)) {
+                $where['shop_id'] = $shopId;
+            }
 
             if (in_array(self::$removedColumn, $tableFillables) && in_array(self::$removedColumn, $tableColumns)) {
-                return parent::newQuery()->where('is_removed', '=', self::$notRemoved);
+                return parent::newQuery()->where('is_removed', '=', self::$notRemoved)->where($where);
+            } else {
+                return parent::newQuery()->where($where);
             }
         } catch(Exception $exception) {}
 

@@ -130,7 +130,7 @@ class BookingInfo extends BaseModel
     {
         $request        = request();
         $now            = Carbon::now();
-        $therapistId    = $request->get('therapist_id');
+        $therapistId    = (int)$request->get('id', false);
         $massageDate    = $type == 'today' ? NULL : $request->get('massage_date');
 
         switch ($type) {
