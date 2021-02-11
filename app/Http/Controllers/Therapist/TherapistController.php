@@ -33,6 +33,7 @@ class TherapistController extends BaseController
         'booking.today.found.successfully' => "Today bookings found successfully !",
         'booking.future.found.successfully' => "Future bookings found successfully !",
         'booking.past.found.successfully' => "Past bookings found successfully !",
+        'calender.get.successfully' => "Calender get successfully !"
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -182,14 +183,26 @@ class TherapistController extends BaseController
         return $this->returns('booking.past.found.successfully', $data);
     }
 
+    public function getCalender(Request $request)
+    {
+        $model  = new BookingInfo();
+        $id     = (int)$request->get('id', false);
+
+        if (!empty($id)) {
+            $data = $model::select('massage_date', 'massage_time', 'id as booking_info_id')->has('therapist')->get();
+
+            return $this->returns('calender.get.successfully', $data);
+        }
+
+        return $this->returns();
+    }
+
     public function returns($message = NULL, $with = NULL)
     {
         $message = !empty($this->successMsg[$message]) ? __($this->successMsg[$message]) : __($this->returnNullMsg);
 
         if (!empty($with) && !$with->isEmpty()) {
             return $this->returnSuccess($message, array_values($with->toArray()));
-        } elseif (!empty($message)) {
-            return $this->returnSuccess($message);
         }
 
         return $this->returnNull();
