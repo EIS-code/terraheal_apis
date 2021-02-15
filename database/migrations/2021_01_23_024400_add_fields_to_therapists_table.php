@@ -14,12 +14,12 @@ class AddFieldsToTherapistsTable extends Migration
     public function up()
     {
         Schema::table('therapists', function (Blueprint $table) {
-            $table->boolean('surname')->nullable()->after('name');
-            $table->boolean('account_number')->nullable()->after('is_document_verified');
-            $table->boolean('nif')->nullable()->after('account_number');
-            $table->boolean('social_security_number')->nullable()->after('nif');
-            $table->boolean('mobile_number')->nullable()->after('tel_number');
-            $table->boolean('emergence_contact_number')->nullable()->after('mobile_number');
+            $table->string('surname')->nullable()->after('name');
+            $table->string('account_number')->nullable()->after('is_document_verified');
+            $table->string('nif')->nullable()->after('account_number');
+            $table->string('social_security_number')->nullable()->after('nif');
+            $table->string('mobile_number')->nullable()->after('tel_number');
+            $table->string('emergence_contact_number')->nullable()->after('mobile_number');
             $table->bigInteger('city_id')->unsigned();
             $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade')->after('shop_id');
             $table->bigInteger('country_id')->unsigned();
