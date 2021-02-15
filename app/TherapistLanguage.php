@@ -23,6 +23,9 @@ class TherapistLanguage extends Model
         'S' => self::TYPE_3
     ];
 
+    const DEFAULT_VALUE  = '0';
+    const THEY_CAN_VALUE = '1';
+
     public function validator(array $data)
     {
         return Validator::make($data, [
@@ -30,6 +33,16 @@ class TherapistLanguage extends Model
             'value'        => ['required', 'in:0,1'],
             'language_id'  => ['required', 'integer'],
             'therapist_id' => ['required', 'integer']
+        ]);
+    }
+
+    public function validators(array $data)
+    {
+        return Validator::make($data, [
+            'type.*'         => ['required', 'in:1,2,3'],
+            'value.*'        => ['required', 'in:0,1'],
+            'language_id.*'  => ['required', 'integer'],
+            'therapist_id.*' => ['required', 'integer']
         ]);
     }
 }
