@@ -59,7 +59,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         self::IS_NOT_FREELANCER => 'No'
     ];
 
-    public function validator(array $data, $id = false, $isUpdate = false)
+    public function validator(array $data, $requiredFileds = [], $extraFields = [], $id = false, $isUpdate = false)
     {
         $user = NULL;
         if ($isUpdate === true && !empty($id)) {
@@ -68,30 +68,36 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $emailValidator = ['unique:therapists'];
         }
 
-        return Validator::make($data, [
-            'name'                 => ['required', 'string', 'max:255'],
-            'dob'                  => ['date'],
-            'gender'               => ['in:m,f'],
-            'email'                => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
-            'tel_number'           => ['string', 'max:50'],
-            'hobbies'              => ['string', 'max:255'],
-            'short_description'    => ['string', 'max:255'],
-            'shop_id'              => ['integer'],
-            'is_freelancer'        => ['required', 'in:' . implode(",", array_keys($this->isFreelancer))],
-            'paid_percentage'      => ['integer'],
-            'avatar'               => ['max:255'],
-            'avatar_original'      => ['max:255'],
-            'device_token'         => ['max:255'],
-            'device_type'          => ['max:255'],
-            'app_version'          => ['max:255'],
-            'oauth_uid'            => ['max:255'],
-            'oauth_provider'       => [(!empty($data['oauth_uid']) ? 'required' : ''), (!empty($data['oauth_uid']) ? 'in:1,2,3,4' : '')],
-            'password'             => [(!$isUpdate ? 'required': ''), 'min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'],
-            'is_email_verified'    => ['in:0,1'],
-            'is_mobile_verified'   => ['in:0,1'],
-            'is_document_verified' => ['in:0,1'],
-        ], [
-            'password.regex'    => 'Password should contains at least one [a-z, A-Z, 0-9, @, $, !, %, *, #, ?, &].'
+        return Validator::make($data, array_merge([
+            'name'                 => array_merge(['string', 'max:255'], !empty($requiredFileds['name']) ? $requiredFileds['name'] : ['required']),
+            'surname'              => array_merge(['string', 'max:255'], !empty($requiredFileds['surname']) ? $requiredFileds['surname'] : ['nullable']),
+            'dob'                  => array_merge(['date:Y-m-d'], !empty($requiredFileds['dob']) ? $requiredFileds['dob'] : ['nullable']),
+            'gender'               => array_merge(['in:m,f'], !empty($requiredFileds['gender']) ? $requiredFileds['gender'] : ['nullable']),
+            'email'                => array_merge(array_merge(['required', 'string', 'email', 'max:255'], $emailValidator), !empty($requiredFileds['email']) ? $requiredFileds['email'] : ['nullable']),
+            'tel_number'           => array_merge(['string', 'max:50'], !empty($requiredFileds['tel_number']) ? $requiredFileds['tel_number'] : ['nullable']),
+            'hobbies'              => array_merge(['string', 'max:255'], !empty($requiredFileds['hobbies']) ? $requiredFileds['hobbies'] : ['nullable']),
+            'short_description'    => array_merge(['string', 'max:255'], !empty($requiredFileds['short_description']) ? $requiredFileds['short_description'] : ['nullable']),
+            'shop_id'              => array_merge(['integer'], !empty($requiredFileds['shop_id']) ? $requiredFileds['shop_id'] : ['required']),
+            'is_freelancer'        => array_merge(['required', 'in:' . implode(",", array_keys(self::$isFreelancer))], !empty($requiredFileds['is_freelancer']) ? $requiredFileds['is_freelancer'] : ['required']),
+            'paid_percentage'      => array_merge(['integer'], !empty($requiredFileds['paid_percentage']) ? $requiredFileds['paid_percentage'] : ['nullable']),
+            'avatar'               => array_merge(['max:255'], !empty($requiredFileds['avatar']) ? $requiredFileds['avatar'] : ['nullable']),
+            'avatar_original'      => array_merge(['max:255'], !empty($requiredFileds['avatar_original']) ? $requiredFileds['avatar_original'] : ['nullable']),
+            'device_token'         => array_merge(['max:255'], !empty($requiredFileds['device_token']) ? $requiredFileds['device_token'] : ['nullable']),
+            'device_type'          => array_merge(['max:255'], !empty($requiredFileds['device_type']) ? $requiredFileds['device_type'] : ['nullable']),
+            'app_version'          => array_merge(['max:255'], !empty($requiredFileds['app_version']) ? $requiredFileds['app_version'] : ['nullable']),
+            'oauth_uid'            => array_merge(['max:255'], !empty($requiredFileds['oauth_uid']) ? $requiredFileds['oauth_uid'] : ['nullable']),
+            'oauth_provider'       => array_merge([(!empty($data['oauth_uid']) ? 'required' : ''), (!empty($data['oauth_uid']) ? 'in:1,2,3,4' : '')], !empty($requiredFileds['oauth_provider']) ? $requiredFileds['oauth_provider'] : ['nullable']),
+            'password'             => array_merge([(!$isUpdate ? 'required': ''), 'min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'], !empty($requiredFileds['password']) ? $requiredFileds['password'] : ['nullable']),
+            'is_email_verified'    => array_merge(['in:0,1'], !empty($requiredFileds['is_email_verified']) ? $requiredFileds['is_email_verified'] : ['nullable']),
+            'is_mobile_verified'   => array_merge(['in:0,1'], !empty($requiredFileds['is_mobile_verified']) ? $requiredFileds['is_mobile_verified'] : ['nullable']),
+            'is_document_verified' => array_merge(['in:0,1'], !empty($requiredFileds['is_document_verified']) ? $requiredFileds['is_document_verified'] : ['nullable']),
+            'account_number'            => array_merge(['string', 'max:255'], !empty($requiredFileds['account_number']) ? $requiredFileds['account_number'] : ['nullable']),
+            'nif'                       => array_merge(['string', 'max:255'], !empty($requiredFileds['nif']) ? $requiredFileds['nif'] : ['nullable']),
+            'social_security_number'    => array_merge(['string', 'max:255'], !empty($requiredFileds['social_security_number']) ? $requiredFileds['social_security_number'] : ['nullable']),
+            'mobile_number'             => array_merge(['string', 'max:255'], !empty($requiredFileds['mobile_number']) ? $requiredFileds['mobile_number'] : ['nullable']),
+            'emergence_contact_number'  => array_merge(['string', 'max:255'], !empty($requiredFileds['emergence_contact_number']) ? $requiredFileds['emergence_contact_number'] : ['nullable']),
+        ], $extraFields), [
+            'password.regex'    => __('Password should contains at least one [a-z, A-Z, 0-9, @, $, !, %, *, #, ?, &].')
         ]);
     }
 

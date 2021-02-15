@@ -14,6 +14,7 @@ use App\Massage;
 use App\MassagePrice;
 use App\MassageTiming;
 use App\MassagePreferenceOption;
+use App\TherapistLanguage;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -189,22 +190,85 @@ class TherapistController extends BaseController
         $id     = (int)$request->get('id', false);
 
         if (!empty($id)) {
-            $data = $model::select('massage_date', 'massage_time', 'id as booking_info_id')->has('therapist')->get();
+            $return = [];
 
-            return $this->returns('calender.get.successfully', $data);
+            $data   = $model::select('massage_date', 'massage_time', 'id as booking_info_id', 'id')
+                          ->has('therapist')
+                          ->has('bookingMassages')
+                          ->with(['bookingMassages' => function($query) {
+                              $query->select('booking_info_id', 'massage_timing_id')
+                                    ->with('massageTiming');
+                          }])
+                          ->get();
+
+            if (!empty($data) && !$data->isEmpty()) {
+                foreach ($data as $record) {
+                    if (!empty($record->bookingMassages) && !$record->bookingMassages->isEmpty()) {
+                        foreach ($record->bookingMassages as $bookingMassage) {
+                            if (empty($bookingMassage->massageTiming)) {
+                                continue;
+                            }
+
+                            $return[] = [
+                                'massage_date'      => $record->massage_date,
+                                'massage_time'      => $record->massage_time,
+                                'booking_info_id'   => $record->booking_info_id,
+                                'time'              => (int)$bookingMassage->massageTiming->time
+                            ];
+                        }
+                    }
+                }
+            }
+
+            return $this->returns('calender.get.successfully', collect($return));
         }
 
         return $this->returns();
     }
 
-    public function returns($message = NULL, $with = NULL)
+    public function returns($message = NULL, $with = NULL, $isError = false)
     {
-        $message = !empty($this->successMsg[$message]) ? __($this->successMsg[$message]) : __($this->returnNullMsg);
+        if ($isError && !empty($message)) {
+            $message = __($message);
+        } else {
+            $message = !empty($this->successMsg[$message]) ? __($this->successMsg[$message]) : __($this->returnNullMsg);
+        }
 
-        if (!empty($with) && !$with->isEmpty()) {
+        if (!$isError && !empty($with) && !$with->isEmpty()) {
             return $this->returnSuccess($message, array_values($with->toArray()));
+        } elseif ($isError) {
+            return $this->returnError($message);
         }
 
         return $this->returnNull();
+    }
+
+    public function updateProfile(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
+    {
+        $model  = new Therapist();
+        $data   = $request->all();
+        $id     = !empty($data['id']) ? (int)$data['id'] : false;
+
+        // $fillable = $model->getFillable();
+
+        $data['dob'] = !empty($data['dob']) ? date('Y-m-d', ($data['dob'] / 1000)) : $data['dob'];
+        $data['is_freelancer'] = $isFreelancer;
+
+        $checks = $model->validator($data, [], [], $id, true);
+
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        if (!empty($data['language_spoken'])) {
+            if (is_array($data['language_spoken'])) {
+                foreach ($data['language_spoken'] as $languageId => $languageSpoken) {
+                    $languageData[] = [
+                        'type'  => $languageSpoken,
+                        'value' => TherapistLanguage::THEY_CAN_VALUE
+                    ];
+                }
+            }
+        }
     }
 }
