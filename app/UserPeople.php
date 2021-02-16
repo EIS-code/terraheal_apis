@@ -24,6 +24,13 @@ class UserPeople extends BaseModel
     public $fileSystem = 'public';
     public $photoPath  = 'user\people\\';
 
+    const MALE   = 'm';
+    const FEMALE = 'f';
+    public $gender = [
+        self::MALE      => "Male",
+        self::FEMALE    => "Female"
+    ];
+
     public function validator(array $data, $isUpdate = false)
     {
         $userId = ['required', 'exists:' . User::getTableName() . ',id'];
