@@ -157,12 +157,13 @@ class TherapistController extends BaseController
             $return = [];
 
             $data   = $model::select('massage_date', 'massage_time', 'id as booking_info_id', 'id')
-                          ->has('therapistWhereShopAndId')
+                          ->has('therapistWhereShop')
                           ->has('bookingMassages')
                           ->with(['bookingMassages' => function($query) {
                               $query->select('booking_info_id', 'massage_timing_id')
                                     ->with('massageTiming');
                           }])
+                          ->where('therapist_id', $id)
                           ->get();
 
             if (!empty($data) && !$data->isEmpty()) {
