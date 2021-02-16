@@ -69,51 +69,11 @@ class TherapistController extends BaseController
 
     public function getGlobalResponse(Request $request)
     {
-        $id   = $request->get('booking_info_id');
-
         // $data = Therapist::with('selectedMassages', 'selectedTherapies')->where('id', $id)->first();
 
-        $bookingModel                   = new Booking();
-        $userPeopleModel                = new UserPeople();
-        $bookingInfoModel               = new BookingInfo();
-        $sessionTypeModel               = new SessionType();
-        $massageModel                   = new Massage();
-        $bookingMassageModel            = new BookingMassage();
-        $massagePriceModel              = new MassagePrice();
-        $massageTimingModel             = new MassageTiming();
-        $massagePreferenceOptionModel   = new MassagePreferenceOption();
+        $bookingModel = new Booking();
 
-        $data = $bookingModel
-                ->select(
-                        DB::RAW(
-                            $userPeopleModel::getTableName() . '.name as client_name, '. 
-                            $bookingInfoModel::getTableName() . '.id as booking_info_id, '. 
-                            $sessionTypeModel::getTableName() . '.type as session_type, ' . 
-                            $massageModel::getTableName() . '.name as service_name, UNIX_TIMESTAMP(' . 
-                            $bookingInfoModel::getTableName() . '.massage_date) * 1000 as massage_date, UNIX_TIMESTAMP(' . 
-                            $bookingInfoModel::getTableName() . '.massage_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . 
-                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, ' . 
-                            'gender.name as gender_preference, ' . 
-                            'pressure.name as pressure_preference, ' . 
-                            $bookingModel::getTableName() . '.special_notes as notes, ' . 
-                            $bookingMassageModel::getTableName() . '.notes_of_injuries as injuries, ' . 
-                            'focus_area.name as focus_area, ' . 
-                            $bookingModel::getTableName() . '.table_futon_quantity, ' . 
-                            $bookingModel::getTableName() . '.booking_type'
-                        )
-                )
-                ->join($bookingInfoModel::getTableName(), $bookingModel::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')
-                ->join($userPeopleModel::getTableName(), $bookingInfoModel::getTableName() . '.user_people_id', '=', $userPeopleModel::getTableName() . '.id')
-                ->leftJoin($sessionTypeModel::getTableName(), $bookingModel::getTableName() . '.session_id', '=', $sessionTypeModel::getTableName() . '.id')
-                ->leftJoin($bookingMassageModel::getTableName(), $bookingInfoModel::getTableName() . '.id', '=', $bookingMassageModel::getTableName() . '.booking_info_id')
-                ->leftJoin($massagePriceModel::getTableName(), $bookingMassageModel::getTableName() . '.massage_prices_id', '=', $massagePriceModel::getTableName() . '.id')
-                ->leftJoin($massageModel::getTableName(), $massagePriceModel::getTableName() . '.massage_id', '=', $massageModel::getTableName() . '.id')
-                ->leftJoin($massageTimingModel::getTableName(), $massagePriceModel::getTableName() . '.massage_timing_id', '=', $massageTimingModel::getTableName() . '.id')
-                ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as gender', $bookingMassageModel::getTableName() . '.gender_preference', '=', 'gender.id')
-                ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as pressure', $bookingMassageModel::getTableName() . '.pressure_preference', '=', 'pressure.id')
-                ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as focus_area', $bookingMassageModel::getTableName() . '.focus_area_preference', '=', 'focus_area.id')
-                ->where($bookingInfoModel::getTableName() . '.id', (int)$id)
-                ->get();
+        $data = $bookingModel->getGlobalQuery($request);
 
         if (!empty($data)) {
             return $this->returnSuccess(__($this->successMsg['booking.details.found.successfully']), $data);
