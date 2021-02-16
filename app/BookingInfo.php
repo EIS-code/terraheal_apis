@@ -128,6 +128,21 @@ class BookingInfo extends BaseModel
         return $this->hasOne('App\Therapist', 'id', 'therapist_id')->where('shop_id', (int)$shopId);
     }
 
+    public function therapistWhereId()
+    {
+        $id = request()->get('therapist_id', false);
+
+        return $this->hasOne('App\Therapist', 'id', 'therapist_id')->where('therapist_id', (int)$id);
+    }
+
+    public function therapistWhereShopAndId()
+    {
+        $shopId = request()->get('shop_id', false);
+        $id     = request()->get('therapist_id', false);
+
+        return $this->hasOne('App\Therapist', 'id', 'therapist_id')->where('shop_id', (int)$shopId)->where('therapist_id', (int)$id);
+    }
+
     public function userPeople()
     {
         return $this->hasOne('App\UserPeople', 'id', 'user_people_id');
