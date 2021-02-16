@@ -46,6 +46,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
     $router->group(['prefix' => 'calender'], function () use($router) {
         $router->post('/get', 'TherapistController@getCalender');
+        $router->post('/booking/details', 'TherapistController@getGlobalResponse');
     });
 
     $router->group(['prefix' => 'booking'], function () use($router) {
