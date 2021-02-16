@@ -15,9 +15,11 @@ use App\MassagePrice;
 use App\MassageTiming;
 use App\MassagePreferenceOption;
 use App\TherapistLanguage;
+use App\TherapistDocument;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\UploadedFile;
 
 class TherapistController extends BaseController
 {
@@ -133,12 +135,14 @@ class TherapistController extends BaseController
                 } elseif (empty($data->bookingInfoWithFilters[0]->therapist) || $data->bookingInfoWithFilters[0]->therapist->shop_id !== $data->shop_id) {
                     unset($return[$index]);
                 } else {
-                    if (!empty($data->bookingInfoWithFilters[0]->userPeople)) {
-                        unset($data->bookingInfoWithFilters[0]->userPeople);
-                    }
+                    foreach ($data->bookingInfoWithFilters as &$bookingInfoWithFilter) {
+                        if (!empty($bookingInfoWithFilter->userPeople)) {
+                            unset($bookingInfoWithFilter->userPeople);
+                        }
 
-                    if (!empty($data->bookingInfoWithFilters[0]->therapist)) {
-                        unset($data->bookingInfoWithFilters[0]->therapist);
+                        if (!empty($bookingInfoWithFilter->therapist)) {
+                            unset($bookingInfoWithFilter->therapist);
+                        }
                     }
 
                     $data->booking_infos = $data->bookingInfoWithFilters;
@@ -245,17 +249,18 @@ class TherapistController extends BaseController
 
     public function updateProfile(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
     {
-        $model  = new Therapist();
+        $model                  = new Therapist();
+        $modelTherapistLanguage = new TherapistLanguage();
+        $modelTherapistDocument = new TherapistDocument();
+
         $data   = $request->all();
         $id     = !empty($data['id']) ? (int)$data['id'] : false;
-
-        // $fillable = $model->getFillable();
+        $inc    = 0;
 
         $data['dob'] = !empty($data['dob']) ? date('Y-m-d', ($data['dob'] / 1000)) : $data['dob'];
         $data['is_freelancer'] = $isFreelancer;
 
         $checks = $model->validator($data, [], [], $id, true);
-
         if ($checks->fails()) {
             return $this->returns($checks->errors()->first(), NULL, true);
         }
@@ -264,11 +269,242 @@ class TherapistController extends BaseController
             if (is_array($data['language_spoken'])) {
                 foreach ($data['language_spoken'] as $languageId => $languageSpoken) {
                     $languageData[] = [
-                        'type'  => $languageSpoken,
-                        'value' => TherapistLanguage::THEY_CAN_VALUE
+                        'type'          => $languageSpoken,
+                        'value'         => TherapistLanguage::THEY_CAN_VALUE,
+                        'language_id'   => $languageId,
+                        'therapist_id'  => $id
                     ];
                 }
             }
         }
+
+        $checks = $modelTherapistLanguage->validators($languageData);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        /* For document uploads. */
+        $documents    = array_keys($data);
+        $documentData = [];
+
+        foreach ($documents as $document) {
+            switch ($document) {
+                case 'document_id_passport_front':
+                    $key      = 'document_id_passport_front';
+                    $file     = $data[$key];
+                    $formats  = 'jpeg,png,jpg';
+                    $pathInfo = pathinfo($file->getClientOriginalName());
+
+                    if (!empty($pathInfo['extension'])) {
+                        $fileName = $pathInfo['basename'];
+
+                        $documentData[$inc] = [
+                            'type'          => $modelTherapistDocument::TYPE_IDENTITY_PROOF_FRONT,
+                            'file_name'     => $fileName,
+                            'therapist_id'  => $id,
+                            $key            => $file
+                        ];
+
+                        $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                        if ($checks->fails()) {
+                            return $this->returns($checks->errors()->first(), NULL, true);
+                        }
+
+                        $inc++;
+                    }
+                case 'document_id_passport_back':
+                    $key      = 'document_id_passport_back';
+                    $file     = $data[$key];
+                    $formats  = 'jpeg,png,jpg';
+                    $pathInfo = pathinfo($file->getClientOriginalName());
+
+                    if (!empty($pathInfo['extension'])) {
+                        $fileName = $pathInfo['basename'];
+
+                        $documentData[$inc] = [
+                            'type'          => $modelTherapistDocument::TYPE_IDENTITY_PROOF_BACK,
+                            'file_name'     => $fileName,
+                            'therapist_id'  => $id,
+                            $key            => $file
+                        ];
+
+                        $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                        if ($checks->fails()) {
+                            return $this->returns($checks->errors()->first(), NULL, true);
+                        }
+
+                        $inc++;
+                    }
+                case 'document_insurance':
+                    $key      = 'document_insurance';
+                    $file     = $data[$key];
+                    $formats  = 'jpeg,png,jpg,pdf';
+                    $pathInfo = pathinfo($file->getClientOriginalName());
+
+                    if (!empty($pathInfo['extension'])) {
+                        $fileName = $pathInfo['basename'];
+
+                        $documentData[$inc] = [
+                            'type'          => $modelTherapistDocument::TYPE_INSURANCE,
+                            'file_name'     => $fileName,
+                            'therapist_id'  => $id,
+                            $key            => $file
+                        ];
+
+                        $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                        if ($checks->fails()) {
+                            return $this->returns($checks->errors()->first(), NULL, true);
+                        }
+
+                        $inc++;
+                    }
+                case 'document_freelancer_financial_document':
+                    $key      = 'document_freelancer_financial_document';
+                    $file     = $data[$key];
+                    $formats  = 'jpeg,png,jpg,pdf';
+                    $pathInfo = pathinfo($file->getClientOriginalName());
+
+                    if (!empty($pathInfo['extension'])) {
+                        $fileName = $pathInfo['basename'];
+
+                        $documentData[$inc] = [
+                            'type'          => $modelTherapistDocument::TYPE_FREELANCER_FINANCIAL_DOCUMENT,
+                            'file_name'     => $fileName,
+                            'therapist_id'  => $id,
+                            $key            => $file
+                        ];
+
+                        $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                        if ($checks->fails()) {
+                            return $this->returns($checks->errors()->first(), NULL, true);
+                        }
+
+                        $inc++;
+                    }
+                case 'document_certificates':
+                    $key      = 'document_certificates';
+                    $files    = $data[$key];
+                    $formats  = 'jpeg,png,jpg,pdf';
+
+                    foreach ($files as $file) {
+                        $pathInfo = pathinfo($file->getClientOriginalName());
+
+                        if (!empty($pathInfo['extension'])) {
+                            $fileName = $pathInfo['basename'];
+
+                            $documentData[$inc] = [
+                                'type'          => $modelTherapistDocument::TYPE_CERTIFICATES,
+                                'file_name'     => $fileName,
+                                'therapist_id'  => $id,
+                                $key            => $file
+                            ];
+
+                            $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                            if ($checks->fails()) {
+                                return $this->returns($checks->errors()->first(), NULL, true);
+                            }
+
+                            $inc++;
+                        }
+                    }
+                case 'document_cv':
+                    $key      = 'document_cv';
+                    $file     = $data[$key];
+                    $formats  = 'pdf,doc,docx';
+                    $pathInfo = pathinfo($file->getClientOriginalName());
+
+                    if (!empty($pathInfo['extension'])) {
+                        $fileName = $pathInfo['basename'];
+
+                        $documentData[$inc] = [
+                            'type'          => $modelTherapistDocument::TYPE_CV,
+                            'file_name'     => $fileName,
+                            'therapist_id'  => $id,
+                            $key            => $file
+                        ];
+
+                        $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                        if ($checks->fails()) {
+                            return $this->returns($checks->errors()->first(), NULL, true);
+                        }
+
+                        $inc++;
+                    }
+                case 'document_reference_letter':
+                    $key      = 'document_reference_letter';
+                    $file     = $data[$key];
+                    $formats  = 'jpeg,png,jpg,pdf,doc,docx';
+                    $pathInfo = pathinfo($file->getClientOriginalName());
+
+                    if (!empty($pathInfo['extension'])) {
+                        $fileName = $pathInfo['basename'];
+
+                        $documentData[$inc] = [
+                            'type'          => $modelTherapistDocument::TYPE_REFERENCE_LATTER,
+                            'file_name'     => $fileName,
+                            'therapist_id'  => $id,
+                            $key            => $file
+                        ];
+
+                        $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                        if ($checks->fails()) {
+                            return $this->returns($checks->errors()->first(), NULL, true);
+                        }
+
+                        $inc++;
+                    }
+                case 'document_others':
+                    $key      = 'document_others';
+                    $file     = $data[$key];
+                    $formats  = 'jpeg,png,jpg,pdf,doc,docx';
+                    $pathInfo = pathinfo($file->getClientOriginalName());
+
+                    if (!empty($pathInfo['extension'])) {
+                        $fileName = $pathInfo['basename'];
+
+                        $documentData[$inc] = [
+                            'type'          => $modelTherapistDocument::TYPE_OTHERS,
+                            'file_name'     => $fileName,
+                            'therapist_id'  => $id,
+                            $key            => $file
+                        ];
+
+                        $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                        if ($checks->fails()) {
+                            return $this->returns($checks->errors()->first(), NULL, true);
+                        }
+
+                        $inc++;
+                    }
+                case 'document_personal_experience':
+                    $key      = 'document_personal_experience';
+                    $files    = $data[$key];
+                    $formats  = 'jpeg,png,jpg,pdf';
+
+                    foreach ($files as $file) {
+                        $pathInfo = pathinfo($file->getClientOriginalName());
+
+                        if (!empty($pathInfo['extension'])) {
+                            $fileName = $pathInfo['basename'];
+
+                            $documentData[$inc] = [
+                                'type'          => $modelTherapistDocument::PERSONAL_EXPERIENCE,
+                                'file_name'     => $fileName,
+                                'therapist_id'  => $id,
+                                $key            => $file
+                            ];
+
+                            $checks = $modelTherapistDocument->validator($documentData[$inc], $key, $formats);
+                            if ($checks->fails()) {
+                                return $this->returns($checks->errors()->first(), NULL, true);
+                            }
+
+                            $inc++;
+                        }
+                    }
+            }
+        }
+
+        dd($documentData);
     }
 }
