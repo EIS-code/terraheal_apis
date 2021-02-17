@@ -173,7 +173,18 @@ class BookingInfo extends BaseModel
         $query->where('therapist_id', $therapistId);
 
         if (!empty($massageDate)) {
-            $query->whereDate('massage_date', $massageDate);
+            switch ($type) {
+                case 'future':
+                    $query->whereDate('massage_date', '>=', $massageDate);
+                    break;
+                case 'past':
+                    $query->whereDate('massage_date', '<=', $massageDate);
+                    break;
+                case 'today':
+                default:
+                    $query->whereDate('massage_date', '=', $massageDate);
+                    break;
+            }
         }
 
         return $query;
