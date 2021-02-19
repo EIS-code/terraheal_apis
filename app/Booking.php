@@ -182,7 +182,7 @@ class Booking extends BaseModel
         }
 
         if (!empty($bookingDate)) {
-            $bookingDate = date('Y-m-d', ($bookingDate / 1000));
+            $bookingDate = Carbon::createFromTimestampMs($bookingDate)->format('Y-m-d');
 
             $data->whereDate($bookingInfoModel::getTableName() . '.massage_date', $bookingDate);
         }
