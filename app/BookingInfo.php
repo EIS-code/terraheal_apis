@@ -155,7 +155,7 @@ class BookingInfo extends BaseModel
         $therapistId    = (int)$request->get('id', false);
         $type           = (strpos($request->path(), 'today') !== false) ? 'today' : ((strpos($request->path(), 'future') !== false) ? 'future' : 'past');
         $massageDate    = $type == 'today' ? NULL : $request->get('massage_date');
-        $massageDate    = (!empty($massageDate)) ? date('Y-m-d', ($massageDate / 1000)) : NULL;
+        $massageDate    = (!empty($massageDate)) ? Carbon::createFromTimestampMs($massageDate)->format('Y-m-d') : NULL;
 
         switch ($type) {
             case 'future':

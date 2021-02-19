@@ -3,6 +3,8 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use App\Massage;
+use App\Therapist;
 
 class TherapistSelectedMassage extends BaseModel
 {
@@ -14,8 +16,16 @@ class TherapistSelectedMassage extends BaseModel
     public function validator(array $data)
     {
         return Validator::make($data, [
-            'massage_id'   => ['required', 'integer'],
-            'therapist_id' => ['required', 'integer']
+            'massage_id'   => ['required', 'integer', 'exists:' . Massage::getTableName() . ',id'],
+            'therapist_id' => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
+        ]);
+    }
+
+    public function validators(array $data)
+    {
+        return Validator::make($data, [
+            '*.massage_id'   => ['required', 'integer', 'exists:' . Massage::getTableName() . ',id'],
+            '*.therapist_id' => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
         ]);
     }
 }

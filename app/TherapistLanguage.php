@@ -9,6 +9,7 @@ class TherapistLanguage extends Model
 {
     protected $fillable = [
         'type',
+        'value',
         'language_id',
         'therapist_id'
     ];
@@ -39,10 +40,10 @@ class TherapistLanguage extends Model
     public function validators(array $data)
     {
         return Validator::make($data, [
-            'type.*'         => ['required', 'in:1,2,3'],
-            'value.*'        => ['required', 'in:0,1'],
-            'language_id.*'  => ['required', 'integer'],
-            'therapist_id.*' => ['required', 'integer']
+            '*.type'         => ['required', 'in:1,2,3'],
+            '*.value'        => ['required', 'in:0,1'],
+            '*.language_id'  => ['required', 'integer'],
+            '*.therapist_id' => ['required', 'integer']
         ]);
     }
 }

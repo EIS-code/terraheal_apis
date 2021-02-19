@@ -20,6 +20,7 @@ class AddFieldsToTherapistsTable extends Migration
             $table->string('social_security_number')->nullable()->after('nif');
             $table->string('mobile_number')->nullable()->after('tel_number');
             $table->string('emergence_contact_number')->nullable()->after('mobile_number');
+            $table->text('health_conditions_allergies')->nullable()->after('emergence_contact_number');
             $table->bigInteger('city_id')->unsigned();
             $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade')->after('shop_id');
             $table->bigInteger('country_id')->unsigned();
@@ -41,6 +42,7 @@ class AddFieldsToTherapistsTable extends Migration
             $table->dropColumn('social_security_number');
             $table->dropColumn('mobile_number');
             $table->dropColumn('emergence_contact_number');
+            $table->dropColumn('health_conditions_allergies');
             $table->dropColumn('city_id');
             $table->dropColumn('country_id');
         });

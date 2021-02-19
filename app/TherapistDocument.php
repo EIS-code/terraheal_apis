@@ -15,7 +15,7 @@ class TherapistDocument extends Model
 
     public $directory = 'therapist/document';
 
-    const TYPE_ADDRESS_PROOF                    = '1';
+    // const TYPE_ADDRESS_PROOF                    = '1';
     const TYPE_IDENTITY_PROOF_FRONT             = '2';
     const TYPE_IDENTITY_PROOF_BACK              = '3';
     const TYPE_INSURANCE                        = '4';
@@ -23,11 +23,11 @@ class TherapistDocument extends Model
     const TYPE_CERTIFICATES                     = '6';
     const TYPE_CV                               = '7';
     const TYPE_REFERENCE_LATTER                 = '8';
-    const PERSONAL_EXPERIENCE                   = '9';
+    const PERSONAL_EXPERIENCES                  = '9';
     const TYPE_OTHERS                           = '10';
 
     public $documentTypes = [
-        self::TYPE_ADDRESS_PROOF                    => 'Address Proof',
+        // self::TYPE_ADDRESS_PROOF                    => 'Address Proof',
         self::TYPE_IDENTITY_PROOF_FRONT             => 'Identity Proof Front',
         self::TYPE_IDENTITY_PROOF_BACK              => 'Identity Proof back',
         self::TYPE_INSURANCE                        => 'Insurance',
@@ -35,11 +35,11 @@ class TherapistDocument extends Model
         self::TYPE_CERTIFICATES                     => 'Certificates',
         self::TYPE_CV                               => 'CV',
         self::TYPE_REFERENCE_LATTER                 => 'Reference Latter',
-        self::PERSONAL_EXPERIENCE                   => 'Personal Experience',
+        self::PERSONAL_EXPERIENCES                  => 'Personal Experience',
         self::TYPE_OTHERS                           => 'Others'
     ];
 
-    public function validator(array $data, $file, $mimes = 'jpeg,png,jpg,doc,docx,pdf')
+    public static function validator(array $data, $file, $mimes = 'jpeg,png,jpg,doc,docx,pdf')
     {
         return Validator::make($data, [
             'type'         => ['required', 'in:1,2,3,4,5,6,7,8,9,10'],
