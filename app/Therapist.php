@@ -15,10 +15,13 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
     protected $fillable = [
         'name',
+        'surname',
         'dob',
         'gender',
         'email',
         'tel_number',
+        'mobile_number',
+        'emergence_contact_number',
         'hobbies',
         'short_description',
         'is_freelancer',
@@ -35,7 +38,14 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         'profile_photo',
         'password',
         'is_email_verified',
-        'is_mobile_verified'
+        'is_mobile_verified',
+        'is_document_verified',
+        'account_number',
+        'nif',
+        'social_security_number',
+        'health_conditions_allergies',
+        'city_id',
+        'country_id',
     ];
 
     protected $hidden = ['is_deleted', 'created_at', 'updated_at', 'password'];
@@ -94,6 +104,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             'account_number'            => array_merge(['string', 'max:255'], !empty($requiredFileds['account_number']) ? $requiredFileds['account_number'] : ['nullable']),
             'nif'                       => array_merge(['string', 'max:255'], !empty($requiredFileds['nif']) ? $requiredFileds['nif'] : ['nullable']),
             'social_security_number'    => array_merge(['string', 'max:255'], !empty($requiredFileds['social_security_number']) ? $requiredFileds['social_security_number'] : ['nullable']),
+            'health_conditions_allergies' => array_merge(['string'], !empty($requiredFileds['health_conditions_allergies']) ? $requiredFileds['health_conditions_allergies'] : ['nullable']),
             'mobile_number'             => array_merge(['string', 'max:255'], !empty($requiredFileds['mobile_number']) ? $requiredFileds['mobile_number'] : ['nullable']),
             'emergence_contact_number'  => array_merge(['string', 'max:255'], !empty($requiredFileds['emergence_contact_number']) ? $requiredFileds['emergence_contact_number'] : ['nullable']),
         ], $extraFields), [
@@ -134,7 +145,14 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $value = $default;
         }
 
-        return cleanUrl(self::$storage . $this->profilePhotoPath . 'therapist.png');
+        // return cleanUrl(self::$storage . $this->profilePhotoPath . 'therapist.png');
+
+        $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
+        if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value)) {
+            return Storage::disk($this->fileSystem)->url($profilePhotoPath . $value);
+        }
+
+        return $default;
     }
 
     /**
@@ -150,5 +168,12 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $classPasswordNotification::$createUrlCallback = 'toMailContentsUrl';
 
         $this->notify($classPasswordNotification);
+    }
+
+    public static function isDocumentVerified(int $id, string $isVerified = '0')
+    {
+        $isVerified = (!in_array($isVerified, ['0', '1'])) ? '0' : $isVerified;
+
+        return self::where('id', $id)->update(['is_document_verified' => $isVerified]);
     }
 }
