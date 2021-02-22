@@ -63,4 +63,10 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             return $controller->updateProfile(Therapist::IS_NOT_FREELANCER, $request);
         });
     });
+
+    $router->group(['prefix' => 'my'], function () use($router) {
+        $router->group(['prefix' => 'working'], function () use($router) {
+            $router->post('/schedule', 'TherapistController@myWorkingSchedules');
+        });
+    });
 });
