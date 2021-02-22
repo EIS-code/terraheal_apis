@@ -21,6 +21,8 @@ use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 
 class TherapistController extends BaseController
 {
@@ -39,7 +41,8 @@ class TherapistController extends BaseController
         'booking.future.found.successfully' => "Future bookings found successfully !",
         'booking.past.found.successfully' => "Past bookings found successfully !",
         'calender.get.successfully' => "Calender get successfully !",
-        'profile.update.successfully' => "Therapist profile updated successfully !"
+        'profile.update.successfully' => "Therapist profile updated successfully !",
+        'my.working.schedules.successfully' => "Therapist working schedules get successfully !"
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -511,5 +514,98 @@ class TherapistController extends BaseController
         }
 
         return $isUploadedAll;
+    }
+
+    public function myWorkingSchedules(Request $request)
+    {
+        $model              = new Therapist();
+        $modelBookingInfo   = new BookingInfo();
+        $data               = $request->all();
+        $id                 = !empty($data['id']) ? (int)$data['id'] : false;
+
+        if (empty($id)) {
+            return $this->returns('profile.update.error', NULL, true);
+        }
+
+        $find = $model::find($id);
+
+        if (empty($find)) {
+            return $this->returns('profile.update.error', NULL, true);
+        }
+
+        $return       = [];
+        $currentDate  = !empty($data['date']) ? $data['date'] : NULL;
+        // date('m')
+        $currentMonth = !empty($currentDate) ? Carbon::createFromTimestampMs($currentDate)->firstOfMonth() : new Carbon('first day of this month');
+        $currentMonth = !empty($currentMonth) ? $currentMonth : new Carbon('first day of this month');
+        $carbonClone  = clone $currentMonth;
+
+        $firstDayOfCurrentMonth = $currentMonth->firstOfMonth();
+        $lastDayOfCurrentMonth  = $carbonClone->lastOfMonth();
+        $totalDaysInMonth       = CarbonPeriod::create($firstDayOfCurrentMonth, $lastDayOfCurrentMonth);
+
+        if (!empty($totalDaysInMonth)) {
+            // Get data between two dates (whole month).
+            $getData = $modelBookingInfo::whereBetween('massage_date', [$firstDayOfCurrentMonth, $lastDayOfCurrentMonth])->get();
+
+            foreach ($totalDaysInMonth as $date) {
+                if (!empty($getData) && !$getData->isEmpty()) {
+                    $date   = strtotime($date->format('Y-m-d')) * 1000;
+                    $isDone = [];
+
+                    foreach ($getData as $bookingInfo) {
+                        if ($bookingInfo->massage_date === $date) {
+                            $isDone[] = $bookingInfo;
+                        }
+                    }
+
+                    if (!empty($isDone)) {
+                        foreach ($isDone as $done) {
+                            if ($done->is_done == $modelBookingInfo::IS_NOT_DONE) {
+                                $return[$date] = [
+                                    'booking_id'        => $done->booking_id,
+                                    'booking_info_id'   => $done->id,
+                                    'massage_date'      => $done->massage_date,
+                                    'status'            => false,
+                                    'date'              => $date
+                                ];
+
+                                break;
+                            } else {
+                                $return[$date] = [
+                                    'booking_id'        => $done->booking_id,
+                                    'booking_info_id'   => $done->id,
+                                    'massage_date'      => $done->massage_date,
+                                    'status'            => true,
+                                    'date'              => $date
+                                ];
+                            }
+                        }
+                    } else {
+                        $return[$date] = [
+                            'booking_id'        => NULL,
+                            'booking_info_id'   => NULL,
+                            'massage_date'      => NULL,
+                            'status'            => false,
+                            'date'              => $date
+                        ];
+                    }
+                } else {
+                    foreach ($totalDaysInMonth as $date) {
+                        $date = strtotime($date->format('Y-m-d')) * 1000;
+
+                        $return[$date] = [
+                            'booking_id'        => NULL,
+                            'booking_info_id'   => NULL,
+                            'massage_date'      => NULL,
+                            'status'            => true,
+                            'date'              => $date
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $this->returns('my.working.schedules.successfully', collect($return));
     }
 }
