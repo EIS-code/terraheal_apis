@@ -10,6 +10,7 @@ use App\BookingInfo;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use DB;
+use Carbon\Carbon;
 
 class Booking extends BaseModel
 {
