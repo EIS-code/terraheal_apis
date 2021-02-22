@@ -51,7 +51,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     protected $hidden = ['is_deleted', 'created_at', 'updated_at', 'password'];
 
     public $fileSystem = 'public';
-    public $profilePhotoPath = 'therapist\profile\\';
+    public $profilePhotoPath = 'therapists\profile\\';
 
     const GENDER_MALE   = 'm';
     const GENDER_FEMALE = 'f';
@@ -136,9 +136,19 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         return $this->hasMany('App\BookingInfo', 'therapist_id', 'id');
     }
 
+    public function documents()
+    {
+        return $this->hasMany('App\TherapistDocument', 'therapist_id', 'id');
+    }
+
+    public function languageSpokens()
+    {
+        return $this->hasMany('App\TherapistLanguage', 'therapist_id', 'id');
+    }
+
     public function getProfilePhotoAttribute($value)
     {
-        $default = 'images/therapist.png';
+        $default = 'images/therapists/therapist.png';
 
         // For set default image.
         if (empty($value)) {

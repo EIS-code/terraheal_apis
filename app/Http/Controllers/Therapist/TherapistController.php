@@ -42,7 +42,8 @@ class TherapistController extends BaseController
         'booking.past.found.successfully' => "Past bookings found successfully !",
         'calender.get.successfully' => "Calender get successfully !",
         'profile.update.successfully' => "Therapist profile updated successfully !",
-        'my.working.schedules.successfully' => "Therapist working schedules get successfully !"
+        'my.working.schedules.successfully' => "Therapist working schedules get successfully !",
+        'therapist.information.successfully' => "Therapist informations get successfully !"
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -229,7 +230,12 @@ class TherapistController extends BaseController
         $id     = !empty($data['id']) ? (int)$data['id'] : false;
         $inc    = 0;
 
-        $data['dob'] = !empty($data['dob']) ? date('Y-m-d', ($data['dob'] / 1000)) : $data['dob'];
+        if (!empty($data['dob'])) {
+            $data['dob'] = date('Y-m-d', ($data['dob'] / 1000));
+        } else {
+            unset($data['dob']);
+        }
+
         $data['is_freelancer'] = $isFreelancer;
 
         if (empty($id)) {
@@ -607,5 +613,24 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('my.working.schedules.successfully', collect($return));
+    }
+
+    public function getProfile(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
+    {
+        $model  = new Therapist();
+        $data   = $request->all();
+        $id     = !empty($data['id']) ? (int)$data['id'] : false;
+
+        if (empty($id)) {
+            return $this->returns('profile.update.error', NULL, true);
+        }
+
+        $data = $model::find($id)->with(['documents', 'languageSpokens'])->get();
+
+        if (!empty($data)) {
+
+        }
+
+        return $this->returns('therapist.information.successfully', $data);
     }
 }
