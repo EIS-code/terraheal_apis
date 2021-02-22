@@ -197,7 +197,7 @@ class TherapistController extends BaseController
     public function returns($message = NULL, $with = NULL, $isError = false)
     {
         if ($isError && !empty($message)) {
-            $message = __($message);
+            $message = !empty($this->errorMsg[$message]) ? __($this->errorMsg[$message]) : __($message);
         } else {
             $message = !empty($this->successMsg[$message]) ? __($this->successMsg[$message]) : __($this->returnNullMsg);
         }
@@ -230,6 +230,10 @@ class TherapistController extends BaseController
         $data['is_freelancer'] = $isFreelancer;
 
         if (empty($id)) {
+            return $this->returns('profile.update.error', NULL, true);
+        }
+
+        if (!$model::find($id)->where('is_freelancer', (string)$isFreelancer)->exists()) {
             return $this->returns('profile.update.error', NULL, true);
         }
 
