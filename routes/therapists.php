@@ -36,6 +36,12 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         });
 
         $router->group(['prefix' => 'profile'], function () use($router) {
+            $router->get('/get', function (Request $request) use($router) {
+                $controller = new \App\Http\Controllers\Therapist\TherapistController();
+
+                return $controller->getProfile(Therapist::IS_FREELANCER, $request);
+            });
+
             $router->post('/update', function (Request $request) use($router) {
                 $controller = new \App\Http\Controllers\Therapist\TherapistController();
 
@@ -57,6 +63,12 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     });
 
     $router->group(['prefix' => 'profile'], function () use($router) {
+        $router->get('/get', function (Request $request) {
+            $controller = new \App\Http\Controllers\Therapist\TherapistController();
+
+            return $controller->getProfile(Therapist::IS_NOT_FREELANCER, $request);
+        });
+
         $router->post('/update', function (Request $request) {
             $controller = new \App\Http\Controllers\Therapist\TherapistController();
 
