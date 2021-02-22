@@ -2,10 +2,10 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class TherapistDocument extends Model
+class TherapistDocument extends BaseModel
 {
     protected $fillable = [
         'type',
@@ -13,7 +13,8 @@ class TherapistDocument extends Model
         'therapist_id'
     ];
 
-    public $directory = 'therapist/document';
+    public $fileSystem = 'public';
+    public $directory  = 'therapists\document\\';
 
     // const TYPE_ADDRESS_PROOF                    = '1';
     const TYPE_IDENTITY_PROOF_FRONT             = '2';
@@ -67,5 +68,22 @@ class TherapistDocument extends Model
         ], [
             $file => 'Please select proper file. The file must be a file of type: ' . $mimes . '.'
         ]);
+    }
+
+    public function getFileNameAttribute($value)
+    {
+        $default = 'document.png';
+
+        // For set default image.
+        if (empty($value)) {
+            $value = $default;
+        }
+
+        $directory = (str_ireplace("\\", "/", $this->directory));
+        if (Storage::disk($this->fileSystem)->exists($directory . $value)) {
+            return Storage::disk($this->fileSystem)->url($directory . $value);
+        }
+
+        return $default;
     }
 }
