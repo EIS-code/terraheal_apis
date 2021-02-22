@@ -229,7 +229,12 @@ class TherapistController extends BaseController
         $id     = !empty($data['id']) ? (int)$data['id'] : false;
         $inc    = 0;
 
-        $data['dob'] = !empty($data['dob']) ? date('Y-m-d', ($data['dob'] / 1000)) : $data['dob'];
+        if (!empty($data['dob'])) {
+            $data['dob'] = date('Y-m-d', ($data['dob'] / 1000));
+        } else {
+            unset($data['dob']);
+        }
+
         $data['is_freelancer'] = $isFreelancer;
 
         if (empty($id)) {
