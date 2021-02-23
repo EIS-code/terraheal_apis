@@ -39,7 +39,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             $router->get('/get', function (Request $request) use($router) {
                 $controller = new \App\Http\Controllers\Therapist\TherapistController();
 
-                return $controller->getProfile(Therapist::IS_FREELANCER, $request);
+                return $controller->getGlobalResponse(Therapist::IS_FREELANCER, $request);
             });
 
             $router->post('/update', function (Request $request) use($router) {
@@ -52,11 +52,11 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
     $router->group(['prefix' => 'calender'], function () use($router) {
         $router->post('/get', 'TherapistController@getCalender');
-        $router->post('/booking/details', 'TherapistController@getGlobalResponse');
+        $router->post('/booking/details', 'TherapistController@getBookingDetails');
     });
 
     $router->group(['prefix' => 'booking'], function () use($router) {
-        $router->post('/', 'TherapistController@getGlobalResponse');
+        $router->post('/', 'TherapistController@getBookingDetails');
         $router->post('/list/today', 'TherapistController@getTodayBooking');
         $router->post('/list/future', 'TherapistController@getFutureBooking');
         $router->post('/list/past', 'TherapistController@getPastBooking');
@@ -66,7 +66,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->get('/get', function (Request $request) {
             $controller = new \App\Http\Controllers\Therapist\TherapistController();
 
-            return $controller->getProfile(Therapist::IS_NOT_FREELANCER, $request);
+            return $controller->getGlobalResponse(Therapist::IS_NOT_FREELANCER, $request);
         });
 
         $router->post('/update', function (Request $request) {
