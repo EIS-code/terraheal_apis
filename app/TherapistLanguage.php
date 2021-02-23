@@ -2,10 +2,9 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 
-class TherapistLanguage extends Model
+class TherapistLanguage extends BaseModel
 {
     protected $fillable = [
         'type',
