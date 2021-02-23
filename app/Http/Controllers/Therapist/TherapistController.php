@@ -17,6 +17,9 @@ use App\MassagePreferenceOption;
 use App\TherapistLanguage;
 use App\TherapistDocument;
 use App\TherapistSelectedMassage;
+use App\Language;
+use App\Country;
+use App\City;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -617,19 +620,41 @@ class TherapistController extends BaseController
 
     public function getProfile(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
     {
-        $model  = new Therapist();
-        $data   = $request->all();
-        $id     = !empty($data['id']) ? (int)$data['id'] : false;
+        $model                  = new Therapist();
+        $modelTherapistLanguage = new TherapistLanguage();
+        $modelLanguage          = new Language();
+        $modelCountry           = new Country();
+        $modelCity              = new City();
+        $data                   = $request->all();
+        $id                     = !empty($data['id']) ? (int)$data['id'] : false;
 
         if (empty($id)) {
             return $this->returns('profile.update.error', NULL, true);
         }
 
-        $data = $model::find($id)->with(['documents', 'languageSpokens'])->get();
+        // $data = $model::find($id)->with(['documents', 'languageSpokens'])->get();
+        $model->setMysqlStrictFalse();
+
+        $data = $model::with(['documents'])
+                      ->leftJoin($modelTherapistLanguage::getTableName(), $model::getTableName() . '.id', '=', $modelTherapistLanguage::getTableName() . '.therapist_id')
+                      ->leftJoin($modelLanguage::getTableName(), $modelTherapistLanguage::getTableName() . '.language_id', '=', $modelLanguage::getTableName() . '.id')
+                      ->leftJoin($modelCountry::getTableName(), $model::getTableName() . '.country_id', '=', $modelCountry::getTableName() . '.id')
+                      ->leftJoin($modelCity::getTableName(), $model::getTableName() . '.city_id', '=', $modelCity::getTableName() . '.id')
+                      ->where($model::getTableName() . '.id', $id)
+                      ->groupBy($model::getTableName() . '.id')
+                      ->get();
 
         if (!empty($data)) {
+            $data->map(function($record) {
+                if (!empty($record->languageSpokens) && !$record->languageSpokens->isEmpty()) {
+                    foreach ($record->languageSpokens as &$languageSpoken) {
 
+                    }
+                }
+            });
         }
+
+        $model->setMysqlStrictTrue();
 
         return $this->returns('therapist.information.successfully', $data);
     }
