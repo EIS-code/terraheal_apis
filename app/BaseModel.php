@@ -93,4 +93,16 @@ class BaseModel extends Model
 
         return strtotime($value) * 1000;
     }
+
+    public function setMysqlStrictFalse(): Void
+    {
+        config()->set('database.connections.mysql.strict', false);
+        \DB::reconnect();
+    }
+
+    public function setMysqlStrictTrue(): Void
+    {
+        config()->set('database.connections.mysql.strict', true);
+        \DB::reconnect();
+    }
 }
