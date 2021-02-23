@@ -8,6 +8,7 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 
 class Therapist extends BaseModel implements CanResetPasswordContract
 {
@@ -185,5 +186,36 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $isVerified = (!in_array($isVerified, ['0', '1'])) ? '0' : $isVerified;
 
         return self::where('id', $id)->update(['is_document_verified' => $isVerified]);
+    }
+
+    public static function getGlobalQuery(int $isFreelancer = self::IS_NOT_FREELANCER, Request $request)
+    {
+        $model                  = new Self();
+        $modelTherapistLanguage = new TherapistLanguage();
+        $modelLanguage          = new Language();
+        $modelCountry           = new Country();
+        $modelCity              = new City();
+        $data                   = $request->all();
+        $id                     = !empty($data['id']) ? (int)$data['id'] : false;
+
+        if (empty($id)) {
+            return collect([]);
+        }
+
+        $model->setMysqlStrictFalse();
+
+        $data = $model::selectRaw($model::getTableName() . '.*, CONCAT(' . $modelLanguage::getTableName() . '.name, " ", CASE WHEN ' . $modelTherapistLanguage::getTableName() . '.type = "1" THEN "- Basic" WHEN ' . $modelTherapistLanguage::getTableName() . '.type = "2" THEN "- Good" WHEN ' . $modelTherapistLanguage::getTableName() . '.type = "3" THEN "- Fluent" ELSE NULL END) AS language_spoken, ' . $modelCountry::getTableName() . '.name AS country_name, ' . $modelCity::getTableName() . '.name AS city_name')
+                      ->with(['documents', 'selectedMassages'])
+                      ->leftJoin($modelTherapistLanguage::getTableName(), $model::getTableName() . '.id', '=', $modelTherapistLanguage::getTableName() . '.therapist_id')
+                      ->leftJoin($modelLanguage::getTableName(), $modelTherapistLanguage::getTableName() . '.language_id', '=', $modelLanguage::getTableName() . '.id')
+                      ->leftJoin($modelCountry::getTableName(), $model::getTableName() . '.country_id', '=', $modelCountry::getTableName() . '.id')
+                      ->leftJoin($modelCity::getTableName(), $model::getTableName() . '.city_id', '=', $modelCity::getTableName() . '.id')
+                      ->where($model::getTableName() . '.id', $id)
+                      ->groupBy($model::getTableName() . '.id')
+                      ->get();
+
+        $model->setMysqlStrictTrue();
+
+        return $data;
     }
 }
