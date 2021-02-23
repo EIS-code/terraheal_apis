@@ -77,7 +77,7 @@ class TherapistController extends BaseController
         return $this->returnNull();
     }
 
-    public function getGlobalResponse(Request $request)
+    public function getBookingDetails(Request $request)
     {
         // $data = Therapist::with('selectedMassages', 'selectedTherapies')->where('id', $id)->first();
 
@@ -446,9 +446,7 @@ class TherapistController extends BaseController
             }
         }
 
-        $find = $model::where('id', $id)->first();
-
-        return $this->returns('profile.update.successfully', $find);
+        return $this->returns('profile.update.successfully', $this->getGlobalResponse($isFreelancer, $request, false));
     }
 
     public function getDocumentFromRequest(Request $request, string $key, string $formats = 'jpeg,png,jpg', int &$inc, string $type) : Array
@@ -618,44 +616,10 @@ class TherapistController extends BaseController
         return $this->returns('my.working.schedules.successfully', collect($return));
     }
 
-    public function getProfile(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
+    public function getGlobalResponse(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request, $returnResponse = true)
     {
-        $model                  = new Therapist();
-        $modelTherapistLanguage = new TherapistLanguage();
-        $modelLanguage          = new Language();
-        $modelCountry           = new Country();
-        $modelCity              = new City();
-        $data                   = $request->all();
-        $id                     = !empty($data['id']) ? (int)$data['id'] : false;
+        $data = Therapist::getGlobalQuery($isFreelancer, $request);
 
-        if (empty($id)) {
-            return $this->returns('profile.update.error', NULL, true);
-        }
-
-        // $data = $model::find($id)->with(['documents', 'languageSpokens'])->get();
-        $model->setMysqlStrictFalse();
-
-        $data = $model::with(['documents'])
-                      ->leftJoin($modelTherapistLanguage::getTableName(), $model::getTableName() . '.id', '=', $modelTherapistLanguage::getTableName() . '.therapist_id')
-                      ->leftJoin($modelLanguage::getTableName(), $modelTherapistLanguage::getTableName() . '.language_id', '=', $modelLanguage::getTableName() . '.id')
-                      ->leftJoin($modelCountry::getTableName(), $model::getTableName() . '.country_id', '=', $modelCountry::getTableName() . '.id')
-                      ->leftJoin($modelCity::getTableName(), $model::getTableName() . '.city_id', '=', $modelCity::getTableName() . '.id')
-                      ->where($model::getTableName() . '.id', $id)
-                      ->groupBy($model::getTableName() . '.id')
-                      ->get();
-
-        if (!empty($data)) {
-            $data->map(function($record) {
-                if (!empty($record->languageSpokens) && !$record->languageSpokens->isEmpty()) {
-                    foreach ($record->languageSpokens as &$languageSpoken) {
-
-                    }
-                }
-            });
-        }
-
-        $model->setMysqlStrictTrue();
-
-        return $this->returns('therapist.information.successfully', $data);
+        return $returnResponse ? $this->returns('therapist.information.successfully', $data) : $data;
     }
 }

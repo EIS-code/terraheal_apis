@@ -17,10 +17,10 @@ class TherapistLanguage extends BaseModel
     const TYPE_2 = '2';
     const TYPE_3 = '3';
 
-    public $types = [
-        'R' => self::TYPE_1,
-        'W' => self::TYPE_2,
-        'S' => self::TYPE_3
+    public static $types = [
+        self::TYPE_1 => "Basic",
+        self::TYPE_2 => "Good",
+        self::TYPE_3 => "Fluent"
     ];
 
     const DEFAULT_VALUE  = '0';
