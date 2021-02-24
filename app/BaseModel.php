@@ -17,9 +17,9 @@ class BaseModel extends Model
 
     public static $storage = NULL;
 
-    public function __construct()
+    public function __construct($attributes = [])
     {
-        parent::__construct();
+        parent::__construct($attributes);
 
         static::getStorage();
     }
