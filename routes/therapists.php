@@ -81,4 +81,10 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             $router->post('/schedule', 'TherapistController@myWorkingSchedules');
         });
     });
+
+    $router->group(['prefix' => 'rating'], function () use($router) {
+        $router->group(['prefix' => 'user'], function () use($router) {
+            $router->post('/save', 'TherapistController@rateUser');
+        });
+    });
 });
