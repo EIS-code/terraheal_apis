@@ -2,7 +2,6 @@
 
 namespace App;
 
-use Illuminate\Support\Facades\Validator;
 use App\User;
 use App\Shop;
 use App\SessionType;
@@ -11,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class Booking extends BaseModel
 {

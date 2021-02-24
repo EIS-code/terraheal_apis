@@ -3,7 +3,9 @@
 namespace App;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+// use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Auth\Authenticatable as AuthenticableTrait;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -14,9 +16,9 @@ use App\Shop;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
-class User extends Authenticatable
+class User extends TherapistUserRating implements Authenticatable
 {
-    use Notifiable;
+    use Notifiable, AuthenticableTrait;
 
     /**
      * The attributes that are mass assignable.
