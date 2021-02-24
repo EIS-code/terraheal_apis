@@ -87,4 +87,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             $router->post('/save', 'TherapistController@rateUser');
         });
     });
+
+    $router->post('/suggestion', 'TherapistController@suggestion');
+    $router->post('/complaint', 'TherapistController@complaint');
 });

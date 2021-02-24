@@ -21,6 +21,8 @@ use App\Language;
 use App\Country;
 use App\City;
 use App\TherapistUserRating;
+use App\TherapistComplaint;
+use App\TherapistSuggestion;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -48,7 +50,9 @@ class TherapistController extends BaseController
         'profile.update.successfully' => "Therapist profile updated successfully !",
         'my.working.schedules.successfully' => "Therapist working schedules get successfully !",
         'therapist.information.successfully' => "Therapist informations get successfully !",
-        'therapist.user.rating' => "User rating given successfully !"
+        'therapist.user.rating' => "User rating given successfully !",
+        'therapist.suggestion' => "Suggestion saved successfully !",
+        'therapist.complaint' => "Complaint registered successfully !"
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -655,5 +659,37 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('therapist.user.rating', $isCreate);
+    }
+
+    public function suggestion(Request $request)
+    {
+        $model                  = new TherapistSuggestion();
+        $data                   = $request->all();
+        $data['therapist_id']   = $request->get('id', false);
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::create($data);
+
+        return $this->returns('therapist.suggestion', $create);
+    }
+
+    public function complaint(Request $request)
+    {
+        $model                  = new TherapistComplaint();
+        $data                   = $request->all();
+        $data['therapist_id']   = $request->get('id', false);
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::create($data);
+
+        return $this->returns('therapist.complaint', $create);
     }
 }
