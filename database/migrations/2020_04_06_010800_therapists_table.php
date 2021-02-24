@@ -22,7 +22,7 @@ class TherapistsTable extends Migration
             $table->string('tel_number', 50)->nullable();
             $table->string('hobbies')->nullable();
             // $table->string('spoken_language_ids')->comment('Comma separated language ids for spoken.');
-            $table->string('short_description')->nullable();
+            $table->text('short_description')->nullable();
             // $table->string('profile_photo');
             $table->enum('is_freelancer', [0, 1])->comment('0: Nope, 1: Yes');
             $table->integer('paid_percentage')->default(0);
