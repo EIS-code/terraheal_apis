@@ -80,6 +80,10 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->group(['prefix' => 'working'], function () use($router) {
             $router->post('/schedule', 'TherapistController@myWorkingSchedules');
         });
+
+        $router->group(['prefix' => 'ratings'], function () use($router) {
+            $router->get('/', 'TherapistController@myRatings');
+        });
     });
 
     $router->group(['prefix' => 'rating'], function () use($router) {

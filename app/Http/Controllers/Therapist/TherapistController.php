@@ -23,6 +23,7 @@ use App\City;
 use App\TherapistUserRating;
 use App\TherapistComplaint;
 use App\TherapistSuggestion;
+use App\TherapistReview;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -37,7 +38,7 @@ class TherapistController extends BaseController
         'loginEmail' => "Please provide email properly.",
         'loginPass'  => "Please provide password properly.",
         'loginBoth'  => "Therapist email or password seems wrong.",
-        'profile.update.error' => "Therapist not found."
+        'notFound' => "Therapist not found."
     ];
 
     public $successMsg = [
@@ -52,7 +53,8 @@ class TherapistController extends BaseController
         'therapist.information.successfully' => "Therapist informations get successfully !",
         'therapist.user.rating' => "User rating given successfully !",
         'therapist.suggestion' => "Suggestion saved successfully !",
-        'therapist.complaint' => "Complaint registered successfully !"
+        'therapist.complaint' => "Complaint registered successfully !",
+        'therapist.ratings' => "Therapist ratings get successfully !"
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -248,11 +250,11 @@ class TherapistController extends BaseController
         $data['is_freelancer'] = $isFreelancer;
 
         if (empty($id)) {
-            return $this->returns('profile.update.error', NULL, true);
+            return $this->returns('notFound', NULL, true);
         }
 
         if (!$model::find($id)->where('is_freelancer', (string)$isFreelancer)->exists()) {
-            return $this->returns('profile.update.error', NULL, true);
+            return $this->returns('notFound', NULL, true);
         }
 
         $checks = $model->validator($data, [], [], $id, true);
@@ -537,13 +539,13 @@ class TherapistController extends BaseController
         $id                 = !empty($data['id']) ? (int)$data['id'] : false;
 
         if (empty($id)) {
-            return $this->returns('profile.update.error', NULL, true);
+            return $this->returns('notFound', NULL, true);
         }
 
         $find = $model::find($id);
 
         if (empty($find)) {
-            return $this->returns('profile.update.error', NULL, true);
+            return $this->returns('notFound', NULL, true);
         }
 
         $return       = [];
@@ -691,5 +693,19 @@ class TherapistController extends BaseController
         $create = $model::create($data);
 
         return $this->returns('therapist.complaint', $create);
+    }
+
+    public function myRatings(Request $request)
+    {
+        $model = new TherapistReview();
+        $id    = $request->get('id', false);
+
+        if (empty($id)) {
+            return $this->returns('notFound', NULL, true);
+        }
+
+        $data = $model::getAverageRatings($id);
+
+        return $this->returns('therapist.ratings', $data);
     }
 }
