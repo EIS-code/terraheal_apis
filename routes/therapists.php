@@ -60,6 +60,10 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->post('/list/today', 'TherapistController@getTodayBooking');
         $router->post('/list/future', 'TherapistController@getFutureBooking');
         $router->post('/list/past', 'TherapistController@getPastBooking');
+        $router->group(['prefix' => 'massage'], function () use($router) {
+            $router->post('start', 'TherapistController@startMassageTime');
+            $router->post('end', 'TherapistController@endMassageTime');
+        });
     });
 
     $router->group(['prefix' => 'profile'], function () use($router) {

@@ -24,6 +24,7 @@ use App\TherapistUserRating;
 use App\TherapistComplaint;
 use App\TherapistSuggestion;
 use App\TherapistReview;
+use App\BookingMassageStart;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -38,7 +39,10 @@ class TherapistController extends BaseController
         'loginEmail' => "Please provide email properly.",
         'loginPass'  => "Please provide password properly.",
         'loginBoth'  => "Therapist email or password seems wrong.",
-        'notFound' => "Therapist not found."
+        'notFound' => "Therapist not found.",
+        'notFoundBookingMassage' => "Booking massage not found.",
+        'notFoundEndTime' => "End time not found.",
+        'endTimeIsNotProper' => "End time always greater than start time."
     ];
 
     public $successMsg = [
@@ -54,7 +58,8 @@ class TherapistController extends BaseController
         'therapist.user.rating' => "User rating given successfully !",
         'therapist.suggestion' => "Suggestion saved successfully !",
         'therapist.complaint' => "Complaint registered successfully !",
-        'therapist.ratings' => "Therapist ratings get successfully !"
+        'therapist.ratings' => "Therapist ratings get successfully !",
+        'booking.start' => "Massage started successfully !"
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -707,5 +712,67 @@ class TherapistController extends BaseController
         $data = $model::getAverageRatings($id);
 
         return $this->returns('therapist.ratings', $data);
+    }
+
+    public function startMassageTime(Request $request)
+    {
+        $model              = new BookingMassageStart();
+        $data               = $request->all();
+        $bookingMassageId   = $request->get('booking_massage_id', false);
+
+        if (empty($bookingMassageId)) {
+            return $this->returns('notFoundBookingMassage', NULL, true);
+        }
+
+        $data['actual_total_time']  = BookingMassage::getMassageTime($bookingMassageId);
+
+        $data['start_time']         = !empty($data['start_time']) ? Carbon::createFromTimestampMs($data['start_time']) : false;
+        $startTime                  = clone $data['start_time'];
+        $data['end_time']           = !empty($startTime) ? $startTime->addMinutes($data['actual_total_time'])->format('H:i:s') : false;
+        $data['start_time']         = !empty($data['start_time']) ? $data['start_time']->format('H:i:s') : false;
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::updateOrCreate(['booking_massage_id' => $bookingMassageId], $data);
+
+        return $this->returns('booking.start', $create);
+    }
+
+    public function endMassageTime(Request $request)
+    {
+        $model              = new BookingMassageStart();
+        $data               = $request->all();
+        $bookingMassageId   = $request->get('booking_massage_id', false);
+
+        $currentTime        = Carbon::now();
+
+        $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
+
+        if (empty($data['end_time'])) {
+            return $this->returns('notFoundEndTime', NULL, true);
+        }
+
+        $find = $model::where('booking_massage_id', $bookingMassageId)->first();
+
+        if (empty($find)) {
+            return $this->returns('notFoundBookingMassage', NULL, true);
+        }
+
+        if ($find->start_time > $data['end_time']) {
+            return $this->returns('endTimeIsNotProper', NULL, true);
+        }
+
+        $data['taken_total_time'] = (new Carbon($find->start_time))->diffInMinutes($currentTime);
+
+        $find->end_time         = $data['end_time'];
+
+        $find->taken_total_time = $data['taken_total_time'];
+
+        $find->update();
+
+        return $this->returns('booking.start', $find);
     }
 }

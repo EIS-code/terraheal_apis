@@ -60,4 +60,16 @@ class BookingMassage extends BaseModel
     {
         return $this->hasOne('App\MassageTiming', 'id', 'massage_timing_id');
     }
+
+    public static function getMassageTime(int $id)
+    {
+        $data = self::find($id);
+        $time = NULL;
+
+        if (!empty($data)) {
+            $time = $data->massageTiming->time;
+        }
+
+        return $time;
+    }
 }
