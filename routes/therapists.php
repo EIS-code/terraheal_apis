@@ -60,6 +60,10 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->post('/list/today', 'TherapistController@getTodayBooking');
         $router->post('/list/future', 'TherapistController@getFutureBooking');
         $router->post('/list/past', 'TherapistController@getPastBooking');
+        $router->group(['prefix' => 'massage'], function () use($router) {
+            $router->post('start', 'TherapistController@startMassageTime');
+            $router->post('end', 'TherapistController@endMassageTime');
+        });
     });
 
     $router->group(['prefix' => 'profile'], function () use($router) {
@@ -80,5 +84,18 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->group(['prefix' => 'working'], function () use($router) {
             $router->post('/schedule', 'TherapistController@myWorkingSchedules');
         });
+
+        $router->group(['prefix' => 'ratings'], function () use($router) {
+            $router->get('/', 'TherapistController@myRatings');
+        });
     });
+
+    $router->group(['prefix' => 'rating'], function () use($router) {
+        $router->group(['prefix' => 'user'], function () use($router) {
+            $router->post('/save', 'TherapistController@rateUser');
+        });
+    });
+
+    $router->post('/suggestion', 'TherapistController@suggestion');
+    $router->post('/complaint', 'TherapistController@complaint');
 });

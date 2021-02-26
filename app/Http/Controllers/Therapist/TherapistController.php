@@ -20,6 +20,11 @@ use App\TherapistSelectedMassage;
 use App\Language;
 use App\Country;
 use App\City;
+use App\TherapistUserRating;
+use App\TherapistComplaint;
+use App\TherapistSuggestion;
+use App\TherapistReview;
+use App\BookingMassageStart;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -34,7 +39,10 @@ class TherapistController extends BaseController
         'loginEmail' => "Please provide email properly.",
         'loginPass'  => "Please provide password properly.",
         'loginBoth'  => "Therapist email or password seems wrong.",
-        'profile.update.error' => "Therapist not found."
+        'notFound' => "Therapist not found.",
+        'notFoundBookingMassage' => "Booking massage not found.",
+        'notFoundEndTime' => "End time not found.",
+        'endTimeIsNotProper' => "End time always greater than start time."
     ];
 
     public $successMsg = [
@@ -46,7 +54,12 @@ class TherapistController extends BaseController
         'calender.get.successfully' => "Calender get successfully !",
         'profile.update.successfully' => "Therapist profile updated successfully !",
         'my.working.schedules.successfully' => "Therapist working schedules get successfully !",
-        'therapist.information.successfully' => "Therapist informations get successfully !"
+        'therapist.information.successfully' => "Therapist informations get successfully !",
+        'therapist.user.rating' => "User rating given successfully !",
+        'therapist.suggestion' => "Suggestion saved successfully !",
+        'therapist.complaint' => "Complaint registered successfully !",
+        'therapist.ratings' => "Therapist ratings get successfully !",
+        'booking.start' => "Massage started successfully !"
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -242,11 +255,11 @@ class TherapistController extends BaseController
         $data['is_freelancer'] = $isFreelancer;
 
         if (empty($id)) {
-            return $this->returns('profile.update.error', NULL, true);
+            return $this->returns('notFound', NULL, true);
         }
 
         if (!$model::find($id)->where('is_freelancer', (string)$isFreelancer)->exists()) {
-            return $this->returns('profile.update.error', NULL, true);
+            return $this->returns('notFound', NULL, true);
         }
 
         $checks = $model->validator($data, [], [], $id, true);
@@ -531,13 +544,13 @@ class TherapistController extends BaseController
         $id                 = !empty($data['id']) ? (int)$data['id'] : false;
 
         if (empty($id)) {
-            return $this->returns('profile.update.error', NULL, true);
+            return $this->returns('notFound', NULL, true);
         }
 
         $find = $model::find($id);
 
         if (empty($find)) {
-            return $this->returns('profile.update.error', NULL, true);
+            return $this->returns('notFound', NULL, true);
         }
 
         $return       = [];
@@ -621,5 +634,145 @@ class TherapistController extends BaseController
         $data = Therapist::getGlobalQuery($isFreelancer, $request);
 
         return $returnResponse ? $this->returns('therapist.information.successfully', $data) : $data;
+    }
+
+    public function rateUser(Request $request)
+    {
+        $model      = new TherapistUserRating();
+        $data       = $request->all();
+        $id         = !empty($data['id']) ? $data['id'] : false;
+        $isCreate   = collect();
+
+        $data['therapist_id'] = $id;
+
+        $data['type']         = !empty($data['rating']) && is_array($data['rating']) ? array_keys($data['rating']) : [];
+
+        $checks = $model->validators($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        foreach ($data['type'] as $index => $type) {
+            if (!empty($data['rating'][$type])) {
+                $create[$index] = [
+                    'rating'        => $data['rating'][$type],
+                    'type'          => $type,
+                    'user_id'       => $data['user_id'],
+                    'therapist_id'  => $id
+                ];
+
+                $isCreate->push(collect($model::updateOrCreate($create[$index], $create[$index])));
+            }
+        }
+
+        return $this->returns('therapist.user.rating', $isCreate);
+    }
+
+    public function suggestion(Request $request)
+    {
+        $model                  = new TherapistSuggestion();
+        $data                   = $request->all();
+        $data['therapist_id']   = $request->get('id', false);
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::create($data);
+
+        return $this->returns('therapist.suggestion', $create);
+    }
+
+    public function complaint(Request $request)
+    {
+        $model                  = new TherapistComplaint();
+        $data                   = $request->all();
+        $data['therapist_id']   = $request->get('id', false);
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::create($data);
+
+        return $this->returns('therapist.complaint', $create);
+    }
+
+    public function myRatings(Request $request)
+    {
+        $model = new TherapistReview();
+        $id    = $request->get('id', false);
+
+        if (empty($id)) {
+            return $this->returns('notFound', NULL, true);
+        }
+
+        $data = $model::getAverageRatings($id);
+
+        return $this->returns('therapist.ratings', $data);
+    }
+
+    public function startMassageTime(Request $request)
+    {
+        $model              = new BookingMassageStart();
+        $data               = $request->all();
+        $bookingMassageId   = $request->get('booking_massage_id', false);
+
+        if (empty($bookingMassageId)) {
+            return $this->returns('notFoundBookingMassage', NULL, true);
+        }
+
+        $data['actual_total_time']  = BookingMassage::getMassageTime($bookingMassageId);
+
+        $data['start_time']         = !empty($data['start_time']) ? Carbon::createFromTimestampMs($data['start_time']) : false;
+        $startTime                  = clone $data['start_time'];
+        $data['end_time']           = !empty($startTime) ? $startTime->addMinutes($data['actual_total_time'])->format('H:i:s') : false;
+        $data['start_time']         = !empty($data['start_time']) ? $data['start_time']->format('H:i:s') : false;
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::updateOrCreate(['booking_massage_id' => $bookingMassageId], $data);
+
+        return $this->returns('booking.start', $create);
+    }
+
+    public function endMassageTime(Request $request)
+    {
+        $model              = new BookingMassageStart();
+        $data               = $request->all();
+        $bookingMassageId   = $request->get('booking_massage_id', false);
+
+        $currentTime        = Carbon::now();
+
+        $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
+
+        if (empty($data['end_time'])) {
+            return $this->returns('notFoundEndTime', NULL, true);
+        }
+
+        $find = $model::where('booking_massage_id', $bookingMassageId)->first();
+
+        if (empty($find)) {
+            return $this->returns('notFoundBookingMassage', NULL, true);
+        }
+
+        if ($find->start_time > $data['end_time']) {
+            return $this->returns('endTimeIsNotProper', NULL, true);
+        }
+
+        $data['taken_total_time'] = (new Carbon($find->start_time))->diffInMinutes($currentTime);
+
+        $find->end_time         = $data['end_time'];
+
+        $find->taken_total_time = $data['taken_total_time'];
+
+        $find->update();
+
+        return $this->returns('booking.start', $find);
     }
 }
