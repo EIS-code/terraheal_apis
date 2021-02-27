@@ -16,7 +16,7 @@ use App\Shop;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
-class User extends TherapistUserRating implements Authenticatable
+class User extends BaseModel implements Authenticatable
 {
     use Notifiable, AuthenticableTrait;
 
@@ -47,6 +47,7 @@ class User extends TherapistUserRating implements Authenticatable
         'oauth_uid',
         'oauth_provider',
         'profile_photo',
+        'qr_code_path',
         'country_id',
         'city_id',
         'shop_id',
@@ -69,6 +70,7 @@ class User extends TherapistUserRating implements Authenticatable
 
     public $fileSystem       = 'public';
     public $profilePhotoPath = 'user\profile\\';
+    public $qrCodePath       = 'user\qr_codes\\';
 
     public static $notRemoved = '0';
     public static $removed = '1';
@@ -131,6 +133,7 @@ class User extends TherapistUserRating implements Authenticatable
             'device_type'          => ['max:255'],
             'app_version'          => ['max:255'],
             'profile_photo'        => ['max:10240'],
+            'qr_code_path'         => ['max:10240'],
             'oauth_uid'            => ['max:255'],
             'oauth_provider'       => [(!empty($data['oauth_uid']) ? 'required' : ''), (!empty($data['oauth_uid']) ? 'in:1,2,3,4' : '')],
             'is_email_verified'    => ['in:0,1'],
@@ -183,6 +186,22 @@ class User extends TherapistUserRating implements Authenticatable
         return $default;
     }
 
+    public function getQrCodePathAttribute($value)
+    {
+        $default = NULL;
+
+        if (empty($value)) {
+            return $default;
+        }
+
+        $qrCodePath = (str_ireplace("\\", "/", $this->qrCodePath));
+        if (Storage::disk($this->fileSystem)->exists($qrCodePath . $value)) {
+            return Storage::disk($this->fileSystem)->url($qrCodePath . $value);
+        }
+
+        return $default;
+    }
+
     public function getDobAttribute($value)
     {
         if (empty($value)) {
@@ -196,5 +215,15 @@ class User extends TherapistUserRating implements Authenticatable
     public function getFullNameAttribute()
     {
         return $this->name . ' ' . $this->surname;
+    }
+
+    public function qrCodeKey()
+    {
+        return json_encode(['id' => $this->id, 'dob' => $this->dob, 'email' => $this->email, 'shop_id' => $this->shop_id]);
+    }
+
+    public function storeQRCode()
+    {
+        
     }
 }
