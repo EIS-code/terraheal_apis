@@ -3,9 +3,16 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Auth\Passwords\CanResetPassword;
 
-class Shop extends BaseModel
+class Shop extends BaseModel implements CanResetPasswordContract
 {
+    
+    use CanResetPassword, Notifiable;
+    
     protected $fillable = [
         'name',
         'surname',
@@ -163,5 +170,20 @@ class Shop extends BaseModel
     public function bookingsHv()
     {
         return $this->hasMany('App\Booking', 'shop_id', 'id')->where('booking_type', '0');
+    }
+    
+     /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $classPasswordNotification = new ResetPasswordNotification($token);
+
+        $classPasswordNotification::$createUrlCallback = 'toMailContentsUrl';
+
+        $this->notify($classPasswordNotification);
     }
 }
