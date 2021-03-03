@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Storage;
+use App\Libraries\serviceHelper;
 
 class TherapistController extends BaseController
 {
@@ -59,7 +61,9 @@ class TherapistController extends BaseController
         'therapist.suggestion' => "Suggestion saved successfully !",
         'therapist.complaint' => "Complaint registered successfully !",
         'therapist.ratings' => "Therapist ratings get successfully !",
-        'booking.start' => "Massage started successfully !"
+        'booking.start' => "Massage started successfully !",
+        'services.found.successfully' => 'services found successfully',
+        'no.data.found' => 'No data found'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -284,7 +288,19 @@ class TherapistController extends BaseController
                 }
             }
         }
-
+        /* For profile Image */
+        if(isset($data['profile_photo']))
+        {
+            $checkImage = $model->validateProfilePhoto($data);
+            if ($checkImage->fails()) {
+                return $this->returns($checkImage->errors()->first(), NULL, true);
+            }
+            $image = $data['profile_photo'];
+            $name = $image->getClientOriginalName();
+            Storage::putFileAs('/images/therapists/', $image, $name);
+            $data['profile_photo'] = $name;
+        }
+             
         /* For document uploads. */
         $documents    = array_keys($data);
         $documentData = [];
@@ -774,5 +790,15 @@ class TherapistController extends BaseController
         $find->update();
 
         return $this->returns('booking.start', $find);
+    }
+    public function getAllServices(Request $request) {
+
+        $services = serviceHelper::getAllService($request);
+
+        if (count($services) > 0) {
+            return $this->returnSuccess(__($this->successMsg['services.found.successfully']), $services);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
+        }
     }
 }

@@ -11,6 +11,7 @@ use App\Therapy;
 use App\Massage;
 use App\User;
 use App\MassagePreference;
+use App\Libraries\serviceHelper;
 
 class ShopsController extends BaseController {
 
@@ -65,16 +66,9 @@ class ShopsController extends BaseController {
     }
 
     public function getAllServices(Request $request) {
-
-        $therapies = Therapy::where('shop_id', $request->get('shop_id'))->get();
-        $massages = Massage::where('shop_id', $request->get('shop_id'))->get();
-        $services = collect();
-        foreach ($therapies as $therapy) {
-            $services->push($therapy);
-        }
-        foreach ($massages as $massage) {
-            $services->push($massage);
-        }
+        
+        $services = serviceHelper::getAllService($request);
+        
         if (count($services) > 0) {
             return $this->returnSuccess(__($this->successMsg['services.found.successfully']), $services);
         } else {
