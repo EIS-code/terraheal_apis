@@ -15,6 +15,7 @@ use App\Shop;
 // use App\BaseModel;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use App\Libraries\QR;
 
 class User extends BaseModel implements Authenticatable
 {
@@ -224,6 +225,26 @@ class User extends BaseModel implements Authenticatable
 
     public function storeQRCode()
     {
-        
+        $qr = new QR();
+
+        $qr->contact($this->qrCodeKey());
+
+        $qrUrl = $qr->getUrl();
+
+        if (!empty($qrUrl)) {
+            $contents = file_get_contents($qrUrl);
+
+            $isStore  = Storage::disk($this->fileSystem)->put($this->qrCodePath . $this->id . '.png', $contents);
+
+            if ($isStore) {
+                $this->qr_code_path = $this->id . '.png';
+
+                if ($this->update()) {
+                    return $this->qr_code_path;
+                }
+            }
+        }
+
+        return false;
     }
 }
