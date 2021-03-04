@@ -138,6 +138,7 @@ class Booking extends BaseModel
         $massageTimingModel             = new MassageTiming();
         $massagePreferenceOptionModel   = new MassagePreferenceOption();
         $shopModel                      = new Shop();
+        $userModel                      = new User();
 
         $data = $this
                 ->select(
@@ -162,12 +163,15 @@ class Booking extends BaseModel
                             $userPeopleModel::getTableName() . '.age as client_age, ' . 
                             'CASE ' . $userPeopleModel::getTableName() . '.gender WHEN "m" THEN "' . $userPeopleModel->gender[$userPeopleModel::MALE] . '" WHEN "f" THEN "' . $userPeopleModel->gender[$userPeopleModel::FEMALE] . '" ELSE "" END as client_gender, ' . 
                             'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' . 
-                            $bookingMassageModel::getTableName() . '.id as booking_massage_id'
+                            $bookingMassageModel::getTableName() . '.id as booking_massage_id, ' . 
+                            $userModel::getTableName() . '.qr_code_path, ' . 
+                            $this::getTableName() . '.user_id'
                         )
                 )
                 ->join($bookingInfoModel::getTableName(), $this::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')
                 ->join($userPeopleModel::getTableName(), $bookingInfoModel::getTableName() . '.user_people_id', '=', $userPeopleModel::getTableName() . '.id')
                 ->join($shopModel::getTableName(), $this::getTableName() . '.shop_id', '=', $shopModel::getTableName() . '.id')
+                ->join($userModel::getTableName(), $this::getTableName() . '.user_id', '=', $userModel::getTableName() . '.id')
                 ->leftJoin($sessionTypeModel::getTableName(), $this::getTableName() . '.session_id', '=', $sessionTypeModel::getTableName() . '.id')
                 ->leftJoin($bookingMassageModel::getTableName(), $bookingInfoModel::getTableName() . '.id', '=', $bookingMassageModel::getTableName() . '.booking_info_id')
                 ->leftJoin($massagePriceModel::getTableName(), $bookingMassageModel::getTableName() . '.massage_prices_id', '=', $massagePriceModel::getTableName() . '.id')
@@ -189,6 +193,22 @@ class Booking extends BaseModel
             $data->whereDate($bookingInfoModel::getTableName() . '.massage_date', $bookingDate);
         }
 
-        return $data->get();
+        $data = $data->get();
+
+        if (!empty($data) && !$data->isEmpty()) {
+            $data->map(function(&$record) use($userModel) {
+                $record->qr_code_path = $userModel->getQrCodePathAttribute($record->qr_code_path);
+
+                if (empty($record->qr_code_path)) {
+                    $find = $userModel::find($record->user_id);
+
+                    $find->storeQRCode();
+
+                    $record->qr_code_path = $find->qr_code_path;
+                }
+            });
+        }
+
+        return $data;
     }
 }
