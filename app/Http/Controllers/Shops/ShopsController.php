@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Shop;
 use App\Therapist;
-use App\Therapy;
-use App\Massage;
 use App\User;
 use App\MassagePreference;
 use App\Libraries\serviceHelper;

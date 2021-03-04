@@ -225,4 +225,9 @@ class User extends BaseModel implements Authenticatable
     {
         
     }
+    
+    public function reviews()
+    {
+        return $this->hasMany('App\Review', 'user_id', 'id');
+    }
 }
