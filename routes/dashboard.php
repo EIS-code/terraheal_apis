@@ -19,4 +19,5 @@ $router->group(['prefix' => 'dashboard', 'namespace' => 'Dashboard'], function (
 
     $router->post('/getInfo', 'DashboardController@getDetails');
     $router->post('/getSalesInfo', 'DashboardController@salesInfo');
+    $router->post('/getCustomerInfo', 'DashboardController@customerInfo');
 });
