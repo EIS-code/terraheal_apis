@@ -60,6 +60,10 @@ class BookingMassage extends BaseModel
     {
         return $this->hasOne('App\MassageTiming', 'id', 'massage_timing_id');
     }
+    public function bookingInfo()
+    {
+        return $this->belongsTo('App\BookingInfo');
+    }
 
     public static function getMassageTime(int $id)
     {

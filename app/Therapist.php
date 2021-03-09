@@ -47,6 +47,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         'health_conditions_allergies',
         'city_id',
         'country_id',
+        'personal_description',
     ];
 
     protected $hidden = ['is_deleted', 'created_at', 'updated_at', 'password'];
@@ -115,7 +116,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
     public function validateProfilePhoto($request)
     {
-        return Validator::make($request->all(), [
+        return Validator::make($request, [
             'profile_photo' => 'mimes:jpeg,png,jpg',
         ], [
             'profile_photo' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'

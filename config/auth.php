@@ -75,6 +75,10 @@ return [
             'driver' => 'eloquent',
             'model' => App\Therapist::class,
         ],
+        'shop' => [
+            'driver' => 'eloquent',
+            'model' => App\Shop::class,
+        ],
 
         // 'users' => [
         //     'driver' => 'database',
@@ -107,6 +111,12 @@ return [
 
         'therapist' => [
             'provider' => 'therapist',
+            'table' => 'password_resets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        'shop' => [
+            'provider' => 'shop',
             'table' => 'password_resets',
             'expire' => 60,
             'throttle' => 60,

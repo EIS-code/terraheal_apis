@@ -3,7 +3,6 @@
 namespace App;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-// use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Auth\Authenticatable as AuthenticableTrait;
 use Illuminate\Notifications\Notifiable;
@@ -246,5 +245,10 @@ class User extends BaseModel implements Authenticatable
         }
 
         return false;
+    }
+    
+    public function reviews()
+    {
+        return $this->hasMany('App\Review', 'user_id', 'id');
     }
 }
