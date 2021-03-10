@@ -13,9 +13,8 @@
  */
 
 
-$router->group(['prefix' => 'dashboard', 'namespace' => 'Dashboard'], function () use($router) {
+$router->group(['prefix' => 'waiting', 'namespace' => 'WaitingList'], function () use($router) {
 
-    $router->post('/getInfo', 'DashboardController@getDetails');
-    $router->post('/getSalesInfo', 'DashboardController@salesInfo');
-    $router->post('/getCustomerInfo', 'DashboardController@customerInfo');
+    $router->post('/getOngoingMassage', 'WaitingListController@ongoingMassage');
+    $router->post('/getWaitingMassage', 'WaitingListController@waitingMassage');
 });
