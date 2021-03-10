@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\WaitingList;
+namespace App\Http\Controllers\Shops\WaitingList;
 
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
