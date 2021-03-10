@@ -13,11 +13,11 @@
  */
 
 
-$router->group(['prefix' => 'waiting', 'namespace' => 'WaitingList'], function () use($router) {
+$router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use($router) {
 
-    $router->post('/getOngoingMassage', 'WaitingListController@ongoingMassage');
-    $router->post('/getWaitingMassage', 'WaitingListController@waitingMassage');
-    $router->post('/getFutureBooking', 'WaitingListController@futureBooking');
-    $router->post('/getCancelBooking', 'WaitingListController@cancelBooking');
-    $router->post('/getCompletedBooking', 'WaitingListController@completedBooking');
+    $router->post('/getOngoingMassage', 'WaitingList\WaitingListController@ongoingMassage');
+    $router->post('/getWaitingMassage', 'WaitingList\WaitingListController@waitingMassage');
+    $router->post('/getFutureBooking', 'WaitingList\WaitingListController@futureBooking');
+    $router->post('/getCancelBooking', 'WaitingList\WaitingListController@cancelBooking');
+    $router->post('/getCompletedBooking', 'WaitingList\WaitingListController@completedBooking');
 });
