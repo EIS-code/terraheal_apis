@@ -17,4 +17,7 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'WaitingList'], function (
 
     $router->post('/getOngoingMassage', 'WaitingListController@ongoingMassage');
     $router->post('/getWaitingMassage', 'WaitingListController@waitingMassage');
+    $router->post('/getFutureBooking', 'WaitingListController@futureBooking');
+    $router->post('/getCancelBooking', 'WaitingListController@cancelBooking');
+    $router->post('/getCompletedBooking', 'WaitingListController@completedBooking');
 });
