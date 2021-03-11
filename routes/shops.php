@@ -30,3 +30,25 @@ $router->group(['prefix' => 'shops', 'namespace' => 'Shops', 'guard' => 'shop'],
 
     $router->post('/forgot', 'Auth\ForgotPasswordController@sendResetLinkEmail');
 });
+
+
+$router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use($router) {
+
+    $router->post('/getOngoingMassage', 'WaitingList\WaitingListController@ongoingMassage');
+    $router->post('/getWaitingMassage', 'WaitingList\WaitingListController@waitingMassage');
+    $router->post('/getFutureBooking', 'WaitingList\WaitingListController@futureBooking');
+    $router->post('/getCancelBooking', 'WaitingList\WaitingListController@cancelBooking');
+    $router->post('/getCompletedBooking', 'WaitingList\WaitingListController@completedBooking');
+});
+
+$router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {
+
+    $router->post('/getInfo', 'Dashboard\DashboardController@getDetails');
+    $router->post('/getSalesInfo', 'Dashboard\DashboardController@salesInfo');
+    $router->post('/getCustomerInfo', 'Dashboard\DashboardController@customerInfo');
+});
+
+$router->group(['prefix' => 'events', 'namespace' => 'Shops'], function () use($router) {
+    
+    $router->post('/addEvent', 'Events\EventsController@createEvent');
+});
