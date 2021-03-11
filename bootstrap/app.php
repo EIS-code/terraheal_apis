@@ -72,6 +72,7 @@ $app->singleton(
 */
 
 $app->configure('app');
+$app->configure('scout');
 
 /*
 |--------------------------------------------------------------------------
@@ -119,6 +120,8 @@ $app->register(\Illuminate\Auth\Passwords\PasswordResetServiceProvider::class);
 $app->register(\Illuminate\Mail\MailServiceProvider::class);
 
 $app->register(OwenIt\Auditing\AuditingServiceProvider::class);
+
+$app->register(Laravel\Scout\ScoutServiceProvider::class);
 
 // $app->middleware([\Illuminate\Session\Middleware\StartSession::class,]);
 
