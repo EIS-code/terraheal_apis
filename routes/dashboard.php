@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-use App\Shop;
 
 /*
   |--------------------------------------------------------------------------
@@ -15,9 +13,9 @@ use App\Shop;
  */
 
 
-$router->group(['prefix' => 'dashboard', 'namespace' => 'Dashboard'], function () use($router) {
+$router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {
 
-    $router->post('/getInfo', 'DashboardController@getDetails');
-    $router->post('/getSalesInfo', 'DashboardController@salesInfo');
-    $router->post('/getCustomerInfo', 'DashboardController@customerInfo');
+    $router->post('/getInfo', 'Dashboard\DashboardController@getDetails');
+    $router->post('/getSalesInfo', 'Dashboard\DashboardController@salesInfo');
+    $router->post('/getCustomerInfo', 'Dashboard\DashboardController@customerInfo');
 });
