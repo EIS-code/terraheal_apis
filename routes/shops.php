@@ -51,4 +51,7 @@ $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () us
 $router->group(['prefix' => 'events', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/addEvent', 'Events\EventsController@createEvent');
+    $router->post('/updateEvent', 'Events\EventsController@updateEvent');
+    $router->post('/deleteEvent', 'Events\EventsController@deleteEvent');
+    $router->post('/getAllEvents', 'Events\EventsController@getAllEvents');
 });

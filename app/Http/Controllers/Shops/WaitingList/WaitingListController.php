@@ -15,6 +15,15 @@ class WaitingListController extends BaseController {
 
     public $query;
 
+    public $successMsg = [
+        
+        'ongoing.massage' => 'Ongoing massages found successfully',
+        'waiting.massage' => 'Waiting massages found successfully',
+        'future.booking' => 'Future bookings found successfully',
+        'completed.booking' => 'Completed bookings found successfully',
+        'cancelled.booking' => 'Cancelled bookings found successfully',
+    ];
+    
     public function __construct() {
 
         $query = DB::table('booking_massages')
@@ -43,7 +52,7 @@ class WaitingListController extends BaseController {
         $ongoingMassages = $this->query->where(['booking_massages.is_confirm' => BookingMassage::IS_CONFIRM, 'bookings.booking_type' => $type])
                         ->whereIn('massage_timings.massage_id', $massage)->get();
 
-        return $this->returnSuccess('Ongoing massages found successfully', $ongoingMassages);
+        return $this->returnSuccess(__($this->successMsg['ongoing.massage']), $ongoingMassages);
     }
 
     public function waitingMassage(Request $request) {
@@ -54,7 +63,7 @@ class WaitingListController extends BaseController {
         $waitingMassages = $this->query->where(['booking_massages.is_confirm' => BookingMassage::IS_NOT_CONFIRM, 'bookings.booking_type' => $type])
                         ->whereIn('massage_timings.massage_id', $massage)->get();
 
-        return $this->returnSuccess('Waiting massages found successfully', $waitingMassages);
+        return $this->returnSuccess(__($this->successMsg['waiting.massage']), $waitingMassages);
     }
 
     public function futureBooking(Request $request) {
@@ -66,8 +75,9 @@ class WaitingListController extends BaseController {
                         ->where('booking_infos.massage_date', '>=', Carbon::now()->format('Y-m-d'))
                         ->whereIn('massage_timings.massage_id', $massage)->get();
         
-        return $this->returnSuccess('Future bookings found successfully', $futureBooking);
+        return $this->returnSuccess(__($this->successMsg['future.booking']), $futureBooking);
     }
+    
     public function completedBooking(Request $request) {
         
         $massage = Massage::where('shop_id', $request->shop_id)->select('id')->get()->toArray();
@@ -76,8 +86,9 @@ class WaitingListController extends BaseController {
         $completedBooking = $this->query->where(['booking_infos.is_done' => BookingInfo::IS_DONE, 'bookings.booking_type' => $type])
                         ->whereIn('massage_timings.massage_id', $massage)->get();
         
-        return $this->returnSuccess('Completed bookings found successfully', $completedBooking);
+        return $this->returnSuccess(__($this->successMsg['completed.booking']), $completedBooking);
     }
+    
     public function cancelBooking(Request $request) {
         
         $massage = Massage::where('shop_id', $request->shop_id)->select('id')->get()->toArray();
@@ -86,6 +97,6 @@ class WaitingListController extends BaseController {
         $cancelBooking = $this->query->where(['booking_infos.is_cancelled' => BookingInfo::IS_CANCELLED, 'bookings.booking_type' => $type])
                         ->whereIn('massage_timings.massage_id', $massage)->get();
         
-        return $this->returnSuccess('Cancelled bookings found successfully', $cancelBooking);
+        return $this->returnSuccess(__($this->successMsg['cancelled.booking']), $cancelBooking);
     }
 }
