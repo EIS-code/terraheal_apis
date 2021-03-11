@@ -23,7 +23,10 @@ class BookingMassage extends BaseModel
         'gender_preference',
         'focus_area_preference'
     ];
-
+    
+    const IS_CONFIRM = '1';
+    const IS_NOT_CONFIRM = '0';
+    
     public function validator(array $data, $excludeBookingInfoId = false, $bookingType)
     {
         $pressurePreference = $genderPreference = ['nullable'];

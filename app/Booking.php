@@ -26,7 +26,7 @@ class Booking extends BaseModel
     ];
 
     const BOOKING_TYPE_IMC = '1';
-    const BOOKING_TYPE_HHV = '0';
+    const BOOKING_TYPE_HHV = '2';
 
     public static $defaultTableFutons = ['0', '1', '2'];
     public static $tableFutons = ['0', '1', '2'];
