@@ -85,30 +85,21 @@ class ShopsController extends BaseController {
     }
 
     public function getPreferences(Request $request) {
-
-        $booking = \App\BookingInfo::create($request->all());
-        return $booking;
         
-        
-//        $type = $request->get('type');
-//        if (isset($type)) {
-//            $preferences = MassagePreference::with(['preferenceOptions'])
-//                            ->whereHas('preferenceOptions', function($q) use($type) {
-//                                $q->where('massage_preference_id', '=', $type);
-//                            })->get();
-//        } else {
-//            $preferences = MassagePreference::with('preferenceOptions')->get();
-//        }
-//        if (count($preferences) > 0) {
-//            return $this->returnSuccess(__($this->successMsg['preferences.found.successfully']), $preferences);
-//        } else {
-//            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
-//        }
-    }
-    
-    public function booking(Request $request) {
-        $booking = \App\BookingInfo::create($request->all());
-        return $booking;
-    }
+        $type = $request->get('type');
+        if (isset($type)) {
+            $preferences = MassagePreference::with(['preferenceOptions'])
+                            ->whereHas('preferenceOptions', function($q) use($type) {
+                                $q->where('massage_preference_id', '=', $type);
+                            })->get();
+        } else {
+            $preferences = MassagePreference::with('preferenceOptions')->get();
+        }
+        if (count($preferences) > 0) {
+            return $this->returnSuccess(__($this->successMsg['preferences.found.successfully']), $preferences);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
+        }
+    }    
 
 }
