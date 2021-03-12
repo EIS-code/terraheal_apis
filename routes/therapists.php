@@ -98,5 +98,8 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
     $router->post('/suggestion', 'TherapistController@suggestion');
     $router->post('/complaint', 'TherapistController@complaint');
-    $router->post('/getServices', 'TherapistController@getAllServices');
+
+    $router->group(['prefix' => 'service'], function () use($router) {
+        $router->post('/', 'TherapistController@getAllServices');
+    });
 });

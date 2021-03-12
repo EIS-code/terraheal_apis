@@ -826,8 +826,9 @@ class TherapistController extends BaseController
 
         return $this->returns('booking.start', $find);
     }
-    public function getAllServices(Request $request) {
 
+    public function getAllServices(Request $request)
+    {
         $services = serviceHelper::getAllService($request);
 
         if (count($services) > 0) {
