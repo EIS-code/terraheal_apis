@@ -111,10 +111,12 @@ class TherapistController extends BaseController
 
     public function filter(Collection &$return)
     {
+        $returnData = [];
+
         if (!empty($return) && !$return->isEmpty()) {
             $increments = 0;
 
-            $return->map(function(&$data, $index) use(&$return, &$increments) {
+            /*$return->map(function(&$data, $index) use(&$return, &$increments) {
                 if (empty($data->bookingInfoWithFilters) || $data->bookingInfoWithFilters->isEmpty()) {
                     unset($return[$index]);
                 } elseif (request()->get('client_name', false) && empty($data->bookingInfoWithFilters[0]->userPeople)) {
@@ -136,10 +138,43 @@ class TherapistController extends BaseController
 
                     unset($data->bookingInfoWithFilters);
                 }
+            });*/
+
+            $return->map(function($data, $index) use(&$returnData, &$increments) {
+                if (!empty($data->bookingInfoWithFilters) && !$data->bookingInfoWithFilters->isEmpty()) {
+                    foreach ($data->bookingInfoWithFilters as $bookingInfo) {
+                        if (!empty($bookingInfo->bookingMassages) && !$bookingInfo->bookingMassages->isEmpty()) {
+                            foreach ($bookingInfo->bookingMassages as $bookingMassage) {
+                                $returnData[$increments]['booking_id']           = $data->id;
+                                $returnData[$increments]['booking_type']         = $data->booking_type;
+                                $returnData[$increments]['special_notes']        = $data->special_notes;
+                                $returnData[$increments]['bring_table_futon']    = $data->bring_table_futon;
+                                $returnData[$increments]['table_futon_quantity'] = $data->table_futon_quantity;
+                                $returnData[$increments]['session_id']           = $data->session_id;
+                                $returnData[$increments]['copy_with_id']         = $data->copy_with_id;
+                                $returnData[$increments]['booking_date_time']    = $data->booking_date_time;
+                                $returnData[$increments]['user_id']              = $data->user_id;
+                                $returnData[$increments]['shop_id']              = $data->shop_id;
+                                $returnData[$increments]['booking_info_id']      = $bookingInfo->booking_info_id;
+                                $returnData[$increments]['massage_date']         = $bookingInfo->massage_date;
+                                $returnData[$increments]['massage_time']         = $bookingInfo->massage_time;
+                                $returnData[$increments]['user_people_id']       = $bookingInfo->user_people_id;
+                                $returnData[$increments]['therapist_id']         = $bookingInfo->therapist_id;
+                                $returnData[$increments]['user_name']            = $bookingInfo->userPeople->name;
+                                $returnData[$increments]['therapist_name']       = $bookingInfo->therapist->fullName;
+                                $returnData[$increments]['massage_name']         = $bookingMassage->massageTiming->massage->name;
+
+                                $increments++;
+                            }
+                        }
+                    }
+                }
             });
+
+            $returnData = collect($returnData);
         }
 
-        return $return;
+        return $returnData;
     }
 
     public function getTodayBooking(Request $request)
@@ -148,7 +183,7 @@ class TherapistController extends BaseController
 
         $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
 
-        $this->filter($data);
+        $data = $this->filter($data);
 
         return $this->returns('booking.today.found.successfully', $data);
     }
@@ -159,7 +194,7 @@ class TherapistController extends BaseController
 
         $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
 
-        $this->filter($data);
+        $data = $this->filter($data);
 
         return $this->returns('booking.future.found.successfully', $data);
     }
@@ -170,7 +205,7 @@ class TherapistController extends BaseController
 
         $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
 
-        $this->filter($data);
+        $data = $this->filter($data);
 
         return $this->returns('booking.past.found.successfully', $data);
     }
