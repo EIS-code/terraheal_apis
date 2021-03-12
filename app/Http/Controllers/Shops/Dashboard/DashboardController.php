@@ -154,8 +154,8 @@ class DashboardController extends BaseController {
     
     public function customerInfo(Request $request) {
         
-        $activeUsers = User::where('is_removed', User::$notRemoved)->count();
-        $defectedUsers = User::where('is_removed', User::$removed)->count();
+        $activeUsers = User::where(['is_removed' => User::$notRemoved, 'shop_id' => $request->shop_id])->count();
+        $defectedUsers = User::where(['is_removed' => User::$removed, 'shop_id' => $request->shop_id])->count();
         
         return $this->returnSuccess(__($this->successMsg['customer.data.found']), ['activeUsers' => $activeUsers, 'defectedUsers' => $defectedUsers]);
     }

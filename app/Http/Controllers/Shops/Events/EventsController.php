@@ -69,7 +69,7 @@ class EventsController extends BaseController {
                 ->where('bookings.booking_type' , $type)
                 ->whereMonth('booking_infos.massage_date', $month)
                 ->get();
-        $eventsData = ShopsEvents::all();
+        $eventsData = ShopsEvents::whereMonth('event_date',$month)->get();
         
         return $this->returnSuccess(__($this->successMsg['events.data']), ['bookingData' => $bookingData, 'eventsData' => $eventsData]);
     }

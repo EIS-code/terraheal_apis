@@ -55,3 +55,8 @@ $router->group(['prefix' => 'events', 'namespace' => 'Shops'], function () use($
     $router->post('/deleteEvent', 'Events\EventsController@deleteEvent');
     $router->post('/getAllEvents', 'Events\EventsController@getAllEvents');
 });
+
+$router->group(['prefix' => 'clients', 'namespace' => 'Shops'], function () use($router) {
+    
+    $router->post('/searchClients', 'Clients\ClientController@searchClients');
+});
