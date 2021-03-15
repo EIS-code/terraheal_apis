@@ -26,7 +26,7 @@ class Booking extends BaseModel
     ];
 
     const BOOKING_TYPE_IMC = '1';
-    const BOOKING_TYPE_HHV = '0';
+    const BOOKING_TYPE_HHV = '2';
 
     public static $defaultTableFutons = ['0', '1', '2'];
     public static $tableFutons = ['0', '1', '2'];
@@ -82,12 +82,16 @@ class Booking extends BaseModel
 
     public function bookingInfoWithFilters($type = 'today')
     {
-        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['booking_id', 'id as booking_info_id', 'massage_date', 'massage_time', 'user_people_id', 'therapist_id'])
+        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['id', 'booking_id', 'id as booking_info_id', 'massage_date', 'massage_time', 'user_people_id', 'therapist_id'])
                     ->where(function($query) use($type) {
                         $query->filterDatas();
                     })->with(['userPeople' => function($query) {
                         return $query->filterDatas();
-                    }, 'therapist']);
+                    }, 'therapist', 'bookingMassages' => function($query) {
+                        $query->with(['massageTiming' => function($query1) {
+                            return $query1->with('massage');
+                        }]);
+                    }]);
     }
 
     public function bookingInfoWithBookingMassages()

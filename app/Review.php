@@ -24,6 +24,7 @@ class Review extends Model
         self::RATING_GOOD_ONE  => 'Good One',
         self::RATING_TOO_HAPPY => 'Too Happy'
     ];
+    const IS_DELETE = 0;
 
     public function validator(array $data)
     {
