@@ -96,8 +96,6 @@ class TherapistController extends BaseController
 
     public function getBookingDetails(Request $request)
     {
-        // $data = Therapist::with('selectedMassages', 'selectedTherapies')->where('id', $id)->first();
-
         $bookingModel = new Booking();
 
         $data = $bookingModel->getGlobalQuery($request);
