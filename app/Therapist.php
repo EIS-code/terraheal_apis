@@ -71,6 +71,11 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         self::IS_NOT_FREELANCER => 'No'
     ];
 
+    public function getFullNameAttribute()
+    {
+        return $this->name . ' ' . $this->surname;
+    }
+
     public function validator(array $data, $requiredFileds = [], $extraFields = [], $id = false, $isUpdate = false)
     {
         $user = NULL;

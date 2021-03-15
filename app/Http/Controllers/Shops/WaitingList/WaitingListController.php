@@ -7,16 +7,13 @@ use Illuminate\Http\Request;
 use App\Massage;
 use DB;
 use Carbon\Carbon;
+use App\Booking;
+use App\BookingMassage;
+use App\BookingInfo;
 
 class WaitingListController extends BaseController {
 
     public $query;
-    const AT_CENTER = '1';
-    const AT_HOME = '0';
-    const IS_CONFIRM = '1';
-    const IS_NOT_CONFIRM = '0';
-    const IS_CANCEL = '1';
-    const IS_DONE = '1';
 
     public function __construct() {
 
@@ -41,54 +38,54 @@ class WaitingListController extends BaseController {
     public function ongoingMassage(Request $request) {
 
         $massage = Massage::where('shop_id' , $request->shop_id)->select('id')->get()->toArray();
-        isset($request->type) ? $type = $request->type : $type = self::AT_CENTER;
+        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         
-        $ongoingMassages = $this->query->where(['booking_massages.is_confirm' => self::IS_CONFIRM, 'bookings.booking_type' => $type])
+        $ongoingMassages = $this->query->where(['booking_massages.is_confirm' => BookingMassage::IS_CONFIRM, 'bookings.booking_type' => $type])
                         ->whereIn('massage_timings.massage_id', $massage)->get();
 
-        return ['ongoingMassages' => $ongoingMassages];
+        return $this->returnSuccess('Ongoing massages found successfully', $ongoingMassages);
     }
 
     public function waitingMassage(Request $request) {
 
         $massage = Massage::where('shop_id', $request->shop_id)->select('id')->get()->toArray();
-        isset($request->type) ? $type = $request->type : $type = self::AT_CENTER;
+        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
 
-        $waitingMassages = $this->query->where(['booking_massages.is_confirm' => self::IS_NOT_CONFIRM, 'bookings.booking_type' => $type])
+        $waitingMassages = $this->query->where(['booking_massages.is_confirm' => BookingMassage::IS_NOT_CONFIRM, 'bookings.booking_type' => $type])
                         ->whereIn('massage_timings.massage_id', $massage)->get();
 
-        return ['waitingMssages' => $waitingMassages];
+        return $this->returnSuccess('Waiting massages found successfully', $waitingMassages);
     }
 
     public function futureBooking(Request $request) {
         
         $massage = Massage::where('shop_id', $request->shop_id)->select('id')->get()->toArray();
-        isset($request->type) ? $type = $request->type : $type = self::AT_CENTER;
+        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         
         $futureBooking = $this->query->where('bookings.booking_type' , $type)
                         ->where('booking_infos.massage_date', '>=', Carbon::now()->format('Y-m-d'))
                         ->whereIn('massage_timings.massage_id', $massage)->get();
         
-        return ['futureBooking' => $futureBooking];
+        return $this->returnSuccess('Future bookings found successfully', $futureBooking);
     }
     public function completedBooking(Request $request) {
         
         $massage = Massage::where('shop_id', $request->shop_id)->select('id')->get()->toArray();
-        isset($request->type) ? $type = $request->type : $type = self::AT_CENTER;
+        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         
-        $completedBooking = $this->query->where(['booking_infos.is_done' => self::IS_DONE, 'bookings.booking_type' => $type])
+        $completedBooking = $this->query->where(['booking_infos.is_done' => BookingInfo::IS_DONE, 'bookings.booking_type' => $type])
                         ->whereIn('massage_timings.massage_id', $massage)->get();
         
-        return ['completedBooking' => $completedBooking];
+        return $this->returnSuccess('Completed bookings found successfully', $completedBooking);
     }
     public function cancelBooking(Request $request) {
         
         $massage = Massage::where('shop_id', $request->shop_id)->select('id')->get()->toArray();
-        isset($request->type) ? $type = $request->type : $type = self::AT_CENTER;
+        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         
-        $cancelBooking = $this->query->where(['booking_infos.is_cancelled' => self::IS_CANCEL, 'bookings.booking_type' => $type])
+        $cancelBooking = $this->query->where(['booking_infos.is_cancelled' => BookingInfo::IS_CANCELLED, 'bookings.booking_type' => $type])
                         ->whereIn('massage_timings.massage_id', $massage)->get();
         
-        return ['cancelBooking' => $cancelBooking];
+        return $this->returnSuccess('Cancelled bookings found successfully', $cancelBooking);
     }
 }
