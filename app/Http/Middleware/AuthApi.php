@@ -22,10 +22,12 @@ class AuthApi
      */
     public function handle($request, Closure $next)
     {
+        return $next($request);
+
         $apiKey = (!empty($request->header('api-key'))) ? $request->header('api-key') : false;
 
         if (in_array($request->path(), $this->excludedRoutes)) {
-            return $next($request);
+            // return $next($request);
         }
 
         $getKeyInfo = $this->validate($apiKey);
