@@ -59,4 +59,12 @@ $router->group(['prefix' => 'events', 'namespace' => 'Shops'], function () use($
 $router->group(['prefix' => 'clients', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/searchClients', 'Clients\ClientController@searchClients');
+    $router->post('/getClientDetails', 'Clients\ClientController@clientDetails');
+    $router->post('/getFutureBookings', 'Clients\ClientController@getFutureBookings');
+});
+
+$router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($router) {
+    
+    $router->post('/createRoom', 'Rooms\RoomsController@createRoom');
+    $router->post('/getRooms', 'Rooms\RoomsController@getRooms');
 });
