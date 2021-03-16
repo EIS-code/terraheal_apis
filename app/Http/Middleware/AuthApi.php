@@ -24,6 +24,10 @@ class AuthApi
     {
         $apiKey = (!empty($request->header('api-key'))) ? $request->header('api-key') : false;
 
+        if (empty($apiKey)) {
+            return $next($request);
+        }
+
         if (in_array($request->path(), $this->excludedRoutes)) {
             return $next($request);
         }
