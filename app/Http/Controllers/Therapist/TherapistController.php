@@ -143,6 +143,10 @@ class TherapistController extends BaseController
                     foreach ($data->bookingInfoWithFilters as $bookingInfo) {
                         if (!empty($bookingInfo->bookingMassages) && !$bookingInfo->bookingMassages->isEmpty()) {
                             foreach ($bookingInfo->bookingMassages as $bookingMassage) {
+                                if (empty($bookingInfo->userPeople)) {
+                                    continue;
+                                }
+
                                 $returnData[$increments]['booking_id']           = $data->id;
                                 $returnData[$increments]['booking_type']         = $data->booking_type;
                                 $returnData[$increments]['special_notes']        = $data->special_notes;
