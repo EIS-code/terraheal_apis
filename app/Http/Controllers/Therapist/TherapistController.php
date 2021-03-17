@@ -308,23 +308,43 @@ class TherapistController extends BaseController
             return $this->returns($checks->errors()->first(), NULL, true);
         }
 
+        /* For language spoken. */
+        // For language_spoken[2] ...
         if (!empty($data['language_spoken'])) {
             if (is_array($data['language_spoken'])) {
-                foreach ($data['language_spoken'] as $languageId => $languageSpoken) {
+                /*foreach ($data['language_spoken'] as $languageId => $languageSpoken) {
                     $languageData[] = [
                         'type'          => $languageSpoken,
                         'value'         => $modelTherapistLanguage::THEY_CAN_VALUE,
                         'language_id'   => $languageId,
                         'therapist_id'  => $id
                     ];
-                }
+                }*/
 
                 $checks = $modelTherapistLanguage->validators($languageData);
                 if ($checks->fails()) {
                     return $this->returns($checks->errors()->first(), NULL, true);
                 }
+            }
+        }
+        // For language_spoken_2 ...
+        $keys            = array_keys($data);
+        $pattern         = '#^language_spoken_(.*)$#i';
+        $languageSpokens = preg_grep($pattern, $keys);
 
+        foreach ($languageSpokens as $key => $languageKey) {
+            $languageSpoken = $data[$languageKey];
+            $keyData        = explode("_", $languageKey);
 
+            if (!empty($keyData[2]) && is_numeric($keyData[2])) {
+                $languageId = $keyData[2];
+
+                $languageData[] = [
+                    'type'          => $languageSpoken,
+                    'value'         => $modelTherapistLanguage::THEY_CAN_VALUE,
+                    'language_id'   => $languageId,
+                    'therapist_id'  => $id
+                ];
             }
         }
 
@@ -465,7 +485,15 @@ class TherapistController extends BaseController
             }
         }
 
+        // My services.
         $massageData = [];
+
+        if (!empty($data['my_massages'])) {
+            foreach ((array)$data['my_massages'] as $myMassage) {
+                $data['my_services']['massages'][] = $myMassage;
+            }
+        }
+
         if (!empty($data['my_services']['massages'])) {
             foreach ((array)$data['my_services']['massages'] as $massageId) {
                 $massageData[] = [
