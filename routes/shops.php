@@ -39,6 +39,11 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/getFutureBooking', 'WaitingList\WaitingListController@futureBooking');
     $router->post('/getCancelBooking', 'WaitingList\WaitingListController@cancelBooking');
     $router->post('/getCompletedBooking', 'WaitingList\WaitingListController@completedBooking');
+    $router->post('/addBookingMassage', 'WaitingList\WaitingListController@addBookingMassage');
+    $router->post('/getAllTherapists', 'WaitingList\WaitingListController@getAllTherapists');
+    $router->post('/deleteBooking', 'WaitingList\WaitingListController@deleteBooking');
+    $router->post('/printBookingDetails', 'WaitingList\WaitingListController@printBookingDetails');
+    $router->post('/assignRoom', 'WaitingList\WaitingListController@assignRoom');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {

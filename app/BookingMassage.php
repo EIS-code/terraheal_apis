@@ -3,12 +3,15 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\MassagePrice;
 use App\BookingInfo;
 use App\MassagePreferenceOption;
 
 class BookingMassage extends BaseModel
 {
+    use SoftDeletes;
+    
     protected $fillable = [
         'price',
         'cost',
@@ -21,7 +24,9 @@ class BookingMassage extends BaseModel
         'booking_info_id',
         'pressure_preference',
         'gender_preference',
-        'focus_area_preference'
+        'focus_area_preference',
+        'room_id',
+        'therapy_id'
     ];
     
     const IS_CONFIRM = '1';
