@@ -323,21 +323,31 @@ class TherapistController extends BaseController
                 if ($checks->fails()) {
                     return $this->returns($checks->errors()->first(), NULL, true);
                 }
+
+
             }
         }
+
         /* For profile Image */
-        if(isset($data['profile_photo']))
-        {
+        if (!empty($data['profile_photo']) && $data['profile_photo'] instanceof UploadedFile) {
             $checkImage = $model->validateProfilePhoto($data);
+
             if ($checkImage->fails()) {
+                unset($data['profile_photo']);
+
                 return $this->returns($checkImage->errors()->first(), NULL, true);
             }
-            $image = $data['profile_photo'];
-            $name = $image->getClientOriginalName();
-            Storage::putFileAs('/images/therapists/', $image, $name);
-            $data['profile_photo'] = $name;
+
+            $fileName = $data['profile_photo']->getClientOriginalName();
+            $fileName = time() . '_' . $id . '.' . $data['profile_photo']->getClientOriginalExtension();
+
+            $storeFile = $data['profile_photo']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
+
+            if ($storeFile) {
+                $data['profile_photo_name'] = $data['profile_photo'] = $fileName;
+            }
         }
-             
+
         /* For document uploads. */
         $documents    = array_keys($data);
         $documentData = [];
