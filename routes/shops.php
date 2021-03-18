@@ -44,6 +44,7 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/deleteBooking', 'WaitingList\WaitingListController@deleteBooking');
     $router->post('/printBookingDetails', 'WaitingList\WaitingListController@printBookingDetails');
     $router->post('/assignRoom', 'WaitingList\WaitingListController@assignRoom');
+    $router->post('/addNewBooking', 'WaitingList\WaitingListController@addNewBooking');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {

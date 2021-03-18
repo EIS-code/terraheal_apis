@@ -23,7 +23,9 @@ class Booking extends BaseModel
         'table_futon_quantity',
         'session_id',
         'copy_with_id',
-        'user_id'
+        'user_id',
+        'shop_id',
+        'booking_date_time'
     ];
 
     const BOOKING_TYPE_IMC = '1';

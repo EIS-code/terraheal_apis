@@ -7,6 +7,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
+use App\BookingInfo;
 
 class Shop extends BaseModel implements CanResetPasswordContract
 {
@@ -186,4 +187,43 @@ class Shop extends BaseModel implements CanResetPasswordContract
 
         $this->notify($classPasswordNotification);
     }
+    
+    public function addBookingInfo($infoData, $newBooking, $newUser) {
+
+        $shop = Shop::find($infoData->shop_id);
+        $bookingInfoData = [
+            'location' => $shop->address,
+            'booking_currency_id' => $shop->currency_id,
+            'shop_currency_id' => $shop->currency_id,
+            'booking_id' => $newBooking->id,
+            'imc_type' => BookingInfo::IMC_TYPE_ASAP,
+            'massage_date' => explode(' ', $infoData->booking_date_time)[0],
+            'massage_time' => $infoData->booking_date_time,
+            'user_people_id' => isset($newUser) ? $newUser->id : NULL
+        ];
+        $bookingInfo = BookingInfo::create($bookingInfoData);
+        return $bookingInfo;
+    }
+    
+    public function addBookingMassages($massage, $bookingInfo, $request, $user) {
+        
+        $massagePrice = MassagePrice::where('massage_timing_id',$massage['massage_timing_id'])->first();
+            $bookingMassageData = [
+                "price" => $massagePrice->price,
+                "cost" => $massagePrice->cost,
+                "origional_price" => $massagePrice->price,
+                "origional_cost"  => $massagePrice->cost,
+                "exchange_rate" => isset($massage['exchange_rate']) ? $massage['exchange_rate'] : 0.00,
+                "notes_of_injuries" => $massage['notes_of_injuries'],
+                "massage_timing_id" => $massage['massage_timing_id'],
+                "massage_prices_id" => $massagePrice->id,
+                "booking_info_id" => $bookingInfo->id,
+                "pressure_preference" => isset($user) ? $user['pressure_preference'] : $request->pressure_preference,
+                "gender_preference" => isset($user) ? $user['gender_preference'] : $request->gender_preference,
+                "focus_area_preference" => isset($user) ? $user['focus_area_preference'] : $request->focus_area_preference
+            ];
+            BookingMassage::create($bookingMassageData);
+    }
+    
+
 }

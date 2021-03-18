@@ -8,6 +8,9 @@ use App\Booking;
 use App\BookingMassage;
 use App\Massage;
 use App\Therapist;
+use App\UserPeople;
+use App\Shop;
+use DB;
 
 class WaitingListController extends BaseController {
 
@@ -22,6 +25,7 @@ class WaitingListController extends BaseController {
         'delete.booking' => 'Booking deleted successfully',
         'print.booking' => 'Booking data found successfully',
         'assign.room' => 'Assign room successfully',
+        'new.booking' => 'New booking added successfully'
     ];
 
     public function ongoingMassage(Request $request) {
@@ -139,4 +143,57 @@ class WaitingListController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['assign.room']), $bookingMassage);
         
     }
+    
+    public function addNewBooking(Request $request) {
+
+        DB::beginTransaction();
+        try {
+            $shopModel = new Shop();
+
+            $bookingData = [
+                'booking_type' => $request->booking_type,
+                'special_notes' => $request->special_notes,
+                'user_id' => $request->user_id,
+                'shop_id' => $request->shop_id,
+                'session_id' => $request->session_id
+            ];
+            $newBooking = Booking::create($bookingData);
+
+            $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, NULL);
+
+            foreach ($request->massages as $key => $massage) {
+
+                $shopModel->addBookingMassages($massage, $bookingInfo, $request, NULL);
+            }
+            if (!empty($request->users)) {
+                foreach ($request->users as $key => $user) {
+                    $user_people = [
+                        'name' => $user['name'],
+                        'age' => $user['age'],
+                        'gender' => $user['gender'],
+                        'user_gender_preference_id' => $user['gender_preference'],
+                        'user_id' => $request->user_id
+                    ];
+                    $newUser = UserPeople::create($user_people);
+
+                    $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $newUser);
+
+                    foreach ($user['massages'] as $key => $massage) {
+
+                        $shopModel->addBookingMassages($massage, $bookingInfo, $request, $user);
+                    }
+                }
+            }
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['new.booking']));
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+
 }
