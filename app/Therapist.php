@@ -223,4 +223,14 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         return $data;
     }
+
+    public function getMassageCountAttribute()
+    {
+        return $this->selectedMassages()->count();
+    }
+
+    public function getTherapyCountAttribute()
+    {
+        return $this->selectedTherapies()->count();
+    }
 }

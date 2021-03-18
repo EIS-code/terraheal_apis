@@ -52,6 +52,15 @@ class BaseModel extends Model
         }
     }
 
+    public function appendNewFields($fields)
+    {
+        if (is_array($fields)) {
+            array_merge($fields, $this->appends);
+        } elseif (is_string($fields)) {
+            array_push($this->appends, $fields);
+        }
+    }
+
     public static function getTableName()
     {
         return with(new static)->getTable();
