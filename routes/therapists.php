@@ -102,4 +102,6 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     $router->group(['prefix' => 'service'], function () use($router) {
         $router->post('/', 'TherapistController@getAllServices');
     });
+
+    $router->post('get', 'TherapistController@getOthers');
 });

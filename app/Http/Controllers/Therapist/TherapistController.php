@@ -25,6 +25,8 @@ use App\TherapistComplaint;
 use App\TherapistSuggestion;
 use App\TherapistReview;
 use App\BookingMassageStart;
+use App\TherapistWorkingSchedule;
+use App\TherapistWorkingScheduleTime;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -62,7 +64,8 @@ class TherapistController extends BaseController
         'therapist.complaint' => "Complaint registered successfully !",
         'therapist.ratings' => "Therapist ratings get successfully !",
         'booking.start' => "Massage started successfully !",
-        'services.found.successfully' => 'services found successfully',
+        'services.found.successfully' => 'services found successfully !',
+        'other.therapist.found' => 'Other therapist found successfully !',
         'no.data.found' => 'No data found'
     ];
 
@@ -627,7 +630,8 @@ class TherapistController extends BaseController
         return $isUploadedAll;
     }
 
-    public function myWorkingSchedules(Request $request)
+    /* My working schedules by bookings. */
+    public function myWorkingSchedulesByBookings(Request $request)
     {
         $model              = new Therapist();
         $modelBookingInfo   = new BookingInfo();
@@ -718,6 +722,18 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('my.working.schedules.successfully', collect($return));
+    }
+
+    /* My working schedules as Shop defined. */
+    public function myWorkingSchedules(Request $request)
+    {
+        $now  = Carbon::now()->timestamp * 1000;
+        $date = Carbon::createFromTimestampMs($request->get('date', $now));
+        $id   = $request->get('id', false);
+
+        $data = TherapistWorkingSchedule::getScheduleByMonth($id, $date->format('Y-m-d'));
+
+        return $this->returns('my.working.schedules.successfully', $data);
     }
 
     public function getGlobalResponse(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request, $returnResponse = true)
@@ -873,6 +889,36 @@ class TherapistController extends BaseController
 
         if (count($services) > 0) {
             return $this->returnSuccess(__($this->successMsg['services.found.successfully']), $services);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
+        }
+    }
+
+    public function getOthers(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $name   = $request->get('name', null);
+        $model  = new Therapist();
+
+        if ($id) {
+            $data = $model::where('id', '!=', $id);
+
+            if (!empty($name)) {
+                $data->where(function($query) use($name) {
+                    $query->where('name', $name)
+                          ->orWhere('surname', $name)
+                          ->orWhereRaw("CONCAT(`name`, ' ', `surname`) LIKE '{$name}'");
+                });
+            }
+
+            $data = $data->get();
+        }
+
+        if (!empty($data) && !$data->isEmpty()) {
+            $data->each->append('massage_count');
+            $data->each->append('therapy_count');
+
+            return $this->returnSuccess(__($this->successMsg['other.therapist.found']), $data);
         } else {
             return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
         }
