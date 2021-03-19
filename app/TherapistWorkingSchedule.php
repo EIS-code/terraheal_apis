@@ -3,8 +3,10 @@
 namespace App;
 
 use App\Therapist;
+use App\TherapistWorkingScheduleTime;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use DB;
 
 class TherapistWorkingSchedule extends BaseModel
 {
@@ -48,6 +50,11 @@ class TherapistWorkingSchedule extends BaseModel
         ]);
     }
 
+    public function therapistWorkingScheduleTimes()
+    {
+        return $this->hasMany('App\TherapistWorkingScheduleTime', 'schedule_id', 'id');
+    }
+
     public function getDateAttribute($value)
     {
         return strtotime($value) * 1000;
@@ -81,6 +88,23 @@ class TherapistWorkingSchedule extends BaseModel
         $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
 
         $data = self::whereBetween('date', [$startDate, $endDate])->where('therapist_id', $id)->get();
+
+        return $data;
+    }
+
+    public static function getAvailabilities(int $id, $date)
+    {
+        $now   = Carbon::now();
+        $date  = Carbon::createFromTimestampMs($date);
+        $date  = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
+        $model = new TherapistWorkingScheduleTime();
+
+        $data  = $model::select(self::getTableName() . '.id AS schedule_id', DB::raw("UNIX_TIMESTAMP(" . self::getTableName() . ".date) * 1000 AS date"), self::getTableName() . '.therapist_id', $model::getTableName() . '.id AS schedule_time_id', DB::raw("UNIX_TIMESTAMP(" . $model::getTableName() . ".time) * 1000 AS time"))
+                       ->join(self::getTableName(), $model::getTableName() . '.schedule_id', '=', self::getTableName() . '.id')
+                       ->whereDate(self::getTableName() . '.date', $date)
+                       // ->whereDate($model::getTableName() . '.time', $date)
+                       ->where(self::getTableName() . '.therapist_id', $id)
+                       ->get();
 
         return $data;
     }

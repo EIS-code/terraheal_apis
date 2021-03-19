@@ -27,6 +27,8 @@ use App\TherapistReview;
 use App\BookingMassageStart;
 use App\TherapistWorkingSchedule;
 use App\TherapistWorkingScheduleTime;
+use App\TherapistQuitCollaboration;
+use App\TherapistSuspendCollaboration;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -46,7 +48,9 @@ class TherapistController extends BaseController
         'notFound' => "Therapist not found.",
         'notFoundBookingMassage' => "Booking massage not found.",
         'notFoundEndTime' => "End time not found.",
-        'endTimeIsNotProper' => "End time always greater than start time."
+        'endTimeIsNotProper' => "End time always greater than start time.",
+        'dateRequired' => "Date is required.",
+        'somethingWrong' => "Something went wrong."
     ];
 
     public $successMsg = [
@@ -66,6 +70,10 @@ class TherapistController extends BaseController
         'booking.start' => "Massage started successfully !",
         'services.found.successfully' => 'services found successfully !',
         'other.therapist.found' => 'Other therapist found successfully !',
+        'my.availability.found' => 'My availability found successfully !',
+        'therapist.absent.successfully' => 'Therapist absent successfully !',
+        'therapist.quit.collaboration' => 'Quit collaboration submitted successfully !',
+        'therapist.suspend.collaboration' => 'Suspend collaboration submitted successfully !',
         'no.data.found' => 'No data found'
     ];
 
@@ -888,9 +896,9 @@ class TherapistController extends BaseController
         $services = serviceHelper::getAllService($request);
 
         if (count($services) > 0) {
-            return $this->returnSuccess(__($this->successMsg['services.found.successfully']), $services);
+            return $this->returns('services.found.successfully', $services);
         } else {
-            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
+            return $this->returns('no.data.found');
         }
     }
 
@@ -918,9 +926,100 @@ class TherapistController extends BaseController
             $data->each->append('massage_count');
             $data->each->append('therapy_count');
 
-            return $this->returnSuccess(__($this->successMsg['other.therapist.found']), $data);
+            return $this->returns('other.therapist.found', $data);
         } else {
-            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
+            return $this->returns('no.data.found');
         }
+    }
+
+    public function myAvailabilities(Request $request)
+    {
+        $id    = $request->get('id', false);
+        $date  = $request->get('date', NULL);
+        $model = new TherapistWorkingSchedule();
+
+        $data = $model::getAvailabilities($id, $date);
+
+        if (!empty($data) && !$data->isEmpty()) {
+            return $this->returns('my.availability.found', $data);
+        } else {
+            return $this->returns('no.data.found');
+        }
+    }
+
+    public function myFreeSpots(Request $request)
+    {
+        $id    = $request->get('id', false);
+        $now   = Carbon::now();
+        $date  = $request->get('date', NULL);
+        $date  = Carbon::createFromTimestampMs($date);
+        $date  = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
+
+        $availableTimes = $model::getAvailabilities($id, $date);
+    }
+
+    public function absent(Request $request)
+    {
+        $id             = $request->get('id', false);
+        $date           = $request->get('date', NULL);
+        $date           = $date > 0 ? Carbon::createFromTimestampMs($date)->format('Y-m-d') : NULL;
+        $absentReason   = $request->get('absent_reason', NULL);
+        $model          = new TherapistWorkingSchedule();
+
+        if (empty($date)) {
+            return $this->returns('dateRequired', NULL, true);
+        }
+
+        if ($id && !empty($date)) {
+            $row = $model->where('therapist_id', $id)->whereDate('date', $date)->update(['is_absent' => $model::ABSENT, 'absent_reason' => $absentReason]);
+
+            if ($row) {
+                return $this->returns('therapist.absent.successfully', collect([]));
+            }
+        }
+
+        return $this->returns('no.data.found');
+    }
+
+    public function quitCollaboration(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $reason = $request->get('reason', NULL);
+        $data   = ['reason' => $reason, 'therapist_id' => $id];
+        $model  = new TherapistQuitCollaboration();
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::create(['reason' => $reason, 'therapist_id' => $id]);
+
+        if ($create) {
+            return $this->returns('therapist.quit.collaboration', $create);
+        }
+
+        return $this->returns('somethingWrong', null, true);
+    }
+
+    public function suspendCollaboration(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $reason = $request->get('reason', NULL);
+        $data   = ['reason' => $reason, 'therapist_id' => $id];
+        $model  = new TherapistSuspendCollaboration();
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::create(['reason' => $reason, 'therapist_id' => $id]);
+
+        if ($create) {
+            return $this->returns('therapist.suspend.collaboration', $create);
+        }
+
+        return $this->returns('somethingWrong', null, true);
     }
 }
