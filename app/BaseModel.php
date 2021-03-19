@@ -76,7 +76,7 @@ class BaseModel extends Model
             $shopId = (int)request()->get('shop_id', false);
 
             if (!empty($shopId) && in_array('shop_id', $tableFillables)) {
-                $where['shop_id'] = $shopId;
+                $where[$this::getTableName() . '.shop_id'] = $shopId;
             }
 
             if (in_array(self::$removedColumn, $tableFillables) && in_array(self::$removedColumn, $tableColumns)) {
