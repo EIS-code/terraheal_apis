@@ -77,6 +77,10 @@ class Massage extends BaseModel
     {
         return $this->hasMany('App\MassageTiming', 'massage_id', 'id');
     }
+    public function pricing()
+    {
+        return $this->hasMany('App\MassagePrice', 'massage_id', 'id');
+    }
 
     /**
      * Get the index name for the model.

@@ -68,13 +68,14 @@ class TherapistController extends BaseController
         'therapist.complaint' => "Complaint registered successfully !",
         'therapist.ratings' => "Therapist ratings get successfully !",
         'booking.start' => "Massage started successfully !",
-        'services.found.successfully' => 'services found successfully !',
         'other.therapist.found' => 'Other therapist found successfully !',
         'my.availability.found' => 'My availability found successfully !',
         'therapist.absent.successfully' => 'Therapist absent successfully !',
         'therapist.quit.collaboration' => 'Quit collaboration submitted successfully !',
         'therapist.suspend.collaboration' => 'Suspend collaboration submitted successfully !',
-        'no.data.found' => 'No data found'
+        'services.found.successfully' => 'services found successfully',
+        'no.data.found' => 'No data found',
+        'therapist.data.found' => 'Therapist data found successfully'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1021,5 +1022,23 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('somethingWrong', null, true);
+    }
+    
+    public function getTherapists(Request $request)
+    {
+        $query = DB::table('booking_massages')
+                        ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                        ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                        ->join('therapists', 'therapists.id', '=', 'booking_infos.therapist_id')
+                        ->select('booking_infos.massage_time as massageStartTime','booking_infos.massage_date as massageDate',
+                                DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'))
+                        ->where('bookings.shop_id',$request->shop_id);
+        
+        if (isset($request->filter) && $request->filter == 1) {
+            $therapists = $query->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'))->get();
+        } else {
+            $therapists = $query->get();
+        }
+        return $this->returnSuccess(__($this->successMsg['therapist.data.found']), $therapists);
     }
 }

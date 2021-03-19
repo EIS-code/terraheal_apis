@@ -15,6 +15,14 @@ use App\Booking;
 
 class DashboardController extends BaseController {
 
+     public $successMsg = [
+        
+         'data.found' => 'Data found successfully.',
+         'sales.data.found' => 'Sales data found successfully.',
+         'customer.data.found' => 'Customers data found successfully.',
+         
+    ];
+     
     public function getDetails(Request $request) {
         $massages = Massage::where('shop_id', $request->get('shop_id'))->get()->count();
         $therapies = Therapy::where('shop_id', $request->get('shop_id'))->get()->count();
@@ -23,7 +31,7 @@ class DashboardController extends BaseController {
                             $q->where('shop_id', '=', $request->get('shop_id'));
                         })->avg('rating');
         $reviews = isset($reviews) ? $reviews : 0;
-        return $this->returnSuccess('Data found successfully', ['massages' => $massages, 'therapies' => $therapies, 'reviews' => $reviews]);
+        return $this->returnSuccess(__($this->successMsg['data.found']), ['massages' => $massages, 'therapies' => $therapies, 'reviews' => $reviews]);
     }
 
     public function salesInfo(Request $request) {
@@ -138,7 +146,7 @@ class DashboardController extends BaseController {
             array_push($topTherapies, ['total' => $bookingTherapies, 'therapy_name' =>  ['name']]);
         }
         
-        return $this->returnSuccess('Sales data found successfully', ['allBookings' => $allBookings, 'cancelBooking' => $cancelBookings, 'pendingBooking' => $pendingBookings,
+        return $this->returnSuccess(__($this->successMsg['sales.data.found']), ['allBookings' => $allBookings, 'cancelBooking' => $cancelBookings, 'pendingBooking' => $pendingBookings,
             'totalMassages' => $massages->count(), 'totalTherapies' => $therapies->count(), 'futureBookings' => $upcomingBookings,
             'todayTotalBookings' => $todayBooking, 'todayCenterBooking' => $todayCenterBookings, 'todayHomeBooking' => $todayHomeBookings,
             'topMassages' => $topMassages, 'topTherapies' => $topTherapies]);
@@ -146,9 +154,9 @@ class DashboardController extends BaseController {
     
     public function customerInfo(Request $request) {
         
-        $activeUsers = User::where('is_removed', User::$notRemoved)->count();
-        $defectedUsers = User::where('is_removed', User::$removed)->count();
+        $activeUsers = User::where(['is_removed' => User::$notRemoved, 'shop_id' => $request->shop_id])->count();
+        $defectedUsers = User::where(['is_removed' => User::$removed, 'shop_id' => $request->shop_id])->count();
         
-        return $this->returnSuccess('Customer data found successfully', ['activeUsers' => $activeUsers, 'defectedUsers' => $defectedUsers]);
+        return $this->returnSuccess(__($this->successMsg['customer.data.found']), ['activeUsers' => $activeUsers, 'defectedUsers' => $defectedUsers]);
     }
 }
