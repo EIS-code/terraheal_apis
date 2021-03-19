@@ -39,6 +39,19 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/getFutureBooking', 'WaitingList\WaitingListController@futureBooking');
     $router->post('/getCancelBooking', 'WaitingList\WaitingListController@cancelBooking');
     $router->post('/getCompletedBooking', 'WaitingList\WaitingListController@completedBooking');
+    $router->post('/getPastBooking', 'WaitingList\WaitingListController@pastBooking');
+    $router->post('/addBookingMassage', 'WaitingList\WaitingListController@addBookingMassage');
+    $router->post('/getAllTherapists', 'WaitingList\WaitingListController@getAllTherapists');
+    $router->post('/deleteBooking', 'WaitingList\WaitingListController@deleteBooking');
+    $router->post('/printBookingDetails', 'WaitingList\WaitingListController@printBookingDetails');
+    $router->post('/assignRoom', 'WaitingList\WaitingListController@assignRoom');
+    $router->post('/addNewBooking', 'WaitingList\WaitingListController@addNewBooking');
+    $router->post('/bookingOverview', 'WaitingList\WaitingListController@bookingOverview');
+    $router->post('/roomOccupation', 'WaitingList\WaitingListController@roomOccupation');
+    $router->post('/getAllMassages', 'WaitingList\WaitingListController@getAllMassages');
+    $router->post('/getAllTherapies', 'WaitingList\WaitingListController@getAllTherapies');
+    $router->post('/getClientList', 'WaitingList\WaitingListController@clientList');
+    $router->post('/addClient', 'WaitingList\WaitingListController@addClient');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {
@@ -51,4 +64,20 @@ $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () us
 $router->group(['prefix' => 'events', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/addEvent', 'Events\EventsController@createEvent');
+    $router->post('/updateEvent', 'Events\EventsController@updateEvent');
+    $router->post('/deleteEvent', 'Events\EventsController@deleteEvent');
+    $router->post('/getAllEvents', 'Events\EventsController@getAllEvents');
+});
+
+$router->group(['prefix' => 'clients', 'namespace' => 'Shops'], function () use($router) {
+    
+    $router->post('/searchClients', 'Clients\ClientController@searchClients');
+    $router->post('/getClientDetails', 'Clients\ClientController@clientDetails');
+    $router->post('/getFutureBookings', 'Clients\ClientController@getFutureBookings');
+});
+
+$router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($router) {
+    
+    $router->post('/createRoom', 'Rooms\RoomsController@createRoom');
+    $router->post('/getRooms', 'Rooms\RoomsController@getRooms');
 });

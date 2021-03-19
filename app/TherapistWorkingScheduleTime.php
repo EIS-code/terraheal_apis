@@ -19,4 +19,9 @@ class TherapistWorkingScheduleTime extends BaseModel
             'schedule_id' => ['required', 'exists:' . TherapistWorkingSchedule::getTableName() . ',id']
         ]);
     }
+
+    public function therapistWorkingSchedule()
+    {
+        return $this->hasOne('App\TherapistWorkingSchedule', 'id', 'schedule_id');
+    }
 }

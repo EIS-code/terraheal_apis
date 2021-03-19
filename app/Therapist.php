@@ -70,6 +70,9 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         self::IS_FREELANCER     => 'Yes',
         self::IS_NOT_FREELANCER => 'No'
     ];
+    
+    const IS_DELETED = '1';
+    const IS_NOT_DELETED = '0';
 
     public function getFullNameAttribute()
     {
