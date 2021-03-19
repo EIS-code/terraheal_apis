@@ -57,6 +57,9 @@ class User extends BaseModel implements Authenticatable
         'is_email_verified',
         'is_mobile_verified',
         'is_document_verified',
+        'source',
+        'client_note',
+        'gender'
     ];
 
     /**

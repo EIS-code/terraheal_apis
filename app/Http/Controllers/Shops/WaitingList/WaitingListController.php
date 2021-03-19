@@ -11,6 +11,9 @@ use App\Therapist;
 use App\UserPeople;
 use App\Shop;
 use DB;
+use Carbon\Carbon;
+use App\Therapy;
+use App\User;
 
 class WaitingListController extends BaseController {
 
@@ -20,12 +23,18 @@ class WaitingListController extends BaseController {
         'future.booking' => 'Future bookings found successfully',
         'completed.booking' => 'Completed bookings found successfully',
         'cancelled.booking' => 'Cancelled bookings found successfully',
+        'past.booking' => 'Past bookings found successfully',
         'add.booking' => 'New booking massage added successfully',
         'therapists' => 'All therapists found successfully',
         'delete.booking' => 'Booking deleted successfully',
         'print.booking' => 'Booking data found successfully',
         'assign.room' => 'Assign room successfully',
-        'new.booking' => 'New booking added successfully'
+        'new.booking' => 'New booking added successfully',
+        'booking.overview' => 'Bookings found successfully',
+        'massages' => 'Massages found successfully',
+        'therapies' => 'Therapies found successfully',
+        'client.list' => 'List of clients found successfully',
+        'client.add' => 'Client added successfully'
     ];
 
     public function ongoingMassage(Request $request) {
@@ -76,6 +85,15 @@ class WaitingListController extends BaseController {
         $cancelBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
         return $this->returnSuccess(__($this->successMsg['cancelled.booking']), $cancelBooking);
+    }
+    public function pastBooking(Request $request) {
+
+        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_PAST]);
+        $bookingModel = new Booking();
+        $pastBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+
+        return $this->returnSuccess(__($this->successMsg['past.booking']), $pastBooking);
     }
     
     public function addBookingMassage(Request $request) {
@@ -195,5 +213,59 @@ class WaitingListController extends BaseController {
             throw $e;
         }
     }
-
+    
+    public function bookingOverview(Request $request) {
+        
+        $filterDate = Carbon::parse($request->date);
+        
+        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $date = isset($request->date) ? $filterDate->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+        $request->request->add(['type' => $type, 'date' => $date]);
+        
+        $bookingModel = new Booking();
+        $bookingOverviews = $bookingModel->getGlobalQuery($request)->groupBy('therapist_id');
+        
+        return $this->returnSuccess(__($this->successMsg['booking.overview']), $bookingOverviews);
+    }
+    public function roomOccupation(Request $request) {
+        
+        $filterDate = Carbon::parse($request->date);
+        
+        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $date = isset($request->date) ? $filterDate->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+        $request->request->add(['type' => $type, 'date' => $date]);
+        
+        $bookingModel = new Booking();
+        $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id')->groupBy('room_id');
+        
+        return $this->returnSuccess(__($this->successMsg['booking.overview']), $roomOccupied);
+    }
+    
+    public function getAllMassages(Request $request)
+    {
+        $massages = Massage::with('timing','pricing')->where('shop_id',$request->shop_id)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['massages']), $massages);
+    }
+    
+    public function getAllTherapies(Request $request)
+    {
+        $therapies = Therapy::where('shop_id',$request->shop_id)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['therapies']), $therapies);        
+    }
+    
+    public function clientList(Request $request) {
+        
+        $clients = User::with('shop','city','country','reviews')->where('shop_id',$request->shop_id)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['client.list']), $clients);
+    }
+    
+    public function addClient(Request $request) {
+        
+        $client = User::create($request->all());
+        
+        return $this->returnSuccess(__($this->successMsg['client.add']), $client);
+    }
 }

@@ -35,6 +35,7 @@ class Booking extends BaseModel
     const BOOKING_FUTURE = '2';
     const BOOKING_COMPLETED = '3';
     const BOOKING_CANCELLED = '4';
+    const BOOKING_PAST = '5';
 
     public static $defaultTableFutons = ['0', '1', '2'];
     public static $tableFutons = ['0', '1', '2'];
@@ -141,6 +142,7 @@ class Booking extends BaseModel
         $therapist      = $request->get('therapist_id');
         $roomId         = $request->get('room_id');
         $bookingId      = $request->get('booking_id');
+        $date      = $request->get('date');
         
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
@@ -190,7 +192,9 @@ class Booking extends BaseModel
                             'CONCAT(' . $therapistModel::getTableName() . '.name, " ", ' . $therapistModel::getTableName() . '.surname) as therapistName, ' . 
                             $roomModel::getTableName().'.name as roomName,'.
                             $userGenderPreferenceModel::getTableName().'.name as genderPreference,'.
-                            $massagePriceModel::getTableName().'.cost'
+                            $massagePriceModel::getTableName().'.cost,'.
+                            $therapistModel::getTableName().'.id as therapist_id,'.
+                            $roomModel::getTableName().'.id as room_id'
                         )
                 )
                 ->join($bookingInfoModel::getTableName(), $this::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')
@@ -234,6 +238,9 @@ class Booking extends BaseModel
         if ($bookingId) {
             $data->where($this::getTableName() . '.id', $bookingId);
         }
+        if ($date) {
+            $data->where($bookingInfoModel::getTableName() . '.massage_date', '=', $date);
+        }
         if (isset($bookingsFilter)) {
             if ($bookingsFilter == self::BOOKING_ONGOING) {
                 $data->where($bookingMassageModel::getTableName() . '.is_confirm', BookingMassage::IS_CONFIRM);
@@ -249,6 +256,9 @@ class Booking extends BaseModel
             }
             if ($bookingsFilter == self::BOOKING_CANCELLED) {
                 $data->where($bookingInfoModel::getTableName() . '.is_cancelled', BookingInfo::IS_CANCELLED);
+            }
+            if ($bookingsFilter == self::BOOKING_PAST) {
+                $data->where($bookingInfoModel::getTableName() . '.massage_date', '<=', Carbon::now()->format('Y-m-d'));
             }
         }
 
