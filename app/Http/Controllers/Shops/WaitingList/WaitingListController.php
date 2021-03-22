@@ -73,7 +73,7 @@ class WaitingListController extends BaseController {
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_COMPLETED]);
         $bookingModel = new Booking();
-        $completedBooking = $bookingModel->getGlobalQuery($request);
+        $completedBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
         return $this->returnSuccess(__($this->successMsg['completed.booking']), $completedBooking);
     }
@@ -92,7 +92,7 @@ class WaitingListController extends BaseController {
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_PAST]);
         $bookingModel = new Booking();
-        $pastBooking = $bookingModel->getGlobalQuery($request);
+        $pastBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
         return $this->returnSuccess(__($this->successMsg['past.booking']), $pastBooking);
     }
