@@ -275,9 +275,11 @@ class Booking extends BaseModel
                 if (empty($record->qr_code_path)) {
                     $find = $userModel::find($record->user_id);
 
-                    $find->storeQRCode();
+                    if (!empty($find)) {
+                        $find->storeQRCode();
 
-                    $record->qr_code_path = $find->qr_code_path;
+                        $record->qr_code_path = $find->qr_code_path;
+                    }
                 }
             });
         }
