@@ -34,7 +34,8 @@ class WaitingListController extends BaseController {
         'massages' => 'Massages found successfully',
         'therapies' => 'Therapies found successfully',
         'client.list' => 'List of clients found successfully',
-        'client.add' => 'Client added successfully'
+        'client.add' => 'Client added successfully',
+        'client.data.found' => 'Client data found successfully'        
     ];
 
     public function ongoingMassage(Request $request) {
@@ -267,5 +268,24 @@ class WaitingListController extends BaseController {
         $client = User::create($request->all());
         
         return $this->returnSuccess(__($this->successMsg['client.add']), $client);
+    }
+    
+    public function searchClients(Request $request) {
+        
+        $search_val = $request->search_val;        
+        $clients = User::where(['shop_id' => $request->shop_id, 'is_removed' => User::$notRemoved]);
+        
+        if (isset($search_val)) {
+            if (is_numeric($search_val)) {
+                $clients->where(function($query) use ($search_val) {
+                    $query->where('id', (int) $search_val)
+                            ->orWhere('tel_number', 'like', $search_val . '%');
+                });
+            } else {
+                $clients->where('name', 'like', $search_val . '%');
+            }
+        }
+
+        return $this->returnSuccess(__($this->successMsg['client.data.found']), $clients->get());
     }
 }
