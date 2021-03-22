@@ -23,4 +23,9 @@ class MassageTiming extends BaseModel
     {
         return $this->hasOne('App\MassagePrice', 'massage_timing_id', 'id');
     }
+
+    public function massage()
+    {
+        return $this->hasOne('App\Massage', 'id', 'massage_id');
+    }
 }

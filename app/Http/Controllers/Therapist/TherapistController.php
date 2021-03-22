@@ -25,6 +25,10 @@ use App\TherapistComplaint;
 use App\TherapistSuggestion;
 use App\TherapistReview;
 use App\BookingMassageStart;
+use App\TherapistWorkingSchedule;
+use App\TherapistWorkingScheduleTime;
+use App\TherapistQuitCollaboration;
+use App\TherapistSuspendCollaboration;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -44,7 +48,9 @@ class TherapistController extends BaseController
         'notFound' => "Therapist not found.",
         'notFoundBookingMassage' => "Booking massage not found.",
         'notFoundEndTime' => "End time not found.",
-        'endTimeIsNotProper' => "End time always greater than start time."
+        'endTimeIsNotProper' => "End time always greater than start time.",
+        'dateRequired' => "Date is required.",
+        'somethingWrong' => "Something went wrong."
     ];
 
     public $successMsg = [
@@ -62,6 +68,11 @@ class TherapistController extends BaseController
         'therapist.complaint' => "Complaint registered successfully !",
         'therapist.ratings' => "Therapist ratings get successfully !",
         'booking.start' => "Massage started successfully !",
+        'other.therapist.found' => 'Other therapist found successfully !',
+        'my.availability.found' => 'My availability found successfully !',
+        'therapist.absent.successfully' => 'Therapist absent successfully !',
+        'therapist.quit.collaboration' => 'Quit collaboration submitted successfully !',
+        'therapist.suspend.collaboration' => 'Suspend collaboration submitted successfully !',
         'services.found.successfully' => 'services found successfully',
         'no.data.found' => 'No data found',
         'therapist.data.found' => 'Therapist data found successfully'
@@ -97,8 +108,6 @@ class TherapistController extends BaseController
 
     public function getBookingDetails(Request $request)
     {
-        // $data = Therapist::with('selectedMassages', 'selectedTherapies')->where('id', $id)->first();
-
         $bookingModel = new Booking();
 
         $data = $bookingModel->getGlobalQuery($request);
@@ -112,10 +121,12 @@ class TherapistController extends BaseController
 
     public function filter(Collection &$return)
     {
+        $returnData = [];
+
         if (!empty($return) && !$return->isEmpty()) {
             $increments = 0;
 
-            $return->map(function(&$data, $index) use(&$return, &$increments) {
+            /*$return->map(function(&$data, $index) use(&$return, &$increments) {
                 if (empty($data->bookingInfoWithFilters) || $data->bookingInfoWithFilters->isEmpty()) {
                     unset($return[$index]);
                 } elseif (request()->get('client_name', false) && empty($data->bookingInfoWithFilters[0]->userPeople)) {
@@ -137,10 +148,47 @@ class TherapistController extends BaseController
 
                     unset($data->bookingInfoWithFilters);
                 }
+            });*/
+
+            $return->map(function($data, $index) use(&$returnData, &$increments) {
+                if (!empty($data->bookingInfoWithFilters) && !$data->bookingInfoWithFilters->isEmpty()) {
+                    foreach ($data->bookingInfoWithFilters as $bookingInfo) {
+                        if (!empty($bookingInfo->bookingMassages) && !$bookingInfo->bookingMassages->isEmpty()) {
+                            foreach ($bookingInfo->bookingMassages as $bookingMassage) {
+                                if (empty($bookingInfo->userPeople)) {
+                                    continue;
+                                }
+
+                                $returnData[$increments]['booking_id']           = $data->id;
+                                $returnData[$increments]['booking_type']         = $data->booking_type;
+                                $returnData[$increments]['special_notes']        = $data->special_notes;
+                                $returnData[$increments]['bring_table_futon']    = $data->bring_table_futon;
+                                $returnData[$increments]['table_futon_quantity'] = $data->table_futon_quantity;
+                                $returnData[$increments]['session_id']           = $data->session_id;
+                                $returnData[$increments]['copy_with_id']         = $data->copy_with_id;
+                                $returnData[$increments]['booking_date_time']    = $data->booking_date_time;
+                                $returnData[$increments]['user_id']              = $data->user_id;
+                                $returnData[$increments]['shop_id']              = $data->shop_id;
+                                $returnData[$increments]['booking_info_id']      = $bookingInfo->booking_info_id;
+                                $returnData[$increments]['massage_date']         = $bookingInfo->massage_date;
+                                $returnData[$increments]['massage_time']         = $bookingInfo->massage_time;
+                                $returnData[$increments]['user_people_id']       = $bookingInfo->user_people_id;
+                                $returnData[$increments]['therapist_id']         = $bookingInfo->therapist_id;
+                                $returnData[$increments]['user_name']            = $bookingInfo->userPeople->name;
+                                $returnData[$increments]['therapist_name']       = $bookingInfo->therapist->fullName;
+                                $returnData[$increments]['massage_name']         = $bookingMassage->massageTiming->massage->name;
+
+                                $increments++;
+                            }
+                        }
+                    }
+                }
             });
+
+            $returnData = collect($returnData);
         }
 
-        return $return;
+        return $returnData;
     }
 
     public function getTodayBooking(Request $request)
@@ -149,7 +197,7 @@ class TherapistController extends BaseController
 
         $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
 
-        $this->filter($data);
+        $data = $this->filter($data);
 
         return $this->returns('booking.today.found.successfully', $data);
     }
@@ -160,7 +208,7 @@ class TherapistController extends BaseController
 
         $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
 
-        $this->filter($data);
+        $data = $this->filter($data);
 
         return $this->returns('booking.future.found.successfully', $data);
     }
@@ -171,7 +219,7 @@ class TherapistController extends BaseController
 
         $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
 
-        $this->filter($data);
+        $data = $this->filter($data);
 
         return $this->returns('booking.past.found.successfully', $data);
     }
@@ -272,16 +320,18 @@ class TherapistController extends BaseController
             return $this->returns($checks->errors()->first(), NULL, true);
         }
 
+        /* For language spoken. */
+        // For language_spoken[2] ...
         if (!empty($data['language_spoken'])) {
             if (is_array($data['language_spoken'])) {
-                foreach ($data['language_spoken'] as $languageId => $languageSpoken) {
+                /*foreach ($data['language_spoken'] as $languageId => $languageSpoken) {
                     $languageData[] = [
                         'type'          => $languageSpoken,
                         'value'         => $modelTherapistLanguage::THEY_CAN_VALUE,
                         'language_id'   => $languageId,
                         'therapist_id'  => $id
                     ];
-                }
+                }*/
 
                 $checks = $modelTherapistLanguage->validators($languageData);
                 if ($checks->fails()) {
@@ -289,19 +339,47 @@ class TherapistController extends BaseController
                 }
             }
         }
+        // For language_spoken_2 ...
+        $keys            = array_keys($data);
+        $pattern         = '#^language_spoken_(.*)$#i';
+        $languageSpokens = preg_grep($pattern, $keys);
+
+        foreach ($languageSpokens as $key => $languageKey) {
+            $languageSpoken = $data[$languageKey];
+            $keyData        = explode("_", $languageKey);
+
+            if (!empty($keyData[2]) && is_numeric($keyData[2])) {
+                $languageId = $keyData[2];
+
+                $languageData[] = [
+                    'type'          => $languageSpoken,
+                    'value'         => $modelTherapistLanguage::THEY_CAN_VALUE,
+                    'language_id'   => $languageId,
+                    'therapist_id'  => $id
+                ];
+            }
+        }
+
         /* For profile Image */
-        if(isset($data['profile_photo']))
-        {
+        if (!empty($data['profile_photo']) && $data['profile_photo'] instanceof UploadedFile) {
             $checkImage = $model->validateProfilePhoto($data);
+
             if ($checkImage->fails()) {
+                unset($data['profile_photo']);
+
                 return $this->returns($checkImage->errors()->first(), NULL, true);
             }
-            $image = $data['profile_photo'];
-            $name = $image->getClientOriginalName();
-            Storage::putFileAs('/images/therapists/', $image, $name);
-            $data['profile_photo'] = $name;
+
+            $fileName = $data['profile_photo']->getClientOriginalName();
+            $fileName = time() . '_' . $id . '.' . $data['profile_photo']->getClientOriginalExtension();
+
+            $storeFile = $data['profile_photo']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
+
+            if ($storeFile) {
+                $data['profile_photo_name'] = $data['profile_photo'] = $fileName;
+            }
         }
-             
+
         /* For document uploads. */
         $documents    = array_keys($data);
         $documentData = [];
@@ -419,7 +497,15 @@ class TherapistController extends BaseController
             }
         }
 
+        // My services.
         $massageData = [];
+
+        if (!empty($data['my_massages'])) {
+            foreach ((array)$data['my_massages'] as $myMassage) {
+                $data['my_services']['massages'][] = $myMassage;
+            }
+        }
+
         if (!empty($data['my_services']['massages'])) {
             foreach ((array)$data['my_services']['massages'] as $massageId) {
                 $massageData[] = [
@@ -553,7 +639,8 @@ class TherapistController extends BaseController
         return $isUploadedAll;
     }
 
-    public function myWorkingSchedules(Request $request)
+    /* My working schedules by bookings. */
+    public function myWorkingSchedulesByBookings(Request $request)
     {
         $model              = new Therapist();
         $modelBookingInfo   = new BookingInfo();
@@ -644,6 +731,18 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('my.working.schedules.successfully', collect($return));
+    }
+
+    /* My working schedules as Shop defined. */
+    public function myWorkingSchedules(Request $request)
+    {
+        $now  = Carbon::now()->timestamp * 1000;
+        $date = Carbon::createFromTimestampMs($request->get('date', $now));
+        $id   = $request->get('id', false);
+
+        $data = TherapistWorkingSchedule::getScheduleByMonth($id, $date->format('Y-m-d'));
+
+        return $this->returns('my.working.schedules.successfully', $data);
     }
 
     public function getGlobalResponse(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request, $returnResponse = true)
@@ -792,15 +891,137 @@ class TherapistController extends BaseController
 
         return $this->returns('booking.start', $find);
     }
-    public function getAllServices(Request $request) {
 
+    public function getAllServices(Request $request)
+    {
         $services = serviceHelper::getAllService($request);
 
         if (count($services) > 0) {
-            return $this->returnSuccess(__($this->successMsg['services.found.successfully']), $services);
+            return $this->returns('services.found.successfully', $services);
         } else {
-            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
+            return $this->returns('no.data.found');
         }
+    }
+
+    public function getOthers(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $name   = $request->get('name', null);
+        $model  = new Therapist();
+
+        if ($id) {
+            $data = $model::where('id', '!=', $id);
+
+            if (!empty($name)) {
+                $data->where(function($query) use($name) {
+                    $query->where('name', $name)
+                          ->orWhere('surname', $name)
+                          ->orWhereRaw("CONCAT(`name`, ' ', `surname`) LIKE '{$name}'");
+                });
+            }
+
+            $data = $data->get();
+        }
+
+        if (!empty($data) && !$data->isEmpty()) {
+            $data->each->append('massage_count');
+            $data->each->append('therapy_count');
+
+            return $this->returns('other.therapist.found', $data);
+        } else {
+            return $this->returns('no.data.found');
+        }
+    }
+
+    public function myAvailabilities(Request $request)
+    {
+        $id    = $request->get('id', false);
+        $date  = $request->get('date', NULL);
+        $model = new TherapistWorkingSchedule();
+
+        $data = $model::getAvailabilities($id, $date);
+
+        if (!empty($data) && !$data->isEmpty()) {
+            return $this->returns('my.availability.found', $data);
+        } else {
+            return $this->returns('no.data.found');
+        }
+    }
+
+    public function myFreeSpots(Request $request)
+    {
+        $id    = $request->get('id', false);
+        $now   = Carbon::now();
+        $date  = $request->get('date', NULL);
+        $date  = Carbon::createFromTimestampMs($date);
+        $date  = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
+
+        $availableTimes = $model::getAvailabilities($id, $date);
+    }
+
+    public function absent(Request $request)
+    {
+        $id             = $request->get('id', false);
+        $date           = $request->get('date', NULL);
+        $date           = $date > 0 ? Carbon::createFromTimestampMs($date)->format('Y-m-d') : NULL;
+        $absentReason   = $request->get('absent_reason', NULL);
+        $model          = new TherapistWorkingSchedule();
+
+        if (empty($date)) {
+            return $this->returns('dateRequired', NULL, true);
+        }
+
+        if ($id && !empty($date)) {
+            $row = $model->where('therapist_id', $id)->whereDate('date', $date)->update(['is_absent' => $model::ABSENT, 'absent_reason' => $absentReason]);
+
+            if ($row) {
+                return $this->returns('therapist.absent.successfully', collect([]));
+            }
+        }
+
+        return $this->returns('no.data.found');
+    }
+
+    public function quitCollaboration(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $reason = $request->get('reason', NULL);
+        $data   = ['reason' => $reason, 'therapist_id' => $id];
+        $model  = new TherapistQuitCollaboration();
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::create(['reason' => $reason, 'therapist_id' => $id]);
+
+        if ($create) {
+            return $this->returns('therapist.quit.collaboration', $create);
+        }
+
+        return $this->returns('somethingWrong', null, true);
+    }
+
+    public function suspendCollaboration(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $reason = $request->get('reason', NULL);
+        $data   = ['reason' => $reason, 'therapist_id' => $id];
+        $model  = new TherapistSuspendCollaboration();
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $create = $model::create(['reason' => $reason, 'therapist_id' => $id]);
+
+        if ($create) {
+            return $this->returns('therapist.suspend.collaboration', $create);
+        }
+
+        return $this->returns('somethingWrong', null, true);
     }
     
     public function getTherapists(Request $request)

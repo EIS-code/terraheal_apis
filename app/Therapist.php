@@ -74,6 +74,11 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     const IS_DELETED = '1';
     const IS_NOT_DELETED = '0';
 
+    public function getFullNameAttribute()
+    {
+        return $this->name . ' ' . $this->surname;
+    }
+
     public function validator(array $data, $requiredFileds = [], $extraFields = [], $id = false, $isUpdate = false)
     {
         $user = NULL;
@@ -220,5 +225,15 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $model->setMysqlStrictTrue();
 
         return $data;
+    }
+
+    public function getMassageCountAttribute()
+    {
+        return $this->selectedMassages()->count();
+    }
+
+    public function getTherapyCountAttribute()
+    {
+        return $this->selectedTherapies()->count();
     }
 }
