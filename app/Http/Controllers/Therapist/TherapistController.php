@@ -77,7 +77,8 @@ class TherapistController extends BaseController
         'services.found.successfully' => 'services found successfully',
         'no.data.found' => 'No data found',
         'therapist.data.found' => 'Therapist data found successfully',
-        'therapist.exchange.shift' => 'Therapist exchange with others request sent successfully !'
+        'therapist.exchange.shift' => 'Therapist exchange with others request sent successfully !',
+        'my.missing.days.successfully' => 'My missing days found successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1068,5 +1069,16 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('somethingWrong', null, true);
+    }
+
+    public function myMissingDays(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $now    = Carbon::now()->timestamp * 1000;
+        $date   = Carbon::createFromTimestampMs($request->get('date', $now));
+
+        $data   = TherapistWorkingSchedule::getMissingDays($id, $date->format('Y-m-d'));
+
+        return $this->returns('my.missing.days.successfully', $data);
     }
 }
