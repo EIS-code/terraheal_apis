@@ -29,6 +29,7 @@ use App\TherapistWorkingSchedule;
 use App\TherapistWorkingScheduleTime;
 use App\TherapistQuitCollaboration;
 use App\TherapistSuspendCollaboration;
+use App\TherapistExchange;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -75,7 +76,9 @@ class TherapistController extends BaseController
         'therapist.suspend.collaboration' => 'Suspend collaboration submitted successfully !',
         'services.found.successfully' => 'services found successfully',
         'no.data.found' => 'No data found',
-        'therapist.data.found' => 'Therapist data found successfully'
+        'therapist.data.found' => 'Therapist data found successfully',
+        'therapist.exchange.shift' => 'Therapist exchange with others request sent successfully !',
+        'my.missing.days.successfully' => 'My missing days found successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1040,5 +1043,42 @@ class TherapistController extends BaseController
             $therapists = $query->get();
         }
         return $this->returnSuccess(__($this->successMsg['therapist.data.found']), $therapists);
+    }
+
+    public function exchangeWithOthers(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $date   = $request->get('date', false);
+        $model  = new TherapistExchange();
+
+        if (!empty($date) && $date > 0) {
+            $date = Carbon::createFromTimestampMs($date)->format('Y-m-d H:i:s');
+
+            $data = ['date' => $date, 'is_approved' => $model::IS_NOT_APPROVED, 'therapist_id' => $id];
+
+            $checks = $model->validator($data);
+            if ($checks->fails()) {
+                return $this->returns($checks->errors()->first(), NULL, true);
+            }
+
+            $create = $model::updateOrCreate($data, $data);
+
+            if ($create) {
+                return $this->returns('therapist.exchange.shift', $create);
+            }
+        }
+
+        return $this->returns('somethingWrong', null, true);
+    }
+
+    public function myMissingDays(Request $request)
+    {
+        $id     = $request->get('id', false);
+        $now    = Carbon::now()->timestamp * 1000;
+        $date   = Carbon::createFromTimestampMs($request->get('date', $now));
+
+        $data   = TherapistWorkingSchedule::getMissingDays($id, $date->format('Y-m-d'));
+
+        return $this->returns('my.missing.days.successfully', $data);
     }
 }
