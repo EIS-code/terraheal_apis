@@ -99,6 +99,14 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             $router->post('/quit', 'TherapistController@quitCollaboration');
             $router->post('/suspend', 'TherapistController@suspendCollaboration');
         });
+
+        $router->group(['prefix' => 'exchange'], function () use($router) {
+            $router->post('/', 'TherapistController@exchangeWithOthers');
+        });
+
+        $router->group(['prefix' => 'missing'], function () use($router) {
+            $router->post('/days', 'TherapistController@myMissingDays');
+        });
     });
 
     $router->group(['prefix' => 'rating'], function () use($router) {

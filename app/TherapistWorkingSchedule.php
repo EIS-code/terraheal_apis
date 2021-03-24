@@ -84,7 +84,7 @@ class TherapistWorkingSchedule extends BaseModel
     {
         $currentMonth   = Carbon::now();
         $month          = empty($month) ? $currentMonth : new Carbon($month);
-        $startDate      = $month->format('Y') . $month->format('m') . '-01';
+        $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
         $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
 
         $data = self::whereBetween('date', [$startDate, $endDate])->where('therapist_id', $id)->get();
@@ -107,5 +107,17 @@ class TherapistWorkingSchedule extends BaseModel
                        ->get();
 
         return $data;
+    }
+
+    public static function getMissingDays(int $id, $month)
+    {
+        $currentMonth   = Carbon::now();
+        $month          = empty($month) ? $currentMonth : new Carbon($month);
+        $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
+        $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
+
+        $date = self::where('therapist_id', $id)->whereBetween('date', [$startDate, $endDate])->where('is_absent', self::ABSENT)->get();
+
+        return $date;
     }
 }
