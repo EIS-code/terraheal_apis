@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Validator;
 class TherapistWorkingScheduleTime extends BaseModel
 {
     protected $fillable = [
-        'time',
+        'start_time',
+        'end_time',
         'schedule_id'
     ];
 
@@ -23,5 +24,15 @@ class TherapistWorkingScheduleTime extends BaseModel
     public function therapistWorkingSchedule()
     {
         return $this->hasOne('App\TherapistWorkingSchedule', 'id', 'schedule_id');
+    }
+    
+    public function getStartTimeAttribute($value)
+    {
+        return strtotime($value) * 1000;
+    }
+    
+    public function getEndTimeAttribute($value)
+    {
+        return strtotime($value) * 1000;
     }
 }

@@ -37,7 +37,6 @@ class TherapistWorkingSchedule extends BaseModel
     {
         parent::__construct($attributes);
 
-        $this->addHidden('therapist_id');
     }
 
     public function validator(array $data, $isUpdate = false)
@@ -54,11 +53,16 @@ class TherapistWorkingSchedule extends BaseModel
     {
         return $this->hasMany('App\TherapistWorkingScheduleTime', 'schedule_id', 'id');
     }
-
-    public function getDateAttribute($value)
-    {
-        return strtotime($value) * 1000;
+    
+    public function therapist() {
+        
+        return $this->hasOne('App\Therapist', 'id', 'therapist_id');
     }
+
+//    public function getDateAttribute($value)
+//    {
+//        return strtotime($value) * 1000;
+//    }
 
     /**
      * Get schedule by date.  If not pass then it will take current month.
