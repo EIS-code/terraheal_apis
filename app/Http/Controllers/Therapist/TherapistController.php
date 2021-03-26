@@ -944,7 +944,7 @@ class TherapistController extends BaseController
 
         $data = $model::getAvailabilities($id, $date);
 
-        if (!empty($data) && !$data->isEmpty()) {
+        if (!empty($data)) {
             return $this->returns('my.availability.found', $data);
         } else {
             return $this->returns('no.data.found');
@@ -975,7 +975,7 @@ class TherapistController extends BaseController
         }
 
         if ($id && !empty($date)) {
-            $row = $model->where('therapist_id', $id)->whereDate('date', $date)->update(['is_absent' => $model::ABSENT, 'absent_reason' => $absentReason]);
+            $row = $model->where('therapist_id', $id)->whereDate('date', $date)->update(['is_absent' => $model::ABSENT, 'is_working' => $model::NOT_WORKING, 'absent_reason' => $absentReason]);
 
             if ($row) {
                 return $this->returns('therapist.absent.successfully', collect([]));

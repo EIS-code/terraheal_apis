@@ -15,7 +15,7 @@ class CreateTherapistWorkingSchedulesTable extends Migration
     {
         Schema::create('therapist_working_schedules', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->timestamp('date');
+            $table->date('date');
             $table->enum('is_working', ['0', '1'])->default('0')->comment("0: Nope, 1: Yes");
             $table->enum('is_absent', ['0', '1'])->nullable()->comment("0: Nope, 1: Yes");
             $table->bigInteger('therapist_id')->unsigned();
