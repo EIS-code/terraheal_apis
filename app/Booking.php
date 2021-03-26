@@ -263,19 +263,19 @@ class Booking extends BaseModel
         }
         if (isset($bookingsFilter)) {
             if ($bookingsFilter == self::BOOKING_ONGOING) {
-                $data->where($bookingMassageModel::getTableName() . '.is_confirm', BookingMassage::IS_CONFIRM);
+                $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_CONFIRM);
             }
             if ($bookingsFilter == self::BOOKING_WAITING) {
-                $data->where($bookingMassageModel::getTableName() . '.is_confirm', BookingMassage::IS_NOT_CONFIRM);
+                $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_NOT_CONFIRM);
             }
             if ($bookingsFilter == self::BOOKING_FUTURE) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', '>=', Carbon::now()->format('Y-m-d'));
             }
             if ($bookingsFilter == self::BOOKING_COMPLETED) {
-                $data->where($bookingInfoModel::getTableName() . '.is_done', BookingInfo::IS_DONE);
+                $data->where($bookingInfoModel::getTableName() . '.is_done', (string)BookingInfo::IS_DONE);
             }
             if ($bookingsFilter == self::BOOKING_CANCELLED) {
-                $data->where($bookingInfoModel::getTableName() . '.is_cancelled', BookingInfo::IS_CANCELLED);
+                $data->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_CANCELLED);
             }
             if ($bookingsFilter == self::BOOKING_PAST) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', '<=', Carbon::now()->format('Y-m-d'));

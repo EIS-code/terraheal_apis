@@ -47,7 +47,7 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $ongoingMassages = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
-        return $this->returnSuccess(__($this->successMsg['ongoing.massage']), $ongoingMassages);
+        return $this->returnSuccess(__($this->successMsg['ongoing.massage']), array_values($ongoingMassages->toArray()));
     }
 
     public function waitingMassage(Request $request) {
@@ -57,7 +57,7 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $waitingMassages = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
-        return $this->returnSuccess(__($this->successMsg['waiting.massage']), $waitingMassages);
+        return $this->returnSuccess(__($this->successMsg['waiting.massage']), array_values($waitingMassages->toArray()));
     }
 
     public function futureBooking(Request $request) {
@@ -67,7 +67,7 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $futureBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
-        return $this->returnSuccess(__($this->successMsg['future.booking']), $futureBooking);
+        return $this->returnSuccess(__($this->successMsg['future.booking']), array_values($futureBooking->toArray()));
     }
 
     public function completedBooking(Request $request) {
@@ -77,7 +77,7 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $completedBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
-        return $this->returnSuccess(__($this->successMsg['completed.booking']), $completedBooking);
+        return $this->returnSuccess(__($this->successMsg['completed.booking']), array_values($completedBooking->toArray()));
     }
 
     public function cancelBooking(Request $request) {
@@ -87,7 +87,7 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $cancelBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
-        return $this->returnSuccess(__($this->successMsg['cancelled.booking']), $cancelBooking);
+        return $this->returnSuccess(__($this->successMsg['cancelled.booking']), array_values($cancelBooking->toArray()));
     }
     public function pastBooking(Request $request) {
 
@@ -96,7 +96,7 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $pastBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
-        return $this->returnSuccess(__($this->successMsg['past.booking']), $pastBooking);
+        return $this->returnSuccess(__($this->successMsg['past.booking']), array_values($pastBooking->toArray()));
     }
     
     public function addBookingMassage(Request $request) {
