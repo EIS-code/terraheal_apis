@@ -1,6 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\View;
+use App\Email;
+use Carbon\Carbon;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
 
@@ -49,7 +54,11 @@ class Controller extends BaseController
             ]);
         }
 
-        $validator = Email::validator(['to' => $to, 'subject' => $subject, 'body' => $body]);
+        $validator = Validator::make(['to' => $to, 'subject' => $subject, 'body' => $body], [
+            'to'    => ['required'],
+            'subject' => ['required'],
+            'body' => ['required']
+        ]);
         if ($validator->fails()) {
             return response()->json([
                 'code' => 401,
@@ -101,7 +110,7 @@ class Controller extends BaseController
                     'bcc'            => $bcc,
                     'subject'        => $subject,
                     'body'           => $bodyContent,
-                    'attachments'    => json_encode($attachments),
+                    //'attachments'    => json_encode($attachments),
                     'exception_info' => NULL,
                     'created_at'     => Carbon::now()
                 ]);

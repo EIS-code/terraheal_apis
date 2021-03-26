@@ -34,4 +34,9 @@ class TherapistUserRating extends BaseModel
             'therapist_id'  => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
         ]);
     }
+    
+    public function therapist()
+    {
+        return $this->hasOne('App\Therapist', 'id', 'therapist_id');
+    }
 }

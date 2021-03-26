@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-use App\Shop;
 
 /*
   |--------------------------------------------------------------------------
@@ -76,6 +74,11 @@ $router->group(['prefix' => 'clients', 'namespace' => 'Shops'], function () use(
     $router->post('/searchClients', 'Clients\ClientController@searchClients');
     $router->post('/getClientDetails', 'Clients\ClientController@clientDetails');
     $router->post('/getFutureBookings', 'Clients\ClientController@getFutureBookings');
+    $router->post('/getPastBookings', 'Clients\ClientController@getPastBookings');
+    $router->post('/getCancelledBookings', 'Clients\ClientController@getCancelledBookings');
+    $router->post('/addForgotObject', 'Clients\ClientController@addForgotObject');
+    $router->post('/returnForgotObject', 'Clients\ClientController@returnForgotObject');
+    $router->post('/sendEmailToClient', 'Clients\ClientController@sendEmailToClient');
 });
 
 $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($router) {

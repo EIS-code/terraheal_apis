@@ -146,7 +146,8 @@ class Booking extends BaseModel
         $therapist      = $request->get('therapist_id');
         $roomId         = $request->get('room_id');
         $bookingId      = $request->get('booking_id');
-        $date      = $request->get('date');
+        $date           = $request->get('date');
+        $userId         = $request->get('user_id');
         
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
@@ -170,7 +171,9 @@ class Booking extends BaseModel
                         DB::RAW(
                             'CONCAT(' . $userModel::getTableName() . '.name, " ", ' . $userModel::getTableName() . '.surname) as client_name, ' . 
                             $userPeopleModel::getTableName() . '.name as client_name, '. 
-                            $bookingInfoModel::getTableName() . '.id as booking_info_id, '. 
+                            $bookingInfoModel::getTableName() . '.id as booking_info_id, '.
+                            $bookingMassageModel::getTableName() . '.id as booking_massage_id, ' .
+                            $bookingInfoModel::getTableName() . '.user_people_id, '.
                             $sessionTypeModel::getTableName() . '.type as session_type, ' . 
                             $massageModel::getTableName() . '.name as massage_name,' . 
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
@@ -178,7 +181,7 @@ class Booking extends BaseModel
                             'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, ' . 
                             'gender.name as gender_preference, ' . 
                             'pressure.name as pressure_preference, ' . 
-                            $this::getTableName() . '.special_notes as notes, ' . 
+                            $this::getTableName() . '.special_notes as notes, ' .
                             $bookingMassageModel::getTableName() . '.notes_of_injuries as injuries, ' . 
                             'focus_area.name as focus_area, ' . 
                             $this::getTableName() . '.table_futon_quantity, ' . 
@@ -188,8 +191,7 @@ class Booking extends BaseModel
                             'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as massage_day_name, ' . 
                             $userPeopleModel::getTableName() . '.age as client_age, ' . 
                             'CASE ' . $userPeopleModel::getTableName() . '.gender WHEN "m" THEN "' . $userPeopleModel->gender[$userPeopleModel::MALE] . '" WHEN "f" THEN "' . $userPeopleModel->gender[$userPeopleModel::FEMALE] . '" ELSE "" END as client_gender, ' . 
-                            'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' . 
-                            $bookingMassageModel::getTableName() . '.id as booking_massage_id, ' . 
+                            'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' .                            
                             $userModel::getTableName() . '.qr_code_path, ' . 
                             $this::getTableName() . '.user_id,'.
                             $bookingMassageModel::getTableName() . '.is_confirm, ' . 
@@ -255,6 +257,9 @@ class Booking extends BaseModel
         }
         if ($date) {
             $data->where($bookingInfoModel::getTableName() . '.massage_date', '=', $date);
+        }
+        if($userId) {
+            $data->where($this::getTableName() . '.user_id', '=', $userId);
         }
         if (isset($bookingsFilter)) {
             if ($bookingsFilter == self::BOOKING_ONGOING) {

@@ -68,7 +68,7 @@ class User extends BaseModel implements Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'is_removed', 'created_at', 'updated_at'
+        'password', 'is_removed', 'updated_at'
     ];
 
     public $fileSystem       = 'public';
