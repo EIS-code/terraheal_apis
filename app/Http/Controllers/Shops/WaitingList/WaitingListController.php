@@ -45,7 +45,7 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $ongoingMassages = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
 
-        return $this->returnSuccess(__($this->successMsg['ongoing.massage']), $ongoingMassages);
+        return $this->returnSuccess(__($this->successMsg['ongoing.massage']), array_values($ongoingMassages));
     }
 
     public function waitingMassage(Request $request) {
