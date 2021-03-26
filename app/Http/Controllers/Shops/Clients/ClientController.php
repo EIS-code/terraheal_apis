@@ -150,6 +150,7 @@ class ClientController extends BaseController {
         $to = $user->email;
         $subject = "Forgot Object";
         $body = array(
+            'user' => $user->name,
             'shop' => $shop->name,
             'room' => $room->name,
             'object' => $request->forgotten_object
