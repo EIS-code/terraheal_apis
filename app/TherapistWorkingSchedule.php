@@ -53,6 +53,21 @@ class TherapistWorkingSchedule extends BaseModel
     {
         return $this->hasMany('App\TherapistWorkingScheduleTime', 'schedule_id', 'id');
     }
+
+    public function therapistWorkingScheduleTime()
+    {
+        return $this->hasOne('App\TherapistWorkingScheduleTime', 'schedule_id', 'id');
+    }
+
+    public function therapistWorkingScheduleTimeWithBreaks()
+    {
+        return $this->hasOne('App\TherapistWorkingScheduleTime', 'schedule_id', 'id')->with('therapistWorkingScheduleBreaks');
+    }
+
+    public function getDateAttribute($value)
+    {
+        return strtotime($value) * 1000;
+    }
     
     public function therapist() {
         
@@ -103,12 +118,31 @@ class TherapistWorkingSchedule extends BaseModel
         $date  = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
         $model = new TherapistWorkingScheduleTime();
 
-        $data  = $model::select(self::getTableName() . '.id AS schedule_id', DB::raw("UNIX_TIMESTAMP(" . self::getTableName() . ".date) * 1000 AS date"), self::getTableName() . '.therapist_id', $model::getTableName() . '.id AS schedule_time_id', DB::raw("UNIX_TIMESTAMP(" . $model::getTableName() . ".time) * 1000 AS time"))
+        /*$data  = $model::select(self::getTableName() . '.id AS schedule_id', DB::raw("UNIX_TIMESTAMP(" . self::getTableName() . ".date) * 1000 AS date"), self::getTableName() . '.therapist_id', $model::getTableName() . '.id AS schedule_time_id', DB::raw("UNIX_TIMESTAMP(" . $model::getTableName() . ".time) * 1000 AS time"))
                        ->join(self::getTableName(), $model::getTableName() . '.schedule_id', '=', self::getTableName() . '.id')
                        ->whereDate(self::getTableName() . '.date', $date)
                        // ->whereDate($model::getTableName() . '.time', $date)
                        ->where(self::getTableName() . '.therapist_id', $id)
-                       ->get();
+                       ->get();*/
+
+       $data = self::has('therapistWorkingScheduleTimeWithBreaks')->with('therapistWorkingScheduleTimeWithBreaks')->whereDate(self::getTableName() . '.date', $date)->where(self::getTableName() . '.therapist_id', $id)->first();
+
+        if (!empty($data)) {
+            $scheduleTime       = $data->therapistWorkingScheduleTimeWithBreaks;
+
+            $data->start_time   = $scheduleTime->start_time;
+            $data->end_time     = $scheduleTime->end_time;
+            $data->schedule_id  = $scheduleTime->schedule_id;
+
+            $breaks = collect([]);
+            if (!empty($scheduleTime->therapistWorkingScheduleBreaks)) {
+                $breaks = $scheduleTime->therapistWorkingScheduleBreaks;
+            }
+
+            unset($data->therapistWorkingScheduleTimeWithBreaks);
+
+            $data->breaks = $breaks;
+        }
 
         return $data;
     }

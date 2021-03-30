@@ -38,4 +38,14 @@ class TherapistWorkingScheduleBreak extends BaseModel
             'schedule_time_id'  => ['required', 'exists:' . TherapistWorkingScheduleTime::getTableName() . ',id']
         ]);
     }
+
+    public function getFromAttribute($value)
+    {
+        return strtotime($value) * 1000;
+    }
+
+    public function getToAttribute($value)
+    {
+        return strtotime($value) * 1000;
+    }
 }
