@@ -78,7 +78,10 @@ class TherapistController extends BaseController
         'no.data.found' => 'No data found',
         'therapist.data.found' => 'Therapist data found successfully',
         'therapist.exchange.shift' => 'Therapist exchange with others request sent successfully !',
-        'my.missing.days.successfully' => 'My missing days found successfully !'
+        'my.missing.days.successfully' => 'My missing days found successfully !',
+        'therapist.languages' => 'Languages found successfully !',
+        'therapist.countries' => 'Countries found successfully !',
+        'therapist.cities' => 'Cities found successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1080,5 +1083,25 @@ class TherapistController extends BaseController
         $data   = TherapistWorkingSchedule::getMissingDays($id, $date->format('Y-m-d'));
 
         return $this->returns('my.missing.days.successfully', $data);
+    }
+    
+    public function getLanguages() {
+        
+        $languages = Language::all();
+        return $this->returnSuccess(__($this->successMsg['therapist.languages']), $languages);
+    }
+    
+    public function getCountries() {
+        
+        $countries = Country::all();
+        return $this->returnSuccess(__($this->successMsg['therapist.countries']), $countries);
+    }
+    
+    public function getCities(Request $request) {
+        
+        $cities = City::whereHas('province', function($q) use($request) {
+                    $q->where('country_id', $request->country_id);
+                })->get();
+        return $this->returnSuccess(__($this->successMsg['therapist.cities']), $cities);
     }
 }
