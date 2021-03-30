@@ -18,4 +18,13 @@ class Therapy extends BaseModel
             'image' => ['string', 'max:255']
         ]);
     }
+    
+    public function timing() {
+        return $this->hasMany('App\TherapiesTimings', 'therapy_id', 'id');
+    }
+
+    public function pricing() {
+        return $this->hasMany('App\TherapiesPrices', 'therapy_id', 'id');
+    }
+
 }

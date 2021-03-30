@@ -14,6 +14,7 @@ use DB;
 use Carbon\Carbon;
 use App\Therapy;
 use App\User;
+use App\TherapistWorkingSchedule;
 
 class WaitingListController extends BaseController {
 
@@ -35,7 +36,8 @@ class WaitingListController extends BaseController {
         'therapies' => 'Therapies found successfully',
         'client.list' => 'List of clients found successfully',
         'client.add' => 'Client added successfully',
-        'client.data.found' => 'Client data found successfully'        
+        'client.data.found' => 'Client data found successfully',       
+        'schedule.data.found' => 'Time Table data found successfully'        
     ];
 
     public function ongoingMassage(Request $request) {
@@ -101,18 +103,37 @@ class WaitingListController extends BaseController {
         
         $bookingMassage = BookingMassage::where('id',$request->booking_massage_id)->first();
         $newBooking = [];
-        $massages = Massage::with(['timing' => function ($query) use ($request) {
-                    $query->where('id', $request->massage_timing_id);
-                }])->with(['pricing' => function ($query) use ($request) {
-                    $query->where('massage_timing_id', $request->massage_timing_id);
-                }])->where(['shop_id' => $request->shop_id, 'id' => $request->massage_id])->first();
         
-        $newBooking['price'] = $massages->pricing[0]->price;
-        $newBooking['cost'] = $massages->pricing[0]->cost;
-        $newBooking['origional_price'] = $massages->pricing[0]->price;
-        $newBooking['origional_cost'] = $massages->pricing[0]->cost;
-        $newBooking['massage_timing_id'] = $massages->timing[0]->id;
-        $newBooking['massage_prices_id'] = $massages->pricing[0]->id;
+        // 0 = for massage, 1 = for therapy
+        if($request->service_type == 0)
+        {
+            $massages = Massage::with(['timing' => function ($query) use ($request) {
+                    $query->where('id', $request->service_timing_id);
+                }])->with(['pricing' => function ($query) use ($request) {
+                    $query->where('massage_timing_id', $request->service_timing_id);
+                }])->where(['shop_id' => $request->shop_id, 'id' => $request->service_id])->first();
+            
+            $newBooking['massage_timing_id'] = $massages->timing[0]->id;
+            $newBooking['massage_prices_id'] = $massages->pricing[0]->id;
+            $newBooking['price'] = $massages->pricing[0]->price;
+            $newBooking['cost'] = $massages->pricing[0]->cost;
+            $newBooking['origional_price'] = $massages->pricing[0]->price;
+            $newBooking['origional_cost'] = $massages->pricing[0]->cost;        
+        } else {
+            $therapy = Therapy::with(['timing' => function ($query) use ($request) {
+                    $query->where('id', $request->service_timing_id);
+                }])->with(['pricing' => function ($query) use ($request) {
+                    $query->where('therapy_timing_id', $request->service_timing_id);
+                }])->where(['shop_id' => $request->shop_id, 'id' => $request->service_id])->first();
+                
+            $newBooking['therapy_timing_id'] = $therapy->timing[0]->id;
+            $newBooking['therapy_prices_id'] = $therapy->pricing[0]->id;
+            $newBooking['price'] = $therapy->pricing[0]->price;
+            $newBooking['cost'] = $therapy->pricing[0]->cost;
+            $newBooking['origional_price'] = $therapy->pricing[0]->price;
+            $newBooking['origional_cost'] = $therapy->pricing[0]->cost;
+        }
+                                
         $newBooking['exchange_rate'] = $bookingMassage->exchange_rate;
         $newBooking['notes_of_injuries'] = $bookingMassage->notes_of_injuries;
         $newBooking['booking_info_id'] = $bookingMassage->booking_info_id;
@@ -179,10 +200,23 @@ class WaitingListController extends BaseController {
             $newBooking = Booking::create($bookingData);
 
             $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, NULL);
+            
+            $isMassage = false;
+            if(count($request->massages) > 0)
+            {
+                $isMassage = true;
+                foreach ($request->massages as $key => $massage) {
 
-            foreach ($request->massages as $key => $massage) {
+                    $shopModel->addBookingMassages($massage, $bookingInfo, $request, NULL, $isMassage);
+                }
+            }
+            if(count($request->therapies) > 0)
+            {
+                $isMassage = false;
+                foreach ($request->therapies as $key => $therapy) {
 
-                $shopModel->addBookingMassages($massage, $bookingInfo, $request, NULL);
+                    $shopModel->addBookingMassages($therapy, $bookingInfo, $request, NULL, $isMassage);
+                }
             }
             if (!empty($request->users)) {
                 foreach ($request->users as $key => $user) {
@@ -197,9 +231,20 @@ class WaitingListController extends BaseController {
 
                     $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $newUser);
 
-                    foreach ($user['massages'] as $key => $massage) {
+                    if (count($user['massages']) > 0) {
 
-                        $shopModel->addBookingMassages($massage, $bookingInfo, $request, $user);
+                        $isMassage = true;
+                        foreach ($user['massages'] as $key => $massage) {
+
+                            $shopModel->addBookingMassages($massage, $bookingInfo, $request, $user, $isMassage);
+                        }
+                    } else {
+
+                        $isMassage = false;
+                        foreach ($user['therapies'] as $key => $therapy) {
+
+                            $shopModel->addBookingMassages($therapy, $bookingInfo, $request, $user, $isMassage);
+                        }
                     }
                 }
             }
@@ -287,5 +332,34 @@ class WaitingListController extends BaseController {
         }
 
         return $this->returnSuccess(__($this->successMsg['client.data.found']), $clients->get());
+    }
+    
+    public function getTimeTable(Request $request) {
+        
+        $filter = $request->filter;
+        $schedules = TherapistWorkingSchedule::with('therapistWorkingScheduleTimes', 'therapist:id,name,shop_id')                   
+                        ->where(['is_working' => TherapistWorkingSchedule::WORKING, 'is_absent' => TherapistWorkingSchedule::NOT_ABSENT])
+                        ->whereHas('therapist', function($q) use($request) {
+                                $q->where('shop_id',$request->shop_id);
+                        });
+                        
+        // 1 for yesterday ,2 for current month, 3 for last 7 days, 4 for last 14 days, 5 for last 30 days
+        if (isset($filter)) {
+            if ($filter == 1) {
+                $schedules = $schedules->where('date', Carbon::yesterday());
+            } else if ($filter == 2) {
+                $schedules = $schedules->whereMonth('date', Carbon::now()->month);
+            } else if ($filter == 3) {
+                $schedules = $schedules->whereBetween('date', [Carbon::now()->subDays(7), Carbon::now()]);
+            } else if ($filter == 4) {
+                $schedules = $schedules->whereBetween('date', [Carbon::now()->subDays(14), Carbon::now()]);
+            } else if ($filter == 5) {
+                $schedules = $schedules->whereBetween('date', [Carbon::now()->subDays(30), Carbon::now()]);
+            }
+        } else {
+            $schedules = $schedules->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['schedule.data.found']), $schedules->get()->groupBy('date'));
     }
 }

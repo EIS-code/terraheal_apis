@@ -205,25 +205,32 @@ class Shop extends BaseModel implements CanResetPasswordContract
         return $bookingInfo;
     }
     
-    public function addBookingMassages($massage, $bookingInfo, $request, $user) {
+    public function addBookingMassages($service, $bookingInfo, $request, $user, $isMassage) {
         
-        $massagePrice = MassagePrice::where('massage_timing_id',$massage['massage_timing_id'])->first();
-            $bookingMassageData = [
-                "price" => $massagePrice->price,
-                "cost" => $massagePrice->cost,
-                "origional_price" => $massagePrice->price,
-                "origional_cost"  => $massagePrice->cost,
-                "exchange_rate" => isset($massage['exchange_rate']) ? $massage['exchange_rate'] : 0.00,
-                "notes_of_injuries" => $massage['notes_of_injuries'],
-                "massage_timing_id" => $massage['massage_timing_id'],
-                "massage_prices_id" => $massagePrice->id,
-                "booking_info_id" => $bookingInfo->id,
-                "pressure_preference" => isset($user) ? $user['pressure_preference'] : $request->pressure_preference,
-                "gender_preference" => isset($user) ? $user['gender_preference'] : $request->gender_preference,
-                "focus_area_preference" => isset($user) ? $user['focus_area_preference'] : $request->focus_area_preference
-            ];
-            BookingMassage::create($bookingMassageData);
+        if($isMassage)
+        {
+            $servicePrice = MassagePrice::where('massage_timing_id',$service['massage_timing_id'])->first();
+        } else {
+            $servicePrice = TherapiesPrices::where('therapy_timing_id',$service['therapy_timing_id'])->first();
+        }
+        
+        $bookingMassageData = [
+            "price" => $servicePrice->price,
+            "cost" => $servicePrice->cost,
+            "origional_price" => $servicePrice->price,
+            "origional_cost"  => $servicePrice->cost,
+            "exchange_rate" => isset($service['exchange_rate']) ? $service['exchange_rate'] : 0.00,
+            "notes_of_injuries" => $service['notes_of_injuries'],
+            "massage_timing_id" => $isMassage ? $service['massage_timing_id'] : NULL,
+            "massage_prices_id" => $isMassage ? $servicePrice->id  : NULL,
+            "therapy_timing_id" => $isMassage ? NULL : $service['therapy_timing_id'],
+            "therapy_prices_id" => $isMassage ? NULL : $servicePrice->id,
+            "booking_info_id" => $bookingInfo->id,
+            "pressure_preference" => isset($user) ? $user['pressure_preference'] : $request->pressure_preference,
+            "gender_preference" => isset($user) ? $user['gender_preference'] : $request->gender_preference,
+            "focus_area_preference" => isset($user) ? $user['focus_area_preference'] : $request->focus_area_preference
+        ];
+        BookingMassage::create($bookingMassageData);
     }
     
-
 }
