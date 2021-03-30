@@ -38,6 +38,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Storage;
 use App\Libraries\serviceHelper;
+use App\User;
 
 class TherapistController extends BaseController
 {
@@ -78,7 +79,11 @@ class TherapistController extends BaseController
         'no.data.found' => 'No data found',
         'therapist.data.found' => 'Therapist data found successfully',
         'therapist.exchange.shift' => 'Therapist exchange with others request sent successfully !',
-        'my.missing.days.successfully' => 'My missing days found successfully !'
+        'my.missing.days.successfully' => 'My missing days found successfully !',
+        'therapist.languages' => 'Languages found successfully !',
+        'therapist.countries' => 'Countries found successfully !',
+        'therapist.cities' => 'Cities found successfully !',
+        'client.data.found' => 'Client data found successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1080,5 +1085,38 @@ class TherapistController extends BaseController
         $data   = TherapistWorkingSchedule::getMissingDays($id, $date->format('Y-m-d'));
 
         return $this->returns('my.missing.days.successfully', $data);
+    }
+    
+    public function getLanguages() {
+        
+        $languages = Language::all();
+        return $this->returnSuccess(__($this->successMsg['therapist.languages']), $languages);
+    }
+    
+    public function getCountries() {
+        
+        $countries = Country::all();
+        return $this->returnSuccess(__($this->successMsg['therapist.countries']), $countries);
+    }
+    
+    public function getCities(Request $request) {
+        
+        $cities = City::whereHas('province', function($q) use($request) {
+                    $q->where('country_id', $request->country_id);
+                })->get();
+        return $this->returnSuccess(__($this->successMsg['therapist.cities']), $cities);
+    }
+    
+    public function searchClients(Request $request) {
+        
+        $search_val = $request->search_val;        
+        $clients = User::where(['shop_id' => $request->shop_id, 'is_removed' => User::$notRemoved])
+                ->where(function($query) use ($search_val) {
+                    $query->where('name', 'like', $search_val .'%')
+                    ->orWhere('surname', 'like', $search_val .'%')
+                    ->orWhere('email', 'like', $search_val .'%');
+                })->get();
+                
+        return $this->returnSuccess(__($this->successMsg['client.data.found']), $clients);
     }
 }

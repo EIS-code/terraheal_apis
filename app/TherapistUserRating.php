@@ -12,7 +12,8 @@ class TherapistUserRating extends BaseModel
         'rating',
         'type',
         'user_id',
-        'therapist_id'
+        'therapist_id',
+        'edit_by'
     ];
 
     public function validator(array $data, $id = false, $isUpdate = false)
@@ -33,5 +34,10 @@ class TherapistUserRating extends BaseModel
             'user_id'       => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
             'therapist_id'  => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
         ]);
+    }
+    
+    public function therapist()
+    {
+        return $this->hasOne('App\Therapist', 'id', 'therapist_id');
     }
 }

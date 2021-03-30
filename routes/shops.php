@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-use App\Shop;
 
 /*
   |--------------------------------------------------------------------------
@@ -53,6 +51,7 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/getClientList', 'WaitingList\WaitingListController@clientList');
     $router->post('/addClient', 'WaitingList\WaitingListController@addClient');
     $router->post('/searchClients', 'WaitingList\WaitingListController@searchClients');
+    $router->post('/getTimeTable', 'WaitingList\WaitingListController@getTimeTable');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {
@@ -75,6 +74,12 @@ $router->group(['prefix' => 'clients', 'namespace' => 'Shops'], function () use(
     $router->post('/searchClients', 'Clients\ClientController@searchClients');
     $router->post('/getClientDetails', 'Clients\ClientController@clientDetails');
     $router->post('/getFutureBookings', 'Clients\ClientController@getFutureBookings');
+    $router->post('/getPastBookings', 'Clients\ClientController@getPastBookings');
+    $router->post('/getCancelledBookings', 'Clients\ClientController@getCancelledBookings');
+    $router->post('/addForgotObject', 'Clients\ClientController@addForgotObject');
+    $router->post('/returnForgotObject', 'Clients\ClientController@returnForgotObject');
+    $router->post('/sendEmailToClient', 'Clients\ClientController@sendEmailToClient');
+    $router->post('/updateRating', 'Clients\ClientController@updateRating');
 });
 
 $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($router) {
