@@ -79,6 +79,7 @@ $router->group(['prefix' => 'clients', 'namespace' => 'Shops'], function () use(
     $router->post('/addForgotObject', 'Clients\ClientController@addForgotObject');
     $router->post('/returnForgotObject', 'Clients\ClientController@returnForgotObject');
     $router->post('/sendEmailToClient', 'Clients\ClientController@sendEmailToClient');
+    $router->post('/updateRating', 'Clients\ClientController@updateRating');
 });
 
 $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($router) {

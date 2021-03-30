@@ -12,7 +12,8 @@ class TherapistUserRating extends BaseModel
         'rating',
         'type',
         'user_id',
-        'therapist_id'
+        'therapist_id',
+        'edit_by'
     ];
 
     public function validator(array $data, $id = false, $isUpdate = false)
