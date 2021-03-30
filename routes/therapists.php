@@ -128,4 +128,5 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     $router->get('/getLanguages', 'TherapistController@getLanguages');
     $router->get('/getCountries', 'TherapistController@getCountries');
     $router->post('/getCities', 'TherapistController@getCities');
+    $router->post('/searchClients', 'TherapistController@searchClients');
 });

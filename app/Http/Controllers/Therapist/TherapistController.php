@@ -38,6 +38,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Storage;
 use App\Libraries\serviceHelper;
+use App\User;
 
 class TherapistController extends BaseController
 {
@@ -81,7 +82,8 @@ class TherapistController extends BaseController
         'my.missing.days.successfully' => 'My missing days found successfully !',
         'therapist.languages' => 'Languages found successfully !',
         'therapist.countries' => 'Countries found successfully !',
-        'therapist.cities' => 'Cities found successfully !'
+        'therapist.cities' => 'Cities found successfully !',
+        'client.data.found' => 'Client data found successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1103,5 +1105,18 @@ class TherapistController extends BaseController
                     $q->where('country_id', $request->country_id);
                 })->get();
         return $this->returnSuccess(__($this->successMsg['therapist.cities']), $cities);
+    }
+    
+    public function searchClients(Request $request) {
+        
+        $search_val = $request->search_val;        
+        $clients = User::where(['shop_id' => $request->shop_id, 'is_removed' => User::$notRemoved])
+                ->where(function($query) use ($search_val) {
+                    $query->where('name', 'like', $search_val .'%')
+                    ->orWhere('surname', 'like', $search_val .'%')
+                    ->orWhere('email', 'like', $search_val .'%');
+                })->get();
+                
+        return $this->returnSuccess(__($this->successMsg['client.data.found']), $clients);
     }
 }
