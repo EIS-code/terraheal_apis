@@ -83,7 +83,9 @@ class TherapistController extends BaseController
         'therapist.languages' => 'Languages found successfully !',
         'therapist.countries' => 'Countries found successfully !',
         'therapist.cities' => 'Cities found successfully !',
-        'client.data.found' => 'Client data found successfully !'
+        'client.data.found' => 'Client data found successfully !',
+        'therapist.complaints.suggestions' => 'Therapist complaints and suggestions found successfully !',
+        'session.types' => 'Session types found successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -368,6 +370,14 @@ class TherapistController extends BaseController
             }
         }
 
+        if (isset($data['language_id']) & isset($data['language_type'])) {
+            $languageData[] = [
+                'type' => $data['language_type'],
+                'value' => $modelTherapistLanguage::THEY_CAN_VALUE,
+                'language_id' => $data['language_id'],
+                'therapist_id' => $id
+            ];
+        }
         /* For profile Image */
         if (!empty($data['profile_photo']) && $data['profile_photo'] instanceof UploadedFile) {
             $checkImage = $model->validateProfilePhoto($data);
@@ -902,7 +912,18 @@ class TherapistController extends BaseController
 
     public function getAllServices(Request $request)
     {
-        $services = serviceHelper::getAllService($request);
+         // 1 for massages , 2 for therapies
+        if ($request->service == 1) {
+            $services = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
+        } else {
+            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
+        }
+
+        if (isset($request->search_val)) {
+            $services = $services->where('name', 'like', $request->search_val . '%');
+        }
+
+        $services =  $services->get();
 
         if (count($services) > 0) {
             return $this->returns('services.found.successfully', $services);
@@ -1118,5 +1139,20 @@ class TherapistController extends BaseController
                 })->get();
                 
         return $this->returnSuccess(__($this->successMsg['client.data.found']), $clients);
+    }
+    
+    public function getComplaintsSuggestion(Request $request) {
+        
+        $complaints = TherapistComplaint::where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id])->orderBy('created_at', 'DESC')->get();
+        $suggestions = TherapistSuggestion::where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id])->orderBy('created_at', 'DESC')->get();
+                
+        return $this->returnSuccess(__($this->successMsg['therapist.complaints.suggestions']), [$complaints, $suggestions]);
+    }
+    
+    public function getSessionTypes() {
+        
+        $sessionTypes = SessionType::all();
+                
+        return $this->returnSuccess(__($this->successMsg['session.types']), $sessionTypes);
     }
 }
