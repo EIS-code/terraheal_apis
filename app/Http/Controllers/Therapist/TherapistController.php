@@ -83,7 +83,8 @@ class TherapistController extends BaseController
         'therapist.languages' => 'Languages found successfully !',
         'therapist.countries' => 'Countries found successfully !',
         'therapist.cities' => 'Cities found successfully !',
-        'client.data.found' => 'Client data found successfully !'
+        'client.data.found' => 'Client data found successfully !',
+        'therapist.complaints.suggestions' => 'Therapist complaints and suggestions found successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1118,5 +1119,13 @@ class TherapistController extends BaseController
                 })->get();
                 
         return $this->returnSuccess(__($this->successMsg['client.data.found']), $clients);
+    }
+    
+    public function getComplaintsSuggestion(Request $request) {
+        
+        $complaints = TherapistComplaint::where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id])->orderBy('created_at', 'DESC')->get();
+        $suggestions = TherapistSuggestion::where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id])->orderBy('created_at', 'DESC')->get();
+                
+        return $this->returnSuccess(__($this->successMsg['therapist.complaints.suggestions']), [$complaints, $suggestions]);
     }
 }
