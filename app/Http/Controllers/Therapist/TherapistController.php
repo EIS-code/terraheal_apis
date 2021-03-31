@@ -84,7 +84,8 @@ class TherapistController extends BaseController
         'therapist.countries' => 'Countries found successfully !',
         'therapist.cities' => 'Cities found successfully !',
         'client.data.found' => 'Client data found successfully !',
-        'therapist.complaints.suggestions' => 'Therapist complaints and suggestions found successfully !'
+        'therapist.complaints.suggestions' => 'Therapist complaints and suggestions found successfully !',
+        'session.types' => 'Session types found successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1135,5 +1136,12 @@ class TherapistController extends BaseController
         $suggestions = TherapistSuggestion::where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id])->orderBy('created_at', 'DESC')->get();
                 
         return $this->returnSuccess(__($this->successMsg['therapist.complaints.suggestions']), [$complaints, $suggestions]);
+    }
+    
+    public function getSessionTypes() {
+        
+        $sessionTypes = SessionType::all();
+                
+        return $this->returnSuccess(__($this->successMsg['session.types']), $sessionTypes);
     }
 }
