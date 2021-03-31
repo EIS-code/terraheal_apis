@@ -1,25 +1,25 @@
 <?php
 
 namespace App\Libraries;
+
 use App\Therapy;
 use App\Massage;
 
-class serviceHelper
-{
-    public static function getAllService($request)
-    {
-        $therapies = Therapy::with('timing','pricing')->where('shop_id', $request->get('shop_id'))->get();
-        $massages  = Massage::with('timing','pricing')->where('shop_id', $request->get('shop_id'))->get();
-        $services  = collect();
+class serviceHelper {
 
-        foreach ($therapies as $therapy) {
-            $services->push($therapy);
+    public static function getAllService($request) {
+        // 1 for massages , 2 for therapies
+        if ($request->service == 1) {
+            $services = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
+        } else {
+            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
         }
 
-        foreach ($massages as $massage) {
-            $services->push($massage);
+        if (isset($request->search_val)) {
+            $services = $services->where('name', 'like', $request->search_val . '%');
         }
 
-        return $services;
+        return $services->get();
     }
+
 }
