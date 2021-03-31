@@ -369,6 +369,14 @@ class TherapistController extends BaseController
             }
         }
 
+        if (isset($data['language_id']) & isset($data['language_type'])) {
+            $languageData[] = [
+                'type' => $data['language_type'],
+                'value' => $modelTherapistLanguage::THEY_CAN_VALUE,
+                'language_id' => $data['language_id'],
+                'therapist_id' => $id
+            ];
+        }
         /* For profile Image */
         if (!empty($data['profile_photo']) && $data['profile_photo'] instanceof UploadedFile) {
             $checkImage = $model->validateProfilePhoto($data);
