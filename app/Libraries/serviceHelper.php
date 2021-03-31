@@ -8,18 +8,19 @@ use App\Massage;
 class serviceHelper {
 
     public static function getAllService($request) {
-        // 1 for massages , 2 for therapies
-        if ($request->service == 1) {
-            $services = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
-        } else {
-            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
+        $therapies = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'))->get();
+        $massages = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'))->get();
+        $services = collect();
+
+        foreach ($therapies as $therapy) {
+            $services->push($therapy);
         }
 
-        if (isset($request->search_val)) {
-            $services = $services->where('name', 'like', $request->search_val . '%');
+        foreach ($massages as $massage) {
+            $services->push($massage);
         }
 
-        return $services->get();
+        return $services;
     }
 
 }

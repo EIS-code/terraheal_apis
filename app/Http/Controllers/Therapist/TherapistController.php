@@ -912,7 +912,18 @@ class TherapistController extends BaseController
 
     public function getAllServices(Request $request)
     {
-        $services = serviceHelper::getAllService($request);
+         // 1 for massages , 2 for therapies
+        if ($request->service == 1) {
+            $services = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
+        } else {
+            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
+        }
+
+        if (isset($request->search_val)) {
+            $services = $services->where('name', 'like', $request->search_val . '%');
+        }
+
+        $services =  $services->get();
 
         if (count($services) > 0) {
             return $this->returns('services.found.successfully', $services);
