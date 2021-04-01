@@ -87,3 +87,10 @@ $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($r
     $router->post('/createRoom', 'Rooms\RoomsController@createRoom');
     $router->post('/getRooms', 'Rooms\RoomsController@getRooms');
 });
+
+$router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {
+    
+    $router->post('/createReceptionist', 'Receptionist\ReceptionistController@createReceptionist');
+    $router->post('/addDocument', 'Receptionist\ReceptionistController@addDocument');
+    $router->post('/getReceptionist', 'Receptionist\ReceptionistController@getReceptionist');
+});
