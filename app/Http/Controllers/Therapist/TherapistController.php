@@ -1151,7 +1151,7 @@ class TherapistController extends BaseController
     
     public function getSessionTypes() {
         
-        $sessionTypes = SessionType::all();
+        $sessionTypes = SessionType::all()->groupBy('booking_type');
                 
         return $this->returnSuccess(__($this->successMsg['session.types']), $sessionTypes);
     }
