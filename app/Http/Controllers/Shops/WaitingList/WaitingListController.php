@@ -45,9 +45,9 @@ class WaitingListController extends BaseController {
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_ONGOING]);
         $bookingModel = new Booking();
-        $ongoingMassages = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $ongoingMassages = $bookingModel->getGlobalQuery($request);
 
-        return $this->returnSuccess(__($this->successMsg['ongoing.massage']), array_values($ongoingMassages->toArray()));
+        return $this->returnSuccess(__($this->successMsg['ongoing.massage']), $ongoingMassages);
     }
 
     public function waitingMassage(Request $request) {
@@ -55,9 +55,9 @@ class WaitingListController extends BaseController {
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_WAITING]);
         $bookingModel = new Booking();
-        $waitingMassages = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $waitingMassages = $bookingModel->getGlobalQuery($request);
 
-        return $this->returnSuccess(__($this->successMsg['waiting.massage']), array_values($waitingMassages->toArray()));
+        return $this->returnSuccess(__($this->successMsg['waiting.massage']), $waitingMassages);
     }
 
     public function futureBooking(Request $request) {
@@ -65,9 +65,9 @@ class WaitingListController extends BaseController {
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_FUTURE]);
         $bookingModel = new Booking();
-        $futureBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $futureBooking = $bookingModel->getGlobalQuery($request);
 
-        return $this->returnSuccess(__($this->successMsg['future.booking']), array_values($futureBooking->toArray()));
+        return $this->returnSuccess(__($this->successMsg['future.booking']), $futureBooking);
     }
 
     public function completedBooking(Request $request) {
@@ -75,9 +75,9 @@ class WaitingListController extends BaseController {
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_COMPLETED]);
         $bookingModel = new Booking();
-        $completedBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $completedBooking = $bookingModel->getGlobalQuery($request);
 
-        return $this->returnSuccess(__($this->successMsg['completed.booking']), array_values($completedBooking->toArray()));
+        return $this->returnSuccess(__($this->successMsg['completed.booking']), $completedBooking);
     }
 
     public function cancelBooking(Request $request) {
@@ -85,18 +85,18 @@ class WaitingListController extends BaseController {
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_CANCELLED]);
         $bookingModel = new Booking();
-        $cancelBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $cancelBooking = $bookingModel->getGlobalQuery($request);
 
-        return $this->returnSuccess(__($this->successMsg['cancelled.booking']), array_values($cancelBooking->toArray()));
+        return $this->returnSuccess(__($this->successMsg['cancelled.booking']), $cancelBooking);
     }
     public function pastBooking(Request $request) {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_PAST]);
         $bookingModel = new Booking();
-        $pastBooking = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $pastBooking = $bookingModel->getGlobalQuery($request);
 
-        return $this->returnSuccess(__($this->successMsg['past.booking']), array_values($pastBooking->toArray()));
+        return $this->returnSuccess(__($this->successMsg['past.booking']), $pastBooking);
     }
     
     public function addBookingMassage(Request $request) {
@@ -269,7 +269,7 @@ class WaitingListController extends BaseController {
         $request->request->add(['type' => $type, 'date' => $date]);
         
         $bookingModel = new Booking();
-        $bookingOverviews = $bookingModel->getGlobalQuery($request)->groupBy('therapist_id');
+        $bookingOverviews = $bookingModel->getGlobalQuery($request);
         
         return $this->returnSuccess(__($this->successMsg['booking.overview']), $bookingOverviews);
     }
@@ -282,7 +282,7 @@ class WaitingListController extends BaseController {
         $request->request->add(['type' => $type, 'date' => $date]);
         
         $bookingModel = new Booking();
-        $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id')->groupBy('room_id');
+        $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id');
         
         return $this->returnSuccess(__($this->successMsg['booking.overview']), $roomOccupied);
     }
@@ -360,6 +360,6 @@ class WaitingListController extends BaseController {
             $schedules = $schedules->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
         }
         
-        return $this->returnSuccess(__($this->successMsg['schedule.data.found']), $schedules->get()->groupBy('date'));
+        return $this->returnSuccess(__($this->successMsg['schedule.data.found']), $schedules->get());
     }
 }
