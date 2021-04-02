@@ -170,7 +170,7 @@ class TherapistController extends BaseController
                                 }
 
                                 $returnData[$increments]['booking_id']           = $data->id;
-                                $returnData[$increments]['booking_type']         = $data->booking_type;
+                                $returnData[$increments]['booking_type']         = $data->getAttributes()['booking_type'];
                                 $returnData[$increments]['special_notes']        = $data->special_notes;
                                 $returnData[$increments]['bring_table_futon']    = $data->bring_table_futon;
                                 $returnData[$increments]['table_futon_quantity'] = $data->table_futon_quantity;
