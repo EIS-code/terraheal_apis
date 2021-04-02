@@ -282,7 +282,7 @@ class Booking extends BaseModel
             }
         }
 
-        $data = $data->get();
+        $data = $data->orderBy($bookingInfoModel::getTableName().'.massage_date','DESC')->get();
 
         if (!empty($data) && !$data->isEmpty()) {
             $data->map(function(&$record) use($userModel) {
