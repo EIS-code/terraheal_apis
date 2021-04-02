@@ -11,12 +11,22 @@ class Receptionist extends Model
         'name',
         'email',
         'tel_number',
-        'whatsapp_number',
         'photo',
-        'upload_id',
-        'insurance',
+        'dob',
+        'gender',
+        'emergency_tel_number',
+        'nif',
+        'security_number',
+        'address',
+        'country_id',
+        'city_id',
         'shop_id'
     ];
+    
+    protected $hidden = ['created_at', 'updated_at'];
+    
+    public $fileSystem = 'public';
+    public $profilePhotoPath = 'receptionist\profile\\';
 
     public function validator(array $data, $id = false, $isUpdate = false)
     {
@@ -28,14 +38,43 @@ class Receptionist extends Model
         }
 
         return Validator::make($data, [
-            'name'              => ['required', 'string', 'max:255'],
-            'email'             => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
-            'tel_number'        => ['required', 'max:50'],
-            'whatsapp_number'   => ['required', 'max:50'],
-            'photo'             => ['required', 'max:255'],
-            'upload_id'         => ['required', 'max:255'],
-            'insurance'         => ['required', 'max:255'],
-            'shop_id'           => ['required', 'integer']
+            'name'                  => ['required', 'string', 'max:255'],
+            'email'                 => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
+            'tel_number'            => ['max:50'],
+            'emergency_tel_number'  => ['max:50'],
+            'gender'                => ['required', 'string'],
+            'shop_id'               => ['required', 'integer'],
+            'city_id'               => ['required', 'integer'],
+            'country_id'            => ['required', 'integer'],
         ]);
+    }
+    
+    public function validatePhoto($request)
+    {
+        return Validator::make($request, [
+            'photo' => 'mimes:jpeg,png,jpg',
+        ], [
+            'photo' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        ]);
+    }
+    
+    public function documents()
+    {
+        return $this->hasMany('App\ReceptionistDocuments', 'receptionist_id', 'id');
+    }
+    
+    public function country()
+    {
+        return $this->hasOne('App\Country', 'id', 'country_id');
+    }
+    
+    public function city()
+    {
+        return $this->hasOne('App\City', 'id', 'city_id');
+    }
+    
+    public function shop()
+    {
+        return $this->hasOne('App\Shop', 'id', 'shop_id');
     }
 }
