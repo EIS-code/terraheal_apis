@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTherapistComplaintsTable extends Migration
+class CreatePackShopsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,10 @@ class CreateTherapistComplaintsTable extends Migration
      */
     public function up()
     {
-        Schema::create('therapist_complaints', function (Blueprint $table) {
+        Schema::create('pack_shops', function (Blueprint $table) {
             $table->id();
-            $table->text('complaint');
-            $table->bigInteger('therapist_id')->unsigned()->nullable();
-            $table->bigInteger('receptionist_id')->unsigned()->nullable();
+            $table->bigInteger('pack_id')->unsigned();
+            $table->foreign('pack_id')->references('id')->on('packs')->onDelete('cascade');
             $table->bigInteger('shop_id')->unsigned();
             $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
             $table->timestamps();
@@ -31,6 +30,6 @@ class CreateTherapistComplaintsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('therapist_complaints');
+        Schema::dropIfExists('pack_shops');
     }
 }
