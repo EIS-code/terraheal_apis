@@ -16,8 +16,8 @@ class CreateTherapistSuggestionsTable extends Migration
         Schema::create('therapist_suggestions', function (Blueprint $table) {
             $table->id();
             $table->text('suggestion');
-            $table->bigInteger('therapist_id')->unsigned();
-            $table->foreign('therapist_id')->references('id')->on('therapists')->onDelete('cascade');
+            $table->bigInteger('therapist_id')->unsigned()->nullable();
+            $table->bigInteger('receptionist_id')->unsigned()->nullable();
             $table->bigInteger('shop_id')->unsigned();
             $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
             $table->timestamps();
