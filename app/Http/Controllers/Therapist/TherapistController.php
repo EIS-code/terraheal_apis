@@ -30,6 +30,7 @@ use App\TherapistWorkingScheduleTime;
 use App\TherapistQuitCollaboration;
 use App\TherapistSuspendCollaboration;
 use App\TherapistExchange;
+use App\Receptionist;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -50,6 +51,7 @@ class TherapistController extends BaseController
         'notFound' => "Therapist not found.",
         'notFoundBookingMassage' => "Booking massage not found.",
         'notFoundEndTime' => "End time not found.",
+        'notFoundData' => "No data found.",
         'endTimeIsNotProper' => "End time always greater than start time.",
         'dateRequired' => "Date is required.",
         'somethingWrong' => "Something went wrong."
@@ -1142,11 +1144,25 @@ class TherapistController extends BaseController
     }
     
     public function getComplaintsSuggestion(Request $request) {
-        
-        $complaints = TherapistComplaint::where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id])->orderBy('created_at', 'DESC')->get();
-        $suggestions = TherapistSuggestion::where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id])->orderBy('created_at', 'DESC')->get();
-                
-        return $this->returnSuccess(__($this->successMsg['therapist.complaints.suggestions']), [$complaints, $suggestions]);
+        $id = $request->get('id', false);
+
+        $complaints     = TherapistComplaint::select(TherapistComplaint::getTableName() . '.id', TherapistComplaint::getTableName() . '.therapist_id', TherapistComplaint::getTableName() . '.receptionist_id', TherapistComplaint::getTableName() . '.complaint as text', Therapist::getTableName() . '.profile_photo as therapist_photo', Receptionist::getTableName() . '.photo as receptionist_photo', DB::raw("CONCAT(" . Therapist::getTableName() . ".name, ' ', " . Therapist::getTableName() . ".surname) as therapist_name"), DB::raw("UNIX_TIMESTAMP(" . TherapistComplaint::getTableName() . ".created_at) * 1000 as created_time"), DB::raw("'complaint' as type"))
+                                            ->leftJoin(Therapist::getTableName(), TherapistComplaint::getTableName() . '.therapist_id', '=', Therapist::getTableName() . '.id')
+                                            ->leftJoin(Receptionist::getTableName(), TherapistComplaint::getTableName() . '.receptionist_id', '=', Receptionist::getTableName() . '.id')
+                                            ->orderBy(TherapistComplaint::getTableName() . '.created_at', 'DESC');
+
+        $suggestions    = TherapistSuggestion::select(TherapistSuggestion::getTableName() . '.id', TherapistSuggestion::getTableName() . '.therapist_id', TherapistSuggestion::getTableName() . '.receptionist_id', TherapistSuggestion::getTableName() . '.suggestion as text', Therapist::getTableName() . '.profile_photo as therapist_photo', Receptionist::getTableName() . '.photo as receptionist_photo', DB::raw("CONCAT(" . Therapist::getTableName() . ".name, ' ', " . Therapist::getTableName() . ".surname) as therapist_name"), DB::raw("UNIX_TIMESTAMP(" . TherapistSuggestion::getTableName() .".created_at) * 1000 as created_time"), DB::raw("'suggestion' as type"))
+                                            ->leftJoin(Therapist::getTableName(), TherapistSuggestion::getTableName() . '.therapist_id', '=', Therapist::getTableName() . '.id')
+                                            ->leftJoin(Receptionist::getTableName(), TherapistSuggestion::getTableName() . '.receptionist_id', '=', Receptionist::getTableName() . '.id')
+                                            ->orderBy(TherapistSuggestion::getTableName() . '.created_at', 'DESC');
+
+        $data           = $complaints->union($suggestions)->get();
+
+        if (!empty($data) && !$data->isEmpty()) {
+            return $this->returns('therapist.complaints.suggestions', $data);
+        }
+
+        return $this->returns('notFoundData', NULL, true);
     }
     
     public function getSessionTypes() {
