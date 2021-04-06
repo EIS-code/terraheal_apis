@@ -8,6 +8,7 @@ use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use App\BookingInfo;
+use App\UserPack;
 
 class Shop extends BaseModel implements CanResetPasswordContract
 {
@@ -188,8 +189,11 @@ class Shop extends BaseModel implements CanResetPasswordContract
         $this->notify($classPasswordNotification);
     }
     
-    public function addBookingInfo($infoData, $newBooking, $newUser) {
+    public function addBookingInfo($infoData, $newBooking, $newUser, $isPack) {
 
+        if(isset($isPack)) {
+            $pack = UserPack::where(['pack_id' => $isPack, 'users_id' => $newBooking->user_id])->first();
+        }
         $shop = Shop::find($infoData->shop_id);
         $bookingInfoData = [
             'location' => $shop->address,
@@ -199,7 +203,8 @@ class Shop extends BaseModel implements CanResetPasswordContract
             'imc_type' => BookingInfo::IMC_TYPE_ASAP,
             'massage_date' => explode(' ', $infoData->booking_date_time)[0],
             'massage_time' => $infoData->booking_date_time,
-            'user_people_id' => isset($newUser) ? $newUser->id : NULL
+            'user_people_id' => isset($newUser) ? $newUser->id : NULL,
+            'therapist_id' => isset($pack) ? $pack->therapist_id : NULL
         ];
         $bookingInfo = BookingInfo::create($bookingInfoData);
         return $bookingInfo;
@@ -220,7 +225,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "origional_price" => $servicePrice->price,
             "origional_cost"  => $servicePrice->cost,
             "exchange_rate" => isset($service['exchange_rate']) ? $service['exchange_rate'] : 0.00,
-            "notes_of_injuries" => $service['notes_of_injuries'],
+            "notes_of_injuries" => $service['notes_of_injuries'] ? $service['notes_of_injuries'] : NULL,
             "massage_timing_id" => $isMassage ? $service['massage_timing_id'] : NULL,
             "massage_prices_id" => $isMassage ? $servicePrice->id  : NULL,
             "therapy_timing_id" => $isMassage ? NULL : $service['therapy_timing_id'],

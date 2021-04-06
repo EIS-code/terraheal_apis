@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use App\Therapy;
 use App\User;
 use App\TherapistWorkingSchedule;
+use App\Pack;
 
 class WaitingListController extends BaseController {
 
@@ -189,61 +190,72 @@ class WaitingListController extends BaseController {
         DB::beginTransaction();
         try {
             $shopModel = new Shop();
-
+            
             $bookingData = [
                 'booking_type' => $request->booking_type,
                 'special_notes' => $request->special_notes,
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
-                'session_id' => $request->session_id
+                'session_id' => $request->session_id,
+                'pack_id' => isset($request->pack_id) ? $request->pack_id : NULL
             ];
             $newBooking = Booking::create($bookingData);
-
-            $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, NULL);
+            $isPack = isset($request->pack_id) ? $request->pack_id : NULL;
+            $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, NULL, $isPack);
             
-            $isMassage = false;
-            if(count($request->massages) > 0)
-            {
-                $isMassage = true;
-                foreach ($request->massages as $key => $massage) {
+            if(isset($request->pack_id)) {
+                
+                $pack = Pack::with('services')->where('id', $request->pack_id)->first();
+                foreach ($pack->services as $key => $service) {
 
-                    $shopModel->addBookingMassages($massage, $bookingInfo, $request, NULL, $isMassage);
+                    $isMassage = isset($service->massage_id) && empty($service->therapy_id) ? true : false;
+                    $shopModel->addBookingMassages($service, $bookingInfo, $request, NULL, $isMassage);
                 }
-            }
-            if(count($request->therapies) > 0)
-            {
+            } else {
                 $isMassage = false;
-                foreach ($request->therapies as $key => $therapy) {
+                if(count($request->massages) > 0)
+                {
+                    $isMassage = true;
+                    foreach ($request->massages as $key => $massage) {
 
-                    $shopModel->addBookingMassages($therapy, $bookingInfo, $request, NULL, $isMassage);
+                        $shopModel->addBookingMassages($massage, $bookingInfo, $request, NULL, $isMassage);
+                    }
                 }
-            }
-            if (!empty($request->users)) {
-                foreach ($request->users as $key => $user) {
-                    $user_people = [
-                        'name' => $user['name'],
-                        'age' => $user['age'],
-                        'gender' => $user['gender'],
-                        'user_gender_preference_id' => $user['gender_preference'],
-                        'user_id' => $request->user_id
-                    ];
-                    $newUser = UserPeople::create($user_people);
+                if(count($request->therapies) > 0)
+                {
+                    $isMassage = false;
+                    foreach ($request->therapies as $key => $therapy) {
 
-                    $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $newUser);
+                        $shopModel->addBookingMassages($therapy, $bookingInfo, $request, NULL, $isMassage);
+                    }
+                }
+                if (!empty($request->users)) {
+                    foreach ($request->users as $key => $user) {
+                        $user_people = [
+                            'name' => $user['name'],
+                            'age' => $user['age'],
+                            'gender' => $user['gender'],
+                            'user_gender_preference_id' => $user['gender_preference'],
+                            'user_id' => $request->user_id
+                        ];
+                        $newUser = UserPeople::create($user_people);
 
-                    if (count($user['massages']) > 0) {
+                        $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $newUser, NULL);
 
-                        $isMassage = true;
-                        foreach ($user['massages'] as $key => $massage) {
+                        if (count($user['massages']) > 0) {
 
-                            $shopModel->addBookingMassages($massage, $bookingInfo, $request, $user, $isMassage);
-                        }
-                    } else {
+                            $isMassage = true;
+                            foreach ($user['massages'] as $key => $massage) {
 
-                        $isMassage = false;
-                        foreach ($user['therapies'] as $key => $therapy) {
+                                $shopModel->addBookingMassages($massage, $bookingInfo, $request, $user, $isMassage);
+                            }
+                        } else {
 
-                            $shopModel->addBookingMassages($therapy, $bookingInfo, $request, $user, $isMassage);
+                            $isMassage = false;
+                            foreach ($user['therapies'] as $key => $therapy) {
+
+                                $shopModel->addBookingMassages($therapy, $bookingInfo, $request, $user, $isMassage);
+                            }
                         }
                     }
                 }
