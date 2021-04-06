@@ -213,7 +213,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $model->setMysqlStrictFalse();
 
         $data = $model::selectRaw($model::getTableName() . '.*, CONCAT(' . $modelLanguage::getTableName() . '.name, " ", CASE WHEN ' . $modelTherapistLanguage::getTableName() . '.type = "1" THEN "- Basic" WHEN ' . $modelTherapistLanguage::getTableName() . '.type = "2" THEN "- Good" WHEN ' . $modelTherapistLanguage::getTableName() . '.type = "3" THEN "- Fluent" ELSE NULL END) AS language_spoken, ' . $modelCountry::getTableName() . '.name AS country_name, ' . $modelCity::getTableName() . '.name AS city_name')
-                      ->with(['documents', 'selectedMassages'])
+                      ->with(['documents', 'selectedMassages', 'languageSpokens'])
                       ->leftJoin($modelTherapistLanguage::getTableName(), $model::getTableName() . '.id', '=', $modelTherapistLanguage::getTableName() . '.therapist_id')
                       ->leftJoin($modelLanguage::getTableName(), $modelTherapistLanguage::getTableName() . '.language_id', '=', $modelLanguage::getTableName() . '.id')
                       ->leftJoin($modelCountry::getTableName(), $model::getTableName() . '.country_id', '=', $modelCountry::getTableName() . '.id')

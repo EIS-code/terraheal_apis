@@ -3,6 +3,8 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use App\Language;
+use App\Therapist;
 
 class TherapistLanguage extends BaseModel
 {
@@ -31,8 +33,8 @@ class TherapistLanguage extends BaseModel
         return Validator::make($data, [
             'type'         => ['required', 'in:1,2,3'],
             'value'        => ['required', 'in:0,1'],
-            'language_id'  => ['required', 'integer'],
-            'therapist_id' => ['required', 'integer']
+            'language_id'  => ['required', 'integer', 'exists:' . Language::getTableName() . ',id'],
+            'therapist_id' => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
         ]);
     }
 
@@ -41,8 +43,8 @@ class TherapistLanguage extends BaseModel
         return Validator::make($data, [
             '*.type'         => ['required', 'in:1,2,3'],
             '*.value'        => ['required', 'in:0,1'],
-            '*.language_id'  => ['required', 'integer'],
-            '*.therapist_id' => ['required', 'integer']
+            '*.language_id'  => ['required', 'integer', 'exists:' . Language::getTableName() . ',id'],
+            '*.therapist_id' => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
         ]);
     }
 }
