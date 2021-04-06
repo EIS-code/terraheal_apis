@@ -25,7 +25,8 @@ class Booking extends BaseModel
         'copy_with_id',
         'user_id',
         'shop_id',
-        'booking_date_time'
+        'booking_date_time',
+        'pack_id'
     ];
 
     const BOOKING_TYPE_IMC = '1';

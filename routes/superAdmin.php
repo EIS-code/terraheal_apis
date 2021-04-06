@@ -13,10 +13,17 @@
 
 $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin'], function () use($router) {
 
+    // For vouchers
     $router->post('addVoucher', 'SuperAdminController@addVoucher');
     $router->post('updateVoucher', 'SuperAdminController@updateVoucher');
     $router->get('getVouchers', 'SuperAdminController@getVouchers');
     $router->post('shareVoucher', 'SuperAdminController@shareVoucher');
     $router->post('purchaseVoucher', 'SuperAdminController@purchaseVoucher');
     $router->post('addServicesToVoucher', 'SuperAdminController@addServicesToVoucher');
+    
+    // For Packs
+    $router->post('addPack', 'SuperAdminController@addPack');
+    $router->get('getPacks', 'SuperAdminController@getPacks');
+    $router->post('sharePack', 'SuperAdminController@sharePack');
+    $router->post('purchasePack', 'SuperAdminController@purchasePack');
 });
