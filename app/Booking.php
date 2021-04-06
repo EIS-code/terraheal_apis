@@ -137,18 +137,19 @@ class Booking extends BaseModel
 
     public function getGlobalQuery(Request $request)
     {
-        $id             = $request->get('booking_info_id');
-        $bookingDate    = $request->get('booking_date');
-        $therapistId    = $request->get('id');
-        $shopId         = $request->get('shop_id');
-        $type           = $request->get('type');
-        $bookingsFilter = $request->get('bookings_filter');
-        $therapist      = $request->get('therapist_id');
-        $roomId         = $request->get('room_id');
-        $bookingId      = $request->get('booking_id');
-        $date           = $request->get('date');
-        $userId         = $request->get('user_id');
-        
+        $id                 = $request->get('booking_info_id');
+        $bookingDate        = $request->get('booking_date');
+        $therapistId        = $request->get('id');
+        $shopId             = $request->get('shop_id');
+        $type               = $request->get('type');
+        $bookingsFilter     = $request->get('bookings_filter');
+        $therapist          = $request->get('therapist_id');
+        $roomId             = $request->get('room_id');
+        $bookingId          = $request->get('booking_id');
+        $date               = $request->get('date');
+        $userId             = $request->get('user_id');
+        $bookingMassageId   = $request->get('booking_massage_id');
+
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
         $sessionTypeModel               = new SessionType();
@@ -235,48 +236,66 @@ class Booking extends BaseModel
         if (!empty($therapistId)) {
             $data->where($bookingInfoModel::getTableName() . '.therapist_id', (int) $therapistId);
         }
+
         if (!empty($id)) {
             $data->where($bookingInfoModel::getTableName() . '.id', (int) $id);
         }
+
         if (!empty($bookingDate)) {
             $bookingDate = Carbon::createFromTimestampMs($bookingDate)->format('Y-m-d');
 
             $data->whereDate($bookingInfoModel::getTableName() . '.massage_date', $bookingDate);
         }
+
         if (!empty($type)) {
             $data->where($this::getTableName() . '.booking_type', $type);
         }
+
         if ($therapist) {
             $data->where($bookingInfoModel::getTableName() . '.therapist_id', $therapist);
         }
+
         if ($roomId) {
             $data->where($bookingMassageModel::getTableName() . '.room_id', $roomId);
         }
+
         if ($bookingId) {
             $data->where($this::getTableName() . '.id', $bookingId);
         }
+
         if ($date) {
             $data->where($bookingInfoModel::getTableName() . '.massage_date', '=', $date);
         }
-        if($userId) {
+
+        if ($userId) {
             $data->where($this::getTableName() . '.user_id', '=', $userId);
         }
+
+        if ($bookingMassageId) {
+            $data->where($bookingMassageModel::getTableName() . '.id', '=', $bookingMassageId);
+        }
+
         if (isset($bookingsFilter)) {
             if ($bookingsFilter == self::BOOKING_ONGOING) {
                 $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_CONFIRM);
             }
+
             if ($bookingsFilter == self::BOOKING_WAITING) {
                 $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_NOT_CONFIRM);
             }
+
             if ($bookingsFilter == self::BOOKING_FUTURE) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', '>=', Carbon::now()->format('Y-m-d'));
             }
+
             if ($bookingsFilter == self::BOOKING_COMPLETED) {
                 $data->where($bookingInfoModel::getTableName() . '.is_done', (string)BookingInfo::IS_DONE);
             }
+
             if ($bookingsFilter == self::BOOKING_CANCELLED) {
                 $data->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_CANCELLED);
             }
+
             if ($bookingsFilter == self::BOOKING_PAST) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', '<=', Carbon::now()->format('Y-m-d'));
             }

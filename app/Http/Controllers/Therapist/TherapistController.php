@@ -122,7 +122,7 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $data = $bookingModel->getGlobalQuery($request);
+        $data = $bookingModel->getGlobalQuery($request)->first();
 
         if (!empty($data)) {
             return $this->returnSuccess(__($this->successMsg['booking.details.found.successfully']), $data);
@@ -379,7 +379,13 @@ class TherapistController extends BaseController
                 'language_id' => $data['language_id'],
                 'therapist_id' => $id
             ];
+
+            $checks = $modelTherapistLanguage->validators($languageData);
+            if ($checks->fails()) {
+                return $this->returns($checks->errors()->first(), NULL, true);
+            }
         }
+
         /* For profile Image */
         if (!empty($data['profile_photo']) && $data['profile_photo'] instanceof UploadedFile) {
             $checkImage = $model->validateProfilePhoto($data);
@@ -559,7 +565,7 @@ class TherapistController extends BaseController
 
                 $fileName  = $document['file_name'];
 
-                $storeFile = $document[$document['key']]->storeAs($modelTherapistDocument->directory, $fileName);
+                $storeFile = $document[$document['key']]->storeAs($modelTherapistDocument->directory, $fileName, $modelTherapistDocument->fileSystem);
 
                 if ($storeFile) {
                     if (in_array($document['type'], [$modelTherapistDocument::TYPE_CERTIFICATES, $modelTherapistDocument::TYPE_OTHERS, $modelTherapistDocument::PERSONAL_EXPERIENCES])) {
@@ -587,11 +593,13 @@ class TherapistController extends BaseController
 
     public function getDocumentFromRequest(Request $request, string $key, string $formats = 'jpeg,png,jpg', int &$inc, string $type) : Array
     {
-        $data = $request->all();
+        $data           = $request->all();
 
-        $id   = !empty($data['id']) ? (int)$data['id'] : false;
+        $descriptions   = !empty($data['description_personal_experience']) ? $data['description_personal_experience'] : [];
 
-        $documentData = [];
+        $id             = !empty($data['id']) ? (int)$data['id'] : false;
+
+        $documentData   = [];
 
         $createData = function($file, $key, $formats, &$inc, $id, $type) {
             $pathInfo = pathinfo($file->getClientOriginalName());
@@ -624,11 +632,19 @@ class TherapistController extends BaseController
 
         if (!empty($data[$key])) {
             if (is_array($data[$key])) {
-                foreach ($data[$key] as $document) {
+                foreach ($data[$key] as $index => $document) {
                     $documentData[$inc] = $createData($document, $key, $formats, $inc, $id, $type);
+
+                    if (!empty($descriptions[$index])) {
+                        $documentData[$inc]['data']['description'] = $descriptions[$index];
+                    }
                 }
             } elseif ($data[$key] instanceof UploadedFile) {
                 $documentData[$inc] = $createData($data[$key], $key, $formats, $inc, $id, $type);
+
+                    if (!empty($descriptions[$index])) {
+                        $documentData[$inc]['data']['description'] = $descriptions[$index];
+                    }
             }
         }
 
@@ -1063,13 +1079,14 @@ class TherapistController extends BaseController
                         ->join('therapists', 'therapists.id', '=', 'booking_infos.therapist_id')
                         ->select('booking_infos.massage_time as massageStartTime','booking_infos.massage_date as massageDate',
                                 DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'))
-                        ->where('bookings.shop_id',$request->shop_id);
-        
+                        ->where('bookings.shop_id', $request->shop_id);
+
         if (isset($request->filter) && $request->filter == 1) {
             $therapists = $query->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'))->get();
         } else {
             $therapists = $query->get();
         }
+
         return $this->returnSuccess(__($this->successMsg['therapist.data.found']), $therapists);
     }
 

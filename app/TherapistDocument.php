@@ -10,6 +10,7 @@ class TherapistDocument extends BaseModel
     protected $fillable = [
         'type',
         'file_name',
+        'description',
         'therapist_id'
     ];
 
@@ -45,6 +46,7 @@ class TherapistDocument extends BaseModel
         return Validator::make($data, [
             'type'         => ['required', 'in:1,2,3,4,5,6,7,8,9,10'],
             'file_name'    => ['required', 'string', 'max:255'],
+            'description'  => ['nullable', 'string'],
             'therapist_id' => ['required', 'integer'],
             $file          => ['mimes:' . $mimes],
         ], [
