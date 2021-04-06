@@ -17,8 +17,6 @@ class CreateUserPacksTable extends Migration
             $table->id();
             $table->bigInteger('pack_id')->unsigned();
             $table->foreign('pack_id')->references('id')->on('packs')->onDelete('cascade');
-            $table->bigInteger('pack_service_id')->unsigned();
-            $table->foreign('pack_service_id')->references('id')->on('pack_services')->onDelete('cascade');
             $table->bigInteger('therapist_id')->unsigned()->nullable();
             $table->foreign('therapist_id')->references('id')->on('therapists')->onDelete('cascade');
             $table->bigInteger('users_id')->unsigned()->nullable();

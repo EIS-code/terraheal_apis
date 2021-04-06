@@ -3,6 +3,8 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use App\Voucher;
+use App\Shop;
 
 class VoucherShop extends BaseModel
 {
@@ -14,8 +16,8 @@ class VoucherShop extends BaseModel
     public function validator(array $data)
     {
         return Validator::make($data, [
-            'voucher_id' => ['required', 'integer'],
-            'shop_id' => ['required', 'integer']
+            'voucher_id'    => ['required', 'integer', 'exists:' . Voucher::getTableName() . ',id'],
+            'shop_id'       => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id']
         ]);
     }
 }

@@ -9,6 +9,11 @@ use App\VoucherShop;
 use App\UserVoucher;
 use App\UserVoucherPrice;
 use Carbon\Carbon;
+use App\Pack;
+use App\PackShop;
+use App\PackService;
+use App\UserPack;
+use DB;
 
 class SuperAdminController extends BaseController {
 
@@ -19,6 +24,10 @@ class SuperAdminController extends BaseController {
         'voucher.share' => 'Voucher shared successfully!',
         'voucher.purchase' => 'Voucher purchased successfully!',
         'voucher.add.services' => 'Services added to voucher successfully!',
+        'pack.add' => 'Pack created successfully!',
+        'pack.share' => 'Pack shared successfully!',
+        'pack.get' => 'Packs found successfully!',
+        'pack.purchase' => 'Pack purchased successfully!',
     ];
 
     public function addVoucher(Request $request) {
@@ -35,6 +44,7 @@ class SuperAdminController extends BaseController {
 
         return $this->returnSuccess(__($this->successMsg['voucher.add']), $voucher);
     }
+
     public function updateVoucher(Request $request) {
 
         $voucher = Voucher::find($request->voucher_id);
@@ -42,9 +52,9 @@ class SuperAdminController extends BaseController {
 
         return $this->returnSuccess(__($this->successMsg['voucher.update']), $voucher);
     }
-    
+
     public function getVouchers() {
-        
+
         $vouchers = Voucher::all();
         return $this->returnSuccess(__($this->successMsg['voucher.get']), $vouchers);
     }
@@ -65,19 +75,28 @@ class SuperAdminController extends BaseController {
 
     public function addServicesToVoucher(Request $request) {
 
-        $model = new UserVoucher();
-        $data = $request->all();
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
-        }
+        DB::beginTransaction();
+        try {
+            $model = new UserVoucher();
+            foreach ($request->services as $key => $service) {
 
-        foreach ($data['services'] as $key => $service) {
-
-            $service['user_voucher_price_id'] = $data['user_voucher_price_id'];
-            $voucherServices[] = UserVoucher::create($service);
+                $service['user_voucher_price_id'] = $request->user_voucher_price_id;
+                $checks = $model->validator($service);
+                if ($checks->fails()) {
+                    return $this->returnError($checks->errors()->first(), NULL, true);
+                }
+                $voucherServices[] = UserVoucher::create($service);
+            }
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['voucher.add.services']), $voucherServices);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
         }
-        return $this->returnSuccess(__($this->successMsg['voucher.add.services']), $voucherServices);
     }
 
     public function purchaseVoucher(Request $request) {
@@ -97,4 +116,72 @@ class SuperAdminController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['voucher.purchase']), $purchaseVoucher);
     }
 
+    public function addPack(Request $request) {
+
+        DB::beginTransaction();
+        try {
+            $model = new Pack();
+            $data = $request->all();
+            $data['number'] = generateRandomString();
+
+            $checks = $model->validator($data);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+
+            $pack = $model->create($data);
+            foreach ($data['services'] as $key => $service) {
+
+                $service['pack_id'] = $pack->id;
+                $checks = $model->validator($service);
+                if ($checks->fails()) {
+                    return $this->returnError($checks->errors()->first(), NULL, true);
+                }
+                PackService::create($service);
+            }
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['pack.add']), $pack);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+    
+    public function sharePack(Request $request) {
+
+        $model = new PackShop();
+        $data = $request->all();
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $pack = $model->create($data);
+
+        return $this->returnSuccess(__($this->successMsg['pack.share']), $pack);
+    }
+    
+    public function getPacks(){
+        
+        $packs = Pack::with('services')->get();
+        return $this->returnSuccess(__($this->successMsg['pack.get']), $packs);
+    }
+    
+    public function purchasePack(Request $request) {
+        
+        $model = new UserPack();
+        $data = $request->all();
+        $data['purchase_date'] = Carbon::now()->format('Y-m-d');
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $purchasePack = $model->create($data);
+        return $this->returnSuccess(__($this->successMsg['pack.purchase']), $purchasePack);
+    }
 }
