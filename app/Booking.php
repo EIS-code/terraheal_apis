@@ -37,6 +37,7 @@ class Booking extends BaseModel
     const BOOKING_COMPLETED = '3';
     const BOOKING_CANCELLED = '4';
     const BOOKING_PAST = '5';
+    const BOOKING_TODAY = '6';
 
     public static $defaultTableFutons = ['0', '1', '2'];
     public static $tableFutons = ['0', '1', '2'];
@@ -263,23 +264,26 @@ class Booking extends BaseModel
             $data->where($this::getTableName() . '.user_id', '=', $userId);
         }
         if (isset($bookingsFilter)) {
-            if ($bookingsFilter == self::BOOKING_ONGOING) {
+            if (in_array(Booking::BOOKING_ONGOING, $bookingsFilter)) {
                 $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_CONFIRM);
             }
-            if ($bookingsFilter == self::BOOKING_WAITING) {
+            if (in_array(Booking::BOOKING_WAITING, $bookingsFilter)) {
                 $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_NOT_CONFIRM);
             }
-            if ($bookingsFilter == self::BOOKING_FUTURE) {
+            if (in_array(Booking::BOOKING_FUTURE, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', '>=', Carbon::now()->format('Y-m-d'));
             }
-            if ($bookingsFilter == self::BOOKING_COMPLETED) {
+            if (in_array(Booking::BOOKING_COMPLETED, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.is_done', (string)BookingInfo::IS_DONE);
             }
-            if ($bookingsFilter == self::BOOKING_CANCELLED) {
+            if (in_array(Booking::BOOKING_CANCELLED, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_CANCELLED);
             }
-            if ($bookingsFilter == self::BOOKING_PAST) {
+            if (in_array(Booking::BOOKING_PAST, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', '<=', Carbon::now()->format('Y-m-d'));
+            }
+            if (in_array(Booking::BOOKING_TODAY, $bookingsFilter)) {
+                $data->where($bookingInfoModel::getTableName() . '.massage_date', '=', Carbon::now()->format('Y-m-d'));
             }
         }
 
