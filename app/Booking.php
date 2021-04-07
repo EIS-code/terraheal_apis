@@ -306,6 +306,8 @@ class Booking extends BaseModel
                         $record->qr_code_path = $find->qr_code_path;
                     }
                 }
+
+                $record->massage_date = strtotime($record->massage_date) * 1000;
             });
         }
 
