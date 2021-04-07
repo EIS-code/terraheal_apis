@@ -139,18 +139,19 @@ class Booking extends BaseModel
 
     public function getGlobalQuery(Request $request)
     {
-        $id             = $request->get('booking_info_id');
-        $bookingDate    = $request->get('booking_date');
-        $therapistId    = $request->get('id');
-        $shopId         = $request->get('shop_id');
-        $type           = $request->get('type');
-        $bookingsFilter = $request->get('bookings_filter');
-        $therapist      = $request->get('therapist_id');
-        $roomId         = $request->get('room_id');
-        $bookingId      = $request->get('booking_id');
-        $date           = $request->get('date');
-        $userId         = $request->get('user_id');
-        
+        $id                 = $request->get('booking_info_id');
+        $bookingDate        = $request->get('booking_date');
+        $therapistId        = $request->get('id');
+        $shopId             = $request->get('shop_id');
+        $type               = $request->get('type');
+        $bookingsFilter     = $request->get('bookings_filter');
+        $therapist          = $request->get('therapist_id');
+        $roomId             = $request->get('room_id');
+        $bookingId          = $request->get('booking_id');
+        $date               = $request->get('date');
+        $userId             = $request->get('user_id');
+        $bookingMassageId   = $request->get('booking_massage_id');
+
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
         $sessionTypeModel               = new SessionType();
@@ -262,6 +263,9 @@ class Booking extends BaseModel
         }
         if($userId) {
             $data->where($this::getTableName() . '.user_id', '=', $userId);
+        }
+        if ($bookingMassageId) {
+            $data->where($bookingMassageModel::getTableName() . '.id', '=', $bookingMassageId);
         }
         if (isset($bookingsFilter)) {
             if (in_array(Booking::BOOKING_ONGOING, $bookingsFilter)) {
