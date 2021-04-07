@@ -241,6 +241,12 @@ class TherapistController extends BaseController
         $model  = new BookingInfo();
         $id     = (int)$request->get('id', false);
 
+        $currentMonth   = Carbon::now();
+        $month          = $request->get('date', 0);
+        $month          = empty($month) ? $currentMonth : new Carbon($month / 1000);
+        $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
+        $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
+
         if (!empty($id)) {
             $return = [];
 
@@ -252,6 +258,7 @@ class TherapistController extends BaseController
                                     ->with('massageTiming');
                           }])
                           ->where('therapist_id', $id)
+                          ->whereBetween('massage_date', [$startDate, $endDate])
                           ->get();
 
             if (!empty($data) && !$data->isEmpty()) {
