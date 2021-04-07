@@ -38,7 +38,6 @@ use Illuminate\Http\UploadedFile;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Storage;
-use App\Libraries\serviceHelper;
 use App\User;
 
 class TherapistController extends BaseController

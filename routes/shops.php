@@ -94,4 +94,11 @@ $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function ()
     $router->post('/addDocument', 'Receptionist\ReceptionistController@addDocument');
     $router->post('/getReceptionist', 'Receptionist\ReceptionistController@getReceptionist');
     $router->post('/getStatistics', 'Receptionist\ReceptionistController@getStatistics');
+    $router->post('/takeBreak', 'Receptionist\ReceptionistController@takeBreak');
+});
+
+
+$router->group(['prefix' => 'therapist', 'namespace' => 'Shops'], function () use($router) {
+    
+    $router->post('/myBookings', 'Therapist\TherapistController@myBookings');
 });
