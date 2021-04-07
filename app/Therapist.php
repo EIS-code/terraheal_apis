@@ -239,11 +239,11 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $selectedMassages  = TherapistSelectedMassage::select(TherapistSelectedMassage::getTableName() . '.id', 'massage_id', Massage::getTableName() . '.name as massage_name', Massage::getTableName() . '.image')->join(Massage::getTableName(), TherapistSelectedMassage::getTableName() . '.massage_id', '=', Massage::getTableName() . '.id')->where('therapist_id', $this->id)->get();
 
         if (!empty($selectedMassages) && !$selectedMassages->isEmpty()) {
-            $model = new TherapistSelectedMassage();
+            $model = new Massage();
 
             $selectedMassages->map(function($record) use($model) {
                 if (!empty($record->image)) {
-                    $imagePath = (str_ireplace("\\", "/", $record->image));
+                    $imagePath = (str_ireplace("\\", "/", $model->imagePath));
 
                     $record->image = Storage::disk($model->fileSystem)->url($imagePath . $record->image);
                 }
@@ -253,11 +253,11 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $selectedTherapies = TherapistSelectedTherapy::select(TherapistSelectedTherapy::getTableName() . '.id', 'therapy_id', Therapy::getTableName() . '.name as therapy_name', Therapy::getTableName() . '.image')->join(Therapy::getTableName(), TherapistSelectedTherapy::getTableName() . '.therapy_id', '=', Therapy::getTableName() . '.id')->where('therapist_id', $this->id)->get();
 
         if (!empty($selectedTherapies) && !$selectedTherapies->isEmpty()) {
-            $model = new TherapistSelectedTherapy();
+            $model = new Therapy();
 
             $selectedTherapies->map(function($record) use($model) {
                 if (!empty($record->image)) {
-                    $imagePath = (str_ireplace("\\", "/", $record->image));
+                    $imagePath = (str_ireplace("\\", "/", $model->imagePath));
 
                     $record->image = Storage::disk($model->fileSystem)->url($imagePath . $record->image);
                 }
