@@ -558,6 +558,8 @@ class TherapistController extends BaseController
 
         // Insert language spoken data.
         if (!empty($languageData)) {
+            $modelTherapistLanguage::where('therapist_id', $id)->delete();
+
             foreach ($languageData as $language) {
                 $modelTherapistLanguage::updateOrCreate(['language_id' => $language['language_id'], 'therapist_id' => $language['therapist_id']], $language);
             }
