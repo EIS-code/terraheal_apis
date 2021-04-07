@@ -8,6 +8,8 @@ use App\Receptionist;
 use App\ReceptionistDocuments;
 use App\ReceptionistTimeTables;
 use Carbon\Carbon;
+use App\Libraries\CommonHelper;
+use App\ReceptionistBreakTime;
 
 class ReceptionistController extends BaseController {
 
@@ -17,6 +19,7 @@ class ReceptionistController extends BaseController {
         'receptionist.document' => 'Receptionist document uploaded successfully',
         'receptionist.data' => 'Receptionist found successfully',
         'receptionist.statistics' => 'Receptionist statistics data found successfully',
+        'receptionist.break' => 'Break added successfully',
     ];
     
     public function createReceptionist(Request $request) {
@@ -80,53 +83,59 @@ class ReceptionistController extends BaseController {
     
     public function getStatistics(Request $request) {
         
-        $date = Carbon::createFromFormat('Y-m-d', $request->date);
-        $receptionist = ReceptionistTimeTables::where('receptionist_id',$request->receptionist_id)
+        $date = isset($request->date) ? Carbon::createFromFormat('Y-m-d', $request->date) : Carbon::now();
+        $receptionist = ReceptionistTimeTables::with('breaks')->where('receptionist_id',$request->receptionist_id)
                 ->whereMonth('login_date',$date->month)->get();
         
         $totalHours = [];
-        $breakHours = [];
+        $breakHours = [];        
         
         foreach ($receptionist as $key => $value) {
             
             $start_time = new Carbon($value['login_time']);
             $end_time = new Carbon($value['logout_time']);
-            $afterBreak = $end_time->diff(new Carbon($value['break_time']));
-            $newEndTime = $afterBreak->format("%h:%i:%s");
-            $value['total'] = $totalHours[] = $start_time->diff($newEndTime)->format("%h:%i");        
-            $breakHours[] = $value['break_time'];
+            $value['total'] = $totalHours[] = $start_time->diff($end_time)->format("%h:%i");
+            
+            $receptionist_break = [];
+            foreach ($value->breaks as $key => $break) {
+                $break_start_time = new Carbon($break['start_time']);
+                $break_end_time = new Carbon($break['end_time']);
+                $breakHours[] = $receptionist_break[] = $break_start_time->diff($break_end_time)->format("%h:%i");
+                
+            }
+            $value['break_time'] = CommonHelper::calculateHours($receptionist_break);
+            unset($receptionist_break); 
         }
+
+        //calculate total hours
+        $hours = CommonHelper::calculateHours($totalHours);
         
-        $hours = '';
-        foreach ($totalHours as $key => $value) {
-            if ($key == 0) {
-                $hours = $value;
-            } else {
-                $secs = strtotime($value) - strtotime("00:00:00");
-                $result = date("H:i:s", strtotime($hours) + $secs);
-                $hours = $result;
-            }
-        }
-
-        $break = '';
-        foreach ($breakHours as $key => $value) {
-            if ($key == 0) {
-                $break = $value;
-            } else {
-                $secs = strtotime($value) - strtotime("00:00:00");
-                $result = date("H:i:s", strtotime($break) + $secs);
-                $break = $result;
-            }
-        }
-
+        //calculate total break hours
+        $break = CommonHelper::calculateHours($breakHours);
+        
         $totalWorkingDays = cal_days_in_month(CAL_GREGORIAN, $date->month, $date->year);
         $presentDays = $receptionist->count();
-        $hours = date("H",strtotime($hours));
-        $break = date("H",strtotime($break));
         
-
         return $this->returnSuccess(__($this->successMsg['receptionist.data']),['receptionistData' => $receptionist, 
             'totalWorkingDays' => $totalWorkingDays, 'presentDays' => $presentDays, 'absentDays' => $totalWorkingDays - $presentDays,
-            'totalHours' => $hours, 'totalBreakHours' => $break,'totalWorkingHours' => $hours-$break]);
+            'totalHours' => explode(':', $hours)[0], 'totalBreakHours' => explode(':', $break)[0],'totalWorkingHours' => explode(':', $hours)[0]-explode(':', $break)[0]]);
+    }
+    
+    public function takeBreak(Request $request) {
+        
+        $model = new ReceptionistBreakTime();
+        $date = Carbon::createFromFormat('Y-m-d',$request->date);
+        $date = $date->format('Y-m-d');
+        $receptionist_schedule = ReceptionistTimeTables::where(['receptionist_id' => $request->receptionist_id, 'login_date' => $date])->first();
+        
+        $data = $request->all();
+        $data['receptionist_schedule_id'] = $receptionist_schedule->id;
+        $checks = $model->validator($data);
+        
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $break = $model->create($data);
+        return $this->returnSuccess(__($this->successMsg['receptionist.break']),$break);
     }
 }
