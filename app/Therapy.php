@@ -11,6 +11,10 @@ class Therapy extends BaseModel
         'image'
     ];
 
+    public $fileSystem = 'public';
+    public $imagePath  = 'therapy\images\\';
+    public $iconPath   = 'therapy\images\icons\\';
+
     public function validator(array $data)
     {
         return Validator::make($data, [

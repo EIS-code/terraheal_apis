@@ -189,4 +189,46 @@ class BookingInfo extends BaseModel
 
         return $query;
     }
+
+    public static function getCalender(int $therapistId, $month = NULL)
+    {
+        $currentMonth   = Carbon::now();
+        $month          = empty($month) ? $currentMonth : new Carbon($month / 1000);
+        $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
+        $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
+
+        $return = [];
+
+        $data   = self::select('massage_date', 'massage_time', 'id as booking_info_id', 'id')
+                      ->has('therapistWhereShop')
+                      ->has('bookingMassages')
+                      ->with(['bookingMassages' => function($query) {
+                          $query->select('booking_info_id', 'massage_timing_id')
+                                ->with('massageTiming');
+                      }])
+                      ->where('therapist_id', $therapistId)
+                      ->whereBetween('massage_date', [$startDate, $endDate])
+                      ->get();
+
+        if (!empty($data) && !$data->isEmpty()) {
+            foreach ($data as $record) {
+                if (!empty($record->bookingMassages) && !$record->bookingMassages->isEmpty()) {
+                    foreach ($record->bookingMassages as $bookingMassage) {
+                        if (empty($bookingMassage->massageTiming)) {
+                            continue;
+                        }
+
+                        $return[] = [
+                            'massage_date'      => $record->massage_date,
+                            'massage_time'      => $record->massage_time,
+                            'booking_info_id'   => $record->booking_info_id,
+                            'time'              => (int)$bookingMassage->massageTiming->time
+                        ];
+                    }
+                }
+            }
+        }
+
+        return collect($return);
+    }
 }

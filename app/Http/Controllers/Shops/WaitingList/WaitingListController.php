@@ -44,7 +44,7 @@ class WaitingListController extends BaseController {
     public function ongoingMassage(Request $request) {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_ONGOING]);
+        $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_ONGOING)]);
         $bookingModel = new Booking();
         $ongoingMassages = $bookingModel->getGlobalQuery($request);
 
@@ -54,7 +54,7 @@ class WaitingListController extends BaseController {
     public function waitingMassage(Request $request) {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_WAITING]);
+        $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_WAITING)]);
         $bookingModel = new Booking();
         $waitingMassages = $bookingModel->getGlobalQuery($request);
 
@@ -64,7 +64,7 @@ class WaitingListController extends BaseController {
     public function futureBooking(Request $request) {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_FUTURE]);
+        $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_FUTURE)]);
         $bookingModel = new Booking();
         $futureBooking = $bookingModel->getGlobalQuery($request);
 
@@ -74,7 +74,7 @@ class WaitingListController extends BaseController {
     public function completedBooking(Request $request) {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_COMPLETED]);
+        $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_COMPLETED)]);
         $bookingModel = new Booking();
         $completedBooking = $bookingModel->getGlobalQuery($request);
 
@@ -84,7 +84,7 @@ class WaitingListController extends BaseController {
     public function cancelBooking(Request $request) {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_CANCELLED]);
+        $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
         $bookingModel = new Booking();
         $cancelBooking = $bookingModel->getGlobalQuery($request);
 
@@ -93,7 +93,7 @@ class WaitingListController extends BaseController {
     public function pastBooking(Request $request) {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type, 'bookings_filter' => Booking::BOOKING_PAST]);
+        $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_PAST)]);
         $bookingModel = new Booking();
         $pastBooking = $bookingModel->getGlobalQuery($request);
 
