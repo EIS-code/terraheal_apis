@@ -9,7 +9,7 @@ use App\Shop;
 use App\Therapist;
 use App\User;
 use App\MassagePreference;
-use App\Libraries\serviceHelper;
+use App\Libraries\CommonHelper;
 
 class ShopsController extends BaseController {
 
@@ -65,7 +65,7 @@ class ShopsController extends BaseController {
 
     public function getAllServices(Request $request) {
         
-        $services = serviceHelper::getAllService($request);
+        $services = CommonHelper::getAllService($request);
         
         if (count($services) > 0) {
             return $this->returnSuccess(__($this->successMsg['services.found.successfully']), $services);

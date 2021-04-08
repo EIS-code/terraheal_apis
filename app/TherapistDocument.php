@@ -88,4 +88,28 @@ class TherapistDocument extends BaseModel
 
         return $default;
     }
+
+    public function checkAllDocumentsUploaded(int $therapistId) : bool
+    {
+        $isUploadedAll = false;
+
+        $modelTherapistDocument = new TherapistDocument();
+
+        $getDocuments = $modelTherapistDocument::where('therapist_id', $therapistId)->get();
+
+        if (!empty($getDocuments) && !$getDocuments->isEmpty()) {
+            $documentTypes = $modelTherapistDocument->documentTypes;
+            $uploadedType  = $getDocuments->pluck('type')->unique();
+
+            foreach ($uploadedType as $type) {
+                if (array_key_exists($type, $documentTypes)) {
+                    unset($documentTypes[$type]);
+                }
+            }
+
+            $isUploadedAll = ((empty($documentTypes)) ? true : false);
+        }
+
+        return $isUploadedAll;
+    }
 }
