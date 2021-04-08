@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class Receptionist extends BaseModel
 {
@@ -75,5 +76,23 @@ class Receptionist extends BaseModel
     public function shop()
     {
         return $this->hasOne('App\Shop', 'id', 'shop_id');
+    }
+
+    public function getProfilePhotoAttribute($value)
+    {
+        $default = asset('images/receptionists/receptionist.png');
+
+        // For set default image.
+        if (empty($value)) {
+            return $default;
+        }
+
+        $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
+
+        if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value)) {
+            return Storage::disk($this->fileSystem)->url($profilePhotoPath . $value);
+        }
+
+        return $default;
     }
 }

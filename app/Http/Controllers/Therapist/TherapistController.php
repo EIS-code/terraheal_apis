@@ -779,6 +779,19 @@ class TherapistController extends BaseController
         $data           = $complaints->union($suggestions)->get();
 
         if (!empty($data) && !$data->isEmpty()) {
+            $therapistModel     = new Therapist();
+            $receptionistModel  = new Receptionist();
+
+            $data->each(function($record) use($therapistModel, $receptionistModel) {
+                if (!empty($record->therapist_photo)) {
+                    $record->therapist_photo = $therapistModel->getProfilePhotoAttribute($record->therapist_photo);
+                }
+
+                if (!empty($record->receptionist_photo)) {
+                    $record->receptionist_photo = $receptionistModel->getProfilePhotoAttribute($record->receptionist_photo);
+                }
+            });
+
             return $this->returns('therapist.complaints.suggestions', $data);
         }
 
