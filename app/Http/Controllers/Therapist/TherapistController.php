@@ -54,7 +54,8 @@ class TherapistController extends BaseController
         'notFoundData' => "No data found.",
         'endTimeIsNotProper' => "End time always greater than start time.",
         'dateRequired' => "Date is required.",
-        'somethingWrong' => "Something went wrong."
+        'somethingWrong' => "Something went wrong.",
+        'no.schedule.found' => "No schedule found."
     ];
 
     public $successMsg = [
@@ -839,6 +840,6 @@ class TherapistController extends BaseController
             return $this->returns('therapist.break', $save);
         }
 
-        return $this->returns('notFoundData', NULL, true);
+        return $this->returns('no.schedule.found', NULL, true);
     }
 }
