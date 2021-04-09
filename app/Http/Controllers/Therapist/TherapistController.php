@@ -130,6 +130,19 @@ class TherapistController extends BaseController
         return $this->returnNull();
     }
 
+    public function getBookings(Request $request)
+    {
+        $bookingModel = new Booking();
+
+        $data = $bookingModel->getGlobalQuery($request);
+
+        if (!empty($data)) {
+            return $this->returnSuccess(__($this->successMsg['booking.details.found.successfully']), $data);
+        }
+
+        return $this->returnNull();
+    }
+
     public function filter(Collection &$return)
     {
         $returnData = [];

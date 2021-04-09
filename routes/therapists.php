@@ -57,6 +57,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
     $router->group(['prefix' => 'booking'], function () use($router) {
         $router->post('/', 'TherapistController@getBookingDetails');
+        $router->post('/all', 'TherapistController@getBookings');
         $router->post('/list/today', 'TherapistController@getTodayBooking');
         $router->post('/list/future', 'TherapistController@getFutureBooking');
         $router->post('/list/past', 'TherapistController@getPastBooking');
@@ -106,6 +107,10 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
         $router->group(['prefix' => 'missing'], function () use($router) {
             $router->post('/days', 'TherapistController@myMissingDays');
+        });
+
+        $router->group(['prefix' => 'break'], function () use($router) {
+            $router->post('/', 'TherapistController@takeBreaks');
         });
     });
 

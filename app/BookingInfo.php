@@ -235,7 +235,11 @@ class BookingInfo extends BaseModel
 
     public function getMassageCountByTherapist(int $therapistId)
     {
-        $data = BookingMassage::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
+        $model = new BookingMassage();
+
+        $model->setMysqlStrictFalse();
+
+        $data = $model::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
                               ->where('therapist_id', $therapistId)->where('is_cancelled', (string)self::IS_CANCELLED_NOPE)
                               ->whereNotNull(BookingMassage::getTableName() . '.massage_timing_id')
                               ->whereNull(BookingMassage::getTableName() . '.therapy_timing_id')
@@ -243,18 +247,26 @@ class BookingInfo extends BaseModel
                               ->get()
                               ->count();
 
+        $model->setMysqlStrictTrue();
+
         return $data;
     }
 
     public function getTherapyCountByTherapist(int $therapistId)
     {
-        $data = BookingMassage::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
+        $model = new BookingMassage();
+
+        $model->setMysqlStrictFalse();
+
+        $data = $model::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
                               ->where('therapist_id', $therapistId)->where('is_cancelled', (string)self::IS_CANCELLED_NOPE)
                               ->whereNotNull(BookingMassage::getTableName() . '.therapy_timing_id')
                               ->whereNull(BookingMassage::getTableName() . '.massage_timing_id')
                               ->groupBy(BookingMassage::getTableName() . '.therapy_timing_id')
                               ->get()
                               ->count();
+
+        $model->setMysqlStrictTrue();
 
         return $data;
     }
