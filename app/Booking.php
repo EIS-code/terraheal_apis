@@ -151,6 +151,7 @@ class Booking extends BaseModel
         $date               = $request->get('date');
         $userId             = $request->get('user_id');
         $bookingMassageId   = $request->get('booking_massage_id');
+        $month              = $request->get('month');
 
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
@@ -260,6 +261,9 @@ class Booking extends BaseModel
         }
         if ($date) {
             $data->where($bookingInfoModel::getTableName() . '.massage_date', '=', $date);
+        }
+        if ($month) {
+            $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', '=', $month->month);
         }
         if($userId) {
             $data->where($this::getTableName() . '.user_id', '=', $userId);

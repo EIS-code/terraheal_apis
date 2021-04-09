@@ -94,7 +94,7 @@ class ReceptionistController extends BaseController {
             
             $start_time = new Carbon($value['login_time']);
             $end_time = new Carbon($value['logout_time']);
-            $value['total'] = $totalHours[] = $start_time->diff($end_time)->format("%h:%i");
+            $total = new Carbon($start_time->diff($end_time)->format("%h:%i"));
             
             $receptionist_break = [];
             foreach ($value->breaks as $key => $break) {
@@ -104,6 +104,7 @@ class ReceptionistController extends BaseController {
                 
             }
             $value['break_time'] = CommonHelper::calculateHours($receptionist_break);
+            $value['total'] = $totalHours[] = $total->diff(new Carbon($value['break_time']))->format("%h:%i");
             unset($receptionist_break); 
         }
 

@@ -58,6 +58,10 @@ class TherapistWorkingSchedule extends BaseModel
     {
         return $this->hasOne('App\TherapistWorkingScheduleTime', 'schedule_id', 'id');
     }
+    public function therapistBreakTime()
+    {
+        return $this->hasMany('App\TherapistWorkingScheduleBreak', 'schedule_id', 'id');
+    }
 
     public function therapistWorkingScheduleTimeWithBreaks()
     {

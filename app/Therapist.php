@@ -10,6 +10,8 @@ use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Massage;
+use DB;
+use Carbon\Carbon;
 
 class Therapist extends BaseModel implements CanResetPasswordContract
 {
@@ -49,6 +51,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         'city_id',
         'country_id',
         'personal_description',
+        'address'
     ];
 
     protected $hidden = ['is_deleted', 'created_at', 'updated_at', 'password'];
@@ -628,5 +631,69 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         }
 
         return $documentData;
+    }
+    
+    public function getTherapist(Request $request) {
+
+        $therapists = DB::table('booking_massages')
+                ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                ->join('therapists', 'therapists.id', '=', 'booking_infos.therapist_id')
+                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_infos.massage_time as massageStartTime', 'booking_infos.massage_date as massageDate', 'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'))
+                ->where('bookings.shop_id', $request->shop_id);
+
+        //0 for today, 1 for all therapist
+        if (isset($request->filter) && $request->filter == 0) {
+
+            $therapists = $therapists->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'))->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id')->toArray();
+            $todayTherapist = [];
+            foreach ($therapists as $key => $value) {
+
+                $current = Carbon::now()->format('H:i');
+                $date = Carbon::parse($value[0]->massageStartTime);
+
+                if ($current >= $date->format('H:i')) {
+                    $available = 'now';
+                } else {
+                    $start_time = new Carbon($current);
+                    $end_time = new Carbon($date->format('H:i:s'));
+                    $diff = $start_time->diff($end_time)->format("%h:%i");
+                    $time = explode(':', $diff);
+                    if ($time[0] == 0) {
+                        $available = 'In ' . $time[1] . ' min';
+                    } else {
+                        $available = $diff;
+                    }
+                }
+                $data = [
+                    'therapist_id' => $value[0]->therapist_id,
+                    'therapistName' => $value[0]->therapistName,
+                    'massageDate' => $value[0]->massageDate,
+                    'massageStartTime' => strtotime($value[0]->massageStartTime) * 1000,
+                    'available' => $available
+                ];
+                array_push($todayTherapist, $data);
+            }
+
+            return $todayTherapist;
+        } else {
+            $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id')->toArray();
+            return $therapists;
+        }
+    }
+    
+    public function country()
+    {
+        return $this->hasOne('App\Country', 'id', 'country_id');
+    }
+    
+    public function city()
+    {
+        return $this->hasOne('App\City', 'id', 'city_id');
+    }
+    
+    public function shop()
+    {
+        return $this->hasOne('App\Shop', 'id', 'shop_id');
     }
 }

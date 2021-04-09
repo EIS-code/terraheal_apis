@@ -101,4 +101,13 @@ $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function ()
 $router->group(['prefix' => 'therapist', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/myBookings', 'Therapist\TherapistController@myBookings');
+    $router->post('/getTherapists', 'Therapist\TherapistController@getTherapists');
+    $router->post('/getInfo', 'Therapist\TherapistController@getInfo');
+    $router->post('/updateProfile', 'Therapist\TherapistController@updateProfile');
+    $router->post('/getServices', 'Therapist\TherapistController@getServices');
+    $router->post('/myAvailabilities', 'Therapist\TherapistController@myAvailabilities');
+    $router->post('/addAvailability', 'Therapist\TherapistController@addAvailability');
+    $router->post('/getRatings', 'Therapist\TherapistController@getRatings');
+    $router->post('/myAttendence', 'Therapist\TherapistController@myAttendence');
+    $router->post('/getCalendar', 'Therapist\TherapistController@getCalendar');
 });
