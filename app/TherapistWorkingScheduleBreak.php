@@ -5,6 +5,7 @@ namespace App;
 use App\TherapistWorkingSchedule;
 use App\TherapistWorkingScheduleTime;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class TherapistWorkingScheduleBreak extends BaseModel
 {
@@ -30,8 +31,8 @@ class TherapistWorkingScheduleBreak extends BaseModel
     public function validator(array $data, $isUpdate = false)
     {
         return Validator::make($data, [
-            'from'              => ['required', 'date:Y-m-d H:i:s'],
-            'to'                => ['required', 'date:Y-m-d H:i:s'],
+            'from'              => ['required'],
+            'to'                => ['required'],
             'break_for'         => ['in:' . implode(",", array_keys(self::$breakFor))],
             'break_reason'      => ['nullable', 'string'],
             'schedule_id'       => ['required', 'exists:' . TherapistWorkingSchedule::getTableName() . ',id'],
@@ -47,5 +48,44 @@ class TherapistWorkingScheduleBreak extends BaseModel
     public function getToAttribute($value)
     {
         return strtotime($value) * 1000;
+    }
+
+    public static function takeBreaks(int $id, $date, int $minutes, int $breakFor = self::OTHER, string $breakReason = NULL)
+    {
+        $schedule = TherapistWorkingSchedule::whereDate('date', $date)->where('therapist_id', $id)->first();
+
+        // Get timing
+        if (!empty($schedule)) {
+            $scheduleTime = $schedule->therapistWorkingScheduleTime;
+
+            $now    = new Carbon(date('Y-m-d'));
+            $toTime = $now->addMinute($minutes);
+
+            $model  = new Self();
+
+            if (!empty($scheduleTime)) {
+                $data = [
+                    'from' => '00:00:00',
+                    'to' => $toTime->format('H:i:s'),
+                    'break_for' => (string)$breakFor,
+                    'break_reason' => $breakReason,
+                    'schedule_id' => $schedule->id,
+                    'schedule_time_id' => $scheduleTime->id
+                ];
+
+                $checks = $model->validator($data);
+                if ($checks->fails()) {
+                    return ['isError' => true, 'msg' => $checks->errors()->first()];
+                }
+
+                $create = $model::create($data);
+
+                if ($create) {
+                    return $create;
+                }
+            }
+        }
+
+        return false;
     }
 }

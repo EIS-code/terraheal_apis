@@ -227,10 +227,10 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $bookingInfo = new BookingInfo();
 
             $data->map(function($record, $key) use($bookingInfo) {
-                $record->selected_services = $record->selectedServices();
+                $record->selected_services  = $record->selectedServices();
 
-                $record->total_massages    = $bookingInfo->getMassageCountByTherapist($record->id);
-                $record->total_services    = $bookingInfo->getTherapyCountByTherapist($record->id);
+                $record->total_massages     = $bookingInfo->getMassageCountByTherapist($record->id);
+                $record->total_therapies    = $bookingInfo->getTherapyCountByTherapist($record->id);
             });
         }
 

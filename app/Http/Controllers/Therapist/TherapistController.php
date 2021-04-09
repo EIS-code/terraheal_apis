@@ -31,6 +31,7 @@ use App\TherapistQuitCollaboration;
 use App\TherapistSuspendCollaboration;
 use App\TherapistExchange;
 use App\Receptionist;
+use App\TherapistWorkingScheduleBreak;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -87,6 +88,7 @@ class TherapistController extends BaseController
         'client.data.found' => 'Client data found successfully !',
         'therapist.complaints.suggestions' => 'Therapist complaints and suggestions found successfully !',
         'session.types' => 'Session types found successfully !',
+        'therapist.break' => 'Break done successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -816,5 +818,27 @@ class TherapistController extends BaseController
         $sessionTypes = SessionType::all()->groupBy('booking_type');
                 
         return $this->returnSuccess(__($this->successMsg['session.types']), $sessionTypes);
+    }
+
+    public function takeBreaks(Request $request)
+    {
+        $id = $request->get('id', false);
+
+        if ($id) {
+            $date           = new Carbon($request->get('date', NULL) / 1000);
+            $minutes        = $request->get('minutes', 0);
+            $breakFor       = $request->get('break_for', TherapistWorkingScheduleBreak::OTHER);
+            $breakReason    = $request->get('break_reason', NULL);
+
+            $save           = TherapistWorkingScheduleBreak::takeBreaks($id, $date->format('Y-m-d'), $minutes, $breakFor, $breakReason);
+
+            if (!empty($save['isError']) && !empty($save['msg'])) {
+                return $this->returns($save['msg'], NULL, true);
+            }
+
+            return $this->returns('therapist.break', $save);
+        }
+
+        return $this->returns('notFoundData', NULL, true);
     }
 }
