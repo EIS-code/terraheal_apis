@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Validator;
 use App\UserPeople;
 use App\Therapist;
 use App\Room;
+use App\BookingMassage;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -230,5 +231,31 @@ class BookingInfo extends BaseModel
         }
 
         return collect($return);
+    }
+
+    public function getMassageCountByTherapist(int $therapistId)
+    {
+        $data = BookingMassage::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
+                              ->where('therapist_id', $therapistId)->where('is_cancelled', (string)self::IS_CANCELLED_NOPE)
+                              ->whereNotNull(BookingMassage::getTableName() . '.massage_timing_id')
+                              ->whereNull(BookingMassage::getTableName() . '.therapy_timing_id')
+                              ->groupBy(BookingMassage::getTableName() . '.massage_timing_id')
+                              ->get()
+                              ->count();
+
+        return $data;
+    }
+
+    public function getTherapyCountByTherapist(int $therapistId)
+    {
+        $data = BookingMassage::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
+                              ->where('therapist_id', $therapistId)->where('is_cancelled', (string)self::IS_CANCELLED_NOPE)
+                              ->whereNotNull(BookingMassage::getTableName() . '.therapy_timing_id')
+                              ->whereNull(BookingMassage::getTableName() . '.massage_timing_id')
+                              ->groupBy(BookingMassage::getTableName() . '.therapy_timing_id')
+                              ->get()
+                              ->count();
+
+        return $data;
     }
 }
