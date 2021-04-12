@@ -692,20 +692,8 @@ class TherapistController extends BaseController
     
     public function getTherapists(Request $request)
     {
-        $query = DB::table('booking_massages')
-                        ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
-                        ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
-                        ->join('therapists', 'therapists.id', '=', 'booking_infos.therapist_id')
-                        ->select('booking_infos.massage_time as massageStartTime','booking_infos.massage_date as massageDate',
-                                DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'))
-                        ->where('bookings.shop_id', $request->shop_id);
-
-        if (isset($request->filter) && $request->filter == 1) {
-            $therapists = $query->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'))->get();
-        } else {
-            $therapists = $query->get();
-        }
-
+        $model = new Therapist();
+        $therapists = $model->getTherapist($request);
         return $this->returnSuccess(__($this->successMsg['therapist.data.found']), $therapists);
     }
 

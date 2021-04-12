@@ -12,7 +12,8 @@ class TherapistUserRating extends BaseModel
         'rating',
         'type',
         'user_id',
-        'therapist_id',
+        'model_id',
+        'model',
         'edit_by'
     ];
 

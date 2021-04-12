@@ -18,4 +18,9 @@ class TherapistSelectedTherapy extends BaseModel
             'therapist_id' => ['required', 'integer']
         ]);
     }
+    
+    public function therapy()
+    {
+        return $this->hasOne('App\Therapy', 'id', 'therapy_id');
+    }
 }
