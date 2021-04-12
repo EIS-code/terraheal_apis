@@ -11,7 +11,11 @@ class TherapistDocument extends BaseModel
         'type',
         'file_name',
         'description',
-        'therapist_id'
+        'therapist_id',
+        'doc_name',
+        'is_expired',
+        'expired_date',
+        'uploaded_by'
     ];
 
     public $fileSystem = 'public';

@@ -543,6 +543,15 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $modelTherapistLanguage::updateOrCreate(['language_id' => $language['language_id'], 'therapist_id' => $language['therapist_id']], $language);
             }
         }
+        
+        if(!empty($data['doc_name']) && !empty($data['document']))
+        {
+            $key = 'document';
+            $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_OTHERS);
+            if ($checkDocumentError) {
+                return $this->returns($checkDocumentError, NULL, true);
+            }
+        }
 
         // Store documents.
         if (!empty($documentData)) {
@@ -556,6 +565,13 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $storeFile = $document[$document['key']]->storeAs($modelTherapistDocument->directory, $fileName, $modelTherapistDocument->fileSystem);
 
                 if ($storeFile) {
+                    if($document['key'] == 'document')
+                    {
+                        $document['doc_name'] = $data['doc_name'];
+                        $document['is_expired'] = $data['is_expired'];
+                        $document['expired_date'] = $data['expired_date'];
+                        $document['uploaded_by'] = $data['uploaded_by'];
+                    }
                     if (in_array($document['type'], [$modelTherapistDocument::TYPE_CERTIFICATES, $modelTherapistDocument::TYPE_OTHERS, $modelTherapistDocument::PERSONAL_EXPERIENCES])) {
                         $modelTherapistDocument::create($document);
                     } else {

@@ -104,7 +104,6 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Shops'], function () us
     $router->post('/getTherapists', 'Therapist\TherapistController@getTherapists');
     $router->post('/getInfo', 'Therapist\TherapistController@getInfo');
     $router->post('/updateProfile', 'Therapist\TherapistController@updateProfile');
-    $router->post('/getServices', 'Therapist\TherapistController@getServices');
     $router->post('/myAvailabilities', 'Therapist\TherapistController@myAvailabilities');
     $router->post('/addAvailability', 'Therapist\TherapistController@addAvailability');
     $router->post('/getRatings', 'Therapist\TherapistController@getRatings');
