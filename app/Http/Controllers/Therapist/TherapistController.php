@@ -292,7 +292,7 @@ class TherapistController extends BaseController
         $store = Therapist::updateProfile($isFreelancer, $request);
 
         if (!empty($store['isError']) && !empty($store['message'])) {
-            $this->returns($store['message'], NULL, true);
+            return $this->returns($store['message'], NULL, true);
         }
 
         return $this->returns('profile.update.successfully', $this->getGlobalResponse($isFreelancer, $request, false));
