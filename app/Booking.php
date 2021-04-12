@@ -314,8 +314,8 @@ class Booking extends BaseModel
                 $record->massage_date = strtotime($record->massage_date) * 1000;
             });
 
-            $data->put('total_massages', $bookingInfoModel->getMassageCountByTherapist($therapistId));
-            $data->put('total_therapies', $bookingInfoModel->getTherapyCountByTherapist($therapistId));
+            // $data->put('total_massages', $bookingInfoModel->getMassageCountByTherapist($therapistId));
+            // $data->put('total_therapies', $bookingInfoModel->getTherapyCountByTherapist($therapistId));
         }
 
         return $data;
