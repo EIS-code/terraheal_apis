@@ -294,6 +294,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $modelTherapistSelectedMassage  = new TherapistSelectedMassage();
 
         $data   = $request->all();
+        \Log::info($data);
         $id     = !empty($data['id']) ? (int)$data['id'] : false;
         $inc    = 0;
 
@@ -545,7 +546,6 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         }
 
         // Store documents.
-        \Log::info($data);
         \Log::info($documentData);
         if (!empty($documentData)) {
             foreach ($documentData as $document) {
