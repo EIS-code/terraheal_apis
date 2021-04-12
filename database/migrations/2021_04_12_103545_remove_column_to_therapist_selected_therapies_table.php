@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class ChangeColumnToTherapistSelectedTherapiesTable extends Migration
+class RemoveColumnToTherapistSelectedTherapiesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,11 +14,8 @@ class ChangeColumnToTherapistSelectedTherapiesTable extends Migration
     public function up()
     {
         Schema::table('therapist_selected_therapies', function (Blueprint $table) {
-            
             $table->dropForeign(['therapy_id']);
             $table->dropColumn(['therapy_id']);
-            $table->bigInteger('therapy_id')->unsigned();
-            $table->foreign('therapy_id')->references('id')->on('therapies')->onDelete('cascade');
         });
     }
 
