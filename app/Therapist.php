@@ -469,7 +469,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 case 'document_cv':
                     $key = 'document_cv';
 
-                    $checkDocumentError = $checkDocument($request, $key, 'pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_CV);
+                    $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_CV);
 
                     if ($checkDocumentError) {
                         return ['isError' => true, 'message' => $checkDocumentError];
