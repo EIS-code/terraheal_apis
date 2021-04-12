@@ -308,16 +308,16 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $data['is_freelancer'] = $isFreelancer;
 
         if (empty($id)) {
-            return $this->returns('notFound', NULL, true);
+            return ['isError' => true, 'message' => 'notFound'];
         }
 
         if (!$model::find($id)->where('is_freelancer', (string)$isFreelancer)->exists()) {
-            return $this->returns('notFound', NULL, true);
+            return ['isError' => true, 'message' => 'notFound'];
         }
 
         $checks = $model->validator($data, [], [], $id, true);
         if ($checks->fails()) {
-            return $this->returns($checks->errors()->first(), NULL, true);
+            return ['isError' => true, 'message' => $checks->errors()->first()];
         }
 
         /* For language spoken. */
@@ -335,7 +335,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
                 $checks = $modelTherapistLanguage->validators($languageData);
                 if ($checks->fails()) {
-                    return $this->returns($checks->errors()->first(), NULL, true);
+                    return ['isError' => true, 'message' => $checks->errors()->first()];
                 }
             }
         }
@@ -370,7 +370,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
             $checks = $modelTherapistLanguage->validators($languageData);
             if ($checks->fails()) {
-                return $this->returns($checks->errors()->first(), NULL, true);
+                return ['isError' => true, 'message' => $checks->errors()->first()];
             }
         }
 
@@ -381,7 +381,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             if ($checkImage->fails()) {
                 unset($data['profile_photo']);
 
-                return $this->returns($checkImage->errors()->first(), NULL, true);
+                return ['isError' => true, 'message' => $checks->errors()->first()];
             }
 
             $fileName = $data['profile_photo']->getClientOriginalName();
@@ -402,7 +402,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $getDocument = self::getDocumentFromRequest($request, $key, $format, $inc, $type);
 
             if (!empty($getDocument['error'])) {
-                return $this->returns($getDocument['error'], NULL, true);
+                return ['isError' => true, 'message' => $getDocument['error']];
             } elseif (!empty($getDocument)) {
                 foreach ((array)$getDocument as $document) {
                     if (!empty($document['error'])) {
@@ -422,7 +422,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg', $inc, $modelTherapistDocument::TYPE_IDENTITY_PROOF_FRONT);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -432,7 +432,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg', $inc, $modelTherapistDocument::TYPE_IDENTITY_PROOF_BACK);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -442,7 +442,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf', $inc, $modelTherapistDocument::TYPE_INSURANCE);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -452,7 +452,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf', $inc, $modelTherapistDocument::TYPE_FREELANCER_FINANCIAL_DOCUMENT);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -462,7 +462,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf', $inc, $modelTherapistDocument::TYPE_CERTIFICATES);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -472,7 +472,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_CV);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -482,7 +482,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_REFERENCE_LATTER);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -492,7 +492,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_OTHERS);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -502,7 +502,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf', $inc, $modelTherapistDocument::PERSONAL_EXPERIENCES);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -530,7 +530,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
             $checks = $modelTherapistSelectedMassage->validators($massageData);
             if ($checks->fails()) {
-                return $this->returns($checks->errors()->first(), NULL, true);
+                return ['isError' => true, 'message' => $checks->errors()->first()];
             }
         }
 
