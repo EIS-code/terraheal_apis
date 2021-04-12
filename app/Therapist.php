@@ -10,6 +10,7 @@ use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Massage;
+use Illuminate\Http\UploadedFile;
 
 class Therapist extends BaseModel implements CanResetPasswordContract
 {
