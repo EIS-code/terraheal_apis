@@ -545,6 +545,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         }
 
         // Store documents.
+        \Log::info($data);
+        \Log::info($documentData);
         if (!empty($documentData)) {
             foreach ($documentData as $document) {
                 if (empty($document['file_name'])) {
