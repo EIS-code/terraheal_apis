@@ -28,4 +28,14 @@ class BookingMassageStart extends BaseModel
             'booking_massage_id'    => ['required', 'integer', 'exists:' . BookingMassage::getTableName() . ',id']
         ]);
     }
+
+    public function getStartTimeAttribute($value)
+    {
+        return strtotime($value) * 1000;
+    }
+
+    public function getEndTimeAttribute($value)
+    {
+        return strtotime($value) * 1000;
+    }
 }
