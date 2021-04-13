@@ -173,7 +173,7 @@ class Booking extends BaseModel
         $data = $this
                 ->select(
                         DB::RAW(
-                            'CONCAT(' . $userModel::getTableName() . '.name, " ", ' . $userModel::getTableName() . '.surname) as client_name, ' . 
+                            'CONCAT_WS(' . $userModel::getTableName() . '.name, " ", ' . $userModel::getTableName() . '.surname) as client_name, ' . 
                             $userPeopleModel::getTableName() . '.name as client_name, '. 
                             $bookingInfoModel::getTableName() . '.id as booking_info_id, '.
                             $bookingMassageModel::getTableName() . '.id as booking_massage_id, ' .
@@ -316,7 +316,7 @@ class Booking extends BaseModel
                 }
 
                 $record->massage_date = strtotime($record->massage_date) * 1000;
-
+dd($record);
                 $record->booking_type = $record->getAttributes()['booking_type'];
             });
 
