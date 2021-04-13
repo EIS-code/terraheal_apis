@@ -178,7 +178,8 @@ class Booking extends BaseModel
                             $bookingInfoModel::getTableName() . '.id as booking_info_id, '.
                             $bookingMassageModel::getTableName() . '.id as booking_massage_id, ' .
                             $bookingInfoModel::getTableName() . '.user_people_id, '.
-                            $sessionTypeModel::getTableName() . '.type as session_type, ' . 
+                            $sessionTypeModel::getTableName() . '.type as session_type, ' .
+                            $this::getTableName() . '.book_platform, ' .
                             $massageModel::getTableName() . '.name as massage_name,' . 
                             $therapiesModel::getTableName() . '.name as therapy_name,' . 
                             $bookingInfoModel::getTableName() . '.massage_date as massages_date,' . 
@@ -275,7 +276,8 @@ class Booking extends BaseModel
         }
         if (isset($bookingsFilter)) {
             if (in_array(Booking::BOOKING_ONGOING, $bookingsFilter)) {
-                $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_CONFIRM);
+                $data->where([$bookingMassageModel::getTableName() . '.is_confirm' => (string)BookingMassage::IS_CONFIRM,
+                    $bookingInfoModel::getTableName() . '.massage_date' => Carbon::now()->format('Y-m-d')]);
             }
             if (in_array(Booking::BOOKING_WAITING, $bookingsFilter)) {
                 $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_NOT_CONFIRM);

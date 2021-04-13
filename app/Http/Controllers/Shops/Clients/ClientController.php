@@ -149,7 +149,7 @@ class ClientController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['client.data.found']), 
                 ["client" => $client, "totalAppointments" => $totalAppointments, "noShow" => $noShow, "registeredAt" => $client->created_at,
                  "lastVisited" => $lastvisited->created_at, "recipient" => $recipient, "addresses" => $addresses, "therapists" => $therapists,
-                 "is_verified" => $is_verified, "questionnaries" => $questionnaries, "ratings" => $ratingData, "avg_rating" => $avg_rating, "infoForTherapy" => $infoForTherapy]);
+                 "is_verified" => $is_verified, "questionnaries" => $questionnaries, "ratings" => $ratingData, "avg_rating" => round($avg_rating,2), "infoForTherapy" => $infoForTherapy]);
     }
      
     public function getFutureBookings(Request $request) {

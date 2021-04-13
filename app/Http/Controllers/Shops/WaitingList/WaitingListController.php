@@ -38,7 +38,9 @@ class WaitingListController extends BaseController {
         'client.list' => 'List of clients found successfully',
         'client.add' => 'Client added successfully',
         'client.data.found' => 'Client data found successfully',       
-        'schedule.data.found' => 'Time Table data found successfully'        
+        'schedule.data.found' => 'Time Table data found successfully',
+        'booking.start' => "Service started successfully !",
+        'booking.end' => "Service ended successfully !",
     ];
 
     public function ongoingMassage(Request $request) {
@@ -285,6 +287,7 @@ class WaitingListController extends BaseController {
         
         return $this->returnSuccess(__($this->successMsg['booking.overview']), $bookingOverviews);
     }
+    
     public function roomOccupation(Request $request) {
         
         $filterDate = Carbon::parse($request->date);
@@ -373,5 +376,21 @@ class WaitingListController extends BaseController {
         }
         
         return $this->returnSuccess(__($this->successMsg['schedule.data.found']), $schedules->get());
+    }
+    
+    public function startServiceTime(Request $request)
+    {
+        $model = new Therapist();
+        $start = $model->serviceStart($request);
+
+        return $this->returnSuccess(__($this->successMsg['booking.start']), $start);
+    }
+    
+    public function endServiceTime(Request $request)
+    {
+        $model = new Therapist();
+        $end = $model->serviceEnd($request);
+        
+        return $this->returnSuccess(__($this->successMsg['booking.end']), $end);
     }
 }
