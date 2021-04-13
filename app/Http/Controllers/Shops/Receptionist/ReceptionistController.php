@@ -20,6 +20,7 @@ class ReceptionistController extends BaseController {
         'receptionist.data' => 'Receptionist found successfully',
         'receptionist.statistics' => 'Receptionist statistics data found successfully',
         'receptionist.break' => 'Break added successfully',
+        'not.found' => 'Receptionist data not found'
     ];
     
     public function createReceptionist(Request $request) {
@@ -54,6 +55,12 @@ class ReceptionistController extends BaseController {
     public function addDocument(Request $request) {
         
         $model = new ReceptionistDocuments();
+        $receptionist = Receptionist::find($request->receptionist_id);
+        
+        if(empty($receptionist)) {
+            return $this->returnError(__($this->successMsg['not.found']));
+        }
+        
         $data = $request->all();
         
         $checks = $model->validator($data);
@@ -78,7 +85,11 @@ class ReceptionistController extends BaseController {
         
         $receptionist = Receptionist::with('country','city','shop:id,name','documents')->where('id',$request->receptionist_id)->get();
         
-        return $this->returnSuccess(__($this->successMsg['receptionist.data']),$receptionist);
+        if($receptionist->count() > 0) {
+            return $this->returnSuccess(__($this->successMsg['receptionist.data']),$receptionist);
+        } else {
+            return $this->returnError(__($this->successMsg['not.found']));
+        }
     }
     
     public function getStatistics(Request $request) {
@@ -129,14 +140,19 @@ class ReceptionistController extends BaseController {
         $date = $date->format('Y-m-d');
         $receptionist_schedule = ReceptionistTimeTables::where(['receptionist_id' => $request->receptionist_id, 'login_date' => $date])->first();
         
-        $data = $request->all();
-        $data['receptionist_schedule_id'] = $receptionist_schedule->id;
-        $checks = $model->validator($data);
         
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
+        if(!empty($receptionist_schedule)) {
+            $data = $request->all();
+            $data['receptionist_schedule_id'] = $receptionist_schedule->id;
+            $checks = $model->validator($data);
+
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            $break = $model->create($data);
+            return $this->returnSuccess(__($this->successMsg['receptionist.break']),$break);
+        } else {
+            return $this->returnError(__($this->successMsg['not.found']));
         }
-        $break = $model->create($data);
-        return $this->returnSuccess(__($this->successMsg['receptionist.break']),$break);
     }
 }
