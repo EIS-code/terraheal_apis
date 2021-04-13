@@ -701,7 +701,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
             return $todayTherapist;
         } else {
-            $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id')->toArray();
+            $therapists = Therapist::all()->toArray();
             return $therapists;
         }
     }
