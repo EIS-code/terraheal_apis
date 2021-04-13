@@ -20,4 +20,9 @@ class TherapiesTimings extends BaseModel
             'therapy_id' => ['required', 'integer']
         ]);
     }
+
+    public function therapy()
+    {
+        return $this->hasOne('App\Therapy', 'id', 'therapy_id');
+    }
 }

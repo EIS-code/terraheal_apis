@@ -101,6 +101,8 @@ class Booking extends BaseModel
                     }, 'therapist', 'bookingMassages' => function($query) {
                         $query->with(['massageTiming' => function($query1) {
                             return $query1->with('massage');
+                        }, 'therapyTiming' => function($query2) {
+                            return $query2->with('therapy');
                         }]);
                     }]);
     }

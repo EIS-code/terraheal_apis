@@ -205,7 +205,10 @@ class TherapistController extends BaseController
                                 $returnData[$increments]['therapist_id']         = $bookingInfo->therapist_id;
                                 $returnData[$increments]['user_name']            = $bookingInfo->userPeople->name;
                                 $returnData[$increments]['therapist_name']       = $bookingInfo->therapist->fullName;
-                                $returnData[$increments]['massage_name']         = $bookingMassage->massageTiming->massage->name;
+                                $returnData[$increments]['massage_name']         = !empty($bookingMassage->massageTiming) ? $bookingMassage->massageTiming->massage->name : NULL;
+                                $returnData[$increments]['therapy_name']         = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy->name : NULL;
+                                $returnData[$increments]['massage_id']           = !empty($bookingMassage->massageTiming) ? $bookingMassage->massageTiming->massage_id : NULL;
+                                $returnData[$increments]['therapy_id']           = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy_id : NULL;
 
                                 $increments++;
                             }
