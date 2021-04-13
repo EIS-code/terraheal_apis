@@ -215,7 +215,7 @@ class ClientController extends BaseController {
 
         $send = $this->sendMail($view, $to, $subject, $body);
         
-        return $this->returnSuccess(__($this->successMsg['client.forgot.object.return']), $send);
+        return $send;
     }
     
     public function updateRating(Request $request) {
