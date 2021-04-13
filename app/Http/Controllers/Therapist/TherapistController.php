@@ -89,7 +89,9 @@ class TherapistController extends BaseController
         'client.data.found' => 'Client data found successfully !',
         'therapist.complaints.suggestions' => 'Therapist complaints and suggestions found successfully !',
         'session.types' => 'Session types found successfully !',
-        'therapist.break' => 'Break done successfully !'
+        'therapist.break' => 'Break done successfully !',
+        'booking.pending.found.successfully' => 'Pending bookings found successfully !',
+        'booking.upcoming.found.successfully' => 'Upcoming bookings found successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -255,11 +257,33 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_TODAY]]);
 
-        $data = $this->filter($data);
+        $data = $bookingModel->getGlobalQuery($request);
 
         return $this->returns('booking.pending.found.successfully', $data);
+    }
+
+    public function getUpcomingBooking(Request $request)
+    {
+        $bookingModel = new Booking();
+
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_FUTURE]]);
+
+        $data = $bookingModel->getGlobalQuery($request);
+
+        return $this->returns('booking.upcoming.found.successfully', $data);
+    }
+
+    public function getPastBookings(Request $request)
+    {
+        $bookingModel = new Booking();
+
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_PAST]]);
+
+        $data = $bookingModel->getGlobalQuery($request);
+
+        return $this->returns('booking.past.found.successfully', $data);
     }
 
     public function getCalender(Request $request)
