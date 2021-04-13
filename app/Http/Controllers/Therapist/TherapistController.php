@@ -491,63 +491,16 @@ class TherapistController extends BaseController
 
     public function startMassageTime(Request $request)
     {
-        $model              = new BookingMassageStart();
-        $data               = $request->all();
-        $bookingMassageId   = $request->get('booking_massage_id', false);
-
-        if (empty($bookingMassageId)) {
-            return $this->returns('notFoundBookingMassage', NULL, true);
-        }
-
-        $data['actual_total_time']  = BookingMassage::getMassageTime($bookingMassageId);
-
-        $data['start_time']         = !empty($data['start_time']) ? Carbon::createFromTimestampMs($data['start_time']) : false;
-        $startTime                  = clone $data['start_time'];
-        $data['end_time']           = !empty($startTime) ? $startTime->addMinutes($data['actual_total_time'])->format('H:i:s') : false;
-        $data['start_time']         = !empty($data['start_time']) ? $data['start_time']->format('H:i:s') : false;
-
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returns($checks->errors()->first(), NULL, true);
-        }
-
-        $create = $model::updateOrCreate(['booking_massage_id' => $bookingMassageId], $data);
+        $model = new Therapist();
+        $create = $model->serviceStart($request);
 
         return $this->returns('booking.start', $create);
     }
 
     public function endMassageTime(Request $request)
     {
-        $model              = new BookingMassageStart();
-        $data               = $request->all();
-        $bookingMassageId   = $request->get('booking_massage_id', false);
-
-        $currentTime        = Carbon::now();
-
-        $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
-
-        if (empty($data['end_time'])) {
-            return $this->returns('notFoundEndTime', NULL, true);
-        }
-
-        $find = $model::where('booking_massage_id', $bookingMassageId)->first();
-
-        if (empty($find)) {
-            return $this->returns('notFoundBookingMassage', NULL, true);
-        }
-
-        if ($find->start_time > $data['end_time']) {
-            return $this->returns('endTimeIsNotProper', NULL, true);
-        }
-
-        $data['taken_total_time'] = (new Carbon($find->start_time))->diffInMinutes($currentTime);
-
-        $find->end_time         = $data['end_time'];
-
-        $find->taken_total_time = $data['taken_total_time'];
-
-        $find->update();
-
+        $model = new Therapist();
+        $find = $model->serviceEnd($request);
         return $this->returns('booking.start', $find);
     }
 

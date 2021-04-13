@@ -52,6 +52,8 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/addClient', 'WaitingList\WaitingListController@addClient');
     $router->post('/searchClients', 'WaitingList\WaitingListController@searchClients');
     $router->post('/getTimeTable', 'WaitingList\WaitingListController@getTimeTable');
+    $router->post('/startServiceTime', 'WaitingList\WaitingListController@startServiceTime');
+    $router->post('/endServiceTime', 'WaitingList\WaitingListController@endServiceTime');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {

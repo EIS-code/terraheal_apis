@@ -720,4 +720,69 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     {
         return $this->hasOne('App\Shop', 'id', 'shop_id');
     }
+    
+    public function serviceStart(Request $request) {
+        
+        $model              = new BookingMassageStart();
+        $data               = $request->all();
+        $bookingMassageId   = $request->get('booking_massage_id', false);
+
+        if (empty($bookingMassageId)) {
+            return $this->returns('Booking massage not found.', NULL, true);
+        }
+
+        $data['actual_total_time']  = BookingMassage::getMassageTime($bookingMassageId);
+
+        $data['start_time']         = !empty($data['start_time']) ? Carbon::createFromTimestampMs($data['start_time']) : false;
+        $startTime                  = clone $data['start_time'];
+        $data['end_time']           = !empty($startTime) ? $startTime->addMinutes($data['actual_total_time'])->format('H:i:s') : false;
+        $data['start_time']         = !empty($data['start_time']) ? $data['start_time']->format('H:i:s') : false;
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return ['isError' => true, 'message' => $checks->errors()->first()];
+        }
+
+        $create = $model::updateOrCreate(['booking_massage_id' => $bookingMassageId], $data);
+        
+        return collect(['create' => $create]);
+        
+    }
+    
+    public function serviceEnd(Request $request) {
+        
+        $model              = new BookingMassageStart();
+        $data               = $request->all();
+        $bookingMassageId   = $request->get('booking_massage_id', false);
+
+        $currentTime        = Carbon::now();
+
+
+        if (empty($data['end_time'])) {
+            return ['isError' => true, 'message' => 'End time not found.'];
+        }
+
+        $find = $model::where('booking_massage_id', $bookingMassageId)->first();
+
+        if (empty($find)) {
+            return ['isError' => true, 'message' => 'Booking massage not found.'];
+        }
+        
+        if ($find->start_time > $data['end_time']) {
+            return ['isError' => true, 'message' => 'End time always greater than start time.'];
+        }
+        
+        $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
+
+        $data['taken_total_time'] = (new Carbon($find->start_time))->diffInMinutes($currentTime->format('H:i:s'));
+        
+        $find->end_time         = $data['end_time'];
+
+        $find->taken_total_time = $data['taken_total_time'];
+
+        $find->update();
+        
+        return collect(['find' => $find]);
+        
+    }
 }
