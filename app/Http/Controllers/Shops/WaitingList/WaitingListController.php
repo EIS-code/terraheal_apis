@@ -41,6 +41,7 @@ class WaitingListController extends BaseController {
         'schedule.data.found' => 'Time Table data found successfully',
         'booking.start' => "Service started successfully !",
         'booking.end' => "Service ended successfully !",
+        'not.found' => "Data not found"
     ];
 
     public function ongoingMassage(Request $request) {
@@ -105,6 +106,9 @@ class WaitingListController extends BaseController {
     public function addBookingMassage(Request $request) {
         
         $bookingMassage = BookingMassage::where('id',$request->booking_massage_id)->first();
+        if(empty($bookingMassage)) {
+            return $this->returnError(__($this->successMsg['not.found']));
+        }
         $newBooking = [];
         
         // 0 = for massage, 1 = for therapy
@@ -160,8 +164,10 @@ class WaitingListController extends BaseController {
     public function deleteBooking(Request $request) {
         
         $booking = BookingMassage::find($request->booking_massage_id);
+        if(empty($booking)) {
+            return $this->returnError(__($this->successMsg['not.found']));
+        }
         $booking->delete();
-        
         return $this->returnSuccess(__($this->successMsg['delete.booking']), $booking);
     }
     
