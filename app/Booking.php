@@ -180,6 +180,8 @@ class Booking extends BaseModel
                             $bookingInfoModel::getTableName() . '.user_people_id, '.
                             $sessionTypeModel::getTableName() . '.type as session_type, ' . 
                             $massageModel::getTableName() . '.name as massage_name,' . 
+                            $therapiesModel::getTableName() . '.name as therapy_name,' . 
+                            $bookingInfoModel::getTableName() . '.massage_date as massages_date,' . 
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
                             $bookingInfoModel::getTableName() . '.massage_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . 
                             'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, ' . 
@@ -202,7 +204,7 @@ class Booking extends BaseModel
                             $this::getTableName().'.id as booking_id,'.
                             $this::getTableName().'.shop_id as shop_id,'.
                             $this::getTableName().'.session_id as sessionId,'.
-                            'CONCAT(' . $therapistModel::getTableName() . '.name, " ", ' . $therapistModel::getTableName() . '.surname) as therapistName, ' . 
+                            'CONCAT_WS(" ",' . $therapistModel::getTableName() . '.name,' . $therapistModel::getTableName() . '.surname) as therapistName, ' . 
                             $roomModel::getTableName().'.name as roomName,'.
                             $userGenderPreferenceModel::getTableName().'.name as genderPreference,'.
                             $massagePriceModel::getTableName().'.cost,'.

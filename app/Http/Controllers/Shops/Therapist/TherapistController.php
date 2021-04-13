@@ -20,6 +20,7 @@ class TherapistController extends BaseController {
 
     public $successMsg = [
         
+        'therapist' => 'Therapist found successfully!',
         'therapist.bookings' => 'Therapist bookings found successfully!',
         'therapist.data.found' => 'Therapist data found successfully!',
         'therapist.services' => 'Therapist services found successfully!',
@@ -31,7 +32,7 @@ class TherapistController extends BaseController {
         'therapist.attendance' => 'Therapist attendance data found successfully !',
         'no.data.found' => 'No data found'
     ];
-   
+    
     public function myBookings(Request $request) {
         
         $booking_type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
@@ -53,7 +54,8 @@ class TherapistController extends BaseController {
     
     public function getInfo(Request $request) {
         
-        $therapist = Therapist::with('shop:id,name','country:id,name','city:id,name')->find($request->therapist_id);
+        $therapist = Therapist::getGlobalQuery(Therapist::IS_NOT_FREELANCER,$request);
+        
         return $this->returnSuccess(__($this->successMsg['therapist.info']), $therapist);
     }
     
@@ -69,14 +71,6 @@ class TherapistController extends BaseController {
         $data = Therapist::getGlobalQuery($isFreelancer, $request);
 
         return $returnResponse ? $this->returns('therapist.information.successfully', $data) : $data;
-    }
-
-    public function getServices(Request $request) {
-        
-        $massages = TherapistSelectedMassage::with('massage:id,name')->where('therapist_id',$request->therapist_id)->get(); 
-        $therapies = TherapistSelectedTherapy::with('therapy:id,name')->where('therapist_id',$request->therapist_id)->get();
-        
-        return $this->returnSuccess(__($this->successMsg['therapist.services']), [$massages,$therapies]);
     }
     
     public function myAvailabilities(Request $request)
