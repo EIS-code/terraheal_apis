@@ -251,6 +251,17 @@ class TherapistController extends BaseController
         return $this->returns('booking.past.found.successfully', $data);
     }
 
+    public function getPendingBooking(Request $request)
+    {
+        $bookingModel = new Booking();
+
+        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
+
+        $data = $this->filter($data);
+
+        return $this->returns('booking.pending.found.successfully', $data);
+    }
+
     public function getCalender(Request $request)
     {
         $model  = new BookingInfo();

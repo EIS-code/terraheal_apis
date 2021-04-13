@@ -61,6 +61,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->post('/list/today', 'TherapistController@getTodayBooking');
         $router->post('/list/future', 'TherapistController@getFutureBooking');
         $router->post('/list/past', 'TherapistController@getPastBooking');
+        $router->post('/list/pending', 'TherapistController@getPendingBooking');
         $router->group(['prefix' => 'massage'], function () use($router) {
             $router->post('start', 'TherapistController@startMassageTime');
             $router->post('end', 'TherapistController@endMassageTime');
