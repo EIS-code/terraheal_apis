@@ -614,23 +614,27 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
 
             $extension = $file->getClientOriginalExtension();
-            \Log::info($file->extension());
-            \Log::info(\File::extension($file));
-            $fileName  = !empty($pathInfo['filename']) ? $pathInfo['filename'] . $ramdomStrings . "." . $extension : $ramdomStrings . "." . $extension;
+            $extension = empty($extension) ? $file->extension() : NULL;
 
-            $data = [
-                'type'          => $type,
-                'file_name'     => $fileName,
-                'therapist_id'  => $id,
-                'key'           => $key,
-                $key            => $file
-            ];
+            if (!empty($extension)) {
+                $fileName  = !empty($pathInfo['filename']) ? $pathInfo['filename'] . $ramdomStrings . "." . $extension : $ramdomStrings . "." . $extension;
 
-            $checks = TherapistDocument::validator($data, $key, $formats);
-            if ($checks->fails()) {
-                return ['error' => $checks->errors()->first(), 'data' => NULL];
+                $data = [
+                    'type'          => $type,
+                    'file_name'     => $fileName,
+                    'therapist_id'  => $id,
+                    'key'           => $key,
+                    $key            => $file
+                ];
+
+                $checks = TherapistDocument::validator($data, $key, $formats);
+                if ($checks->fails()) {
+                    return ['error' => $checks->errors()->first(), 'data' => NULL];
+                } else {
+                    $inc++;
+                }
             } else {
-                $inc++;
+                return ['error' => "File extension not found.", 'data' => $data];
             }
 
             return ['error' => false, 'data' => $data];
