@@ -4,9 +4,12 @@ namespace App;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TherapistDocument extends BaseModel
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'type',
         'file_name',
@@ -91,6 +94,17 @@ class TherapistDocument extends BaseModel
         }
 
         return $default;
+    }
+
+    public function removeDocument(string $documentName)
+    {
+        $directory = (str_ireplace("\\", "/", $this->directory));
+
+        if (Storage::disk($this->fileSystem)->exists($directory . $documentName)) {
+            return Storage::disk($this->fileSystem)->delete($directory . $documentName);
+        }
+
+        return false;
     }
 
     public function checkAllDocumentsUploaded(int $therapistId) : bool

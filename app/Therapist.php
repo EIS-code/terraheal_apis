@@ -382,8 +382,10 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 return ['isError' => true, 'message' => $checks->errors()->first()];
             }
 
-            $fileName = $data['profile_photo']->getClientOriginalName();
-            $fileName = time() . '_' . $id . '.' . $data['profile_photo']->getClientOriginalExtension();
+            $extension = $data['profile_photo']->getClientOriginalExtension();
+            $extension = empty($extension) ? $file->extension() : $extension;
+
+            $fileName = time() . '_' . $id . '.' . $extension;
 
             $storeFile = $data['profile_photo']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
 
@@ -611,7 +613,6 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $data     = [];
 
             $ramdomStrings = generateRandomString(6);
-
 
             $extension = $file->getClientOriginalExtension();
             $extension = empty($extension) ? $file->extension() : $extension;

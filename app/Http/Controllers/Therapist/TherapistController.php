@@ -55,7 +55,8 @@ class TherapistController extends BaseController
         'endTimeIsNotProper' => "End time always greater than start time.",
         'dateRequired' => "Date is required.",
         'somethingWrong' => "Something went wrong.",
-        'no.schedule.found' => "No schedule found."
+        'no.schedule.found' => "No schedule found.",
+        'no.document.found' => "No document found."
     ];
 
     public $successMsg = [
@@ -91,7 +92,8 @@ class TherapistController extends BaseController
         'session.types' => 'Session types found successfully !',
         'therapist.break' => 'Break done successfully !',
         'booking.pending.found.successfully' => 'Pending bookings found successfully !',
-        'booking.upcoming.found.successfully' => 'Upcoming bookings found successfully !'
+        'booking.upcoming.found.successfully' => 'Upcoming bookings found successfully !',
+        'therapist.document.delete' => 'Therapist document removed successfully !'
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -824,5 +826,30 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('no.schedule.found', NULL, true);
+    }
+
+    public function removeDocument(Request $request)
+    {
+        $documentId = (int)$request->get('document_id', false);
+
+        $model      = new TherapistDocument();
+
+        if (!empty($documentId)) {
+            $find = $model::find($documentId);
+
+            if (!empty($find)) {
+                // $documentName = $find->getAttributes()['file_name'];
+
+                $remove       = $find->delete();
+
+                /*if ($remove && !empty($documentName)) {
+                    $model->removeDocument($documentName);
+                }*/
+
+                return $this->returns('therapist.document.delete', collect([]));
+            }
+        }
+
+        return $this->returns('no.document.found', NULL, true);
     }
 }
