@@ -160,7 +160,7 @@ class TherapistController extends BaseController {
     public function myAttendence(Request $request) {
         
         $date = isset($request->date) ? Carbon::createFromTimestampMs($request->date) : Carbon::now();
-        $scheduleData = TherapistWorkingSchedule::with('therapistBreakTime')->has('therapistWorkingScheduleTime')->where('therapist_id',$request->therapist_id)
+        $scheduleData = TherapistWorkingSchedule::with('therapistBreakTime','therapistWorkingScheduleTime')->where('therapist_id',$request->therapist_id)
                 ->whereMonth('date',$date->month)->get();
         $presentDays = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->count();
         $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_absent' => TherapistWorkingSchedule::ABSENT])->get()->count();
@@ -172,9 +172,11 @@ class TherapistController extends BaseController {
 
             foreach ($scheduleData as $key => $value) {
 
-                $start_time = Carbon::createFromTimestampMs($value['therapistWorkingScheduleTime']['start_time']);
-                $end_time = Carbon::createFromTimestampMs($value['therapistWorkingScheduleTime']['end_time']);
-                $total = new Carbon($start_time->diff($end_time)->format("%h:%i"));
+                if(!is_null($value['therapistWorkingScheduleTime'])) {
+                    $start_time = Carbon::createFromTimestampMs($value['therapistWorkingScheduleTime']['start_time']);
+                    $end_time = Carbon::createFromTimestampMs($value['therapistWorkingScheduleTime']['end_time']);
+                    $total = new Carbon($start_time->diff($end_time)->format("%h:%i"));
+                }
 
                 $therapist_break = [];
                 foreach ($value->therapistBreakTime as $key => $break) {
