@@ -614,6 +614,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
 
             $extension = $file->getClientOriginalExtension();
+            \Log::info($file->extension());
+            \Log::info(\File::extension($file));
             $fileName  = !empty($pathInfo['filename']) ? $pathInfo['filename'] . $ramdomStrings . "." . $extension : $ramdomStrings . "." . $extension;
 
             $data = [
