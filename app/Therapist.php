@@ -478,7 +478,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $key = 'document_reference_letter';
 
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_REFERENCE_LATTER);
-
+\Log::info($checkDocumentError);
                     if ($checkDocumentError) {
                         return ['isError' => true, 'message' => $checkDocumentError];
                     }
@@ -554,6 +554,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         }
 
         // Store documents.
+        \Log::info($documentData);
         if (!empty($documentData)) {
             foreach ($documentData as $document) {
                 if (empty($document['file_name'])) {
