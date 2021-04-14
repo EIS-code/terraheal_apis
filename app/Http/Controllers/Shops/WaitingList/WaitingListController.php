@@ -305,7 +305,7 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id');
         
-        return $this->returnSuccess(__($this->successMsg['booking.overview']), $roomOccupied);
+        return $this->returnSuccess(__($this->successMsg['booking.overview']), array_values($roomOccupied->toArray()));
     }
     
     public function getAllMassages(Request $request)

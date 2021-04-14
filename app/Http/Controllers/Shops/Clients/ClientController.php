@@ -30,6 +30,7 @@ class ClientController extends BaseController {
         'client.forgot.object.return' => 'Client forgotten object returned successfully',
         'client.email.send' => 'Email sent successfully',
         'client.rating.update' => 'Client ratings updated successfully',
+        'client.not.found' => 'Client not found'
     ];        
     
     public function searchClients(Request $request) {
@@ -202,6 +203,10 @@ class ClientController extends BaseController {
         $user = User::find($request->user_id);
         $shop = Shop::find($request->shop_id);
         $room = Room::find($request->room_id);
+        
+        if(empty($user)) {
+            return $this->returnSuccess(__($this->successMsg['client.not.found']));
+        }
         
         $view = "forgotObject";
         $to = $user->email;
