@@ -622,8 +622,9 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     'key'           => $key,
                     $key            => $file
                 ];
-
+\Log::info($data);
                 $checks = TherapistDocument::validator($data, $key, $formats);
+                \Log::info($checks->fails());
                 if ($checks->fails()) {
                     return ['error' => $checks->errors()->first(), 'data' => NULL];
                 } else {
@@ -638,14 +639,14 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             if (is_array($data[$key])) {
                 foreach ($data[$key] as $index => $document) {
                     $documentData[$inc] = $createData($document, $key, $formats, $inc, $id, $type);
-\Log::info($documentData);
+
                     if (!empty($descriptions[$index])) {
                         $documentData[$inc]['data']['description'] = $descriptions[$index];
                     }
                 }
             } elseif ($data[$key] instanceof UploadedFile) {
                 $documentData[$inc] = $createData($data[$key], $key, $formats, $inc, $id, $type);
-\Log::info($documentData);
+
                 if (!empty($descriptions[0])) {
                     $documentData[$inc]['data']['description'] = $descriptions[$index];
                 }
