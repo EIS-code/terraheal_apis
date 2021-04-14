@@ -634,7 +634,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $inc++;
                 }
             } else {
-                return ['error' => "File extension not found.", 'data' => $data];
+                return ['error' => "File extension not found.", 'data' => NULL];
             }
 
             return ['error' => false, 'data' => $data];
