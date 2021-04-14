@@ -398,7 +398,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         $checkDocument = function($request, $key, $format, $inc, $type) use(&$documentData) {
             $getDocument = self::getDocumentFromRequest($request, $key, $format, $inc, $type);
-\Log::info($getDocument);
+
             if (!empty($getDocument['error'])) {
                 return ['isError' => true, 'message' => $getDocument['error']];
             } elseif (!empty($getDocument)) {
@@ -609,26 +609,26 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $pathInfo = pathinfo($file->getClientOriginalName());
 
             $data     = [];
-\Log::info($pathInfo);
-            if (!empty($pathInfo['extension'])) {
-                $ramdomStrings = generateRandomString(6);
 
-                $fileName = !empty($pathInfo['filename']) ? $pathInfo['filename'] . $ramdomStrings . "." . $pathInfo['extension'] : $ramdomStrings . "." . $pathInfo['extension'];
+            $ramdomStrings = generateRandomString(6);
 
-                $data = [
-                    'type'          => $type,
-                    'file_name'     => $fileName,
-                    'therapist_id'  => $id,
-                    'key'           => $key,
-                    $key            => $file
-                ];
 
-                $checks = TherapistDocument::validator($data, $key, $formats);
-                if ($checks->fails()) {
-                    return ['error' => $checks->errors()->first(), 'data' => NULL];
-                } else {
-                    $inc++;
-                }
+            $extension = $file->getClientOriginalExtension();
+            $fileName  = !empty($pathInfo['filename']) ? $pathInfo['filename'] . $ramdomStrings . "." . $extension : $ramdomStrings . "." . $extension;
+
+            $data = [
+                'type'          => $type,
+                'file_name'     => $fileName,
+                'therapist_id'  => $id,
+                'key'           => $key,
+                $key            => $file
+            ];
+
+            $checks = TherapistDocument::validator($data, $key, $formats);
+            if ($checks->fails()) {
+                return ['error' => $checks->errors()->first(), 'data' => NULL];
+            } else {
+                $inc++;
             }
 
             return ['error' => false, 'data' => $data];
