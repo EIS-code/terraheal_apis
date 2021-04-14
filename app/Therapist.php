@@ -398,7 +398,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         $checkDocument = function($request, $key, $format, $inc, $type) use(&$documentData) {
             $getDocument = self::getDocumentFromRequest($request, $key, $format, $inc, $type);
-
+\Log::info($getDocument);
             if (!empty($getDocument['error'])) {
                 return ['isError' => true, 'message' => $getDocument['error']];
             } elseif (!empty($getDocument)) {
@@ -478,7 +478,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $key = 'document_reference_letter';
 
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_REFERENCE_LATTER);
-\Log::info($checkDocumentError);
+
                     if ($checkDocumentError) {
                         return ['isError' => true, 'message' => $checkDocumentError];
                     }
@@ -554,7 +554,6 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         }
 
         // Store documents.
-        \Log::info($documentData);
         if (!empty($documentData)) {
             foreach ($documentData as $document) {
                 if (empty($document['file_name'])) {
@@ -639,14 +638,14 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             if (is_array($data[$key])) {
                 foreach ($data[$key] as $index => $document) {
                     $documentData[$inc] = $createData($document, $key, $formats, $inc, $id, $type);
-
+\Log::info($documentData);
                     if (!empty($descriptions[$index])) {
                         $documentData[$inc]['data']['description'] = $descriptions[$index];
                     }
                 }
             } elseif ($data[$key] instanceof UploadedFile) {
                 $documentData[$inc] = $createData($data[$key], $key, $formats, $inc, $id, $type);
-
+\Log::info($documentData);
                 if (!empty($descriptions[0])) {
                     $documentData[$inc]['data']['description'] = $descriptions[$index];
                 }
