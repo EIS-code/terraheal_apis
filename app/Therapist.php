@@ -609,7 +609,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $pathInfo = pathinfo($file->getClientOriginalName());
 
             $data     = [];
-
+\Log::info($pathInfo);
             if (!empty($pathInfo['extension'])) {
                 $ramdomStrings = generateRandomString(6);
 
@@ -622,9 +622,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     'key'           => $key,
                     $key            => $file
                 ];
-\Log::info($data);
+
                 $checks = TherapistDocument::validator($data, $key, $formats);
-                \Log::info($checks->fails());
                 if ($checks->fails()) {
                     return ['error' => $checks->errors()->first(), 'data' => NULL];
                 } else {
