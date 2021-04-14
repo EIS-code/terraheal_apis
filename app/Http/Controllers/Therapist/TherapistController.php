@@ -327,7 +327,6 @@ class TherapistController extends BaseController
 
     public function updateProfile(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
     {
-        \Log::info($request->all());
         $store = Therapist::updateProfile($isFreelancer, $request);
 
         if (!empty($store['isError']) && !empty($store['message'])) {
