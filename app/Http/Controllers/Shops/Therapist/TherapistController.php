@@ -187,7 +187,9 @@ class TherapistController extends BaseController {
                     }
                 }
                 $value['break_time'] = CommonHelper::calculateHours($therapist_break);
-                $value['total'] = $totalHours[] = $total->diff(new Carbon($value['break_time']))->format("%h:%i");
+                if(isset($total) && !empty($total)) {
+                    $value['total'] = $totalHours[] = $total->diff(new Carbon($value['break_time']))->format("%h:%i");
+                }
                 unset($therapist_break); 
             }
 
