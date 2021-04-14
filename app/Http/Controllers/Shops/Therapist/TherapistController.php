@@ -160,14 +160,13 @@ class TherapistController extends BaseController {
     public function myAttendence(Request $request) {
         
         $date = isset($request->date) ? Carbon::createFromTimestampMs($request->date) : Carbon::now();
-        $scheduleData = TherapistWorkingSchedule::with('therapistWorkingScheduleTime','therapistBreakTime')->where('therapist_id',$request->therapist_id)
+        $scheduleData = TherapistWorkingSchedule::with('therapistBreakTime')->has('therapistWorkingScheduleTime')->where('therapist_id',$request->therapist_id)
                 ->whereMonth('date',$date->month)->get();
         $presentDays = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->count();
         $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_absent' => TherapistWorkingSchedule::ABSENT])->get()->count();
         
         if(count($scheduleData) > 0) {
             
-            $totalWorkingDays = $scheduleData->count();
             $totalHours = [];
             $breakHours = [];        
 
@@ -179,9 +178,11 @@ class TherapistController extends BaseController {
 
                 $therapist_break = [];
                 foreach ($value->therapistBreakTime as $key => $break) {
-                    $break_start_time = new Carbon(Carbon::createFromTimestampMs($break['from']));
-                    $break_end_time = new Carbon(Carbon::createFromTimestampMs($break['to']));
-                    $breakHours[] = $therapist_break[] = $break_start_time->diff($break_end_time)->format("%h:%i");
+                    if(!is_null($break)) {
+                        $break_start_time = new Carbon(Carbon::createFromTimestampMs($break['from']));
+                        $break_end_time = new Carbon(Carbon::createFromTimestampMs($break['to']));
+                        $breakHours[] = $therapist_break[] = $break_start_time->diff($break_end_time)->format("%h:%i");
+                    }
                 }
                 $value['break_time'] = CommonHelper::calculateHours($therapist_break);
                 $value['total'] = $totalHours[] = $total->diff(new Carbon($value['break_time']))->format("%h:%i");
@@ -195,7 +196,7 @@ class TherapistController extends BaseController {
             $break = CommonHelper::calculateHours($breakHours);
 
             return $this->returnSuccess(__($this->successMsg['therapist.attendance']),['receptionistData' => $scheduleData, 
-                'totalWorkingDays' => $totalWorkingDays, 'presentDays' => $presentDays, 'absentDays' => $totalAbsent,
+                'totalWorkingDays' => $presentDays + $totalAbsent, 'presentDays' => $presentDays, 'absentDays' => $totalAbsent,
                 'totalHours' => explode(':', $hours)[0], 'totalBreakHours' => explode(':', $break)[0],'totalWorkingHours' => explode(':', $hours)[0]-explode(':', $break)[0]]);
         } else {
              return $this->returnSuccess(__($this->successMsg['no.data.found']));
