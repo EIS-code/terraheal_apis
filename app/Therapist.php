@@ -613,8 +613,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $ramdomStrings = generateRandomString(6);
 
 
-            $extension = $file->extension();
-            $extension = empty($extension) ? $file->getClientOriginalExtension() : NULL;
+            $extension = $file->getClientOriginalExtension();
+            $extension = empty($extension) ? $file->extension() : $extension;
 
             if (!empty($extension)) {
                 $fileName  = !empty($pathInfo['filename']) ? $pathInfo['filename'] . $ramdomStrings . "." . $extension : $ramdomStrings . "." . $extension;
