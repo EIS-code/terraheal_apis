@@ -270,4 +270,17 @@ class BookingInfo extends BaseModel
 
         return $data;
     }
+
+    public static function massageDone(int $id)
+    {
+        $find = self::find($id);
+
+        if (!empty($find)) {
+            $find->is_done = (string)self::IS_DONE;
+
+            return $find->update();
+        }
+
+        return false;
+    }
 }

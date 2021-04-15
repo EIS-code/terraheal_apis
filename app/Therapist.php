@@ -10,6 +10,8 @@ use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Massage;
+use App\BookingInfo;
+use App\BookingMassage;
 use Illuminate\Http\UploadedFile;
 use DB;
 use Carbon\Carbon;
@@ -772,12 +774,16 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         if (empty($find)) {
             return ['isError' => true, 'message' => __('Booking massage not found.')];
         }
-        
-        if ($find->start_time > $data['end_time']) {
+
+        $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
+
+        if (empty($data['end_time'])) {
+            return ['isError' => true, 'message' => __('Provide proper end time.')];
+        }
+
+        if ($find->start_time > (strtotime($data['end_time']) * 1000)) {
             return ['isError' => true, 'message' => __('End time always greater than start time.')];
         }
-        
-        $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
 
         $data['taken_total_time'] = (new Carbon($find->start_time))->diffInMinutes($currentTime->format('H:i:s'));
         
@@ -785,9 +791,16 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         $find->taken_total_time = $data['taken_total_time'];
 
-        $find->update();
-        
+        $update = $find->update();
+
+        if ($update) {
+            $bookingMassage = BookingMassage::find($bookingMassageId);
+
+            if (!empty($bookingMassage)) {
+                BookingInfo::massageDone($bookingMassage->booking_info_id);
+            }
+        }
+
         return collect(['find' => $find]);
-        
     }
 }
