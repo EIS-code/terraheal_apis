@@ -99,7 +99,7 @@ class BookingMassage extends BaseModel
     {
         $id   = $this->id;
 
-        $find = BookingMassageStart::where('booking_massage_id', $id);
+        $find = BookingMassageStart::where('booking_massage_id', $id)->first();
 
         $bookingInfo = $this->bookingInfo;
 

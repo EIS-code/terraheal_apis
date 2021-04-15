@@ -214,6 +214,7 @@ class TherapistController extends BaseController
                                 $returnData[$increments]['therapy_id']           = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy_id : NULL;
                                 $returnData[$increments]['is_done']              = $bookingInfo->is_done;
                                 $returnData[$increments]['service_status']       = $bookingMassage->getServiceStatus();
+                                $returnData[$increments]['booking_massage_id']   = $bookingMassage->id;
 
                                 $increments++;
                             }
