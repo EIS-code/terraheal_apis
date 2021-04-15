@@ -64,6 +64,7 @@ $router->get('password/reset/{token}', [
 ]);*/
 
 $router->group(['middleware' => ['auth']], function () use($router) {
+    include("users.php");
     include("therapists.php");
     include("shops.php");
     include("news.php");

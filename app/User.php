@@ -254,4 +254,11 @@ class User extends BaseModel implements Authenticatable
     {
         return $this->hasMany('App\Review', 'user_id', 'id');
     }
+
+    public function getGlobalResponse(int $id)
+    {
+        $data = $this->where('id', $id)->with(['country', 'city'])->first();
+
+        return $data;
+    }
 }
