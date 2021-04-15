@@ -212,12 +212,12 @@ class Booking extends BaseModel
                             $roomModel::getTableName().'.name as roomName,'.
                             $massageModel::getTableName() . '.name as massage_name,' . 
                             $therapiesModel::getTableName() . '.name as therapy_name,' . 
-                            $bookingInfoModel::getTableName() . '.massage_date as service_date,' . 
-                            $bookingInfoModel::getTableName() . '.massage_date as service_date, UNIX_TIMESTAMP(' . 
-                            $bookingInfoModel::getTableName() . '.massage_time) * 1000 as service_start_time, UNIX_TIMESTAMP(' . 
-                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as service_end_time, ' . 
-                            'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as service_day_name, ' . 
-                            'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as service_duration, ' .                            
+                            $bookingInfoModel::getTableName() . '.massage_date as massage_date,' . 
+                            $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
+                            $bookingInfoModel::getTableName() . '.massage_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . 
+                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, ' . 
+                            'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as massage_day_name, ' . 
+                            'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' .                            
                             $massagePriceModel::getTableName().'.cost,'.
                             'gender.name as gender_preference, ' . 
                             'pressure.name as pressure_preference, ' . 
