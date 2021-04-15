@@ -212,6 +212,7 @@ class TherapistController extends BaseController
                                 $returnData[$increments]['therapy_name']         = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy->name : NULL;
                                 $returnData[$increments]['massage_id']           = !empty($bookingMassage->massageTiming) ? $bookingMassage->massageTiming->massage_id : NULL;
                                 $returnData[$increments]['therapy_id']           = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy_id : NULL;
+                                $returnData[$increments]['is_done']              = $bookingInfo->is_done;
 
                                 $increments++;
                             }
@@ -532,8 +533,13 @@ class TherapistController extends BaseController
 
     public function startMassageTime(Request $request)
     {
-        $model = new Therapist();
+        $model  = new Therapist();
+
         $create = $model->serviceStart($request);
+
+        if (!empty($create['isError']) && !empty($create['message'])) {
+            return $this->returns($create['message'], NULL, true);
+        }
 
         return $this->returns('booking.start', $create);
     }
@@ -541,7 +547,13 @@ class TherapistController extends BaseController
     public function endMassageTime(Request $request)
     {
         $model = new Therapist();
-        $find = $model->serviceEnd($request);
+
+        $find  = $model->serviceEnd($request);
+
+        if (!empty($find['isError']) && !empty($find['message'])) {
+            return $this->returns($find['message'], NULL, true);
+        }
+
         return $this->returns('booking.start', $find);
     }
 

@@ -733,7 +733,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $bookingMassageId   = $request->get('booking_massage_id', false);
 
         if (empty($bookingMassageId)) {
-            return $this->returns('Booking massage not found.', NULL, true);
+            return ['isError' => true, 'message' => __('Booking massage not found.')];
         }
 
         $data['actual_total_time']  = BookingMassage::getMassageTime($bookingMassageId);
@@ -764,17 +764,17 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
 
         if (empty($data['end_time'])) {
-            return ['isError' => true, 'message' => 'End time not found.'];
+            return ['isError' => true, 'message' => __('End time not found.')];
         }
 
         $find = $model::where('booking_massage_id', $bookingMassageId)->first();
 
         if (empty($find)) {
-            return ['isError' => true, 'message' => 'Booking massage not found.'];
+            return ['isError' => true, 'message' => __('Booking massage not found.')];
         }
         
         if ($find->start_time > $data['end_time']) {
-            return ['isError' => true, 'message' => 'End time always greater than start time.'];
+            return ['isError' => true, 'message' => __('End time always greater than start time.')];
         }
         
         $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
