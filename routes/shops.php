@@ -54,6 +54,9 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/getTimeTable', 'WaitingList\WaitingListController@getTimeTable');
     $router->post('/startServiceTime', 'WaitingList\WaitingListController@startServiceTime');
     $router->post('/endServiceTime', 'WaitingList\WaitingListController@endServiceTime');
+    $router->post('/assignTherapist', 'WaitingList\WaitingListController@assignTherapist');
+    $router->post('/confirmBooking', 'WaitingList\WaitingListController@confirmBooking');
+    $router->post('/downgradeBooking', 'WaitingList\WaitingListController@downgradeBooking');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {

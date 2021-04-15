@@ -16,6 +16,8 @@ use App\Therapy;
 use App\User;
 use App\TherapistWorkingSchedule;
 use App\Pack;
+use App\BookingInfo;
+use App\Room;
 
 class WaitingListController extends BaseController {
 
@@ -31,6 +33,7 @@ class WaitingListController extends BaseController {
         'delete.booking' => 'Booking deleted successfully',
         'print.booking' => 'Booking data found successfully',
         'assign.room' => 'Assign room successfully',
+        'assign.therapist' => 'Assign therapist successfully',
         'new.booking' => 'New booking added successfully',
         'booking.overview' => 'Bookings found successfully',
         'massages' => 'Massages found successfully',
@@ -41,7 +44,12 @@ class WaitingListController extends BaseController {
         'schedule.data.found' => 'Time Table data found successfully',
         'booking.start' => "Service started successfully !",
         'booking.end' => "Service ended successfully !",
-        'not.found' => "Data not found"
+        'not.found' => "Data not found",
+        'booking.not.found' => "Booking not found",
+        'therapist.not.found' => "Therapist not found",
+        'room.not.found' => "Room not found",
+        'booking.confirm' => "Booking confirm successfully!",
+        'booking.downgrade' => "Booking downgrade successfully!",
     ];
 
     public function ongoingMassage(Request $request) {
@@ -58,6 +66,9 @@ class WaitingListController extends BaseController {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_WAITING)]);
+        if(isset($request->service)) {
+            $request->request->add(['service' => $request->service]);
+        }
         $bookingModel = new Booking();
         $waitingMassages = $bookingModel->getGlobalQuery($request);
 
@@ -93,6 +104,7 @@ class WaitingListController extends BaseController {
 
         return $this->returnSuccess(__($this->successMsg['cancelled.booking']), $cancelBooking);
     }
+    
     public function pastBooking(Request $request) {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
@@ -187,10 +199,37 @@ class WaitingListController extends BaseController {
     public function assignRoom(Request $request) {
         
         $bookingMassage = BookingMassage::find($request->booking_massage_id);
+        
+        if(empty($bookingMassage)) {
+            return $this->returnSuccess(__($this->successMsg['booking.not.found']));
+        }
+        
+        $room = Room::find($request->room_id);
+        
+        if(empty($room)) {
+            return $this->returnSuccess(__($this->successMsg['room.not.found']));
+        }
         $bookingMassage->update(['room_id' => $request->room_id]);
         
         return $this->returnSuccess(__($this->successMsg['assign.room']), $bookingMassage);
+    }
+    
+    public function assignTherapist(Request $request) {
         
+        $bookingInfo = BookingInfo::find($request->booking_info_id);
+        $therapist = Therapist::find($request->therapist_id);
+        
+        if(empty($bookingInfo)) {
+            return $this->returnSuccess(__($this->successMsg['booking.not.found']));
+        }
+        
+        if(empty($therapist)) {
+            return $this->returnSuccess(__($this->successMsg['therapist.not.found']));
+        }
+        
+        $bookingInfo->update(['therapist_id' => $request->therapist_id]);
+        
+        return $this->returnSuccess(__($this->successMsg['assign.therapist']), $bookingInfo);
     }
     
     public function addNewBooking(Request $request) {
@@ -398,5 +437,29 @@ class WaitingListController extends BaseController {
         $end = $model->serviceEnd($request);
         
         return $this->returnSuccess(__($this->successMsg['booking.end']), $end);
+    }
+    
+    public function confirmBooking(Request $request) {
+        
+        $bookingMassage = BookingMassage::find($request->booking_massage_id);
+        
+        if(empty($bookingMassage)) {
+            return $this->returnSuccess(__($this->successMsg['booking.not.found']));
+        }
+        $bookingMassage->update(['is_confirm' => BookingMassage::IS_CONFIRM]);
+        
+        return $this->returnSuccess(__($this->successMsg['booking.confirm']), $bookingMassage);
+    }
+    
+    public function downgradeBooking(Request $request) {
+        
+        $bookingMassage = BookingMassage::find($request->booking_massage_id);
+        
+        if(empty($bookingMassage)) {
+            return $this->returnSuccess(__($this->successMsg['booking.not.found']));
+        }
+        $bookingMassage->update(['is_confirm' => BookingMassage::IS_NOT_CONFIRM]);
+        
+        return $this->returnSuccess(__($this->successMsg['booking.downgrade']), $bookingMassage);
     }
 }

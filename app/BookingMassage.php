@@ -28,7 +28,8 @@ class BookingMassage extends BaseModel
         'room_id',
         'therapy_id',
         'therapy_timing_id',
-        'therapy_prices_id'
+        'therapy_prices_id',
+        'is_confirm'
     ];
     
     const IS_CONFIRM = '1';
