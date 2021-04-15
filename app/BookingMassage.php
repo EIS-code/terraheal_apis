@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\MassagePrice;
 use App\BookingInfo;
 use App\MassagePreferenceOption;
+use App\BookingMassageStart;
 
 class BookingMassage extends BaseModel
 {
@@ -92,5 +93,24 @@ class BookingMassage extends BaseModel
         }
 
         return $time;
+    }
+
+    public function getServiceStatus()
+    {
+        $id   = $this->id;
+
+        $find = BookingMassageStart::where('booking_massage_id', $id);
+
+        $bookingInfo = $this->bookingInfo;
+
+        if ($bookingInfo->is_done == (string)BookingInfo::IS_DONE) {
+            return 2;
+        } elseif (!empty($find)) {
+            return 1;
+        } elseif ($bookingInfo->is_done == (string)BookingInfo::IS_NOT_DONE) {
+            return 0;
+        }
+
+        return 0;
     }
 }
