@@ -331,7 +331,7 @@ class Booking extends BaseModel
         $data = $data->orderBy($bookingInfoModel::getTableName().'.massage_date','DESC')->get();
 
         if (!empty($data) && !$data->isEmpty()) {
-            $data->map(function(&$record) use($userModel) {
+            $data->map(function(&$record) use($userModel, $bookingMassageModel) {
                 $record->qr_code_path = $userModel->getQrCodePathAttribute($record->qr_code_path);
 
                 if (empty($record->qr_code_path)) {
@@ -351,6 +351,10 @@ class Booking extends BaseModel
                 unset($record->booking_type);
 
                 $record->booking_type_value = $bookingType;
+
+                $bookingMassage = $bookingMassageModel::find($record->booking_massage_id);
+
+                $record->service_status = $bookingMassage->getServiceStatus();
             });
 
             // $data->put('total_massages', $bookingInfoModel->getMassageCountByTherapist($therapistId));
