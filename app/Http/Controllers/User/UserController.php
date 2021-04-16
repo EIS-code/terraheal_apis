@@ -10,6 +10,8 @@ use App\BookingInfo;
 use App\BookingMassage;
 use App\Booking;
 use App\MassagePrice;
+use App\UserSetting;
+use App\UserEmailOtp;
 use DB;
 use Carbon\Carbon;
 use App\Libraries\CurrencyHelper;
@@ -24,7 +26,13 @@ class UserController extends BaseController
         'error.email.password' => 'User email or password seems wrong.',
         'error.something' => 'Something went wrong.',
         'error.user.id' => 'Please provide valid user id.',
-        'error.user.not.found' => 'User not found.'
+        'error.user.not.found' => 'User not found.',
+        'error.old.password' => 'Please provide valid old password.',
+        'error.new.password' => 'Please provide valid new password.',
+        'error.old.new.same' => 'You can\'t use old password. Please insert new one.',
+        'error.old.password.wrong' => 'Old password seems wrong.',
+        'error.email.already.verified' => 'This user email already verified with this ',
+        'error.email.id' => ' email id.'
     ];
 
     public $successMsg = [
@@ -32,7 +40,13 @@ class UserController extends BaseController
         'success.user.created' => 'User created successfully !',
         'success.user.profile.update' => 'User profile updated successfully !',
         'success.user.loggedout' => 'User logged out successfully !',
-        'success.booking.created' => 'Booking created successfully !'
+        'success.booking.created' => 'Booking created successfully !',
+        'success.password.updated' => 'User password updated successfully !',
+        'success.user.setting.found' => 'User setting found successfully !',
+        'success.user.setting.not.found' => 'User setting not found.',
+        'success.user.setting.created' => 'User setting created successfully !',
+        'success.sms.sent' => 'SMS sent successfully !',
+        'success.email.sent' => 'Email sent successfully !',
     ];
 
     public function __construct()
@@ -344,5 +358,191 @@ class UserController extends BaseController
         }
 
         return $data;
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new User();
+
+        DB::beginTransaction();
+
+        try {
+            $userId      = (!empty($data['user_id'])) ? (int)$data['user_id'] : false;
+            $oldPassword = (!empty($data['old_password'])) ? $data['old_password'] : NULL;
+            $newPassword = (!empty($data['new_password'])) ? $data['new_password'] : NULL;
+
+            if (!$userId) {
+                return $this->returns('error.user.id', NULL, true);
+            }
+
+            if (empty($oldPassword)) {
+                return $this->returns('error.old.password', NULL, true);
+            }
+
+            if (empty($newPassword)) {
+                return $this->returns('error.new.password', NULL, true);
+            }
+
+            if ($oldPassword === $newPassword) {
+                return $this->returns('error.old.new.same', NULL, true);
+            }
+
+            $getUser = $model->where('id', '=', $userId)->where('is_removed', '=', $model::$notRemoved)->first();
+
+            if (empty($getUser)) {
+                return $this->returns('error.user.not.found', NULL, true);
+            }
+
+            if (Hash::check($oldPassword, $getUser['password'])) {
+                $validator = $model->validator(['password' => $newPassword], $userId, true);
+                if ($validator->fails()) {
+                    return $this->returns($validator->errors()->first(), NULL, true);
+                }
+
+                $update = $model->where('id', '=', $userId)->where('is_removed', '=', $model::$notRemoved)->update(['password' => Hash::make($newPassword)]);
+            } else {
+                return $this->returns('error.old.password.wrong', NULL, true);
+            }
+
+        } catch (Exception $e) {
+            DB::rollBack();
+        }
+
+        DB::commit();
+
+        return $this->returns('success.password.updated', collect([]));
+    }
+
+    public function getUserSettings(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new UserSetting();
+        $userId = $request->get('user_id', false);
+
+        $data   = $model->getGlobalResponse($userId);
+
+        if (!empty($data)) {
+            return $this->returns('success.user.setting.found', $data);
+        } else {
+            return $this->returns('success.user.setting.not.found', collect([]));
+        }
+    }
+
+    public function saveUserSettings(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new UserSetting();
+
+        DB::beginTransaction();
+
+        try {
+            $userId      = (!empty($data['user_id'])) ? (int)$data['user_id'] : false;
+            $settingData = [];
+
+            if (!$userId) {
+                return $this->returns('error.user.id', NULL, true);
+            }
+
+            $validator = $model->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            $settingData = $model->where('user_id', $userId)->where('is_removed', '=', $model::$notRemoved)->get();
+
+            if (!empty($settingData) && !$settingData->isEmpty()) {
+                $model->where('user_id', $userId)->where('is_removed', '=', $model::$notRemoved)->update($data);
+            } else {
+                $model->fill($data);
+                $model->save();
+            }
+        } catch(Exception $e) {
+            DB::rollBack();
+        }
+
+        DB::commit();
+
+        return $this->returns('success.user.setting.created', $model->getGlobalResponse($userId));
+    }
+
+    public function verifyMobile(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new UserSetting();
+
+        /* TODO all things like email otp after get sms gateway. */
+
+        return $this->returns('success.sms.sent', collect([]));
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        $data           = $request->all();
+        $model          = new User();
+        $modelEmailOtp  = new UserEmailOtp();
+
+        $id      = (!empty($data['user_id'])) ? $data['user_id'] : 0;
+        $getUser = $model->find($id);
+
+        if (!empty($getUser)) {
+            $emailId = (!empty($data['email'])) ? $data['email'] : NULL;
+
+            // Validate
+            $data = [
+                'user_id'      => $id,
+                'otp'          => 1434,
+                'email'        => $emailId,
+                'is_send'      => '0'
+            ];
+
+            $validator = $modelEmailOtp->validate($data);
+            if ($validator['is_validate'] == '0') {
+                return $this->returns($validator['msg'], NULL, true);
+            }
+
+            if ($emailId == $getUser->email && $getUser->is_email_verified == '1') {
+                $this->errorMsg['error.email.already.verified'] = $this->errorMsg['error.email.already.verified'] . $emailId . $this->errorMsg['error.email.id'];
+
+                return $this->returns('error.email.already.verified', NULL, true);
+            }
+
+            /* $validate = (filter_var($emailId, FILTER_VALIDATE_EMAIL) && preg_match('/@.+\./', $emailId));
+            if (!$validate) {
+                $this->errorMsg[] = "Please provide valid email id.";
+            } */
+
+            $sendOtp         = $this->sendOtp($emailId);
+            $data['otp']     = NULL;
+            $data['is_send'] = '0';
+
+            if ($this->getJsonResponseCode($sendOtp) == '200') {
+                $data['is_send']     = '1';
+                $data['is_verified'] = '0';
+                $data['otp']         = $this->getJsonResponseOtp($sendOtp);
+            } else {
+                return $this->returns($this->getJsonResponseMsg($sendOtp), NULL, true);
+            }
+
+            $getData = $modelEmailOtp->where(['user_id' => $id])->get();
+
+            if (!empty($getData) && !$getData->isEmpty()) {
+                $updateOtp = $modelEmailOtp->updateOtp($id, $data);
+
+                if (!empty($updateOtp['isError']) && !empty($updateOtp['message'])) {
+                    return $this->returns($updateOtp['message'], NULL, true);
+                }
+            } else {
+                $create = $modelEmailOtp->create($data);
+
+                if (!$create) {
+                    return $this->returns('error.something', NULL, true);
+                }
+            }
+        } else {
+            return $this->returns('error.user.id', NULL, true);
+        }
+
+        return $this->returns('success.email.sent', collect([]));
     }
 }

@@ -122,4 +122,49 @@ class Controller extends BaseController
             ]);
         }
     }
+
+    public function getJsonResponseCode($response)
+    {
+        if (!empty($response) && $response instanceof \Illuminate\Http\JsonResponse) {
+            return (!empty($response->getData()->code)) ? $response->getData()->code : false;
+        }
+
+        return false;
+    }
+
+    public function getJsonResponseMsg($response)
+    {
+        if (!empty($response) && $response instanceof \Illuminate\Http\JsonResponse) {
+            return (!empty($response->getData()->msg)) ? $response->getData()->msg : false;
+        }
+
+        return false;
+    }
+
+    public function getJsonResponseOtp($response)
+    {
+        if (!empty($response) && $response instanceof \Illuminate\Http\JsonResponse) {
+            return (!empty($response->getData()->otp)) ? $response->getData()->otp : false;
+        }
+
+        return false;
+    }
+
+    public function sendOtp(string $email)
+    {
+        $subject = __('Terra Heal signup request.');
+        $otp     = mt_rand(1000,9999);
+
+        $return = $this->sendMail('user-otp', $email, $subject, ['otp' => $otp]);
+
+        if ($this->getJsonResponseCode($return) == '200') {
+            return response()->json([
+                'code' => 200,
+                'msg'  => __('Email sent successfully !'),
+                'otp'  => $otp
+            ]);;
+        } else {
+            return $return;
+        }
+    }
 }

@@ -27,6 +27,14 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
 
     $router->group(['prefix' => 'setting'], function () use($router) {
         $router->post('/logout', 'UserController@logout');
+        $router->post('/update/password', 'UserController@updatePassword');
+        $router->post('/get', 'UserController@getUserSettings');
+        $router->post('/save', 'UserController@saveUserSettings');
+    });
+
+    $router->group(['prefix' => 'verify'], function () use($router) {
+        $router->post('/mobile', 'UserController@verifyMobile');
+        $router->post('/email', 'UserController@verifyEmail');
     });
 
     $router->group(['prefix' => 'booking'], function () use($router) {
