@@ -239,7 +239,7 @@ class WaitingListController extends BaseController {
             $shopModel = new Shop();
             
             $bookingData = [
-                'booking_type' => $request->booking_type,
+                'booking_type' => isset($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
                 'special_notes' => $request->special_notes,
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
@@ -253,6 +253,9 @@ class WaitingListController extends BaseController {
             if(isset($request->pack_id)) {
                 
                 $pack = Pack::with('services')->where('id', $request->pack_id)->first();
+                if (empty($pack)) {
+                    return ['isError' => true, 'message' => 'Pack not found'];
+                }
                 foreach ($pack->services as $key => $service) {
 
                     $isMassage = isset($service->massage_id) && empty($service->therapy_id) ? true : false;
@@ -287,6 +290,9 @@ class WaitingListController extends BaseController {
                         ];
                         $newUser = UserPeople::create($user_people);
 
+                        $newUser['therapist_id'] = $user['therapist_id'];
+                        $newUser['notes_of_injuries'] = $user['notes_of_injuries'];
+                        
                         $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $newUser, NULL);
 
                         if (count($user['massages']) > 0) {
@@ -356,7 +362,7 @@ class WaitingListController extends BaseController {
     
     public function getAllTherapies(Request $request)
     {
-        $therapies = Therapy::where('shop_id',$request->shop_id)->get();
+        $therapies = Therapy::with('timing','pricing')->where('shop_id',$request->shop_id)->get();
         
         return $this->returnSuccess(__($this->successMsg['therapies']), $therapies);        
     }
@@ -370,7 +376,15 @@ class WaitingListController extends BaseController {
     
     public function addClient(Request $request) {
         
-        $client = User::create($request->all());
+        $user = new User();
+        $data = $request->all();
+        
+        $checks = $user->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $client = $user->create($request->all());
         
         return $this->returnSuccess(__($this->successMsg['client.add']), $client);
     }

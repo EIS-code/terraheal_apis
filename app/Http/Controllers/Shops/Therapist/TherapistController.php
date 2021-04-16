@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\Booking;
 use App\Therapist;
-use App\TherapistSelectedMassage;
-use App\TherapistSelectedTherapy;
 use App\TherapistWorkingSchedule;
 use App\TherapistWorkingScheduleTime;
 use App\TherapistUserRating;
@@ -23,7 +21,6 @@ class TherapistController extends BaseController {
         'therapist' => 'Therapist found successfully!',
         'therapist.bookings' => 'Therapist bookings found successfully!',
         'therapist.data.found' => 'Therapist data found successfully!',
-        'therapist.services' => 'Therapist services found successfully!',
         'therapist.info' => 'Therapist personal information found successfully!',
         'therapist.ratings' => 'Therapist ratings found successfully!',
         'therapist.schedule' => 'Therapist schedule added successfully!',

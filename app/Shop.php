@@ -193,8 +193,16 @@ class Shop extends BaseModel implements CanResetPasswordContract
 
         if(isset($isPack)) {
             $pack = UserPack::where(['pack_id' => $isPack, 'users_id' => $newBooking->user_id])->first();
+            if(empty($pack)) {
+                return ['isError' => true, 'message' => 'Pack not found'];
+            }
         }
+        $therapist_id = isset($newUser) ? $newUser->therapist_id : $infoData->therapist_id;
+        
         $shop = Shop::find($infoData->shop_id);
+        if(empty($shop)) {
+            return ['isError' => true, 'message' => 'Shop not found'];
+        }
         $bookingInfoData = [
             'location' => $shop->address,
             'booking_currency_id' => $shop->currency_id,
@@ -204,7 +212,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             'massage_date' => explode(' ', $infoData->booking_date_time)[0],
             'massage_time' => $infoData->booking_date_time,
             'user_people_id' => isset($newUser) ? $newUser->id : NULL,
-            'therapist_id' => isset($pack) ? $pack->therapist_id : NULL
+            'therapist_id' => isset($pack) ? $pack->therapist_id : $therapist_id
         ];
         $bookingInfo = BookingInfo::create($bookingInfoData);
         return $bookingInfo;
@@ -218,6 +226,10 @@ class Shop extends BaseModel implements CanResetPasswordContract
         } else {
             $servicePrice = TherapiesPrices::where('therapy_timing_id',$service['therapy_timing_id'])->first();
         }
+        if(empty($servicePrice)) {
+                return $this->returnSuccess('Service Price not found');
+        }
+        $injuries = isset($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
         
         $bookingMassageData = [
             "price" => $servicePrice->price,
@@ -225,7 +237,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "origional_price" => $servicePrice->price,
             "origional_cost"  => $servicePrice->cost,
             "exchange_rate" => isset($service['exchange_rate']) ? $service['exchange_rate'] : 0.00,
-            "notes_of_injuries" => $service['notes_of_injuries'] ? $service['notes_of_injuries'] : NULL,
+            "notes_of_injuries" => isset($injuries) ? $injuries : NULL,
             "massage_timing_id" => $isMassage ? $service['massage_timing_id'] : NULL,
             "massage_prices_id" => $isMassage ? $servicePrice->id  : NULL,
             "therapy_timing_id" => $isMassage ? NULL : $service['therapy_timing_id'],
