@@ -385,7 +385,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             }
 
             $extension = $data['profile_photo']->getClientOriginalExtension();
-            $extension = empty($extension) ? $file->extension() : $extension;
+            $extension = empty($extension) ? $data['profile_photo']->extension() : $extension;
 
             $fileName = time() . '_' . $id . '.' . $extension;
 
