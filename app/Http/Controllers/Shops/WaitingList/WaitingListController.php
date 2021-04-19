@@ -18,6 +18,8 @@ use App\TherapistWorkingSchedule;
 use App\Pack;
 use App\BookingInfo;
 use App\Room;
+use App\MassageTiming;
+use App\TherapiesTimings;
 
 class WaitingListController extends BaseController {
 
@@ -50,6 +52,7 @@ class WaitingListController extends BaseController {
         'room.not.found' => "Room not found",
         'booking.confirm' => "Booking confirm successfully!",
         'booking.downgrade' => "Booking downgrade successfully!",
+        'room.not.available' => "Room not available!",
     ];
 
     public function ongoingMassage(Request $request) {
@@ -79,6 +82,10 @@ class WaitingListController extends BaseController {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_FUTURE)]);
+        if(isset($request->date)){
+            $date  = Carbon::createFromTimestampMs($request->date);
+            $request->request->add(['date' => (new Carbon($date))->format('Y-m-d')]);
+        }
         $bookingModel = new Booking();
         $futureBooking = $bookingModel->getGlobalQuery($request);
 
@@ -89,6 +96,10 @@ class WaitingListController extends BaseController {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_COMPLETED)]);
+        if(isset($request->date)){
+            $date  = Carbon::createFromTimestampMs($request->date);
+            $request->request->add(['date' => (new Carbon($date))->format('Y-m-d')]);
+        }
         $bookingModel = new Booking();
         $completedBooking = $bookingModel->getGlobalQuery($request);
 
@@ -99,6 +110,10 @@ class WaitingListController extends BaseController {
 
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
+        if(isset($request->date)){
+            $date  = Carbon::createFromTimestampMs($request->date);
+            $request->request->add(['date' => (new Carbon($date))->format('Y-m-d')]);
+        }
         $bookingModel = new Booking();
         $cancelBooking = $bookingModel->getGlobalQuery($request);
 
@@ -196,19 +211,53 @@ class WaitingListController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['print.booking']), ['booking_details' => $printDetails,'total_cost' => $total_cost]);
     }
     
+    public function getStartEndTime($booking) {
+
+        if (isset($booking->massage_timing_id) && is_null($booking->therapy_timing_id)) {
+            $endtime = MassageTiming::find($booking->massage_timing_id);
+        }
+        if (isset($booking->therapy_timing_id) && is_null($booking->massage_timing_id)) {
+            $endtime = TherapiesTimings::find($booking->therapy_timing_id);
+        }
+
+        $startTime = Carbon::createFromTimestampMs($booking->bookingInfo->massage_time);
+        $startTime = (new Carbon($startTime))->format("h:i:s");
+
+        $endtime = (new Carbon($startTime))->addMinutes($endtime->time);
+        $endtime = (new Carbon($endtime))->format("h:i:s");
+
+        return collect(["startTime" => $startTime, "endTime" => $endtime]);
+    }
+
     public function assignRoom(Request $request) {
         
-        $bookingMassage = BookingMassage::find($request->booking_massage_id);
-        
+        $bookingMassage = BookingMassage::with('bookingInfo')->find($request->booking_massage_id);
         if(empty($bookingMassage)) {
             return $this->returnSuccess(__($this->successMsg['booking.not.found']));
         }
-        
         $room = Room::find($request->room_id);
-        
         if(empty($room)) {
             return $this->returnSuccess(__($this->successMsg['room.not.found']));
         }
+        
+        $current_times = $this->getStartEndTime($bookingMassage);
+        $date  = Carbon::createFromTimestampMs($bookingMassage->bookingInfo->massage_date);
+        
+        $bookings = BookingMassage::with('bookingInfo')->where('room_id',$request->room_id)
+                        ->whereHas('bookingInfo', function($q) use($bookingMassage, $date) {
+                            $q->where('massage_date',$date)->where('id', '!=', $bookingMassage->bookingInfo->id);
+                        })->get();
+        if(!empty($bookings)) {
+            foreach ($bookings as $key => $booking) {
+
+                $times = $this->getStartEndTime($booking);
+                if ($current_times['startTime'] > $times['startTime'] && $current_times['startTime'] < $times['endTime']) {
+
+                    return $this->returnSuccess(__($this->successMsg['room.not.available']));
+                }
+            }
+        }
+
         $bookingMassage->update(['room_id' => $request->room_id]);
         
         return $this->returnSuccess(__($this->successMsg['assign.room']), $bookingMassage);
@@ -327,10 +376,10 @@ class WaitingListController extends BaseController {
     
     public function bookingOverview(Request $request) {
         
-        $filterDate = Carbon::parse($request->date);
+        $date  = Carbon::createFromTimestampMs($request->date);
         
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $date = isset($request->date) ? $filterDate->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+        $date = isset($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
         $request->request->add(['type' => $type, 'date' => $date]);
         
         $bookingModel = new Booking();
@@ -341,10 +390,10 @@ class WaitingListController extends BaseController {
     
     public function roomOccupation(Request $request) {
         
-        $filterDate = Carbon::parse($request->date);
+        $date  = Carbon::createFromTimestampMs($request->date);
         
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $date = isset($request->date) ? $filterDate->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+        $date = isset($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
         $request->request->add(['type' => $type, 'date' => $date]);
         
         $bookingModel = new Booking();
