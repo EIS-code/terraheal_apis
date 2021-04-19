@@ -81,4 +81,11 @@ class UserEmailOtp extends BaseModel
             return ['isError' => false, 'message' => __('Something went wrong.')];
         }
     }
+
+    public function setIsVerified(int $id, string $isVarified = '0')
+    {
+        $isVarified = (!in_array($isVarified, ['0', '1'])) ? '0' : $isVarified;
+
+        return $this->where('id', $id)->update(['is_verified' => $isVarified]);
+    }
 }

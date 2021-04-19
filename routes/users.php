@@ -1,11 +1,10 @@
 <?php
 
 use Illuminate\Http\Request;
-use App\Therapist;
 
 /*
 |--------------------------------------------------------------------------
-| Application Therapist Routes
+| Application Users Routes
 |--------------------------------------------------------------------------
 |
 | Here is where you can register all of the routes for an application.
@@ -37,7 +36,14 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/email', 'UserController@verifyEmail');
     });
 
+    $router->group(['prefix' => 'compare'], function () use($router) {
+        $router->post('/otp/email', 'UserController@compareOtpEmail');
+        $router->post('/otp/mobile', 'UserController@compareOtpSms');
+    });
+
     $router->group(['prefix' => 'booking'], function () use($router) {
         $router->post('/create', 'UserController@bookingCreate');
     });
+
+    $router->get('/get', 'UserController@getDetails');
 });

@@ -32,7 +32,10 @@ class UserController extends BaseController
         'error.old.new.same' => 'You can\'t use old password. Please insert new one.',
         'error.old.password.wrong' => 'Old password seems wrong.',
         'error.email.already.verified' => 'This user email already verified with this ',
-        'error.email.id' => ' email id.'
+        'error.email.id' => ' email id.',
+        'error.otp' => 'Please provide OTP properly.',
+        'error.otp.wrong' => 'OTP seems wrong.',
+        'error.otp.already.verified' => 'OTP already verified.'
     ];
 
     public $successMsg = [
@@ -47,6 +50,7 @@ class UserController extends BaseController
         'success.user.setting.created' => 'User setting created successfully !',
         'success.sms.sent' => 'SMS sent successfully !',
         'success.email.sent' => 'Email sent successfully !',
+        'success.email.otp.compare' => 'OTP matched successfully !',
     ];
 
     public function __construct()
@@ -544,5 +548,74 @@ class UserController extends BaseController
         }
 
         return $this->returns('success.email.sent', collect([]));
+    }
+
+    public function compareOtpEmail(Request $request)
+    {
+        $data       = $request->all();
+        $model      = new UserEmailOtp();
+        $modelUser  = new User();
+
+        $userId = (!empty($data['user_id'])) ? $data['user_id'] : 0;
+        $otp    = (!empty($data['otp'])) ? $data['otp'] : NULL;
+
+        if (empty($otp)) {
+            return $this->returns('error.otp', NULL, true);
+        }
+
+        if (strtolower(env('APP_ENV') != 'live') && $otp == '1234') {
+            $getUser = $model->where(['user_id' => $userId])->get();
+        } else {
+            $getUser = $model->where(['user_id' => $userId, 'otp' => $otp])->get();
+        }
+
+        if (!empty($getUser) && !$getUser->isEmpty()) {
+            $getUser = $getUser->first();
+
+            if ($getUser->is_verified == '1') {
+                return $this->returns('error.otp.already.verified', NULL, true);
+            } else {
+                $modelUser->where(['id' => $userId])->update(['email' => $getUser->email, 'is_email_verified' => '1']);
+
+                $model->setIsVerified($getUser->id, '1');
+            }
+        } else {
+            return $this->returns('error.otp.wrong', NULL, true);
+        }
+
+        return $this->returns('success.email.otp.compare', collect([]));
+    }
+
+    public function compareOtpSms(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new User();
+
+        /* TODO all things like email otp compare after get sms gateway. */
+        $userId = (!empty($data['user_id'])) ? $data['user_id'] : 0;
+        $otp    = (!empty($data['otp'])) ? $data['otp'] : NULL;
+
+        if (strtolower(env('APP_ENV') != 'live') && $otp == '1234') {
+            $model->where(['id' => $userId])->update(['is_mobile_verified' => '1']);
+        } else {
+            return $this->returns('error.otp.wrong', NULL, true);
+        }
+
+        return $this->returns('success.email.otp.compare', collect([]));
+    }
+
+    public function getDetails(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new User();
+        $userId = $request->get('user_id', false);
+
+        $data   = $model->getGlobalResponse($userId);
+
+        if (!empty($data)) {
+            return $this->returns('success.user.found', $data);
+        }
+
+        return $this->returns('error.user.not.found', NULL, true);
     }
 }
