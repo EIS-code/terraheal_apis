@@ -13,11 +13,11 @@ use Illuminate\Http\Request;
 |
 */
 
-$router->group(['prefix' => 'massages', 'namespace' => 'Massages', 'guard' => 'massages'], function () use($router) {
+$router->group(['prefix' => 'massage', 'namespace' => 'Massage', 'guard' => 'massage'], function () use($router) {
     $router->post('get', 'MassageController@get');
 
-    $router->group(['prefix' => 'preference', 'namespace' => 'Preference'], function () use($router) {
-        $router->get('/', 'MassageController@getPreference');
+    $router->group(['prefix' => 'preference'], function () use($router) {
+        $router->post('/', 'MassageController@getPreference');
         $router->post('save', 'MassageController@createPreference');
     });
 

@@ -12,6 +12,7 @@ use App\Booking;
 use App\MassagePrice;
 use App\UserSetting;
 use App\UserEmailOtp;
+use App\UserAddress;
 use DB;
 use Carbon\Carbon;
 use App\Libraries\CurrencyHelper;
@@ -35,7 +36,8 @@ class UserController extends BaseController
         'error.email.id' => ' email id.',
         'error.otp' => 'Please provide OTP properly.',
         'error.otp.wrong' => 'OTP seems wrong.',
-        'error.otp.already.verified' => 'OTP already verified.'
+        'error.otp.already.verified' => 'OTP already verified.',
+        'error.user.address.not.found' => 'User address not found.'
     ];
 
     public $successMsg = [
@@ -51,6 +53,10 @@ class UserController extends BaseController
         'success.sms.sent' => 'SMS sent successfully !',
         'success.email.sent' => 'Email sent successfully !',
         'success.email.otp.compare' => 'OTP matched successfully !',
+        'success.user.address.found' => 'User address found successfully.',
+        'success.user.address.created' => 'User address created successfully !',
+        'success.user.address.updated' => 'User address updated successfully !',
+        'success.user.address.removed' => 'User address removed successfully.'
     ];
 
     public function __construct()
@@ -617,5 +623,101 @@ class UserController extends BaseController
         }
 
         return $this->returns('error.user.not.found', NULL, true);
+    }
+
+    public function getAddress(Request $request)
+    {
+        $model       = new UserAddress();
+        $id          = (int)$request->get('user_id', false);
+
+        $userAddress = $model->where('user_id', $id)->where('is_removed', $model::$notRemoved)->get();
+
+        if (!empty($userAddress) && !$userAddress->isEmpty()) {
+            return $this->returns('success.user.address.found', $userAddress);
+        }
+
+        return $this->returns('error.user.address.not.found', NULL, true);
+    }
+
+    public function createAddress(Request $request)
+    {
+        $model = new UserAddress();
+        $data  = $request->all();
+
+        DB::beginTransaction();
+
+        try {
+            $validator = $model->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            $model->fill($data);
+            $model->save();
+        } catch(Exception $e) {
+            DB::rollBack();
+        }
+
+        DB::commit();
+
+        return $this->returns('success.user.address.created', $model);
+    }
+
+    public function updateAddress(Request $request)
+    {
+        $model = new UserAddress();
+        $data  = $request->all();
+
+        if (isset($data['user_id'])) {
+            unset($data['user_id']);
+        }
+
+        $id              = (!empty($data['id'])) ? (int)$data['id'] : false;
+        $update          = false;
+        $findUserAddress = $model->find($id);
+
+        if (!empty($findUserAddress)) {
+            DB::beginTransaction();
+
+            try {
+                $validator = $model->validator($data, true);
+                if ($validator->fails()) {
+                    return $this->returns($validator->errors()->first(), NULL, true);
+                }
+
+                $update = $model->where('id', $id)->update($data);
+            } catch(Exception $e) {
+                DB::rollBack();
+            }
+
+            if ($update) {
+                DB::commit();
+                return $this->returns('success.user.address.updated', $findUserAddress->refresh());
+            } else {
+                return $this->returns('error.something', NULL, true);
+            }
+        }
+
+        return $this->returns('error.user.address.not.found', NULL, true);
+    }
+
+    public function removeAddress(Request $request)
+    {
+        $model = new UserAddress();
+        $id    = (int)$request->get('id', false);
+
+        if (!empty($id)) {
+            $userAddress = $model->find($id);
+
+            if (!empty($userAddress)) {
+                $userAddress->is_removed = $model::$removed;
+
+                if ($userAddress->save()) {
+                    return $this->returns('success.user.address.removed', collect([]));
+                }
+            }
+        }
+
+        return $this->returns('error.user.address.not.found', NULL, true);
     }
 }

@@ -46,4 +46,11 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     });
 
     $router->get('/get', 'UserController@getDetails');
+
+    $router->group(['prefix' => 'address'], function () use($router) {
+        $router->post('/get', 'UserController@getAddress');
+        $router->post('/save', 'UserController@createAddress');
+        $router->post('/update', 'UserController@updateAddress');
+        $router->post('/remove', 'UserController@removeAddress');
+    });
 });
