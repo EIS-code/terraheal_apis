@@ -221,10 +221,10 @@ class WaitingListController extends BaseController {
         }
 
         $startTime = Carbon::createFromTimestampMs($booking->bookingInfo->massage_time);
-        $startTime = (new Carbon($startTime))->format("h:i:s");
+        $startTime = (new Carbon($startTime))->format("H:i:s");
 
         $endtime = (new Carbon($startTime))->addMinutes($endtime->time);
-        $endtime = (new Carbon($endtime))->format("h:i:s");
+        $endtime = (new Carbon($endtime))->format("H:i:s");
 
         return collect(["startTime" => $startTime, "endTime" => $endtime]);
     }
@@ -251,7 +251,7 @@ class WaitingListController extends BaseController {
             foreach ($bookings as $key => $booking) {
 
                 $times = $this->getStartEndTime($booking);
-                if ($current_times['startTime'] > $times['startTime'] && $current_times['startTime'] < $times['endTime']) {
+                if ($current_times['startTime'] >= $times['startTime'] && $current_times['startTime'] <= $times['endTime']) {
 
                     return $this->returnSuccess(__($this->successMsg['room.not.available']));
                 }
