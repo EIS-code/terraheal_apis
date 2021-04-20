@@ -210,7 +210,6 @@ class Booking extends BaseModel
                             $sessionTypeModel::getTableName() . '.type as session_type, ' .
                             $this::getTableName() . '.booking_type, ' . 
                             $this::getTableName() . '.book_platform, ' .
-                            $bookingMassageModel::getTableName() . '.is_confirm, ' . 
                             $this::getTableName().'.shop_id as shop_id,'.
                             $shopModel::getTableName() . '.name as shop_name, ' . 
                             'CONCAT(' . $shopModel::getTableName() . '.address, " ", ' . $shopModel::getTableName() . '.address2) as shop_address, ' . 
@@ -241,7 +240,11 @@ class Booking extends BaseModel
                             $bookingMassageModel::getTableName().'.massage_prices_id,'.
                             $bookingMassageModel::getTableName().'.therapy_timing_id,'.
                             $bookingMassageModel::getTableName().'.therapy_prices_id,'.
-                            $bookingInfoModel::getTableName().'.is_therapist_locked'
+                            $bookingMassageModel::getTableName() . '.is_confirm, ' . 
+                            $bookingInfoModel::getTableName().'.is_done,'.
+                            $bookingInfoModel::getTableName().'.is_cancelled,'.
+                            $bookingInfoModel::getTableName().'.cancel_type,'.
+                            $bookingInfoModel::getTableName().'.cancelled_reason'
                         )
                 )
                 ->join($bookingInfoModel::getTableName(), $this::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')

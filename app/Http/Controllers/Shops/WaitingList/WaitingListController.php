@@ -204,12 +204,61 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $printDetails = $bookingModel->getGlobalQuery($request);
         
+        if(empty($printDetails)) {
+            return $this->returnError(__($this->successMsg['not.found']));
+        }
+        $services =[];
         $total_cost = 0;
         foreach ($printDetails as $key => $printDetail) {
-
+            
             $total_cost += $printDetail->cost;
+            $services[] = [
+                    "massage_name" => $printDetail['massage_name'],
+                    "massage_date" => $printDetail['massage_date'],
+                    "massage_start_time" => $printDetail['massage_start_time'],
+                    "massage_end_time" => $printDetail['massage_end_time'],
+                    "massage_duration" => $printDetail['massage_duration'],
+                    "massage_day_name" => $printDetail['massage_day_name'],
+                    "therapy_name" => $printDetail['therapy_name'],
+                    "theropy_end_time" => $printDetail['theropy_end_time'],
+                    "theropy_duration" => $printDetail['theropy_duration'],
+                    "cost" => $printDetail['cost'],
+                    "gender_preference" => $printDetail['gender_preference'],
+                    "pressure_preference" => $printDetail['pressure_preference'],
+                    "focus_area" => $printDetail['focus_area'],
+                    "genderPreference" => $printDetail['genderPreference'],
+                    "notes" => $printDetail['notes'],
+                    "injuries" => $printDetail['injuries']
+            ];
         }
-        return $this->returnSuccess(__($this->successMsg['print.booking']), ['booking_details' => $printDetails,'total_cost' => $total_cost]);
+        $bookingDetails = [
+            "booking_id" => $printDetails[0]['booking_id'],
+            "book_platform" => $printDetails[0]['book_platform'],
+            "is_confirm" => $printDetails[0]['is_confirm'],
+            "is_done" => $printDetails[0]['is_done'],
+            "is_cancelled" => $printDetails[0]['is_cancelled'],
+            "cancel_type" => $printDetails[0]['cancel_type'],
+            "cancelled_reason" => $printDetails[0]['cancelled_reason'],
+            "booking_type" => $printDetails[0]['booking_type_value'],
+            "client_id" => $printDetails[0]['client_id'],
+            "client_name" => $printDetails[0]['client_name'],
+            "client_gender" => $printDetails[0]['client_gender'],
+            "client_age" => $printDetails[0]['client_age'],
+            "sessionId" => $printDetails[0]['sessionId'],
+            "session_type" => $printDetails[0]['session_type'],
+            "shop_id" => $printDetails[0]['shop_id'],
+            "shop_name" => $printDetails[0]['shop_name'],
+            "shop_address" => $printDetails[0]['shop_address'],
+            "therapist_id" => $printDetails[0]['therapist_id'],
+            "therapistName" => $printDetails[0]['therapistName'],
+            "room_id" => $printDetails[0]['room_id'],
+            "roomName" => $printDetails[0]['roomName'],
+            "table_futon_quantity" => $printDetails[0]['table_futon_quantity'],
+            "booking_services" => $services,
+            "total_cost" => $total_cost
+
+        ];
+        return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
     }
     
     public function getStartEndTime($booking) {
