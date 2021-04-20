@@ -17,6 +17,7 @@ class BookingInfo extends BaseModel
         'massage_date',
         'massage_time',
         'is_cancelled',
+        'cancel_type',
         'cancelled_reason',
         'imc_type',
         'is_done',
