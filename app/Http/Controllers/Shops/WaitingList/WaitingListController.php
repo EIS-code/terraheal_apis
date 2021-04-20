@@ -53,6 +53,7 @@ class WaitingListController extends BaseController {
         'booking.confirm' => "Booking confirm successfully!",
         'booking.downgrade' => "Booking downgrade successfully!",
         'room.not.available' => "Room not available!",
+        'cancel.appointment' => "Appointment cancelled successfully!",
     ];
 
     public function ongoingMassage(Request $request) {
@@ -377,29 +378,75 @@ class WaitingListController extends BaseController {
     public function bookingOverview(Request $request) {
         
         $date  = Carbon::createFromTimestampMs($request->date);
-        
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $date = isset($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
         $request->request->add(['type' => $type, 'date' => $date]);
         
         $bookingModel = new Booking();
-        $bookingOverviews = $bookingModel->getGlobalQuery($request);
+        $bookingOverviews = $bookingModel->getGlobalQuery($request)->whereNotNull('therapist_id')->groupBy('therapist_id');
         
-        return $this->returnSuccess(__($this->successMsg['booking.overview']), $bookingOverviews);
+        $services = [];
+        foreach ($bookingOverviews as $key => $bookings) {
+            $therapist_id = $bookings[0]['therapist_id'];
+            $therapist_name = $bookings[0]['therapistName'];
+            foreach ($bookings as $key => $booking) {
+                $services[] = [
+                    "service_day_name" => $booking['massage_day_name'],
+                    "massage_date" => $booking['massage_date'],
+                    "massage_name" => $booking['massage_name'],
+                    "massage_start_time" => $booking['massage_start_time'],
+                    "massage_end_time" => $booking['massage_end_time'],
+                    "massage_duration" => $booking['massage_duration'],
+                    "therapy_name" => $booking['therapy_name'],
+                    "theropy_end_time" => $booking['theropy_end_time'],
+                    "theropy_duration" => $booking['theropy_duration']
+                ];
+            }
+            $allBookings[] =[
+                "therapist_id" => $therapist_id,
+                "therapist_name" => $therapist_name,
+                "services" => $services
+             ];
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['booking.overview']), $allBookings);
     }
     
     public function roomOccupation(Request $request) {
         
         $date  = Carbon::createFromTimestampMs($request->date);
-        
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $date = isset($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
         $request->request->add(['type' => $type, 'date' => $date]);
         
         $bookingModel = new Booking();
-        $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id');
+        $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id')->groupBy('room_id');
         
-        return $this->returnSuccess(__($this->successMsg['booking.overview']), array_values($roomOccupied->toArray()));
+        $services = [];
+        foreach ($roomOccupied as $key => $bookings) {
+            $room_id = $bookings[0]['room_id'];
+            $room_name = $bookings[0]['roomName'];
+            foreach ($bookings as $key => $booking) {
+                $services[] = [
+                    "service_day_name" => $booking['massage_day_name'],
+                    "massage_date" => $booking['massage_date'],
+                    "massage_name" => $booking['massage_name'],
+                    "massage_start_time" => $booking['massage_start_time'],
+                    "massage_end_time" => $booking['massage_end_time'],
+                    "massage_duration" => $booking['massage_duration'],
+                    "therapy_name" => $booking['therapy_name'],
+                    "theropy_end_time" => $booking['theropy_end_time'],
+                    "theropy_duration" => $booking['theropy_duration']
+                ];
+            }
+            $allBookings[] =[
+                "room_id" => $room_id,
+                "room_name" => $room_name,
+                "services" => $services
+             ];
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['booking.overview']), $allBookings);
     }
     
     public function getAllMassages(Request $request)
@@ -524,5 +571,18 @@ class WaitingListController extends BaseController {
         $bookingMassage->update(['is_confirm' => BookingMassage::IS_NOT_CONFIRM]);
         
         return $this->returnSuccess(__($this->successMsg['booking.downgrade']), $bookingMassage);
+    }
+    
+    public function cancelAppointment(Request $request) {
+        
+        $booking = Booking::with('bookingInfo')->find($request->booking_id);        
+        if(empty($booking)) {
+            return $this->returnSuccess(__($this->successMsg['booking.not.found']));
+        }
+        foreach ($booking->bookingInfo as $key => $bookingInfo) {
+            
+            $bookingInfo->update(['is_cancelled' => BookingInfo::IS_CANCELLED, 'cancel_type' => $request->cancel_type, 'cancelled_reason' => $request->cancelled_reason]);
+        }
+        return $this->returnSuccess(__($this->successMsg['cancel.appointment']), $booking);
     }
 }

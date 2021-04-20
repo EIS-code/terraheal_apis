@@ -223,9 +223,11 @@ class Booking extends BaseModel
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date,' . 
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
                             $bookingInfoModel::getTableName() . '.massage_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . 
-                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, ' . 
+                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, UNIX_TIMESTAMP(' . 
+                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $therapiesTimingModel::getTableName() . '.time MINUTE)) * 1000 as theropy_end_time, ' . 
                             'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as massage_day_name, ' . 
                             'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' .                            
+                            'CONCAT(' . $therapiesTimingModel::getTableName() . '.time, " ", "Mins") as theropy_duration, ' .                            
                             $massagePriceModel::getTableName().'.cost,'.
                             'gender.name as gender_preference, ' . 
                             'pressure.name as pressure_preference, ' . 
