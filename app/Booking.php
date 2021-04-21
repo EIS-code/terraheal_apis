@@ -7,6 +7,10 @@ use App\Shop;
 use App\SessionType;
 use App\BookingInfo;
 use App\UserGenderPreference;
+use App\BookingMassage;
+use App\UserPeople;
+use App\MassagePrice;
+use App\MassageTiming;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use DB;
@@ -389,5 +393,105 @@ class Booking extends BaseModel
         }
 
         return $data;
+    }
+
+    public function getWherePastFuture($userId, $isPast = false, $isUpcoming = true, $isPending = false)
+    {
+        $now                 = Carbon::now();
+
+        $modelBookingMassage = new BookingMassage();
+        $modelBookingInfo    = new BookingInfo();
+        $modelShop           = new Shop();
+        $modelUserPeople     = new UserPeople();
+        $modelSessionType    = new SessionType();
+        $modelMassage        = new Massage();
+        $modelMassagePrice   = new MassagePrice();
+        $modelMassageTiming  = new MassageTiming();
+
+        $bookings = $this->select(DB::RAW(self::getTableName() . '.id, massage_date, massage_time, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, user_people_id, ' . $modelBookingInfo::getTableName() . '.id as bookingInfoId, ' . $modelUserPeople::getTableName() . '.name as user_people_name, ' . $modelUserPeople::getTableName() . '.age as user_people_age, ' . $modelUserPeople::getTableName() . '.gender as user_people_gender, ' . $modelUserPeople::getTableName() . '.photo as user_prople_photo'))
+                         ->join($modelBookingInfo::getTableName(), self::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
+                         ->join($modelUserPeople::getTableName(), $modelBookingInfo::getTableName() . '.user_people_id', '=', $modelUserPeople::getTableName() . '.id')
+                         ->leftJoin($modelShop::getTableName(), self::getTableName() . '.shop_id', '=', $modelShop::getTableName() . '.id')
+                         ->leftJoin($modelSessionType::getTableName(), self::getTableName() . '.session_id', '=', $modelSessionType::getTableName() . '.id')
+                         ->where($modelBookingInfo::getTableName() . '.massage_date', ($isPast === true ? '<' : '>='), $now);
+
+        if (!empty($userId) && is_numeric($userId)) {
+            $bookings->where(self::getTableName() . '.user_id', $userId);
+        }
+
+        $bookings       = $bookings->get();
+
+        $returnBookings = [];
+
+        if (!empty($bookings) && !$bookings->isEmpty()) {
+
+            $userPeopleIds  = $bookings->pluck('user_people_id');
+            $userPeoples    = $massagePrices = $bookingMassages = $massages = [];
+
+            if (!empty($userPeopleIds) && !$userPeopleIds->isEmpty()) {
+                $userPeoples = $modelUserPeople->select('id', 'name', 'age', 'gender')->whereIn('id', array_unique($userPeopleIds->toArray()))->get();
+
+                if (!empty($userPeoples) && !$userPeoples->isEmpty()) {
+                    $userPeoples = $userPeoples->keyBy('id');
+                }
+            }
+
+            $return = [];
+            $bookings->map(function($data, $index) use(&$return) {
+                $return[$data->id][] = $data;
+            });
+
+            foreach ($return as $bookingId => $datas) {
+                $returnUserPeoples = [];
+
+                foreach ($datas as $index => $data) {
+                    $bookingInfoId = $data->bookingInfoId;
+                    $userPeopleId  = $data->user_people_id;
+
+                    $returnUserPeoples[$bookingId][$index] = [
+                        'id'     => $userPeopleId,
+                        'name'   => $data->user_people_name,
+                        'age'    => $data->user_people_age,
+                        'gender' => $data->user_people_gender,
+                        'photo'  => $data->user_prople_photo
+                    ];
+
+                    $bookingMassages = $modelBookingMassage
+                                            ->select($modelMassage::getTableName() . '.name', $modelBookingMassage::getTableName() . '.price', $modelMassageTiming::getTableName() . '.time')
+                                            ->join($modelMassagePrice::getTableName(), $modelBookingMassage::getTableName() . '.massage_prices_id', '=', $modelMassagePrice::getTableName() . '.id')
+                                            ->join($modelMassageTiming::getTableName(), $modelMassagePrice::getTableName() . '.massage_timing_id', '=', $modelMassageTiming::getTableName() . '.id')
+                                            ->join($modelMassage::getTableName(), $modelMassagePrice::getTableName() . '.massage_id', '=', $modelMassage::getTableName() . '.id')
+                                            ->where('booking_info_id', $bookingInfoId)
+                                            ->get();
+
+                    if (!empty($bookingMassages) && !$bookingMassages->isEmpty()) {
+                        $returnUserPeoples[$bookingId][$index]['booking_massages'] = $bookingMassages;
+
+                        if (isset($returnBookings[$bookingId]['total_price'])) {
+                            $returnBookings[$bookingId]['total_price'] += $bookingMassages->sum('price');
+                        } else {
+                            $returnBookings[$bookingId]['total_price'] = $bookingMassages->sum('price');
+                        }
+                    }
+
+                    $returnBookings[$bookingId] = [
+                        'id'               => $bookingId,
+                        'booking_type'     => $data->booking_type,
+                        'shop_name'        => $data->shop_name,
+                        'shop_description' => $data->shop_description,
+                        'session_type'     => $data->session_type,
+                        'massage_date'     => $data->massage_date,
+                        'massage_time'     => $data->massage_time,
+                        'total_price'      => number_format($returnBookings[$bookingId]['total_price'], 2)
+                    ];
+                }
+
+                $returnBookings[$bookingId]['user_people'] = $returnUserPeoples[$bookingId];
+            }
+
+            $returnBookings = array_values($returnBookings);
+        }
+
+        return $returnBookings;
     }
 }

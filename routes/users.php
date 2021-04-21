@@ -43,6 +43,10 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
 
     $router->group(['prefix' => 'booking'], function () use($router) {
         $router->post('/create', 'UserController@bookingCreate');
+        $router->post('/therapists', 'UserController@getBookingTherapists');
+        $router->post('/places', 'UserController@getBookingPlaces');
+        $router->post('/list/past', 'UserController@getPastBooking');
+        $router->post('/list/future', 'UserController@getFutureBooking');
     });
 
     $router->get('/get', 'UserController@getDetails');
@@ -52,5 +56,40 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/save', 'UserController@createAddress');
         $router->post('/update', 'UserController@updateAddress');
         $router->post('/remove', 'UserController@removeAddress');
+    });
+
+    $router->group(['prefix' => 'people'], function () use($router) {
+        $router->post('/get', 'UserController@getPeople');
+        $router->post('/save', 'UserController@createPeople');
+        $router->post('/update', 'UserController@updatePeople');
+        $router->post('/remove', 'UserController@removePeople');
+    });
+
+    $router->group(['prefix' => 'therapist'], function () use($router) {
+        $router->group(['prefix' => 'review'], function () use($router) {
+            $router->post('/save', 'UserController@setTherapistReviews');
+        });
+    });
+
+    $router->group(['prefix' => 'menu'], function () use($router) {
+        $router->get('/get', 'UserController@getMenus');
+
+        $router->group(['prefix' => 'item'], function () use($router) {
+            $router->post('/get', 'UserController@getMenuItem');
+        });
+    });
+
+    $router->group(['prefix' => 'gift'], function () use($router) {
+        $router->group(['prefix' => 'voucher'], function () use($router) {
+            $router->post('/get', 'UserController@getGiftVouchers');
+
+            $router->get('/info', 'UserController@getGiftVoucherInfos');
+
+            $router->group(['prefix' => 'design'], function () use($router) {
+                $router->get('/get', 'UserController@getGiftVoucherDesigns');
+            });
+
+            $router->post('/save', 'UserController@saveGiftVouchers');
+        });
     });
 });

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Validator;
 use App\User;
 use App\UserGenderPreference;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 
 class UserPeople extends BaseModel
 {
@@ -66,13 +67,10 @@ class UserPeople extends BaseModel
             return $default;
         }
 
-        /* TODO : Set main project storage link */
-        /*$photoPath = (str_ireplace("\\", "/", $this->photoPath));
+        $photoPath = (str_ireplace("\\", "/", $this->photoPath));
         if (Storage::disk($this->fileSystem)->exists($photoPath . $value)) {
             return Storage::disk($this->fileSystem)->url($photoPath . $value);
-        }*/
-
-        return $default;
+        }
     }
 
     public function filterDatas(Builder $builder)

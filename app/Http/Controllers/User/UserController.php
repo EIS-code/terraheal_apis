@@ -13,6 +13,12 @@ use App\MassagePrice;
 use App\UserSetting;
 use App\UserEmailOtp;
 use App\UserAddress;
+use App\UserPeople;
+use App\UserGenderPreference;
+use App\TherapistReview;
+use App\UserMenu;
+use App\UserGuide;
+use App\UserGiftVoucher;
 use DB;
 use Carbon\Carbon;
 use App\Libraries\CurrencyHelper;
@@ -37,7 +43,13 @@ class UserController extends BaseController
         'error.otp' => 'Please provide OTP properly.',
         'error.otp.wrong' => 'OTP seems wrong.',
         'error.otp.already.verified' => 'OTP already verified.',
-        'error.user.address.not.found' => 'User address not found.'
+        'error.user.address.not.found' => 'User address not found.',
+        'error.user.people.not.found' => 'User people not found.',
+        'error.proper.id' => 'Please provide valid id.',
+        'error.booking.therapists.not.found' => 'Booking therapists not found.',
+        'error.booking.places.not.found' => 'Booking places not found.',
+        'error.booking.not.found' => 'Booking not found !',
+        'error.provide.menu.id' => 'Please provide menu id !'
     ];
 
     public $successMsg = [
@@ -56,7 +68,21 @@ class UserController extends BaseController
         'success.user.address.found' => 'User address found successfully.',
         'success.user.address.created' => 'User address created successfully !',
         'success.user.address.updated' => 'User address updated successfully !',
-        'success.user.address.removed' => 'User address removed successfully.'
+        'success.user.address.removed' => 'User address removed successfully.',
+        'success.user.people.found' => 'User people found successfully.',
+        'success.user.people.created' => 'User people created successfully !',
+        'success.user.people.updated' => 'User people updated successfully !',
+        'success.user.people.removed' => 'User people removed successfully !',
+        'success.booking.therapists.found' => 'Booking therapists found successfully !',
+        'success.booking.places.found' => 'Booking places found successfully !',
+        'success.booking.found' => 'Booking found successfully !',
+        'success.therapist.review.created' => 'Therapist review created successfully !',
+        'success.user.menu.found' => 'User menu found successfully !',
+        'success.user.menu.not.found' => 'User menu not found !',
+        'success.user.menu.item.found' => 'User menu item found successfully !',
+        'success.user.menu.item.not.found' => 'User menu item found !',
+        'success.user.gift.voucher.found' => 'User gift voucher found successfully !',
+        'success.user.gift.voucher.not.found' => 'User gift voucher not found !'
     ];
 
     public function __construct()
@@ -719,5 +745,332 @@ class UserController extends BaseController
         }
 
         return $this->returns('error.user.address.not.found', NULL, true);
+    }
+
+    public function getPeople(Request $request)
+    {
+        $model      = new UserPeople();
+        $id         = (int)$request->get('id', false);
+
+        $userPeople = $model->where('user_id', $id)->where('is_removed', $model::$notRemoved)->get();
+
+        // Get user gender preference.
+        $userGenderPreference = UserGenderPreference::where('is_removed', UserGenderPreference::$notRemoved)->get();
+
+        if (!empty($userPeople) && !$userPeople->isEmpty()) {
+            return response()->json([
+                'code'               => 200,
+                'msg'                => __($this->successMsg['success.user.people.found']),
+                'data'               => $userPeople,
+                'gender_preferences' => $userGenderPreference
+            ]);
+        }
+
+        $code = 401;
+        if (!empty($userGenderPreference) && !$userGenderPreference->isEmpty()) {
+            $code = 200;
+        }
+
+        return response()->json([
+            'code'               => $code,
+            'msg'                => __($this->errorMsg['error.user.people.not.found']),
+            'data'               => $userPeople,
+            'gender_preferences' => $userGenderPreference
+        ]);
+    }
+
+    public function createPeople(Request $request)
+    {
+        $model = new UserPeople();
+        $data  = $request->all();
+
+        DB::beginTransaction();
+
+        try {
+            $validator = $model->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            if (!empty($request->photo)) {
+                $validate = $model->validatePhoto($request);
+                if ($validate->fails()) {
+                    return $this->returns($validator->errors()->first(), NULL, true);
+                }
+
+                unset($data['photo']);
+            }
+
+            $model->fill($data);
+            $model->save();
+
+            $userPeopleId = $model->id;
+
+            if (!empty($request->photo)) {
+                $fileName      = time() . '_' . $userPeopleId . '.' . $request->photo->getClientOriginalExtension();
+                $storeFile     = $request->photo->storeAs($model->photoPath, $fileName, $model->fileSystem);
+
+                $model->update(['photo' => $fileName]);
+            }
+
+        } catch(Exception $e) {
+            DB::rollBack();
+        }
+
+        DB::commit();
+
+        return $this->returns('success.user.people.created', $model);
+    }
+
+    public function updatePeople(Request $request)
+    {
+        $model = new UserPeople();
+        $data  = $request->all();
+        $id    = (int)$request->get('id', false);
+
+        DB::beginTransaction();
+
+        try {
+            if (isset($data['user_id'])) {
+                unset($data['user_id']);
+            }
+
+            $validator = $model->validator($data, true);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            if (empty($id)) {
+                return $this->returns('error.proper.id', NULL, true);
+            }
+
+            $getUserPeople = $model->find($id);
+            if (empty($getUserPeople)) {
+                return $this->returns('error.proper.id', NULL, true);
+            }
+
+            if (!empty($request->photo)) {
+                $validate = $model->validatePhoto($request);
+                if ($validate->fails()) {
+                    return $this->returns($validate->errors()->first(), NULL, true);
+                }
+
+                unset($data['photo']);
+            }
+
+            $update = $model->where('id', $id)->update($data);
+
+            if ($update && !empty($request->photo)) {
+                $fileName      = time() . '_' . $id . '.' . $request->photo->getClientOriginalExtension();
+                $storeFile     = $request->photo->storeAs($model->photoPath, $fileName, $model->fileSystem);
+
+                $model->where('id', $id)->update(['photo' => $fileName]);
+            }
+
+        } catch (Exception $e) {
+            DB::rollBack();
+        }
+
+        if ($update) {
+            DB::commit();
+
+            $userPeople = $model->find($id);
+
+            return $this->returns('success.user.people.updated', $userPeople);
+        } else {
+            return $this->returns('error.something', NULL, true);
+        }
+
+        return $this->returns('error.user.people.not.found', NULL, true);
+    }
+
+    public function removePeople(Request $request)
+    {
+        $model = new UserPeople();
+        $id    = (int)$request->get('id', false);
+
+        if (!empty($id)) {
+            $userPeople = $model->find($id);
+
+            if (!empty($userPeople)) {
+                $userPeople->is_removed = $model::$removed;
+
+                if ($userPeople->save()) {
+                    return $this->returns('success.user.people.removed', collect([]));
+                }
+            }
+        }
+
+        return $this->returns('error.user.people.not.found', NULL, true);
+    }
+
+    public function getBookingTherapists(Request $request)
+    {
+        $model  = new Booking();
+        $userId = (int)$request->get('user_id', false);
+
+        if (!empty($userId)) {
+            $response = [];
+
+            $bookings = $model->where('user_id', (int)$userId)->get();
+
+            if (!empty($bookings) && !$bookings->isEmpty()) {
+                foreach ($bookings as $key => $booking) {
+                    if (!empty($booking->bookingInfo)) {
+                        foreach ($booking->bookingInfo as $bookingInfo) {
+                            if (!empty($bookingInfo->therapist)) {
+                                $therapistId = $bookingInfo->therapist->id;
+
+                                $response[$therapistId] = $bookingInfo->therapist;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!empty($response)) {
+                return $this->returns('success.booking.therapists.found', collect(array_values($response)));
+            }
+        }
+
+        return $this->returns('error.booking.therapists.not.found', NULL, true);
+    }
+
+    public function getBookingPlaces(Request $request)
+    {
+        $model  = new Booking();
+        $userId = (int)$request->get('user_id', false);
+
+        if (!empty($userId)) {
+            $model->setMysqlStrictFalse();
+
+            $response = [];
+            $bookings = $model->where('user_id', (int)$userId)->groupBy('shop_id')->get();
+
+            if (!empty($bookings) && !$bookings->isEmpty()) {
+                foreach ($bookings as $key => $booking) {
+                    if (!empty($booking->shop)) {
+                        $booking->shop->total_services = $booking->shop->massages->count();
+
+                        $response[] = $booking->shop;
+                    }
+                }
+            }
+
+            $model->setMysqlStrictTrue();
+
+            if (!empty($response)) {
+                return $this->returns('success.booking.places.found', collect($response));
+            }
+        }
+
+        return $this->returns('error.booking.places.not.found', NULL, true);
+    }
+
+    public function getPastBooking(Request $request)
+    {
+        $userId = (int)$request->get('user_id', false);
+
+        $model  = new Booking();
+
+        $data   = $model->getWherePastFuture($userId, true, false, false);
+
+        if (!empty($data)) {
+            return $this->returns('success.booking.found', collect($data));
+        }
+
+        return $this->returns('error.booking.not.found', NULL, true);
+    }
+
+    public function getFutureBooking(Request $request)
+    {
+        $userId = (int)$request->get('user_id', false);
+
+        $model  = new Booking();
+
+        $data   = $model->getWherePastFuture($userId, false, true, false);
+
+        if (!empty($data)) {
+            return $this->returns('success.booking.found', collect($data));
+        }
+
+        return $this->returns('error.booking.not.found', NULL, true);
+    }
+
+    public function setTherapistReviews(Request $request)
+    {
+        $model = new TherapistReview();
+        $data  = $request->all();
+
+        if (!empty($data)) {
+            $validator = $model->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            $data['rating'] = (float)$data['rating'];
+
+            $model->fill($data);
+
+            if ($model->save()) {
+                return $this->returns('success.therapist.review.created', collect([]));
+            }
+        }
+
+        return $this->returns('error.something', NULL, true);
+    }
+
+    public function getMenus(Request $request)
+    {
+        $data = UserMenu::all();
+
+        if (!empty($data) && !$data->isEmpty()) {
+            return $this->returns('success.user.menu.found', $data);
+        }
+
+        return $this->returns('success.user.menu.not.found', collect([]));
+    }
+
+    public function getMenuItem(Request $request)
+    {
+        $data = $request->all();
+
+        if (empty($data['menu_id'])) {
+            return $this->returns('error.provide.menu.id', NULL, true);
+        }
+
+        $menuId = (int)$data['menu_id'];
+
+
+        if ($menuId == 1) {
+            $data = UserGuide::all();
+
+            if (!empty($data) && !$data->isEmpty()) {
+                return $this->returns('success.user.menu.item.found', $data);
+            }
+
+            return $this->returns('success.user.menu.item.not.found', collect([]));
+        }
+    }
+
+    public function getGiftVouchers(Request $request)
+    {
+        $model  = new UserGiftVoucher();
+        $userId = $request->get('user_id', false);
+
+        if (!empty($userId)) {
+            $data = $model->where('user_id', $userId)->get();
+
+            if (!empty($data) && !$data->isEmpty()) {
+                $data->map(function($value) {
+                    $value->start_from = $value->created_at;
+                    $value->last_date  = date("Y-m-d", strtotime(date("Y-m-d", strtotime($value->created_at)) . " + ".GIFT_VOUCHER_LIMIT." days"));
+                });
+
+                return $this->returns('success.user.gift.voucher.found', $data);
+            }
+        }
+
+        return $this->returns('success.user.gift.voucher.not.found', collect([]));
     }
 }

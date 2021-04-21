@@ -78,7 +78,7 @@ class MassageController extends BaseController
 
         return response()->json([
             'code' => 200,
-            'msg'  => $this->successMsg['success.massage.found'],
+            'msg'  => __($this->successMsg['success.massage.found']),
             'data' => $getMassages,
             'massage_centers' => $massageCenters
         ]);
