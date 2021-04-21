@@ -213,7 +213,7 @@ class TherapistController extends BaseController {
         $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_absent' => TherapistWorkingSchedule::ABSENT])->get()->count();
         
         $booking_type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $booking_type, 'therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id, 'month' => $date]);
+        $request->request->add(['type' => $booking_type, 'therapist_id' => $request->therapist_id, 'month' => $date]);
         $bookingModel = new Booking();
         $myBookings = $bookingModel->getGlobalQuery($request);
 

@@ -434,10 +434,11 @@ class WaitingListController extends BaseController {
         $bookingModel = new Booking();
         $bookingOverviews = $bookingModel->getGlobalQuery($request)->whereNotNull('therapist_id')->groupBy('therapist_id');
         
-        $services = [];
+        $allBookings = [];
         foreach ($bookingOverviews as $key => $bookings) {
             $therapist_id = $bookings[0]['therapist_id'];
             $therapist_name = $bookings[0]['therapistName'];
+            $services = [];
             foreach ($bookings as $key => $booking) {
                 $services[] = [
                     "service_day_name" => $booking['massage_day_name'],
@@ -464,17 +465,17 @@ class WaitingListController extends BaseController {
     public function roomOccupation(Request $request) {
         
         $date  = Carbon::createFromTimestampMs($request->date);
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $date = isset($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
-        $request->request->add(['type' => $type, 'date' => $date]);
+        $request->request->add(['date' => $date]);
         
         $bookingModel = new Booking();
         $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id')->groupBy('room_id');
         
-        $services = [];
+        $allBookings = [];
         foreach ($roomOccupied as $key => $bookings) {
             $room_id = $bookings[0]['room_id'];
             $room_name = $bookings[0]['roomName'];
+            $services = [];
             foreach ($bookings as $key => $booking) {
                 $services[] = [
                     "service_day_name" => $booking['massage_day_name'],
