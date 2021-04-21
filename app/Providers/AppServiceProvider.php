@@ -40,9 +40,5 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
         }
-
-        if (env('APP_ENV') == 'dev') {
-            throw new \Exception("Class Http\Console not found.");
-        }
     }
 }
