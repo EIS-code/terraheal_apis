@@ -49,7 +49,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/list/future', 'UserController@getFutureBooking');
     });
 
-    $router->get('/get', 'UserController@getDetails');
+    $router->post('/get', 'UserController@getDetails');
 
     $router->group(['prefix' => 'address'], function () use($router) {
         $router->post('/get', 'UserController@getAddress');
