@@ -20,6 +20,8 @@ class TherapistDocument extends BaseModel
         'expired_date',
         'uploaded_by'
     ];
+    
+    protected $hidden = ['is_removed', 'updated_at'];
 
     public $fileSystem = 'public';
     public $directory  = 'therapists\document\\';
