@@ -58,6 +58,8 @@ class Shop extends BaseModel implements CanResetPasswordContract
         '6' => 'Sun'
     ];
 
+    const IS_ADMIN = 0;
+
     public function validator(array $data, $id = false, $isUpdate = false)
     {
         $user = NULL;
@@ -172,6 +174,11 @@ class Shop extends BaseModel implements CanResetPasswordContract
     public function bookingsHv()
     {
         return $this->hasMany('App\Booking', 'shop_id', 'id')->where('booking_type', '0');
+    }
+    
+    public function receptionist() 
+    {
+        return $this->hasOne('App\Receptionist');
     }
     
      /**

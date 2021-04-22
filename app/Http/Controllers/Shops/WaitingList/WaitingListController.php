@@ -475,6 +475,7 @@ class WaitingListController extends BaseController {
         foreach ($roomOccupied as $key => $bookings) {
             $room_id = $bookings[0]['room_id'];
             $room_name = $bookings[0]['roomName'];
+            $total_rooms = $bookings[0]['totalRooms'];
             $services = [];
             foreach ($bookings as $key => $booking) {
                 $services[] = [
@@ -492,6 +493,7 @@ class WaitingListController extends BaseController {
             $allBookings[] =[
                 "room_id" => $room_id,
                 "room_name" => $room_name,
+                "total_rooms" => $total_rooms,
                 "services" => $services
              ];
         }

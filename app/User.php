@@ -92,12 +92,27 @@ class User extends BaseModel implements Authenticatable
     const OAUTH_PROVIDER_TWITTER  = 3;
     const OAUTH_PROVIDER_LINKEDIN = 4;
     const IS_GUEST = 1;
+    const INTERNET = 0;
+    const RECOMMENDATION = 1;
+    const FLYER = 2;
+    const PUBLICITY = 3;
+    const HOTEL = 4;
+    const BY_CHANCE = 5;
     
     public static $oauthProviders = [
         self::OAUTH_PROVIDER_GOOGLE   => 'Google',
         self::OAUTH_PROVIDER_FACEBOOK => 'Facebook',
         self::OAUTH_PROVIDER_TWITTER  => 'Twitter',
         self::OAUTH_PROVIDER_LINKEDIN => 'LinkedIn'
+    ];
+    
+    public static $source = [
+        self::INTERNET => 'Internet',
+        self::RECOMMENDATION => 'Recommendation',
+        self::FLYER => 'Flyer',
+        self::PUBLICITY => 'Publicity',
+        self::HOTEL => 'Hotel',
+        self::BY_CHANCE => 'By chance'
     ];
 
     public static function getTableName()
@@ -207,19 +222,24 @@ class User extends BaseModel implements Authenticatable
         return $default;
     }
 
-    public function getDobAttribute($value)
-    {
-        if (empty($value)) {
-            return $value;
-        }
-
-        return strtotime($value) * 1000;
-        // return Carbon::createFromTimestampMs($value)->format('Y-m-d H:i:s');
-    }
+//    public function getDobAttribute($value)
+//    {
+//        if (empty($value)) {
+//            return $value;
+//        }
+//
+//        return strtotime($value) * 1000;
+//        // return Carbon::createFromTimestampMs($value)->format('Y-m-d H:i:s');
+//    }
 
     public function getFullNameAttribute()
     {
         return $this->name . ' ' . $this->surname;
+    }
+    
+    public function getSourceAttribute($value)
+    {
+        return (isset(self::$source[$value])) ? self::$source[$value] : $value;
     }
 
     public function qrCodeKey()

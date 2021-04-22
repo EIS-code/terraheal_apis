@@ -18,19 +18,26 @@ use App\UserMassagePreferences;
 use DB;
 use App\BookingInfo;
 use App\BookingMassage;
+use Carbon\Carbon;
+use App\Pack;
+use App\Voucher;
 
 class ClientController extends BaseController {
 
     public $successMsg = [
-        'client.data.found' => 'Client data found successfully',
-        'client.future.booking' => 'Client future booking found successfully',
-        'client.past.booking' => 'Client past booking found successfully',
-        'client.cancelled.booking' => 'Client cancelled booking found successfully',
-        'client.forgot.object' => 'Client forgotten object added successfully',
-        'client.forgot.object.return' => 'Client forgotten object returned successfully',
-        'client.email.send' => 'Email sent successfully',
-        'client.rating.update' => 'Client ratings updated successfully',
-        'client.not.found' => 'Client not found'
+        'client.data.found' => 'Client data found successfully!',
+        'client.future.booking' => 'Client future booking found successfully!',
+        'client.past.booking' => 'Client past booking found successfully!',
+        'client.cancelled.booking' => 'Client cancelled booking found successfully!',
+        'client.forgot.object' => 'Client forgotten object added successfully!',
+        'client.forgot.object.return' => 'Client forgotten object returned successfully!',
+        'client.email.send' => 'Email sent successfully!',
+        'client.rating.update' => 'Client ratings updated successfully!',
+        'client.not.found' => 'Client not found',
+        'data.not.found' => 'Data not found',
+        'client.recipient' => 'Client recipient found successfully!',
+        'client.source' => 'Client sources found successfully!',
+        'client.forgot.objects' => 'Client forgotten objectes found successfully!',
     ];        
     
     public function searchClients(Request $request) {
@@ -75,7 +82,7 @@ class ClientController extends BaseController {
             $clients->where($userModel::getTableName().'.gender', $request->gender);
         }
         if(isset($request->dob)) {
-            $clients->where($userModel::getTableName().'.dob', $request->dob);
+            $clients->whereDate($userModel::getTableName().'.dob', $request->dob);
         }
         if(isset($request->visits)) {
             $clients->where($bookingModel::getTableName().'.booking_type', $request->visits);
@@ -97,18 +104,63 @@ class ClientController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['client.data.found']), $clientData);
     }
     
+    public function getRatings($ratings)
+    {
+        foreach ($ratings as $key => $value) {
+            $model = $value->model;
+            if($model == "App\Shop") {
+                $user = Shop::where('id',$value->model_id)->select('id','name','is_admin')->first();
+                $designation = $user->is_admin == Shop::IS_ADMIN ? 'Admin' : 'Manager';
+            } else {
+                $user = Therapist::where('id',$value->model_id)->select('id','name')->first();
+                $designation = 'Therapist';
+            }
+            $value['user'] = $user;
+            $value['designation'] = $designation;
+        }
+        $ratings = $ratings->groupBy('type');
+        
+        $ratingData = [];
+        foreach ($ratings as $key => $rating) {
+            $type = $rating[0]['type'];
+            $sum = 0; $cnt = 0;
+            $users = [];
+            foreach ($rating as $key => $value) {
+                $cnt += 1;
+                $sum += $value->rating;
+                $users[] = [
+                    'id' => $value['id'],
+                    'user_id' => $value['user']['id'],
+                    'user_name' => $value['user']['name'],
+                    'rating' => $value['rating'],
+                    'designation' => $value['designation']
+                ];
+            }
+            $avg_rate = $sum / $cnt;
+            $ratingData[] = [
+                'type' => $type,
+                'users' => $users,
+                'avg_rating' => round($avg_rate, 2),
+            ];
+        }
+        return $ratingData;
+    }
+    
     public function clientDetails(Request $request) {
         
+        $userId = $request->user_id;
         $client = User::with('shop:id,name','city:id,name','country:id,name')
-                ->where(['shop_id' => $request->shop_id,'id' => $request->user_id])
+                ->where(['shop_id' => $request->shop_id,'id' => $userId])
                 ->first();
         
         $bookingModel = new Booking();
         
-        $lastvisited = $bookingModel->where(['shop_id' => $request->shop_id,'id' => $request->user_id])->get()->last();        
-        $totalAppointments = $bookingModel->getGlobalQuery($request)->groupBy('booking_id')->count();
-        $recipient = UserPeople::where('user_id',$request->user_id)->get()->count();
-        $addresses = UserAddress::where('user_id',$request->user_id)->get()->count();
+        $totalAppointments = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $lastVisit = $totalAppointments->first();
+        $lastVisit = Carbon::createFromTimestampMs($lastVisit[0]['massage_date']);
+        
+        $recipient = UserPeople::where('user_id',$userId)->get()->count();
+        $addresses = UserAddress::where('user_id',$userId)->get()->count();
         $therapists = $bookingModel->getGlobalQuery($request)->groupBy('therapist_id')->count();
         $is_verified = false;
         if($client->is_email_verified == 1 && $client->is_mobile_verified == 1 && $client->is_document_verified == 1) {
@@ -116,71 +168,62 @@ class ClientController extends BaseController {
         }        
         $questionnaries = TherapyQuestionnaire::with('questionnaireAnswer')->get();
         
-        $ratings = TherapistUserRating::where('user_id',$request->user_id)->get();
+        $ratings = TherapistUserRating::where('user_id',$userId)->get();
         $avg_rating = $ratings->avg('rating');
         
-        foreach ($ratings as $key => $value) {
-            $model = $value->model;
-            if($model == "App\Shop") {
-                $user = Shop::where('id',$value->model_id)->select('id','name')->get();
-            } else {
-                $user = Therapist::where('id',$value->model_id)->select('id','name')->get();
-            }
-            $value['user'] = $user;
-        }
-        $ratings = $ratings->groupBy('type');
-        
-        $ratingData = [];
-        foreach ($ratings as $key => $rating) {
-            $sum = 0; $cnt = 0;
-            foreach ($rating as $key => $value) {
-                $cnt += 1;
-                $sum += $value->rating;
-            }
-            $avg_rate = $sum / $cnt;
-            $rating['avg_rating'] = $avg_rate;
-            array_push($ratingData, $rating);
-        }
+        $ratingData = $this->getRatings($ratings);
         
         $request->request->add(['bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
         $noShow = $bookingModel->getGlobalQuery($request)->groupBy('booking_id')->count();
                
         $infoForTherapy = UserMassagePreferences::with('massagePreference:id,name','massagePreferenceOption:id,name')->where('user_id',$request->user_id)->get();
         
+        $packs = Pack::with('users')->whereHas('users', function($q) use($userId) {
+                            $q->where('users_id',$userId);
+                        })->get();
+        $vouchers = Voucher::with('users')->whereHas('users', function($q) use($userId) {
+                            $q->where('user_id',$userId);
+                        })->get();
+                        
+        $client['totalAppointments'] = $totalAppointments->count();
+        $client['noShow'] = $noShow;
+        $client['registeredAt'] = $client->created_at;
+        $client['lastVisited'] = $lastVisit;
+        $client['avg_rating'] = round($avg_rating,2);
+        $client['is_verified'] = $is_verified;
         return $this->returnSuccess(__($this->successMsg['client.data.found']), 
-                ["client" => $client, "totalAppointments" => $totalAppointments, "noShow" => $noShow, "registeredAt" => $client->created_at,
-                 "lastVisited" => $lastvisited->created_at, "recipient" => $recipient, "addresses" => $addresses, "therapists" => $therapists,
-                 "is_verified" => $is_verified, "questionnaries" => $questionnaries, "ratings" => $ratingData, "avg_rating" => round($avg_rating,2), "infoForTherapy" => $infoForTherapy]);
+                ["client" => $client, "recipient" => $recipient, "addresses" => $addresses, "therapists" => $therapists,"questionnaries" => $questionnaries, "ratings" => $ratingData,
+                    "infoForTherapy" => $infoForTherapy, "packs" => $packs, "vouchers" => $vouchers]);
     }
      
     public function getFutureBookings(Request $request) {
         
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_FUTURE),'user_id' => $request->user_id]);
+        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_FUTURE),'user_id' => $userId]);
         $bookingModel = new Booking();
-        $futureBookings = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $futureBookings = $bookingModel->getGlobalQuery($request);
                
-        return $this->returnSuccess(__($this->successMsg['client.future.booking']), array_values($futureBookings->toArray()));
+        return $this->returnSuccess(__($this->successMsg['client.future.booking']), $futureBookings->toArray());
     }
     
     public function getPastBookings(Request $request) {
         
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_PAST),'user_id' => $request->user_id]);
+        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_PAST),'user_id' => $userId]);
         $bookingModel = new Booking();
-        $pastBookings = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $pastBookings = $bookingModel->getGlobalQuery($request);
                
-        return $this->returnSuccess(__($this->successMsg['client.past.booking']), array_values($pastBookings->toArray()));
+        return $this->returnSuccess(__($this->successMsg['client.past.booking']), $pastBookings->toArray());
     }
     
     public function getCancelledBookings(Request $request) {
         
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_CANCELLED),'user_id' => $request->user_id]);
+        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_CANCELLED),'user_id' => $userId]);
         $bookingModel = new Booking();
-        $cancelledBookings = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+        $cancelledBookings = $bookingModel->getGlobalQuery($request);
                
-        return $this->returnSuccess(__($this->successMsg['client.cancelled.booking']), array_values($cancelledBookings->toArray()));
+        return $this->returnSuccess(__($this->successMsg['client.cancelled.booking']), $cancelledBookings->toArray());
     }
     
     public function addForgotObject(Request $request) {
@@ -228,6 +271,26 @@ class ClientController extends BaseController {
         $rating = TherapistUserRating::find($request->rating_id);
         $rating->update(['rating' => $request->rating, "edit_by" => $request->edit_by]);
         return $this->returnSuccess(__($this->successMsg['client.rating.update']), $rating);
+    }
+    
+    public function getRecipient(Request $request) {
         
+        $recipients = UserPeople::where('user_id',$request->client_id)->get();
+        if ($recipients->count() == 0) {
+            return $this->returnSuccess(__($this->successMsg['data.not.found']));
+        }
+        return $this->returnSuccess(__($this->successMsg['client.recipient']), $recipients);
+    }
+    
+    public function getSources() {
+                
+        $source = User::$source;
+        return $this->returnSuccess(__($this->successMsg['client.source']), $source);
+    }
+    
+    public function getForgotObjects(Request $request) {
+        
+        $objects = UsersForgottenObjects::with('shops:id,name','rooms:id,name')->where('user_id',$request->client_id)->get();
+        return $this->returnSuccess(__($this->successMsg['client.forgot.objects']), $objects);
     }
 }

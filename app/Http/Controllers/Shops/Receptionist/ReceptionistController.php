@@ -10,6 +10,7 @@ use App\ReceptionistTimeTables;
 use Carbon\Carbon;
 use App\Libraries\CommonHelper;
 use App\ReceptionistBreakTime;
+use App\Shop;
 
 class ReceptionistController extends BaseController {
 
@@ -20,7 +21,8 @@ class ReceptionistController extends BaseController {
         'receptionist.data' => 'Receptionist found successfully',
         'receptionist.statistics' => 'Receptionist statistics data found successfully',
         'receptionist.break' => 'Break added successfully',
-        'not.found' => 'Receptionist data not found'
+        'not.found' => 'Receptionist data not found',
+        'shop' => 'Please provide shop id.',
     ];
     
     public function createReceptionist(Request $request) {
@@ -83,7 +85,16 @@ class ReceptionistController extends BaseController {
     
     public function getReceptionist(Request $request) {
         
-        $receptionist = Receptionist::with('country','city','shop:id,name','documents')->where('id',$request->receptionist_id)->get();
+        if(!isset($request->receptionist_id)){
+            if(!isset($request->shop_id)){
+                return $this->returnError(__($this->successMsg['shop']));
+            }
+            $receptionist = Shop::with('receptionist')->where('id',$request->shop_id)->first();
+            $receptionistId = $receptionist->receptionist->id;
+        } else {
+            $receptionistId = $request->receptionist_id;
+        }
+        $receptionist = Receptionist::with('country','city','shop:id,name','documents')->where('id',$receptionistId)->get();
         
         if($receptionist->count() > 0) {
             return $this->returnSuccess(__($this->successMsg['receptionist.data']),$receptionist);
@@ -94,7 +105,8 @@ class ReceptionistController extends BaseController {
     
     public function getStatistics(Request $request) {
         
-        $date = isset($request->date) ? Carbon::createFromFormat('Y-m-d', $request->date) : Carbon::now();
+        $date  = Carbon::createFromTimestampMs($request->date);
+        $date = isset($request->date) ? $date : Carbon::now();
         $receptionist = ReceptionistTimeTables::with('breaks')->where('receptionist_id',$request->receptionist_id)
                 ->whereMonth('login_date',$date->month)->get();
         

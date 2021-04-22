@@ -86,6 +86,9 @@ $router->group(['prefix' => 'clients', 'namespace' => 'Shops'], function () use(
     $router->post('/returnForgotObject', 'Clients\ClientController@returnForgotObject');
     $router->post('/sendEmailToClient', 'Clients\ClientController@sendEmailToClient');
     $router->post('/updateRating', 'Clients\ClientController@updateRating');
+    $router->post('/getRecipient', 'Clients\ClientController@getRecipient');
+    $router->get('/getSources', 'Clients\ClientController@getSources');
+    $router->post('/getForgotObjects', 'Clients\ClientController@getForgotObjects');
 });
 
 $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($router) {
