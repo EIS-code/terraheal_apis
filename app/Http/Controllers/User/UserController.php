@@ -19,6 +19,13 @@ use App\TherapistReview;
 use App\UserMenu;
 use App\UserGuide;
 use App\UserGiftVoucher;
+use App\UserGiftVoucherInfo;
+use App\UserGiftVoucherTheme;
+use App\UserFaq;
+use App\UserPack;
+use App\UserPackOrder;
+use App\UserPackMassage;
+use App\UserPackGift;
 use DB;
 use Carbon\Carbon;
 use App\Libraries\CurrencyHelper;
@@ -82,7 +89,20 @@ class UserController extends BaseController
         'success.user.menu.item.found' => 'User menu item found successfully !',
         'success.user.menu.item.not.found' => 'User menu item found !',
         'success.user.gift.voucher.found' => 'User gift voucher found successfully !',
-        'success.user.gift.voucher.not.found' => 'User gift voucher not found !'
+        'success.user.gift.voucher.not.found' => 'User gift voucher not found !',
+        'success.user.gift.voucher.info.found' => 'User gift voucher info found successfully !',
+        'success.user.gift.voucher.info.not.found' => 'User gift voucher info not found !',
+        'success.user.gift.voucher.created' => 'User gift voucher created successfully !',
+        'success.user.gift.voucher.design.found' => 'User gift voucher designs found successfully !',
+        'success.user.gift.voucher.design.not.found' => 'User gift voucher design not found !',
+        'success.user.faq.found' => 'User FAQ found successfully !',
+        'success.user.faq.not.found' => 'User FAQ not found !',
+        'success.user.packs.found' => 'User packs found successfully !',
+        'success.user.packs.not.found' => 'User pack not found !',
+        'success.user.packs.services.found' => 'User pack services found successfully !',
+        'success.user.packs.service.not.found' => 'User pack service not found !',
+        'success.user.pack.ordered' => 'User pack ordered successfully !',
+        'success.user.pack.gift.created' => 'User pack gift created successfully !'
     ];
 
     public function __construct()
@@ -1072,5 +1092,223 @@ class UserController extends BaseController
         }
 
         return $this->returns('success.user.gift.voucher.not.found', collect([]));
+    }
+
+    public function getGiftVoucherInfos()
+    {
+        $model      = new UserGiftVoucherInfo();
+
+        $getInfos   = $model->all();
+
+        if (!empty($getInfos) && !$getInfos->isEmpty()) {
+            return $this->returns('success.user.gift.voucher.info.found', $getInfos);
+        }
+
+        return $this->returns('success.user.gift.voucher.info.not.found', collect([]));
+    }
+
+    public function saveGiftVouchers(Request $request)
+    {
+        $model  = new UserGiftVoucher();
+        $data   = $request->all();
+
+        DB::beginTransaction();
+
+        try {
+            $uniqueId = mt_rand(10000000,99999999);
+
+            // Check exists.
+            $check = $model->where('unique_id', $uniqueId)->first();
+            if (!empty($check)) {
+                $uniqueId = mt_rand(10000000,99999999);
+            }
+
+            $data['unique_id'] = $uniqueId;
+
+            if (!empty($data['preference_email_date'])) {
+                $emailDate = $data['preference_email_date'] = date("Y-m-d", ($data['preference_email_date'] / 1000));
+            }
+
+            if (!empty($data['amount'])) {
+                $data['amount'] = (float)$data['amount'];
+            }
+
+            $validator = $model->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            $model->fill($data);
+            $save = $model->save();
+
+            if ($save) {
+                $today     = strtotime(date('Y-m-d'));
+                $emailDate = strtotime($emailDate);
+
+                if ($today == $emailDate) {
+                    // Send Email.
+                } else {
+                    // Set console command for send email for the future date.
+                }
+            }
+        } catch(Exception $e) {
+            DB::rollBack();
+        }
+
+        DB::commit();
+
+        return $this->returns('success.user.gift.voucher.created', $model);
+    }
+
+    public function getGiftVoucherDesigns()
+    {
+        $model      = new UserGiftVoucherTheme();
+
+        $getDesigns = $model->with('designs')->get();
+
+        if (!empty($getDesigns) && !$getDesigns->isEmpty()) {
+            return $this->returns('success.user.gift.voucher.design.found', $getDesigns);
+        }
+
+        return $this->returns('success.user.gift.voucher.design.not.found', collect([]));
+    }
+
+    public function getFaqs()
+    {
+        $model  = new UserFaq();
+
+        $data   = $model->all();
+
+        if (!empty($data) && !$data->isEmpty()) {
+            return $this->returns('success.user.faq.found', $data);
+        }
+
+        return $this->returns('success.user.faq.not.found', collect([]));
+    }
+
+    public function getPacks(Request $request)
+    {
+        $model              = new UserPack();
+        $modelUserPackOrder = new UserPackOrder();
+        $data               = $request->all();
+
+        if (!empty($data['shop_id'])) {
+            $shopId = (int)$data['shop_id'];
+
+            return $model->where('shop_id', $shopId)->get();
+        } elseif (!empty($data['user_id'])) {
+            $return = [];
+            $userId = (int)$data['user_id'];
+
+            $getPacks = $modelUserPackOrder::with('userPack')->where('user_id', $userId)->get();
+
+            if (!empty($getPacks) && !$getPacks->isEmpty()) {
+                $getPacks->map(function($userPack) use(&$return) {
+                    $return[] = $userPack->userPack;
+                });
+            }
+
+            if (!empty($return)) {
+                return $this->returns('success.user.packs.found', collect($return));
+            }
+        }
+
+        return $this->returns('success.user.packs.not.found', collect([]));
+    }
+
+    public function getPackServices(Request $request)
+    {
+        $model      = new UserPackMassage();
+        $data       = $request->all();
+        $userPackId = (!empty($data['user_pack_id'])) ? (int)$data['user_pack_id'] : false;
+
+        if (!empty($userPackId)) {
+            $return      = [];
+            $getMassages = $model->where('user_pack_id', $userPackId)->get();
+
+            if (!empty($getMassages) && !$getMassages->isEmpty()) {
+                $getMassages->map(function($getMassage) use(&$return) {
+                    if (!empty($getMassage->massagePrice) && !empty($getMassage->massagePrice->massage) && !empty($getMassage->massagePrice->timing)) {
+                        $massage = $getMassage->massagePrice->massage;
+                        $timing  = $getMassage->massagePrice->timing;
+
+                        $return[] = [
+                            'name'  => $massage->name,
+                            'time'  => $timing->time,
+                            'image' => $massage->image
+                        ];
+                    }
+                });
+            }
+
+            if (!empty($return)) {
+                return $this->returns('success.user.packs.services.found', collect($return));
+            }
+        }
+
+        return $this->returns('success.user.packs.service.not.found', collect([]));
+    }
+
+    public function savePackOrders(Request $request)
+    {
+        $model  = new UserPackOrder();
+        $data   = $request->all();
+
+        DB::beginTransaction();
+
+        try {
+            $validator = $model->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            $model->fill($data);
+            $model->save();
+        } catch(Exception $e) {
+            DB::rollBack();
+        }
+
+        DB::commit();
+
+        return $this->returns('success.user.pack.ordered', $userPackOrder);
+    }
+
+    public function savePackGifts(Request $request)
+    {
+        $model  = new UserPackGift();
+        $data   = $request->all();
+
+        DB::beginTransaction();
+
+        try {
+            if (!empty($data['preference_email_date'])) {
+                $emailDate = $data['preference_email_date'] = date("Y-m-d", ($data['preference_email_date'] / 1000));
+            }
+
+            $validator = $model->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            $model->fill($data);
+            $save = $model->save();
+
+            if ($save) {
+                $today     = strtotime(date('Y-m-d'));
+                $emailDate = strtotime($emailDate);
+
+                if ($today == $emailDate) {
+                    // Send Email.
+                } else {
+                    // Set console command for send email for the future date.
+                }
+            }
+        } catch(Exception $e) {
+            DB::rollBack();
+        }
+
+        DB::commit();
+
+        return $this->returns('success.user.pack.gift.created', $userPackGift);
     }
 }
