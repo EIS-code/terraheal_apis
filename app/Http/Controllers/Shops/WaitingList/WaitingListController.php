@@ -70,9 +70,6 @@ class WaitingListController extends BaseController {
 
         $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_WAITING)]);
-        if(!empty($request->service)) {
-            $request->request->add(['service' => $request->service]);
-        }
         $bookingModel = new Booking();
         $waitingMassages = $bookingModel->getGlobalQuery($request);
 
@@ -636,6 +633,19 @@ class WaitingListController extends BaseController {
         foreach ($booking->bookingInfo as $key => $bookingInfo) {
             
             $bookingInfo->update(['is_cancelled' => BookingInfo::IS_CANCELLED, 'cancel_type' => $request->cancel_type, 'cancelled_reason' => $request->cancelled_reason]);
+        }
+        return $this->returnSuccess(__($this->successMsg['cancel.appointment']), $booking);
+    }
+    
+    public function recoverAppointment(Request $request) {
+        
+        $booking = Booking::with('bookingInfo')->find($request->booking_id);        
+        if(empty($booking)) {
+            return $this->returnSuccess(__($this->successMsg['booking.not.found']));
+        }
+        foreach ($booking->bookingInfo as $key => $bookingInfo) {
+            
+            $bookingInfo->update(['is_cancelled' => BookingInfo::IS_NOT_CANCELLED]);
         }
         return $this->returnSuccess(__($this->successMsg['cancel.appointment']), $booking);
     }

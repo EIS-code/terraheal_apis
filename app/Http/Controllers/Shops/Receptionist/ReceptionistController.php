@@ -87,8 +87,8 @@ class ReceptionistController extends BaseController {
     
     public function getReceptionist(Request $request) {
         
-        if(!empty($request->receptionist_id)){
-            if(!empty($request->shop_id)){
+        if(empty($request->receptionist_id)){
+            if(empty($request->shop_id)){
                 return $this->returnError(__($this->successMsg['shop']));
             }
             $receptionist = Shop::with('receptionist')->where('id',$request->shop_id)->first();

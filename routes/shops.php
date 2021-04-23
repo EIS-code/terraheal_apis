@@ -58,6 +58,7 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/confirmBooking', 'WaitingList\WaitingListController@confirmBooking');
     $router->post('/downgradeBooking', 'WaitingList\WaitingListController@downgradeBooking');
     $router->post('/cancelAppointment', 'WaitingList\WaitingListController@cancelAppointment');
+    $router->post('/recoverAppointment', 'WaitingList\WaitingListController@recoverAppointment');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {
