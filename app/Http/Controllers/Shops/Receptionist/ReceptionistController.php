@@ -111,6 +111,8 @@ class ReceptionistController extends BaseController {
         $date = !empty($request->date) ? $date : Carbon::now();
         $receptionist = ReceptionistTimeTables::with('breaks')->where('receptionist_id',$request->receptionist_id)
                 ->whereMonth('login_date',$date->month)->get();
+        $presentDays = ReceptionistTimeTables::with('breaks')->where(['receptionist_id' => $request->receptionist_id, 'is_working' => ReceptionistTimeTables::IS_WORKING])->count();
+        $absentDays = ReceptionistTimeTables::with('breaks')->where(['receptionist_id' => $request->receptionist_id, 'is_working' => ReceptionistTimeTables::IS_NOT_WORKING])->count();
         
         $totalHours = [];
         $breakHours = [];        
@@ -141,11 +143,8 @@ class ReceptionistController extends BaseController {
         //calculate total break hours
         $break = CommonHelper::calculateHours($breakHours);
         
-        $totalWorkingDays = cal_days_in_month(CAL_GREGORIAN, $date->month, $date->year);
-        $presentDays = $receptionist->count();
-        
         return $this->returnSuccess(__($this->successMsg['receptionist.data']),['receptionistData' => $receptionist, 
-            'totalWorkingDays' => $totalWorkingDays, 'presentDays' => $presentDays, 'absentDays' => $totalWorkingDays - $presentDays,
+            'totalWorkingDays' => $receptionist->count(), 'presentDays' => $presentDays, 'absentDays' => $absentDays,
             'totalHours' => explode(':', $hours)[0], 'totalBreakHours' => explode(':', $break)[0],'totalWorkingHours' => explode(':', $hours)[0]-explode(':', $break)[0]]);
     }
     

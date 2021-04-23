@@ -13,6 +13,9 @@ class ReceptionistTimeTables extends BaseModel {
         'logout_time',
         'receptionist_id'
     ];
+    
+    const IS_WORKING = '1';
+    const IS_NOT_WORKING = '0';
 
     
     public static function validator(array $data) {
