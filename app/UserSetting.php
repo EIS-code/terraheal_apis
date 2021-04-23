@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Support\Facades\Validator;
 use App\User;
+use App\UserHtmlField;
 
 class UserSetting extends BaseModel
 {
@@ -31,5 +32,25 @@ class UserSetting extends BaseModel
             'user_id'       => $userId,
             'currency_code' => ['string', 'max:255']
         ]);
+    }
+
+    public function getGlobalResponse(int $id)
+    {
+        $data          = $this->where('user_id', $id)->where('is_removed', '=', self::$notRemoved)->first();
+        $userHtmlField = UserHtmlField::where('is_removed', '=', UserHtmlField::$notRemoved)->first();
+
+        $userSettings = $userHtmlFields = [];
+
+        if (!empty($data)) {
+            $userSettings = $data->toArray();
+        }
+
+        if (!empty($userHtmlField)) {
+            $userHtmlFields = $userHtmlField->toArray();
+        }
+
+        $data = array_merge($userSettings, $userHtmlFields);
+
+        return collect($data);
     }
 }

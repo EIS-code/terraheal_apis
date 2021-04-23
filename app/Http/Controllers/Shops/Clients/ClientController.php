@@ -81,9 +81,14 @@ class ClientController extends BaseController {
         if(isset($request->gender)) {
             $clients->where($userModel::getTableName().'.gender', $request->gender);
         }
-        if(isset($request->dob)) {
-            $clients->whereDate($userModel::getTableName().'.dob', $request->dob);
+
+        if (!empty($request->dob)) {
+            // $clients->whereDate($userModel::getTableName().'.dob', $request->dob);
+            $dob = Carbon::createFromTimestampMs($request->dob)->format('Y-m-d');
+
+            $clients->whereRaw("DATE_FORMAT(FROM_UNIXTIME(`dob` / 1000), '%Y-%m-%d') = '{$dob}'");
         }
+
         if(isset($request->visits)) {
             $clients->where($bookingModel::getTableName().'.booking_type', $request->visits);
         }
@@ -189,7 +194,7 @@ class ClientController extends BaseController {
         $client['noShow'] = $noShow;
         $client['registeredAt'] = $client->created_at;
         $client['lastVisited'] = $lastVisit;
-        $client['avg_rating'] = round($avg_rating,2);
+        $client['avg_rating'] = number_format($avg_rating, 2);
         $client['is_verified'] = $is_verified;
         return $this->returnSuccess(__($this->successMsg['client.data.found']), 
                 ["client" => $client, "recipient" => $recipient, "addresses" => $addresses, "therapists" => $therapists,"questionnaries" => $questionnaries, "ratings" => $ratingData,
