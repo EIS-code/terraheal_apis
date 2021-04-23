@@ -194,7 +194,7 @@ class ClientController extends BaseController {
         $client['noShow'] = $noShow;
         $client['registeredAt'] = $client->created_at;
         $client['lastVisited'] = $lastVisit;
-        // $client['avg_rating'] = round($avg_rating,2);
+        $client['avg_rating'] = number_format($avg_rating, 2);
         $client['is_verified'] = $is_verified;
         return $this->returnSuccess(__($this->successMsg['client.data.found']), 
                 ["client" => $client, "recipient" => $recipient, "addresses" => $addresses, "therapists" => $therapists,"questionnaries" => $questionnaries, "ratings" => $ratingData,
