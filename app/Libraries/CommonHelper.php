@@ -4,20 +4,19 @@ namespace App\Libraries;
 
 use App\Therapy;
 use App\Massage;
+use App\Shop;
 
 class CommonHelper {
 
     public static function getAllService($request) {
-        $therapies = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'))->get();
-        $massages = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'))->get();
-        $services = collect();
-
-        foreach ($therapies as $therapy) {
-            $services->push($therapy);
+        
+        $pageNumber = isset($request->page_number) ? $request->page_number : 1;
+        if($request->type == Shop::MASSAGES) {
+            $services = Massage::with('timing', 'pricing')->select('id','name','image','icon','shop_id')
+                    ->where('shop_id', $request->get('shop_id'))->paginate(18, ['*'], 'page', $pageNumber);
         }
-
-        foreach ($massages as $massage) {
-            $services->push($massage);
+        if($request->type == Shop::THERAPIES) {
+            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'))->paginate(18, ['*'], 'page', $pageNumber);
         }
 
         return $services;
