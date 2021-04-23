@@ -87,8 +87,8 @@ class ReceptionistController extends BaseController {
     
     public function getReceptionist(Request $request) {
         
-        if(!isset($request->receptionist_id)){
-            if(!isset($request->shop_id)){
+        if(!empty($request->receptionist_id)){
+            if(!empty($request->shop_id)){
                 return $this->returnError(__($this->successMsg['shop']));
             }
             $receptionist = Shop::with('receptionist')->where('id',$request->shop_id)->first();
@@ -108,7 +108,7 @@ class ReceptionistController extends BaseController {
     public function getStatistics(Request $request) {
         
         $date  = Carbon::createFromTimestampMs($request->date);
-        $date = isset($request->date) ? $date : Carbon::now();
+        $date = !empty($request->date) ? $date : Carbon::now();
         $receptionist = ReceptionistTimeTables::with('breaks')->where('receptionist_id',$request->receptionist_id)
                 ->whereMonth('login_date',$date->month)->get();
         

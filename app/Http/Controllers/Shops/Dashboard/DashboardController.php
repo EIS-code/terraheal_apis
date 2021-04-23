@@ -32,7 +32,7 @@ class DashboardController extends BaseController {
                         ->whereHas('user', function($q) use($request) {
                             $q->where('shop_id', '=', $request->get('shop_id'));
                         })->avg('rating');
-        $reviews = isset($reviews) ? $reviews : 0;
+        $reviews = !empty($reviews) ? $reviews : 0;
         $vouchers = Voucher::where('expired_date','>=', Carbon::now()->format('Y-m-d'))->get()->count();
         $packs = Pack::where('expired_date','>=', Carbon::now()->format('Y-m-d'))->get()->count();
         return $this->returnSuccess(__($this->successMsg['data.found']), ['massages' => $massages, 'therapies' => $therapies, 'reviews' => $reviews,

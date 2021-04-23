@@ -60,14 +60,14 @@ class ClientController extends BaseController {
                 ->where(['users.shop_id' => $request->shop_id, 'users.is_removed' => User::$notRemoved]);
                         
         
-        $pageNumber = isset($request->page_number) ? $request->page_number : 1;
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
         $search_val = $request->search_val;
         
-        if(isset($request->name_filter))
+        if(!empty($request->name_filter))
         {
             $clients->where($userModel::getTableName().'.name', 'like', $request->name_filter.'%');
         }
-        if(isset($search_val))
+        if(!empty($search_val))
         {
             if(is_numeric($search_val)) {
                 $clients->where($userModel::getTableName().'.id', $search_val);
@@ -78,7 +78,7 @@ class ClientController extends BaseController {
                 });
             }
         }
-        if(isset($request->gender)) {
+        if(!empty($request->gender)) {
             $clients->where($userModel::getTableName().'.gender', $request->gender);
         }
 
@@ -89,10 +89,10 @@ class ClientController extends BaseController {
             $clients->whereRaw("DATE_FORMAT(FROM_UNIXTIME(`dob` / 1000), '%Y-%m-%d') = '{$dob}'");
         }
 
-        if(isset($request->visits)) {
+        if(!empty($request->visits)) {
             $clients->where($bookingModel::getTableName().'.booking_type', $request->visits);
         }
-        if(isset($request->booking_type)) {
+        if(!empty($request->booking_type)) {
             // 1 for massages , 2 for therapies
             if($request->booking_type == 1){
                 $clients->whereNotNull($bookingMassageModel::getTableName().'.massage_prices_id')->whereNotNull($bookingMassageModel::getTableName().'.massage_timing_id')
@@ -203,7 +203,7 @@ class ClientController extends BaseController {
      
     public function getFutureBookings(Request $request) {
         
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_FUTURE),'user_id' => $request->user_id]);
         $bookingModel = new Booking();
         $futureBookings = $bookingModel->getGlobalQuery($request);
@@ -213,7 +213,7 @@ class ClientController extends BaseController {
     
     public function getPastBookings(Request $request) {
         
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_PAST),'user_id' => $request->user_id]);
         $bookingModel = new Booking();
         $pastBookings = $bookingModel->getGlobalQuery($request);
@@ -223,7 +223,7 @@ class ClientController extends BaseController {
     
     public function getCancelledBookings(Request $request) {
         
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_CANCELLED),'user_id' => $request->user_id]);
         $bookingModel = new Booking();
         $cancelledBookings = $bookingModel->getGlobalQuery($request);

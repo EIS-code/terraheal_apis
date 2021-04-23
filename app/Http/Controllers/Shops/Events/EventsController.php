@@ -56,8 +56,8 @@ class EventsController extends BaseController {
     
     public function getAllEvents(Request $request) {
         
-        $month = isset($request->month) ? $request->month : Carbon::now()->month;
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $month = !empty($request->month) ? $request->month : Carbon::now()->month;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         
         $bookingData = DB::table('booking_massages')
                 ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')

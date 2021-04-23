@@ -40,6 +40,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Storage;
 use App\User;
+use App\Shop;
 
 class TherapistController extends BaseController
 {
@@ -561,14 +562,14 @@ class TherapistController extends BaseController
 
     public function getAllServices(Request $request)
     {
-         // 1 for massages , 2 for therapies
-        if ($request->service == 1) {
+        if ($request->service == Shop::MASSAGES) {
             $services = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
-        } else {
+        } 
+        if ($request->service == Shop::THERAPIES) {
             $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
         }
 
-        if (isset($request->search_val)) {
+        if (!empty($request->search_val)) {
             $services = $services->where('name', 'like', $request->search_val . '%');
         }
 

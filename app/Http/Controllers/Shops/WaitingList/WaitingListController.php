@@ -58,7 +58,7 @@ class WaitingListController extends BaseController {
 
     public function ongoingMassage(Request $request) {
 
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_ONGOING)]);
         $bookingModel = new Booking();
         $ongoingMassages = $bookingModel->getGlobalQuery($request);
@@ -68,9 +68,9 @@ class WaitingListController extends BaseController {
 
     public function waitingMassage(Request $request) {
 
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_WAITING)]);
-        if(isset($request->service)) {
+        if(!empty($request->service)) {
             $request->request->add(['service' => $request->service]);
         }
         $bookingModel = new Booking();
@@ -81,9 +81,9 @@ class WaitingListController extends BaseController {
 
     public function futureBooking(Request $request) {
 
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_FUTURE)]);
-        if(isset($request->date)){
+        if(!empty($request->date)){
             $date  = Carbon::createFromTimestampMs($request->date);
             $request->request->add(['date' => (new Carbon($date))->format('Y-m-d')]);
         }
@@ -95,9 +95,9 @@ class WaitingListController extends BaseController {
 
     public function completedBooking(Request $request) {
 
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_COMPLETED)]);
-        if(isset($request->date)){
+        if(!empty($request->date)){
             $date  = Carbon::createFromTimestampMs($request->date);
             $request->request->add(['date' => (new Carbon($date))->format('Y-m-d')]);
         }
@@ -109,9 +109,9 @@ class WaitingListController extends BaseController {
 
     public function cancelBooking(Request $request) {
 
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
-        if(isset($request->date)){
+        if(!empty($request->date)){
             $date  = Carbon::createFromTimestampMs($request->date);
             $request->request->add(['date' => (new Carbon($date))->format('Y-m-d')]);
         }
@@ -123,7 +123,7 @@ class WaitingListController extends BaseController {
     
     public function pastBooking(Request $request) {
 
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $type, 'bookings_filter' => array(Booking::BOOKING_PAST)]);
         $bookingModel = new Booking();
         $pastBooking = $bookingModel->getGlobalQuery($request);
@@ -263,10 +263,10 @@ class WaitingListController extends BaseController {
     
     public function getStartEndTime($booking) {
 
-        if (isset($booking->massage_timing_id) && is_null($booking->therapy_timing_id)) {
+        if (!empty($booking->massage_timing_id) && is_null($booking->therapy_timing_id)) {
             $endtime = MassageTiming::find($booking->massage_timing_id);
         }
-        if (isset($booking->therapy_timing_id) && is_null($booking->massage_timing_id)) {
+        if (!empty($booking->therapy_timing_id) && is_null($booking->massage_timing_id)) {
             $endtime = TherapiesTimings::find($booking->therapy_timing_id);
         }
 
@@ -338,18 +338,18 @@ class WaitingListController extends BaseController {
             $shopModel = new Shop();
             
             $bookingData = [
-                'booking_type' => isset($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
+                'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
                 'special_notes' => $request->special_notes,
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
                 'session_id' => $request->session_id,
-                'pack_id' => isset($request->pack_id) ? $request->pack_id : NULL
+                'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL
             ];
             $newBooking = Booking::create($bookingData);
-            $isPack = isset($request->pack_id) ? $request->pack_id : NULL;
+            $isPack = !empty($request->pack_id) ? $request->pack_id : NULL;
             $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, NULL, $isPack);
             
-            if(isset($request->pack_id)) {
+            if(!empty($request->pack_id)) {
                 
                 $pack = Pack::with('services')->where('id', $request->pack_id)->first();
                 if (empty($pack)) {
@@ -357,7 +357,7 @@ class WaitingListController extends BaseController {
                 }
                 foreach ($pack->services as $key => $service) {
 
-                    $isMassage = isset($service->massage_id) && empty($service->therapy_id) ? true : false;
+                    $isMassage = !empty($service->massage_id) && empty($service->therapy_id) ? true : false;
                     $shopModel->addBookingMassages($service, $bookingInfo, $request, NULL, $isMassage);
                 }
             } else {
@@ -427,8 +427,8 @@ class WaitingListController extends BaseController {
     public function bookingOverview(Request $request) {
         
         $date  = Carbon::createFromTimestampMs($request->date);
-        $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $date = isset($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+        $type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $date = !empty($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
         $request->request->add(['type' => $type, 'date' => $date]);
         
         $bookingModel = new Booking();
@@ -465,7 +465,7 @@ class WaitingListController extends BaseController {
     public function roomOccupation(Request $request) {
         
         $date  = Carbon::createFromTimestampMs($request->date);
-        $date = isset($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+        $date = !empty($request->date) ? (new Carbon($date))->format('Y-m-d') : Carbon::now()->format('Y-m-d');
         $request->request->add(['date' => $date]);
         
         $bookingModel = new Booking();
@@ -542,7 +542,7 @@ class WaitingListController extends BaseController {
         $search_val = $request->search_val;        
         $clients = User::where(['shop_id' => $request->shop_id, 'is_removed' => User::$notRemoved]);
         
-        if (isset($search_val)) {
+        if (!empty($search_val)) {
             if (is_numeric($search_val)) {
                 $clients->where(function($query) use ($search_val) {
                     $query->where('id', (int) $search_val)
@@ -559,7 +559,7 @@ class WaitingListController extends BaseController {
     public function getTimeTable(Request $request) {
         
         $date  = Carbon::createFromTimestampMs($request->date);
-        $date = isset($request->date) ? $date : Carbon::now();
+        $date = !empty($request->date) ? $date : Carbon::now();
         
         $schedules = TherapistWorkingSchedule::with('therapistWorkingScheduleTimes', 'therapist:id,name,shop_id')                   
                         ->where(['is_working' => TherapistWorkingSchedule::WORKING, 'is_absent' => TherapistWorkingSchedule::NOT_ABSENT])
@@ -569,7 +569,7 @@ class WaitingListController extends BaseController {
                         });
                         
 //        // 1 for yesterday ,2 for current month, 3 for last 7 days, 4 for last 14 days, 5 for last 30 days
-//        if (isset($filter)) {
+//        if (!empty($filter)) {
 //            if ($filter == 1) {
 //                $schedules = $schedules->where('date', Carbon::yesterday());
 //            } else if ($filter == 2) {

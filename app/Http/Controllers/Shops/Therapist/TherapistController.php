@@ -32,9 +32,9 @@ class TherapistController extends BaseController {
     
     public function myBookings(Request $request) {
         
-        $booking_type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $booking_time = isset($request->booking_time) ? ($request->booking_time == 0 ? Booking::BOOKING_TODAY : Booking::BOOKING_FUTURE) : Booking::BOOKING_TODAY;
-        $booking_status = isset($request->booking_status) ? ($request->booking_status == 0 ? Booking::BOOKING_WAITING : Booking::BOOKING_COMPLETED) : Booking::BOOKING_WAITING;
+        $booking_type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $booking_time = !empty($request->booking_time) ? ($request->booking_time == 0 ? Booking::BOOKING_TODAY : Booking::BOOKING_FUTURE) : Booking::BOOKING_TODAY;
+        $booking_status = !empty($request->booking_status) ? ($request->booking_status == 0 ? Booking::BOOKING_WAITING : Booking::BOOKING_COMPLETED) : Booking::BOOKING_WAITING;
         $request->request->add(['type' => $booking_type, 'bookings_filter' => array($booking_time,$booking_status)]);
         $bookingModel = new Booking();
         $myBookings = $bookingModel->getGlobalQuery($request);
@@ -156,7 +156,7 @@ class TherapistController extends BaseController {
     
     public function myAttendence(Request $request) {
         
-        $date = isset($request->date) ? Carbon::createFromTimestampMs($request->date) : Carbon::now();
+        $date = !empty($request->date) ? Carbon::createFromTimestampMs($request->date) : Carbon::now();
         $scheduleData = TherapistWorkingSchedule::with('therapistBreakTime','therapistWorkingScheduleTime')->where('therapist_id',$request->therapist_id)
                 ->whereMonth('date',$date->month)->get();
         $presentDays = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->count();
@@ -212,7 +212,7 @@ class TherapistController extends BaseController {
         $totalPresent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->count();
         $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_absent' => TherapistWorkingSchedule::ABSENT])->get()->count();
         
-        $booking_type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
+        $booking_type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $booking_type, 'therapist_id' => $request->therapist_id, 'month' => $date]);
         $bookingModel = new Booking();
         $myBookings = $bookingModel->getGlobalQuery($request);

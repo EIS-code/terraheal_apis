@@ -87,7 +87,7 @@ class ShopsController extends BaseController {
     public function getPreferences(Request $request) {
         
         $type = $request->get('type');
-        if (isset($type)) {
+        if (!empty($type)) {
             $preferences = MassagePreference::with(['preferenceOptions'])
                             ->whereHas('preferenceOptions', function($q) use($type) {
                                 $q->where('massage_preference_id', '=', $type);
