@@ -86,7 +86,7 @@ class ClientController extends BaseController {
             // $clients->whereDate($userModel::getTableName().'.dob', $request->dob);
             $dob = Carbon::createFromTimestampMs($request->dob)->format('Y-m-d');
 
-            $clients->whereRaw("DATE_FORMAT(FROM_UNIXTIME(`dob` / 1000), '%Y-%m-%d') = {$dob}");
+            $clients->whereRaw("DATE_FORMAT(FROM_UNIXTIME(`dob` / 1000), '%Y-%m-%d') = '{$dob}'");
         }
 
         if(isset($request->visits)) {
