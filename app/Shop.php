@@ -59,6 +59,8 @@ class Shop extends BaseModel implements CanResetPasswordContract
     ];
 
     const IS_ADMIN = 0;
+    const MASSAGES = '0';
+    const THERAPIES = '1';
 
     public function validator(array $data, $id = false, $isUpdate = false)
     {

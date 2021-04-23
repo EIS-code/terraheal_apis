@@ -199,7 +199,7 @@ class ClientController extends BaseController {
     public function getFutureBookings(Request $request) {
         
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_FUTURE),'user_id' => $userId]);
+        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_FUTURE),'user_id' => $request->user_id]);
         $bookingModel = new Booking();
         $futureBookings = $bookingModel->getGlobalQuery($request);
                
@@ -209,7 +209,7 @@ class ClientController extends BaseController {
     public function getPastBookings(Request $request) {
         
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_PAST),'user_id' => $userId]);
+        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_PAST),'user_id' => $request->user_id]);
         $bookingModel = new Booking();
         $pastBookings = $bookingModel->getGlobalQuery($request);
                
@@ -219,7 +219,7 @@ class ClientController extends BaseController {
     public function getCancelledBookings(Request $request) {
         
         $type = isset($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
-        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_CANCELLED),'user_id' => $userId]);
+        $request->request->add(['type' => $type,'bookings_filter' => array(Booking::BOOKING_CANCELLED),'user_id' => $request->user_id]);
         $bookingModel = new Booking();
         $cancelledBookings = $bookingModel->getGlobalQuery($request);
                
