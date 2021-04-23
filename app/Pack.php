@@ -33,4 +33,8 @@ class Pack extends BaseModel
         
         return $this->hasMany('App\PackService', 'pack_id', 'id');
     }
+    public function users(){
+        
+        return $this->hasMany('App\UserPack', 'pack_id', 'id');
+    }
 }

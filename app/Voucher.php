@@ -22,4 +22,9 @@ class Voucher extends BaseModel
             'expired_date' => ['required']
         ]);
     }
+    
+    public function users(){
+        
+        return $this->hasMany('App\UserVoucherPrice', 'voucher_id', 'id');
+    }
 }

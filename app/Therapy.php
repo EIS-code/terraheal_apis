@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class Therapy extends BaseModel
 {
@@ -21,6 +22,16 @@ class Therapy extends BaseModel
             'name'  => ['required', 'string', 'max:255'],
             'image' => ['string', 'max:255']
         ]);
+    }
+    
+    public function getImageAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        $imagePath = (str_ireplace("\\", "/", $this->imagePath));
+        return Storage::disk($this->fileSystem)->url($imagePath . $value);
     }
     
     public function timing() {
