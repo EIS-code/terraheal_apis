@@ -81,9 +81,14 @@ class ClientController extends BaseController {
         if(isset($request->gender)) {
             $clients->where($userModel::getTableName().'.gender', $request->gender);
         }
-        if(isset($request->dob)) {
-            $clients->whereDate($userModel::getTableName().'.dob', $request->dob);
+
+        if (!empty($request->dob)) {
+            // $clients->whereDate($userModel::getTableName().'.dob', $request->dob);
+            $dob = Carbon::createFromTimestampMs($request->dob)->format('Y-m-d');
+
+            $clients->whereRaw("DATE_FORMAT(FROM_UNIXTIME(`dob` / 1000), '%Y-%m-%d') = {$dob}");
         }
+
         if(isset($request->visits)) {
             $clients->where($bookingModel::getTableName().'.booking_type', $request->visits);
         }
