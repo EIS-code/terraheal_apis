@@ -46,4 +46,13 @@ class ReceptionistDocuments extends BaseModel
 
         return $default;
     }
+    
+    public function getExpireDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
 }

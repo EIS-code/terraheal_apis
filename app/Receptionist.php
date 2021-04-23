@@ -58,6 +58,15 @@ class Receptionist extends BaseModel
         ]);
     }
     
+    public function getDobAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function documents()
     {
         return $this->hasMany('App\ReceptionistDocuments', 'receptionist_id', 'id');
@@ -78,7 +87,7 @@ class Receptionist extends BaseModel
         return $this->hasOne('App\Shop', 'id', 'shop_id');
     }
 
-    public function getProfilePhotoAttribute($value)
+    public function getPhotoAttribute($value)
     {
         $default = asset('images/receptionists/receptionist.png');
 

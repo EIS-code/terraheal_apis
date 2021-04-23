@@ -24,5 +24,32 @@ class ReceptionistTimeTables extends BaseModel {
     public function breaks() {
         return $this->hasMany('App\ReceptionistBreakTime', 'receptionist_schedule_id', 'id');
     }
+    
+    public function getLoginDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
+    public function getLoginTimeAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
+    public function getLogoutTimeAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
 
 }

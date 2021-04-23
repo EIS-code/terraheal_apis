@@ -48,7 +48,9 @@ class ReceptionistController extends BaseController {
             if ($storeFile) {
                 $data['photo'] = $fileName;
             }
-        }        
+        }
+        $date = Carbon::createFromTimestampMs($data['dob']);
+        $data['dob'] = $date->format('Y-m-d');
         $receptionist = $model->create($data);
         
         return $this->returnSuccess(__($this->successMsg['receptionist.create']),$receptionist);
@@ -115,19 +117,21 @@ class ReceptionistController extends BaseController {
         
         foreach ($receptionist as $key => $value) {
             
-            $start_time = new Carbon($value['login_time']);
-            $end_time = new Carbon($value['logout_time']);
+            $start_time = Carbon::createFromTimestampMs($value['login_time']);
+            $end_time = Carbon::createFromTimestampMs($value['logout_time']);
             $total = new Carbon($start_time->diff($end_time)->format("%h:%i"));
             
             $receptionist_break = [];
             foreach ($value->breaks as $key => $break) {
-                $break_start_time = new Carbon($break['start_time']);
-                $break_end_time = new Carbon($break['end_time']);
+                $break_start_time = Carbon::createFromTimestampMs($break['start_time']);
+                $break_end_time = Carbon::createFromTimestampMs($break['end_time']);
                 $breakHours[] = $receptionist_break[] = $break_start_time->diff($break_end_time)->format("%h:%i");
                 
             }
             $value['break_time'] = CommonHelper::calculateHours($receptionist_break);
+            $value['break_time'] = strtotime($value['break_time']) * 1000;
             $value['total'] = $totalHours[] = $total->diff(new Carbon($value['break_time']))->format("%h:%i");
+            $value['total'] = strtotime($value['total']) * 1000;
             unset($receptionist_break); 
         }
 
