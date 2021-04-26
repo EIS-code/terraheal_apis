@@ -11,15 +11,20 @@ class CommonHelper {
     public static function getAllService($request)
     {
         $pageNumber = isset($request->page_number) ? $request->page_number : 1;
+        $type       = (in_array($request->type, [Shop::MASSAGES, Shop::THERAPIES])) ? $request->type : Shop::MASSAGES;
 
-        if ($request->type == Shop::MASSAGES) {
+        if ($type == Shop::MASSAGES) {
             $services = Massage::with('timing', 'pricing')
                                ->select('id','name','image','icon','shop_id')
                                ->where('shop_id', $request->get('shop_id'));
+        } else {
+            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
         }
 
-        if ($request->type == Shop::THERAPIES) {
-            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
+        if (!empty($request->q)) {
+            $query      = $request->q;
+
+            $services   = $services->where("name", "LIKE", "%{$query}%");
         }
 
         if (!empty($request->isGetAll)) {
