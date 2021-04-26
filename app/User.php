@@ -244,7 +244,7 @@ class User extends BaseModel implements Authenticatable
 
     public function qrCodeKey()
     {
-        return json_encode(['id' => $this->id, 'dob' => $this->dob, 'email' => $this->email, 'shop_id' => $this->shop_id]);
+        return json_encode(['id' => $this->id, 'dob' => $this->dob, 'email' => $this->email, 'shop_id' => $this->shop_id, 'terraheal_flag' => true]);
     }
 
     public function storeQRCode()
@@ -271,7 +271,20 @@ class User extends BaseModel implements Authenticatable
 
         return false;
     }
-    
+
+    public static function isOurQRCode(string $json):Bool
+    {
+        $data = json_decode($json, true);
+
+        if (json_last_error() == JSON_ERROR_NONE) {
+            $arrayKeys = array_keys($data);
+
+            return (in_array('id', $arrayKeys) && in_array('dob', $arrayKeys) && in_array('email', $arrayKeys) && in_array('shop_id', $arrayKeys) && in_array('terraheal_flag', $arrayKeys));
+        }
+
+        return false;
+    }
+
     public function reviews()
     {
         return $this->hasMany('App\Review', 'user_id', 'id');
