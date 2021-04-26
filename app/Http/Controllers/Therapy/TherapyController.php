@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use App\Therapy;
 use App\TherapyQuestionnaire;
 use App\TherapyQuestionnaireAnswer;
+use App\Shop;
 use Carbon\Carbon;
 use DB;
+use App\Libraries\CommonHelper;
 
 class TherapyController extends BaseController
 {
@@ -19,7 +21,9 @@ class TherapyController extends BaseController
 
     public $successMsg = [
         'success.therapy.questionnaire.found' => 'Therapy questionnaire found successfully !',
-        'success.therapy.questionnaire.answers.created' => 'Therapy questionnaire answers created successfully !'
+        'success.therapy.questionnaire.answers.created' => 'Therapy questionnaire answers created successfully !',
+        'success.therapy.found' => 'Therapies found successfully !',
+        'success.therapy.not.found' => 'Therapy not found !'
     ];
 
     public function returns($message = NULL, $with = NULL, $isError = false)
@@ -129,5 +133,19 @@ class TherapyController extends BaseController
         DB::commit();
 
         return $this->returns('success.therapy.questionnaire.answers.created', collect([]));
+    }
+
+    public function getTherapies(Request $request)
+    {
+        $request->merge(['type' => Shop::THERAPIES]);
+        $request->merge(['isGetAll' => true]);
+
+        $therapies = CommonHelper::getAllService($request);
+
+        if (!empty($therapies) && !$therapies->isEmpty()) {
+            return $this->returns('success.therapy.found', $therapies);
+        }
+
+        return $this->returns('success.therapy.not.found', collect([]));
     }
 }
