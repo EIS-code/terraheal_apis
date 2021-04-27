@@ -20,6 +20,10 @@ use App\BookingInfo;
 use App\Room;
 use App\MassageTiming;
 use App\TherapiesTimings;
+use App\TherapistUserRating;
+use App\Voucher;
+use App\PackShop;
+use App\VoucherShop;
 
 class WaitingListController extends BaseController {
 
@@ -54,6 +58,12 @@ class WaitingListController extends BaseController {
         'booking.downgrade' => "Booking downgrade successfully!",
         'room.not.available' => "Room not available!",
         'cancel.appointment' => "Appointment cancelled successfully!",
+        'recover.appointment' => "Appointment recovered successfully!",
+        'packs.active' => 'Active packs found successfully',
+        'packs.use' => 'Used packs found successfully',
+        'vouchers.active' => 'Active vouchers found successfully',
+        'vouchers.use' => 'Used vouchers found successfully',
+        'data.found' => 'Data found successfully'
     ];
 
     public function ongoingMassage(Request $request) {
@@ -100,7 +110,16 @@ class WaitingListController extends BaseController {
         }
         $bookingModel = new Booking();
         $completedBooking = $bookingModel->getGlobalQuery($request);
-
+        
+        foreach ($completedBooking as $key => $value) {
+            
+            $review = TherapistUserRating::where(['model_id' => $value['therapist_id'], 'model' => 'App\Therapist'])->count();
+            if($review > 0) {
+                $value['has_review'] = true;
+            } else {
+                $value['has_review'] = false;
+            }
+        }
         return $this->returnSuccess(__($this->successMsg['completed.booking']), $completedBooking);
     }
 
@@ -647,6 +666,127 @@ class WaitingListController extends BaseController {
             
             $bookingInfo->update(['is_cancelled' => BookingInfo::IS_NOT_CANCELLED]);
         }
-        return $this->returnSuccess(__($this->successMsg['cancel.appointment']), $booking);
+        return $this->returnSuccess(__($this->successMsg['recover.appointment']), $booking);
+    }
+    
+    public function getActivePacks(Request $request) {
+        
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        $packs = Pack::with('shopsPacks')->whereDate('expired_date', '>=', Carbon::now()->format('Y-m-d'))
+                        ->whereHas('shopsPacks', function($q) use($request) {
+                            $q->where('shop_id', $request->shop_id);
+                        })->paginate(10, ['*'], 'page', $pageNumber);
+        
+        if (count($packs) > 0) {
+            return $this->returnSuccess(__($this->successMsg['packs.active']), $packs);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['not.found']), null);
+        }
+    }
+    
+    public function getUsedPacks(Request $request) {
+        
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        $packModel              = new Pack();
+        $packShopModel          = new PackShop();
+        
+        $packs = $packModel->getPackQuery()
+                ->where($packShopModel::getTableName() . '.shop_id', $request->shop_id)
+                ->whereDate($packModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'))
+                ->paginate(10, ['*'], 'page', $pageNumber);
+
+        if (count($packs) > 0) {
+            return $this->returnSuccess(__($this->successMsg['packs.use']), $packs);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['not.found']), null);
+        }
+    }
+    
+    public function getUsedVouchers(Request $request) {
+        
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        $voucherModel       = new Voucher();
+        $voucherShopModel   = new VoucherShop();
+        
+        $vouchers = $voucherModel->getVoucherQuery()
+                ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
+                ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'))
+                ->paginate(10, ['*'], 'page', $pageNumber);
+
+        if (count($vouchers) > 0) {
+            return $this->returnSuccess(__($this->successMsg['vouchers.use']), $vouchers);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['not.found']), null);
+        }
+    }
+    
+    public function getActiveVouchers(Request $request) {
+        
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        $vouchers = Voucher::with('shopsVouchers')->whereDate('expired_date', '>=', Carbon::now()->format('Y-m-d'))
+                        ->whereHas('shopsVouchers', function($q) use($request) {
+                            $q->where('shop_id', $request->shop_id);
+                        })->paginate(10, ['*'], 'page', $pageNumber);
+        
+        if (count($vouchers) > 0) {
+            return $this->returnSuccess(__($this->successMsg['vouchers.active']), $vouchers);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['not.found']), null);
+        }
+    }
+    
+     public function searchPacks(Request $request) {
+        
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        $packModel              = new Pack();
+        $packShopModel          = new PackShop();
+        $userModel              = new User();
+        
+        $packs = $packModel->getPackQuery()
+                ->where($packShopModel::getTableName() . '.shop_id', $request->shop_id)
+                ->whereDate($packModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
+             
+        $search_val = $request->search_val;
+        if(!empty($search_val)) {
+            $packs->where(function($query) use ($search_val, $packModel, $userModel) {
+                    $query->where($packModel::getTableName().'.name', 'like', $search_val.'%')
+                            ->orWhere($userModel::getTableName().'.name', 'like', $search_val.'%');
+                });
+        }
+        $packs = $packs->paginate(10, ['*'], 'page', $pageNumber);
+        if (count($packs) > 0) {
+            return $this->returnSuccess(__($this->successMsg['data.found']), $packs);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['not.found']), null);
+        }
+    }
+    
+    public function searchVouchers(Request $request) {
+        
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        $voucherModel       = new Voucher();
+        $voucherShopModel   = new VoucherShop();
+        $userModel          = new User();
+        
+        $vouchers = $voucherModel->getVoucherQuery()
+                ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
+                ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
+
+        $search_val = $request->search_val;
+        if(!empty($search_val)) {
+            $vouchers->where(function($query) use ($search_val, $voucherModel, $userModel) {
+                    $query->where($voucherModel::getTableName().'.name', 'like', $search_val.'%')
+                            ->orWhere($userModel::getTableName().'.name', 'like', $search_val.'%');
+                });
+        }
+        
+        $vouchers = $vouchers->paginate(10, ['*'], 'page', $pageNumber);
+        if (count($vouchers) > 0) {
+            return $this->returnSuccess(__($this->successMsg['data.found']), $vouchers);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['not.found']), null);
+        }
+             
+       
     }
 }

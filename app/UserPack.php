@@ -26,6 +26,15 @@ class UserPack extends BaseModel
         ]);
     }
 
+    public function getPurchaseDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function massages()
     {
         return $this->hasMany('App\UserPackMassage', 'user_pack_id', 'id');
