@@ -22,10 +22,12 @@ class SuperAdminController extends BaseController {
         'voucher.update' => 'Voucher updated successfully!',
         'voucher.get' => 'Vouchers found successfully!',
         'voucher.share' => 'Voucher shared successfully!',
+        'voucher.shared' => 'Voucher already shared!',
         'voucher.purchase' => 'Voucher purchased successfully!',
         'voucher.add.services' => 'Services added to voucher successfully!',
         'pack.add' => 'Pack created successfully!',
         'pack.share' => 'Pack shared successfully!',
+        'pack.shared' => 'Pack already shared!',
         'pack.get' => 'Packs found successfully!',
         'pack.purchase' => 'Pack purchased successfully!',
     ];
@@ -103,6 +105,11 @@ class SuperAdminController extends BaseController {
         $checks = $model->validator($data);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $is_exist = $model->where(['shop_id' => $data['shop_id'], 'voucher_id' => $data['voucher_id']])->first();
+        if(!empty($is_exist)) {
+            return $this->returnSuccess(__($this->successMsg['voucher.shared']), $is_exist);
         }
         $voucher = $model->create($data);
 
@@ -230,6 +237,10 @@ class SuperAdminController extends BaseController {
         $checks = $model->validator($data);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $is_exist = $model->where(['shop_id' => $data['shop_id'], 'voucher_id' => $data['pack_id']])->first();
+        if(!empty($is_exist)) {
+            return $this->returnSuccess(__($this->successMsg['pack.shared']), $is_exist);
         }
         $pack = $model->create($data);
 
