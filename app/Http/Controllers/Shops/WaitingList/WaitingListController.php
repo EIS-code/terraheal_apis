@@ -735,7 +735,7 @@ class WaitingListController extends BaseController {
         }
     }
     
-    public function searchPacks(Request $request) {
+    public function searchUsedPacks(Request $request) {
         
         $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
         $packModel              = new Pack();
@@ -753,7 +753,36 @@ class WaitingListController extends BaseController {
                             ->orWhere($userModel::getTableName().'.name', 'like', $search_val.'%');
                 });
         }
-        $packs = $packs->paginate(10, ['*'], 'page', $pageNumber);
+        return $packs->paginate(10, ['*'], 'page', $pageNumber);
+    }
+    
+    public function searchActivePacks(Request $request) {
+        
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        $packModel = new Pack();
+        $packShopModel = new PackShop();
+        
+        $packs = $packModel
+                ->select(DB::RAW($packShopModel::getTableName() . '.*,' .$packModel::getTableName() . '.*,' . 
+                        'UNIX_TIMESTAMP(' . $packModel::getTableName() . '.expired_date) * 1000 as expired_date'))
+                ->join($packShopModel::getTableName(), $packShopModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
+                ->where($packShopModel::getTableName() . '.shop_id', $request->shop_id)
+                ->whereDate($packModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
+             
+        $search_val = $request->search_val;
+        if(!empty($search_val)) {
+            $packs->where($packModel::getTableName().'.name', 'like', $search_val.'%');
+        }
+        return $packs->paginate(10, ['*'], 'page', $pageNumber);
+    }
+    public function searchPacks(Request $request) {
+        
+        if ($request->filter) {
+            $packs = $this->searchUsedPacks($request);
+        } else {
+            $packs = $this->searchActivePacks($request);
+        }
+        
         if (count($packs) > 0) {
             return $this->returnSuccess(__($this->successMsg['data.found']), $packs);
         } else {
