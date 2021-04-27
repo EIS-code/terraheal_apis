@@ -708,7 +708,7 @@ class WaitingListController extends BaseController {
         $voucherModel       = new Voucher();
         $voucherShopModel   = new VoucherShop();
         
-        $vouchers = $voucherModel->getVoucherQuery()
+        $vouchers = $voucherModel->getVoucherUsedeQuery()
                 ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->paginate(10, ['*'], 'page', $pageNumber);
@@ -735,7 +735,7 @@ class WaitingListController extends BaseController {
         }
     }
     
-     public function searchPacks(Request $request) {
+    public function searchPacks(Request $request) {
         
         $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
         $packModel              = new Pack();
@@ -761,7 +761,7 @@ class WaitingListController extends BaseController {
         }
     }
     
-    public function searchVouchers(Request $request) {
+    public function searchUsedVoucher(Request $request) {
         
         $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
         $voucherModel       = new Voucher();
@@ -779,14 +779,41 @@ class WaitingListController extends BaseController {
                             ->orWhere($userModel::getTableName().'.name', 'like', $search_val.'%');
                 });
         }
+        return $vouchers->paginate(10, ['*'], 'page', $pageNumber);
+    }
+    
+    public function searchActiveVoucher(Request $request) {
         
-        $vouchers = $vouchers->paginate(10, ['*'], 'page', $pageNumber);
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        $voucherModel       = new Voucher();
+        $voucherShopModel   = new VoucherShop();
+        
+        $vouchers = $voucherModel
+                ->select(DB::RAW($voucherShopModel::getTableName() . '.*,' .$voucherModel::getTableName() . '.*,' 
+                        . 'UNIX_TIMESTAMP(' . $voucherModel::getTableName() . '.expired_date) * 1000 as expired_date'))
+                ->join($voucherShopModel::getTableName(), $voucherShopModel::getTableName() . '.voucher_id', '=', $voucherModel::getTableName() . '.id')
+                ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
+                ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
+
+        $search_val = $request->search_val;
+        if (!empty($search_val)) {
+            $vouchers->where($voucherModel::getTableName().'.name', 'like', $search_val.'%');
+        }
+        return $vouchers->paginate(10, ['*'], 'page', $pageNumber);
+    }
+    
+    public function searchVouchers(Request $request) {
+
+        if ($request->filter) {
+            $vouchers = $this->getVoucherQuery($request);
+        } else {
+            $vouchers = $this->searchActiveVoucher($request);
+        }
+
         if (count($vouchers) > 0) {
             return $this->returnSuccess(__($this->successMsg['data.found']), $vouchers);
         } else {
             return $this->returnSuccess(__($this->successMsg['not.found']), null);
         }
-             
-       
     }
 }
