@@ -115,6 +115,8 @@ class User extends BaseModel implements Authenticatable
         self::BY_CHANCE => 'By chance'
     ];
 
+    private static $qrCode = ['id' => false, 'dob' => NULL, 'email' => NULL, 'shop_id' => false, 'terraheal_flag' => true];
+
     public static function getTableName()
     {
         return with(new static)->getTable();
@@ -244,7 +246,12 @@ class User extends BaseModel implements Authenticatable
 
     public function qrCodeKey()
     {
-        return json_encode(['id' => $this->id, 'dob' => $this->dob, 'email' => $this->email, 'shop_id' => $this->shop_id, 'terraheal_flag' => true]);
+        $this->qrCode['id']      = $this->id;
+        $this->qrCode['dob']     = $this->dob;
+        $this->qrCode['email']   = $this->email;
+        $this->qrCode['shop_id'] = $this->shop_id;
+
+        return json_encode($this->qrCode);
     }
 
     public function storeQRCode()
@@ -277,9 +284,23 @@ class User extends BaseModel implements Authenticatable
         $data = json_decode($json, true);
 
         if (json_last_error() == JSON_ERROR_NONE) {
-            $arrayKeys = array_keys($data);
+            $keys   = array_keys(self::$qrCode);
+            $qrData = self::$qrCode;
+            $flag   = false;
 
-            return (in_array('id', $arrayKeys) && in_array('dob', $arrayKeys) && in_array('email', $arrayKeys) && in_array('shop_id', $arrayKeys) && in_array('terraheal_flag', $arrayKeys));
+            foreach ($data as $key => $value) {
+                if (in_array($key, $keys)) {
+                    $flag = true;
+
+                    unset($qrData[$key]);
+                } else {
+                    $flag = false;
+
+                    break;
+                }
+            }
+
+            return ($flag && count($qrData) == 0);
         }
 
         return false;

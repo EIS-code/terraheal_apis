@@ -1316,6 +1316,8 @@ class UserController extends BaseController
 
     public function isOurQRCode(Request $request)
     {
+        $json = [];
+
         if ($request->has('id')) {
             $json['id'] = $request->get('id');
         }
