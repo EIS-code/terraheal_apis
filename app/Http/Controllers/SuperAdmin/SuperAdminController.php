@@ -35,10 +35,27 @@ class SuperAdminController extends BaseController {
         $model = new Voucher();
         $data = $request->all();
         $data['number'] = generateRandomString();
+        $data['expired_date'] = Carbon::createFromTimestampMs($data['expired_date']);
 
         $checks = $model->validator($data);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        /* For profile Image */
+        if ($request->hasFile('image')) {
+            $checkImage = $model->validateImage($data);
+            if ($checkImage->fails()) {
+                unset($data['image']);
+
+                return $this->returnError($checkImage->errors()->first(), NULL, true);
+            }
+            $fileName = time() . '.' . $data['image']->getClientOriginalExtension();
+            $storeFile = $data['image']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
+
+            if ($storeFile) {
+                $data['image'] = $fileName;
+            }
         }
         $voucher = $model->create($data);
 
@@ -48,7 +65,26 @@ class SuperAdminController extends BaseController {
     public function updateVoucher(Request $request) {
 
         $voucher = Voucher::find($request->voucher_id);
-        $voucher->update($request->all());
+        $data = $request->all();
+        $data['expired_date'] = Carbon::createFromTimestampMs($data['expired_date']);
+        
+        /* For profile Image */
+        if ($request->hasFile('image')) {
+            $checkImage = $model->validateImage($data);
+            if ($checkImage->fails()) {
+                unset($data['image']);
+
+                return $this->returnError($checkImage->errors()->first(), NULL, true);
+            }
+            $fileName = time() . '.' . $data['image']->getClientOriginalExtension();
+            $storeFile = $data['image']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
+
+            if ($storeFile) {
+                $data['image'] = $fileName;
+            }
+        }
+        
+        $voucher->update($data);
 
         return $this->returnSuccess(__($this->successMsg['voucher.update']), $voucher);
     }
@@ -123,21 +159,57 @@ class SuperAdminController extends BaseController {
             $model = new Pack();
             $data = $request->all();
             $data['number'] = generateRandomString();
-
+            $data['expired_date'] = Carbon::createFromTimestampMs($data['expired_date']);
+            
             $checks = $model->validator($data);
             if ($checks->fails()) {
                 return $this->returnError($checks->errors()->first(), NULL, true);
             }
 
-            $pack = $model->create($data);
-            foreach ($data['services'] as $key => $service) {
+            /* For profile Image */
+            if ($request->hasFile('image')) {
+                $checkImage = $model->validateImage($data);
+                if ($checkImage->fails()) {
+                    unset($data['image']);
 
-                $service['pack_id'] = $pack->id;
-                $checks = $model->validator($service);
-                if ($checks->fails()) {
-                    return $this->returnError($checks->errors()->first(), NULL, true);
+                    return $this->returnError($checkImage->errors()->first(), NULL, true);
                 }
-                PackService::create($service);
+                $fileName = time() . '.' . $data['image']->getClientOriginalExtension();
+                $storeFile = $data['image']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
+
+                if ($storeFile) {
+                    $data['image'] = $fileName;
+                }
+            }
+            $pack = $model->create($data);
+            $packServiceModel = new PackService();
+            if(!empty($data['massage_id'])) {
+                foreach ($data['massage_id'] as $key => $value) {
+                    $service = [
+                        'massage_id' => $value,
+                        'massage_timing_id' => $data['massage_timing_id'][$key],
+                        'pack_id' => $pack->id
+                    ];
+                    $checks = $packServiceModel->validator($service);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $packServiceModel->create($service);
+                }
+            }
+            if(!empty($data['therapy_id'])) {
+                foreach ($data['therapy_id'] as $key => $value) {
+                    $service = [
+                        'therapy_id' => $value,
+                        'therapy_timing_id' => $data['therapy_timing_id'][$key],
+                        'pack_id' => $pack->id
+                    ];
+                    $checks = $packServiceModel->validator($service);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $packServiceModel->create($service);
+                }
             }
             DB::commit();
             return $this->returnSuccess(__($this->successMsg['pack.add']), $pack);
