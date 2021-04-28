@@ -66,7 +66,7 @@ class AuthApi
                         ->where(ApiKeyShop::getTableName() . '.key', $key)
                         ->join(ApiKey::getTableName(), ApiKey::getTableName() . '.api_key_id', '=', ApiKeyShop::getTableName() . '.id');
 
-        $getKeyInfo = $apiKeyShop->union($apiKey)->first();
+        $getKeyInfo = $apiKey->union($apiKeyShop)->first();
 
         // For Superadmin if nothing found.
         if (empty($getKeyInfo)) {
