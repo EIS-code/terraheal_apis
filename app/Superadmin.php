@@ -4,9 +4,8 @@ namespace App;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Superadmin extends Authenticatable
+class Superadmin extends BaseModel
 {
     use Notifiable;
 

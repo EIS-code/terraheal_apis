@@ -26,4 +26,11 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin'], function
     $router->get('getPacks', 'SuperAdminController@getPacks');
     $router->post('sharePack', 'SuperAdminController@sharePack');
     $router->post('purchasePack', 'SuperAdminController@purchasePack');
+    
+    $router->post('signIn', 'SuperAdminController@signIn');
+});
+
+$router->group(['prefix' => 'dashboard', 'namespace' => 'SuperAdmin'], function () use($router) {
+    
+    $router->post('details/get', 'Dashboard\DashboardController@getDetails');
 });
