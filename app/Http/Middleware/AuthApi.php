@@ -22,8 +22,7 @@ class AuthApi
      */
     public function handle($request, Closure $next)
     {
-        $apiKey   = (!empty($request->header('api-key'))) ? $request->header('api-key') : false;
-        $isMobile = (!empty($request->header('is-mobile'))) ? $request->header('is-mobile') : false;
+        $apiKey = (!empty($request->header('api-key'))) ? $request->header('api-key') : false;
 
         if (in_array($request->path(), $this->excludedRoutes)) {
             return $next($request);
@@ -37,6 +36,8 @@ class AuthApi
                 'msg'  => __('API key is missing or wrong.')
             ]);
         }
+
+        $isMobile = (in_array($getKeyInfo->type, [ApiKey::TYPE_USERS, ApiKey::TYPE_THERAPISTS, ApiKey::TYPE_FREELANCER_THERAPISTS]));
 
         if ($isMobile && $this->totalLogins($getKeyInfo)) {
             return response()->json([
