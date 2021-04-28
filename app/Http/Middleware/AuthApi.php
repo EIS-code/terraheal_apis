@@ -22,11 +22,8 @@ class AuthApi
      */
     public function handle($request, Closure $next)
     {
-        $apiKey = (!empty($request->header('api-key'))) ? $request->header('api-key') : false;
-
-        if (empty($apiKey)) {
-            return $next($request);
-        }
+        $apiKey   = (!empty($request->header('api-key'))) ? $request->header('api-key') : false;
+        $isMobile = (!empty($request->header('is-mobile'))) ? $request->header('is-mobile') : false;
 
         if (in_array($request->path(), $this->excludedRoutes)) {
             return $next($request);
@@ -41,14 +38,18 @@ class AuthApi
             ]);
         }
 
-        if ($this->totalLogins($getKeyInfo)) {
+        if ($isMobile && $this->totalLogins($getKeyInfo)) {
             return response()->json([
                 'code' => 401,
                 'msg'  => __('You can\'t login on multiple device.')
             ]);
         }
 
+        // Superadmin ID
+        $request->merge(['superadmin_id' => $getKeyInfo->superadmin_id]);
+        // Shop ID
         $request->merge(['shop_id' => $getKeyInfo->shop_id]);
+        // Model ID
         $request->merge(['id' => $getKeyInfo->model_id]);
 
         return $next($request);
@@ -56,12 +57,34 @@ class AuthApi
 
     private function validate(string $key)
     {
-        $getKeyInfo = ApiKey::select(ApiKey::getTableName() . '.*', ApiKeyShop::getTableName() . '.shop_id')
-                            ->where(ApiKey::getTableName() . '.key', $key)
-                            ->join(ApiKeyShop::getTableName(), ApiKey::getTableName() . '.api_key_id', '=', ApiKeyShop::getTableName() . '.id')
-                            ->first();
+        $apiKey     = ApiKey::select(ApiKey::getTableName() . '.*', ApiKeyShop::getTableName() . '.shop_id', ApiKeyShop::getTableName() . '.superadmin_id')
+                        ->where(ApiKey::getTableName() . '.key', $key)
+                        ->join(ApiKeyShop::getTableName(), ApiKey::getTableName() . '.api_key_id', '=', ApiKeyShop::getTableName() . '.id');
+
+        $apiKeyShop = ApiKeyShop::select(ApiKey::getTableName() . '.*', ApiKeyShop::getTableName() . '.shop_id', ApiKeyShop::getTableName() . '.superadmin_id')
+                        ->where(ApiKeyShop::getTableName() . '.key', $key)
+                        ->join(ApiKey::getTableName(), ApiKey::getTableName() . '.api_key_id', '=', ApiKeyShop::getTableName() . '.id');
+
+        $getKeyInfo = $apiKeyShop->union($apiKey)->first();
+
+        // For Superadmin if nothing found.
+        if (empty($getKeyInfo)) {
+            $getKeyInfo = $this->isSuperadmin($key);
+        }
 
         return $getKeyInfo;
+    }
+
+    private function isSuperadmin(string $key)
+    {
+        $apiKeySuperadmin = ApiKeyShop::select(ApiKey::getTableName() . '.*', ApiKeyShop::getTableName() . '.shop_id', ApiKeyShop::getTableName() . '.superadmin_id')
+                                      ->whereNull('shop_id')
+                                      ->whereNotNull('superadmin_id')
+                                      ->where(ApiKeyShop::getTableName() . '.key', $key)
+                                      ->leftJoin(ApiKey::getTableName(), ApiKey::getTableName() . '.api_key_id', '=', ApiKeyShop::getTableName() . '.id')
+                                      ->first();
+
+        return $apiKeySuperadmin;
     }
 
     private function totalLogins(ApiKey $apiKey)
