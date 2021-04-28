@@ -834,7 +834,7 @@ class WaitingListController extends BaseController {
     public function searchVouchers(Request $request) {
 
         if ($request->filter) {
-            $vouchers = $this->getVoucherQuery($request);
+            $vouchers = $this->searchUsedVoucher($request);
         } else {
             $vouchers = $this->searchActiveVoucher($request);
         }
