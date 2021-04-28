@@ -102,7 +102,9 @@ class UserController extends BaseController
         'success.user.packs.services.found' => 'User pack services found successfully !',
         'success.user.packs.service.not.found' => 'User pack service not found !',
         'success.user.pack.ordered' => 'User pack ordered successfully !',
-        'success.user.pack.gift.created' => 'User pack gift created successfully !'
+        'success.user.pack.gift.created' => 'User pack gift created successfully !',
+        'success.user.qr.matched' => 'User QR code matched !',
+        'success.user.qr.matched.not.matched' => 'User QR code does not matched !'
     ];
 
     public function __construct()
@@ -1310,5 +1312,46 @@ class UserController extends BaseController
         DB::commit();
 
         return $this->returns('success.user.pack.gift.created', $userPackGift);
+    }
+
+    public function isOurQRCode(Request $request)
+    {
+        $json = [];
+
+        if ($request->has('id')) {
+            $json['id'] = $request->get('id');
+        }
+
+        if ($request->has('dob')) {
+            $json['dob'] = $request->get('dob');
+        }
+
+        if ($request->has('email')) {
+            $json['email'] = $request->get('email');
+        }
+
+        if ($request->has('shop_id')) {
+            $json['shop_id'] = $request->get('shop_id');
+        }
+
+        if ($request->has('terraheal_flag')) {
+            $json['terraheal_flag'] = $request->get('terraheal_flag');
+        }
+
+        $json       = json_encode($json);
+
+        $isMatched  = User::isOurQRCode($json);
+
+        if ($isMatched) {
+            $message = __($this->successMsg['success.user.qr.matched']);
+        } else {
+            $message = __($this->successMsg['success.user.qr.matched.not.matched']);
+        }
+
+        return response()->json([
+            'code' => 200,
+            'msg'  => $message,
+            'data' => $isMatched
+        ]);
     }
 }

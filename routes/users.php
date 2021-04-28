@@ -110,4 +110,8 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
             $router->post('/save', 'UserController@savePackGifts');
         });
     });
+
+    $router->group(['prefix' => 'match'], function () use($router) {
+        $router->post('/qr', 'UserController@isOurQRCode');
+    });
 });

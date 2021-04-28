@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 */
 
 $router->group(['prefix' => 'therapy', 'namespace' => 'Therapy', 'guard' => 'therapy'], function () use($router) {
+    $router->post('/get', 'TherapyController@getTherapies');
+
     $router->group(['prefix' => 'questionnaire'], function () use($router) {
         $router->post('/', 'TherapyController@getQuestions');
         $router->post('save', 'TherapyController@createQuestions');

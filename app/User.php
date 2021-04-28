@@ -115,6 +115,8 @@ class User extends BaseModel implements Authenticatable
         self::BY_CHANCE => 'By chance'
     ];
 
+    private static $qrCode = ['id' => false, 'dob' => NULL, 'email' => NULL, 'shop_id' => false, 'terraheal_flag' => true];
+
     public static function getTableName()
     {
         return with(new static)->getTable();
@@ -244,7 +246,12 @@ class User extends BaseModel implements Authenticatable
 
     public function qrCodeKey()
     {
-        return json_encode(['id' => $this->id, 'dob' => $this->dob, 'email' => $this->email, 'shop_id' => $this->shop_id]);
+        $this->qrCode['id']      = $this->id;
+        $this->qrCode['dob']     = $this->dob;
+        $this->qrCode['email']   = $this->email;
+        $this->qrCode['shop_id'] = $this->shop_id;
+
+        return json_encode($this->qrCode);
     }
 
     public function storeQRCode()
@@ -271,7 +278,34 @@ class User extends BaseModel implements Authenticatable
 
         return false;
     }
-    
+
+    public static function isOurQRCode(string $json):Bool
+    {
+        $data = json_decode($json, true);
+
+        if (json_last_error() == JSON_ERROR_NONE) {
+            $keys   = array_keys(self::$qrCode);
+            $qrData = self::$qrCode;
+            $flag   = false;
+
+            foreach ($data as $key => $value) {
+                if (in_array($key, $keys)) {
+                    $flag = true;
+
+                    unset($qrData[$key]);
+                } else {
+                    $flag = false;
+
+                    break;
+                }
+            }
+
+            return ($flag && count($qrData) == 0);
+        }
+
+        return false;
+    }
+
     public function reviews()
     {
         return $this->hasMany('App\Review', 'user_id', 'id');

@@ -16,8 +16,10 @@ class ApiKeyShopsTable extends Migration
         Schema::create('api_key_shops', function (Blueprint $table) {
             $table->id();
             $table->string('key')->unique();
-            $table->bigInteger('shop_id')->unsigned();
+            $table->bigInteger('shop_id')->unsigned()->nullable();
             $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
+            $table->bigInteger('superadmin_id')->unsigned()->nullable();
+            $table->foreign('superadmin_id')->references('id')->on('superadmins')->onDelete('cascade');
             $table->timestamps();
         });
     }
