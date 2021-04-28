@@ -238,7 +238,7 @@ class SuperAdminController extends BaseController {
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        $is_exist = $model->where(['shop_id' => $data['shop_id'], 'voucher_id' => $data['pack_id']])->first();
+        $is_exist = $model->where(['shop_id' => $data['shop_id'], 'pack_id' => $data['pack_id']])->first();
         if(!empty($is_exist)) {
             return $this->returnSuccess(__($this->successMsg['pack.shared']), $is_exist);
         }

@@ -782,7 +782,6 @@ class WaitingListController extends BaseController {
         } else {
             $packs = $this->searchActivePacks($request);
         }
-        
         if (count($packs) > 0) {
             return $this->returnSuccess(__($this->successMsg['data.found']), $packs);
         } else {
@@ -838,7 +837,6 @@ class WaitingListController extends BaseController {
         } else {
             $vouchers = $this->searchActiveVoucher($request);
         }
-
         if (count($vouchers) > 0) {
             return $this->returnSuccess(__($this->successMsg['data.found']), $vouchers);
         } else {
