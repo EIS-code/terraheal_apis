@@ -29,7 +29,7 @@ class NewsController extends BaseController
     public function setRead(Request $request)
     {
         $model  = new News();
-        $id     = (int)$request->get('id', false);
+        $id     = (int)$request->get('news_id', false);
 
         if (!empty($id)) {
             $find = $model::find($id);
