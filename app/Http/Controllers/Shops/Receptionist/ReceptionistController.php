@@ -66,6 +66,7 @@ class ReceptionistController extends BaseController {
         }
         
         $data = $request->all();
+        $data['expire_date'] = Carbon::createFromTimestampMs($data['expire_date']);
         
         $checks = $model->validator($data);
         if ($checks->fails()) {

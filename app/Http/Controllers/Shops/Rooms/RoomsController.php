@@ -16,13 +16,14 @@ class RoomsController extends BaseController {
     
     public function createRoom(Request $request) {
         
+        $data = $request->all();
         $model = new Room();
-        $checks = $model->validator($request->all());
+        $checks = $model->validator($data);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        
-        $room = Room::create($request->all());
+        unset($data['id']);
+        $room = Room::create($data);
         return $this->returnSuccess(__($this->successMsg['rooms.create']),$room);
     }
     

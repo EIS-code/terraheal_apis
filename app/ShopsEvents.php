@@ -2,10 +2,9 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 
-class ShopsEvents extends Model
+class ShopsEvents extends BaseModel
 {
     protected $fillable = [
         'id',
@@ -21,5 +20,14 @@ class ShopsEvents extends Model
             'event_date' => ['required'],
             'shop_id' => ['required', 'integer']
         ]);
+    }
+    
+    public function getEventDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
     }
 }

@@ -21,33 +21,39 @@ class EventsController extends BaseController {
     
     public function createEvent(Request $request) {
         
-        $checks = ShopsEvents::validator($request->all());
+        $data = $request->all();
+        $data['event_date'] = Carbon::createFromTimestampMs($data['event_date']);
+        
+        $checks = ShopsEvents::validator($data);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        
-        $event = ShopsEvents::create($request->all());
+        unset($data['id']);
+        $event = ShopsEvents::create($data);
         return $this->returnSuccess(__($this->successMsg['events.create']),$event);
     }
 
     public function updateEvent(Request $request) {
         
-        $checks = ShopsEvents::validator($request->all());
+        $data = $request->all();
+        $data['event_date'] = Carbon::createFromTimestampMs($data['event_date']);
+        
+        $checks = ShopsEvents::validator($data);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        
-        $event = ShopsEvents::find($request->id);
-        if (!$event || empty($request->id)) {
+        unset($data['id']);
+        $event = ShopsEvents::find($data['event_id']);
+        if (!$event || empty($data['event_id'])) {
             return $this->returnError('notFound', NULL, true);
         }
-        $event->update($request->all());
+        $event->update($data);
         return $this->returnSuccess(__($this->successMsg['events.update']),$event);
     }
     public function deleteEvent(Request $request) {
         
-        $event = ShopsEvents::find($request->id);
-        if (!$event || empty($request->id)) {
+        $event = ShopsEvents::find($request->event_id);
+        if (!$event || empty($request->event_id)) {
             return $this->returnError('notFound', NULL, true);
         }
         $event->delete();
