@@ -24,6 +24,11 @@ class AuthApi
     {
         $apiKey = (!empty($request->header('api-key'))) ? $request->header('api-key') : false;
 
+        // Exclude client APIs temporary as Prasangsir said we will add it later after whole app complete. 20212904
+        if ($request->is('user*') || $request->is('location*') || $request->is('massage*') || $request->is('therapy*')) {
+            return $next($request);
+        }
+
         if (in_array($request->path(), $this->excludedRoutes)) {
             return $next($request);
         }
