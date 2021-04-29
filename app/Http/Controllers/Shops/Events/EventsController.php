@@ -28,7 +28,6 @@ class EventsController extends BaseController {
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        unset($data['id']);
         $event = ShopsEvents::create($data);
         return $this->returnSuccess(__($this->successMsg['events.create']),$event);
     }

@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Validator;
 class ShopsEvents extends BaseModel
 {
     protected $fillable = [
-        'id',
         'event_name',
         'event_date',
         'shop_id'
@@ -16,9 +15,9 @@ class ShopsEvents extends BaseModel
     public static function validator(array $data)
     {
         return Validator::make($data, [
-            'event_name'       => ['required', 'string'],
-            'event_date' => ['required'],
-            'shop_id' => ['required', 'integer']
+                    'event_name'    => ['required', 'string'],
+                    'event_date'    => ['required'],
+                    'shop_id'       => ['required', 'integer']
         ]);
     }
     
