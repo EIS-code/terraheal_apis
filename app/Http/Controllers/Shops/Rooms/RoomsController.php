@@ -21,7 +21,6 @@ class RoomsController extends BaseController {
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        
         $room = Room::create($request->all());
         return $this->returnSuccess(__($this->successMsg['rooms.create']),$room);
     }
