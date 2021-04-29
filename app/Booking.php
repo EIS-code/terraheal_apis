@@ -367,7 +367,7 @@ class Booking extends BaseModel
                 $record->qr_code_path = $userModel->getQrCodePathAttribute($record->qr_code_path);
 
                 if (empty($record->qr_code_path)) {
-                    $find = $userModel::find($record->user_id);
+                    $find = $userModel::find($record->client_id);
 
                     if (!empty($find)) {
                         $find->storeQRCode();

@@ -806,7 +806,7 @@ class TherapistController extends BaseController
                 }
 
                 if (!empty($record->receptionist_photo)) {
-                    $record->receptionist_photo = $receptionistModel->getProfilePhotoAttribute($record->receptionist_photo);
+                    $record->receptionist_photo = $receptionistModel->getPhotoAttribute($record->receptionist_photo);
                 }
             });
 

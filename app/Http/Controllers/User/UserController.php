@@ -1348,8 +1348,10 @@ class UserController extends BaseController
             $message = __($this->successMsg['success.user.qr.matched.not.matched']);
         }
 
+        $code = $isMatched ? $this->successCode : $this->errorCode;
+
         return response()->json([
-            'code' => 200,
+            'code' => $code,
             'msg'  => $message,
             'data' => $isMatched
         ]);

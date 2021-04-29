@@ -246,19 +246,19 @@ class User extends BaseModel implements Authenticatable
 
     public function qrCodeKey()
     {
-        $this->qrCode['id']      = $this->id;
-        $this->qrCode['dob']     = $this->dob;
-        $this->qrCode['email']   = $this->email;
-        $this->qrCode['shop_id'] = $this->shop_id;
+        self::$qrCode['id']      = $this->id;
+        self::$qrCode['dob']     = $this->dob;
+        self::$qrCode['email']   = $this->email;
+        self::$qrCode['shop_id'] = $this->shop_id;
 
-        return json_encode($this->qrCode);
+        return json_encode(self::$qrCode);
     }
 
     public function storeQRCode()
     {
         $qr = new QR();
 
-        $qr->contact($this->qrCodeKey());
+        $qr->json($this->qrCodeKey());
 
         $qrUrl = $qr->getUrl();
 
