@@ -17,7 +17,7 @@ final class QR {
     /**
      * Google API URL
      */
-    const API_URL = "https://chart.googleapis.com/chart?";
+    const API_URL_GOOGLE = "https://chart.googleapis.com/chart?";
 
     /**
      * Code data
@@ -63,6 +63,18 @@ final class QR {
     }
 
     /**
+     * Create code with JSON.
+     *
+     * @param string $type
+     * @param string $size
+     * @param string $content
+     */
+    public function json(string $content = null)
+    {
+        $this->_data = "{$content}";
+    }
+
+    /**
      * Generate QR code image
      *
      * @param int $size
@@ -70,7 +82,7 @@ final class QR {
      */
     public function draw($size = 150)
     {
-        $url = self::API_URL . "choe=UTF-8&chs={$size}x{$size}&cht=qr&chl=" . urlencode($this->_data);
+        $url = self::API_URL_GOOGLE . "choe=UTF-8&chs={$size}x{$size}&cht=qr&chl=" . urlencode($this->_data);
 
         return '<img src="'.$url.'">';
     }
@@ -83,7 +95,7 @@ final class QR {
      */
     public function getUrl($size = 150)
     {
-        $url = self::API_URL . "choe=UTF-8&chs={$size}x{$size}&cht=qr&chl=" . urlencode($this->_data);
+        $url = self::API_URL_GOOGLE . "choe=UTF-8&chs={$size}x{$size}&cht=qr&chl=" . urlencode($this->_data);
 
         return $url;
     }
