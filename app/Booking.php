@@ -11,6 +11,7 @@ use App\BookingMassage;
 use App\UserPeople;
 use App\MassagePrice;
 use App\MassageTiming;
+use App\BookingMassageStart;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use DB;
@@ -197,6 +198,7 @@ class Booking extends BaseModel
         $therapiesModel                 = new Therapy();
         $therapiesTimingModel           = new TherapiesTimings();
         $therapiesPriceModel            = new TherapiesPrices();
+        $bookingMassageStartModel       = new BookingMassageStart();
 
         $data = $this
                 ->select(
@@ -240,16 +242,17 @@ class Booking extends BaseModel
                             'focus_area.name as focus_area, ' . 
                             $this::getTableName() . '.table_futon_quantity, ' . 
                             $userModel::getTableName() . '.qr_code_path, ' . 
-                            $userGenderPreferenceModel::getTableName().'.name as genderPreference,'.
-                            $bookingMassageModel::getTableName().'.massage_timing_id,'.
-                            $bookingMassageModel::getTableName().'.massage_prices_id,'.
-                            $bookingMassageModel::getTableName().'.therapy_timing_id,'.
-                            $bookingMassageModel::getTableName().'.therapy_prices_id,'.
+                            $userGenderPreferenceModel::getTableName().'.name as genderPreference,' . 
+                            $bookingMassageModel::getTableName().'.massage_timing_id,' . 
+                            $bookingMassageModel::getTableName().'.massage_prices_id,' . 
+                            $bookingMassageModel::getTableName().'.therapy_timing_id,' . 
+                            $bookingMassageModel::getTableName().'.therapy_prices_id,' . 
                             $bookingMassageModel::getTableName() . '.is_confirm, ' . 
-                            $bookingInfoModel::getTableName().'.is_done,'.
-                            $bookingInfoModel::getTableName().'.is_cancelled,'.
-                            $bookingInfoModel::getTableName().'.cancel_type,'.
-                            $bookingInfoModel::getTableName().'.cancelled_reason'
+                            $bookingInfoModel::getTableName().'.is_done,' . 
+                            $bookingInfoModel::getTableName().'.is_cancelled,' . 
+                            $bookingInfoModel::getTableName().'.cancel_type,' . 
+                            $bookingInfoModel::getTableName().'.cancelled_reason, ' . 
+                            $bookingMassageStartModel::getTableName().'.start_time as massage_start_time'
                         )
                 )
                 ->join($bookingInfoModel::getTableName(), $this::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')
@@ -266,10 +269,11 @@ class Booking extends BaseModel
                 ->leftJoin($massageTimingModel::getTableName(), $massagePriceModel::getTableName() . '.massage_timing_id', '=', $massageTimingModel::getTableName() . '.id')
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as gender', $bookingMassageModel::getTableName() . '.gender_preference', '=', 'gender.id')
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as pressure', $bookingMassageModel::getTableName() . '.pressure_preference', '=', 'pressure.id')
-                ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as focus_area', $bookingMassageModel::getTableName() . '.focus_area_preference', '=', 'focus_area.id')            
+                ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as focus_area', $bookingMassageModel::getTableName() . '.focus_area_preference', '=', 'focus_area.id')
                 ->leftJoin($therapiesPriceModel::getTableName(), $bookingMassageModel::getTableName() . '.therapy_prices_id', '=', $therapiesPriceModel::getTableName() . '.id')
                 ->leftJoin($therapiesModel::getTableName(), $therapiesPriceModel::getTableName() . '.therapy_id', '=', $therapiesModel::getTableName() . '.id')
                 ->leftJoin($therapiesTimingModel::getTableName(), $therapiesPriceModel::getTableName() . '.therapy_timing_id', '=', $therapiesTimingModel::getTableName() . '.id')
+                ->leftJoin($bookingMassageStartModel::getTableName(), $bookingMassageModel::getTableName() . '.id', '=', $bookingMassageStartModel::getTableName() . '.booking_massage_id')
                 ->where($this::getTableName() . '.shop_id', (int)$shopId)
                 ->whereNull($bookingMassageModel::getTableName().'.deleted_at');
 
@@ -363,7 +367,7 @@ class Booking extends BaseModel
         $data = $data->orderBy($bookingInfoModel::getTableName().'.massage_date','DESC')->get();
 
         if (!empty($data) && !$data->isEmpty()) {
-            $data->map(function(&$record) use($userModel, $bookingMassageModel) {
+            $data->map(function(&$record) use($userModel, $bookingMassageModel, $bookingMassageStartModel, $bookingInfoModel) {
                 $record->qr_code_path = $userModel->getQrCodePathAttribute($record->qr_code_path);
 
                 if (empty($record->qr_code_path)) {
@@ -376,7 +380,7 @@ class Booking extends BaseModel
                     }
                 }
 
-                $record->massage_date = strtotime($record->massage_date) * 1000;
+                $record->massage_date = $bookingInfoModel->getMassageDateAttribute($record->massage_date);
 
                 $bookingType = $record->getAttributes()['booking_type'];
 
@@ -387,6 +391,10 @@ class Booking extends BaseModel
                 $bookingMassage = $bookingMassageModel::find($record->booking_massage_id);
 
                 $record->service_status = $bookingMassage->getServiceStatus();
+
+                if (!empty($record->massage_start_time)) {
+                    $record->massage_start_time = $bookingMassageStartModel->getStartTimeAttribute($record->massage_start_time);
+                }
             });
 
             // $data->put('total_massages', $bookingInfoModel->getMassageCountByTherapist($therapistId));
