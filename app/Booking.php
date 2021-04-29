@@ -230,10 +230,10 @@ class Booking extends BaseModel
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
                             $bookingInfoModel::getTableName() . '.massage_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . 
                             'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, UNIX_TIMESTAMP(' . 
-                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $therapiesTimingModel::getTableName() . '.time MINUTE)) * 1000 as theropy_end_time, ' . 
+                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $therapiesTimingModel::getTableName() . '.time MINUTE)) * 1000 as therapy_end_time, ' . 
                             'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as massage_day_name, ' . 
-                            'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' .                            
-                            'CONCAT(' . $therapiesTimingModel::getTableName() . '.time, " ", "Mins") as theropy_duration, ' .                            
+                            'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' . 
+                            'CONCAT(' . $therapiesTimingModel::getTableName() . '.time, " ", "Mins") as therapy_duration, ' . 
                             $massagePriceModel::getTableName().'.cost,'.
                             'gender.name as gender_preference, ' . 
                             'pressure.name as pressure_preference, ' . 
@@ -252,7 +252,8 @@ class Booking extends BaseModel
                             $bookingInfoModel::getTableName().'.is_cancelled,' . 
                             $bookingInfoModel::getTableName().'.cancel_type,' . 
                             $bookingInfoModel::getTableName().'.cancelled_reason, ' . 
-                            $bookingMassageStartModel::getTableName().'.start_time as massage_start_time'
+                            $bookingMassageStartModel::getTableName().'.start_time as actual_start_time, ' . 
+                            $bookingMassageStartModel::getTableName().'.end_time as actual_end_time'
                         )
                 )
                 ->join($bookingInfoModel::getTableName(), $this::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')
@@ -392,8 +393,12 @@ class Booking extends BaseModel
 
                 $record->service_status = $bookingMassage->getServiceStatus();
 
-                if (!empty($record->massage_start_time)) {
-                    $record->massage_start_time = $bookingMassageStartModel->getStartTimeAttribute($record->massage_start_time);
+                if (!empty($record->actual_start_time)) {
+                    $record->actual_start_time = $bookingMassageStartModel->getStartTimeAttribute($record->actual_start_time);
+                }
+
+                if (!empty($record->actual_end_time)) {
+                    $record->actual_end_time = $bookingMassageStartModel->getEndTimeAttribute($record->actual_end_time);
                 }
             });
 
