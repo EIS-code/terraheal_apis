@@ -50,7 +50,7 @@ class DashboardController extends BaseController {
                 ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
                 ->where('booking_infos.is_done', (string) BookingInfo::IS_DONE)
                 ->sum('booking_massages.cost');
-        $totalEarning = ($totalSales - $totalCost) / ($totalCost * 100);
+        $totalEarning = number_format(($totalSales - $totalCost) / ($totalCost * 100), 2);
 
         $massageModel = new Massage();
         $therapyModel = new Therapy();
