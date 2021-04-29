@@ -76,6 +76,7 @@ class TherapistController extends BaseController
         'therapist.complaint' => "Complaint registered successfully !",
         'therapist.ratings' => "Therapist ratings get successfully !",
         'booking.start' => "Massage started successfully !",
+        'booking.end' => "Massage ended successfully !",
         'other.therapist.found' => 'Other therapist found successfully !',
         'my.availability.found' => 'My availability found successfully !',
         'therapist.absent.successfully' => 'Therapist absent successfully !',
@@ -558,7 +559,7 @@ class TherapistController extends BaseController
             return $this->returns($find['message'], NULL, true);
         }
 
-        return $this->returns('booking.start', $find);
+        return $this->returns('booking.end', $find);
     }
 
     public function getAllServices(Request $request)
