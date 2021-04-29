@@ -58,7 +58,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
         '6' => 'Sun'
     ];
 
-    const IS_ADMIN = 0;
+    const IS_ADMIN = '0';
     const MASSAGES = '0';
     const THERAPIES = '1';
 

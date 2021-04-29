@@ -14,9 +14,17 @@ use App\PackShop;
 use App\PackService;
 use App\UserPack;
 use DB;
+use App\Superadmin;
+use Illuminate\Support\Facades\Hash;
 
 class SuperAdminController extends BaseController {
 
+    public $errorMsg = [
+        'loginEmail' => "Please provide email.",
+        'loginPass' => "Please provide password.",
+        'loginBoth' => "Shop email or password seems wrong.",
+    ];
+    
     public $successMsg = [
         'voucher.add' => 'Voucher created successfully!',
         'voucher.update' => 'Voucher updated successfully!',
@@ -30,6 +38,7 @@ class SuperAdminController extends BaseController {
         'pack.shared' => 'Pack already shared!',
         'pack.get' => 'Packs found successfully!',
         'pack.purchase' => 'Pack purchased successfully!',
+        'login' => "Login successfully !",
     ];
 
     public function addVoucher(Request $request) {
@@ -266,5 +275,31 @@ class SuperAdminController extends BaseController {
         
         $purchasePack = $model->create($data);
         return $this->returnSuccess(__($this->successMsg['pack.purchase']), $purchasePack);
+    }
+    
+    public function signIn(Request $request) {
+        $data = $request->all();
+        $email = (!empty($data['email'])) ? $data['email'] : NULL;
+        $password = (!empty($data['password'])) ? $data['password'] : NULL;
+
+
+        if (empty($email)) {
+            return $this->returnError($this->errorMsg['loginEmail']);
+        } elseif (empty($password)) {
+            return $this->returnError($this->errorMsg['loginPass']);
+        }
+
+        if (!empty($email) && !empty($password)) {
+
+            $user = Superadmin::where(['email' => $email])->first();
+            if (!empty($user) && Hash::check($password, $user->password)) {
+                $user = $user->first();
+
+                return $this->returnSuccess(__($this->successMsg['login']), $user);
+            } else {
+                return $this->returnError($this->errorMsg['loginBoth']);
+            }
+        }
+        return $this->returnNull();
     }
 }

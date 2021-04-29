@@ -11,7 +11,7 @@
 |
 */
 
-$router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin'], function () use($router) {
+$router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' => 'superadmins'], function () use($router) {
 
     // For vouchers
     $router->post('addVoucher', 'SuperAdminController@addVoucher');
@@ -26,4 +26,15 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin'], function
     $router->get('getPacks', 'SuperAdminController@getPacks');
     $router->post('sharePack', 'SuperAdminController@sharePack');
     $router->post('purchasePack', 'SuperAdminController@purchasePack');
+    
+    $router->post('signIn', 'SuperAdminController@signIn');
+    
+    $router->group(['prefix' => 'dashboard'], function () use($router) {
+
+        $router->get('details/get', 'Dashboard\DashboardController@getDetails');
+    });
+    $router->group(['prefix' => 'sidebar'], function () use($router) {
+
+        $router->post('details/get', 'Dashboard\DashboardController@getSidebarDetails');
+    });
 });
