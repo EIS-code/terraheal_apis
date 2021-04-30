@@ -32,7 +32,14 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->group(['prefix' => 'dashboard'], function () use($router) {
 
         $router->get('details/get', 'Dashboard\DashboardController@getDetails');
+        $router->get('centers/get', 'Dashboard\DashboardController@getCenters');
     });
+    
+    $router->group(['prefix' => 'center'], function () use($router) {
+        
+        $router->post('details/get', 'Center\CenterController@getCenterDetails');
+    });
+    
     $router->group(['prefix' => 'sidebar'], function () use($router) {
 
         $router->post('details/get', 'Dashboard\DashboardController@getSidebarDetails');
