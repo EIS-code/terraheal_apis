@@ -1356,4 +1356,51 @@ class UserController extends BaseController
             'data' => $isMatched
         ]);
     }
+
+    public function checkQRCode(Request $request)
+    {
+        $json = [];
+
+        if ($request->has('id')) {
+            $json['id'] = $request->get('id');
+        }
+
+        if ($request->has('dob')) {
+            $json['dob'] = $request->get('dob');
+        }
+
+        if ($request->has('email')) {
+            $json['email'] = $request->get('email');
+        }
+
+        if ($request->has('shop_id')) {
+            $json['shop_id'] = $request->get('shop_id');
+        }
+
+        if ($request->has('terraheal_flag')) {
+            $json['terraheal_flag'] = $request->get('terraheal_flag');
+        }
+
+        if ($request->has('booking_id')) {
+            $json['booking_id'] = $request->get('booking_id');
+        }
+
+        $json       = json_encode($json);
+
+        $isChecked  = User::checkQRCode($json);
+
+        if ($isChecked) {
+            $message = __($this->successMsg['success.user.qr.matched']);
+        } else {
+            $message = __($this->successMsg['success.user.qr.matched.not.matched']);
+        }
+
+        $code = $isChecked ? $this->successCode : $this->errorCode;
+
+        return response()->json([
+            'code' => $code,
+            'msg'  => $message,
+            'data' => $isChecked
+        ]);
+    }
 }

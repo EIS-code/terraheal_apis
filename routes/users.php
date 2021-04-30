@@ -112,6 +112,6 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     });
 
     $router->group(['prefix' => 'match'], function () use($router) {
-        $router->post('/qr', 'UserController@isOurQRCode');
+        $router->post('/qr', 'UserController@checkQRCode');
     });
 });

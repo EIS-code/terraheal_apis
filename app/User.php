@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 use App\Country;
 use App\City;
 use App\Shop;
+use App\Booking;
 // use App\BaseModel;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
@@ -304,6 +305,48 @@ class User extends BaseModel implements Authenticatable
         }
 
         return false;
+    }
+
+    public static function checkQRCode(string $json):Bool
+    {
+        $data    = json_decode($json, true);
+        $checked = false;
+
+        if (json_last_error() == JSON_ERROR_NONE) {
+            $bookingId = !empty($data['booking_id']) ? (int)$data['booking_id'] : false;
+
+            if (!empty($bookingId)) {
+                $booking = Booking::find($bookingId);
+
+                if (!empty($booking)) {
+                    $userId = $booking->user_id;
+
+                    $user   = self::find($userId);
+
+                    if (!empty($user)) {
+                        $test = true;
+
+                        foreach (self::$qrCode as $key => $value) {
+                            if (!empty($data[$key])) {
+                                if (($key == "terraheal_flag") || (!empty($user->{$key}) && $user->{$key} == $data[$key])) {
+                                    $test = true;
+                                } else {
+                                    $test = false;
+                                    break;
+                                }
+                            } else {
+                                $test = false;
+                                break;
+                            }
+                        }
+
+                        $checked = $test;
+                    }
+                }
+            }
+        }
+
+        return $checked;
     }
 
     public function reviews()
