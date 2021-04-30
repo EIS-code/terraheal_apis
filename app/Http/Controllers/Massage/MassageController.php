@@ -97,77 +97,34 @@ class MassageController extends BaseController
         $cityTableName = City::getTableName();
         $query         = Shop::query();
 
-        $selectStatements = "{$shopTableName}.*, latitude, longitude, (6371 * 2 * ASIN(SQRT(POWER(SIN((37.38714000 - latitude)* PI() / 180 / 2), 2) + COS(37.38714000* PI() / 180) * COS(latitude* PI() / 180) * POWER(SIN((-122.08323500 - longitude) * PI() / 180 / 2) ,2)))) AS distance";
+        $selectStatements = "{$shopTableName}.id, {$shopTableName}.name, {$shopTableName}.address, {$shopTableName}.latitude, {$shopTableName}.longitude, (6371 * 2 * ASIN(SQRT(POWER(SIN((37.38714000 - latitude)* PI() / 180 / 2), 2) + COS(37.38714000* PI() / 180) * COS(latitude* PI() / 180) * POWER(SIN((-122.08323500 - longitude) * PI() / 180 / 2) ,2)))) AS distance";
         $whereStatements  = "longitude BETWEEN ({$longitude} - {$distance} / COS(RADIANS({$latitude})) * 69) AND ({$longitude} + {$distance} / COS(RADIANS({$latitude})) *69) AND latitude BETWEEN ({$latitude} - ({$distance} / 69)) AND ({$latitude} + ({$distance} / 69))";
 
         $query = $query->select(DB::raw($selectStatements))
                        ->leftJoin($cityTableName, $shopTableName . '.city_id', '=', $cityTableName . '.id')
                        ->whereRaw($whereStatements)
+                       ->with('centerHours')
                        ->get();
 
-        if (env('APP_ENV') == 'local' || env('APP_ENV') == 'dev') {
-            $latLong[] = [
-                'latitude'  => 37.38633900,
-                'longitude' => -122.08582300
-            ];
+        $returnData = [];
 
-            $latLong[] = [
-                'latitude'  => 37.38714000,
-                'longitude' => -122.08323500
-            ];
-
-            $latLong[] = [
-                'latitude'  => 37.39388500,
-                'longitude' => -122.07891600
-            ];
-
-            $latLong[] = [
-                'latitude'  => 37.40265300,
-                'longitude' => -122.07935400
-            ];
-
-            $latLong[] = [
-                'latitude'  => 37.39401100,
-                'longitude' => -122.09552800
-            ];
-
-            $latLong[] = [
-                'latitude'  => 37.40172400,
-                'longitude' => -122.11464600
-            ];
-
-            for ($i = 0; $i < 5; $i++) {
-                $returnData[] = [
-                    'id' => 1,
-                    'name' => 'Shop 0' . $i,
-                    'address' => 'Address 0' . $i,
-                    'latitude' => $latLong[$i]['latitude'],
-                    'longitude' => $latLong[$i]['longitude'],
-                    'total_services' =>  25,
-                    'center_hours' => [
-                        'mon' => '09AM to 05PM',
-                        'tue' => '09AM to 05PM',
-                        'wed' => '09AM to 05PM',
-                        'thu' => '09AM to 05PM',
-                        'fri' => '09AM to 05PM',
-                        'sat' => '09AM to 05PM',
-                        'sun' => NULL
-                    ]
-                ];
-            }
-
-            if ($isApi) {
-                return $this->returns('success.massage.center.found', collect($returnData));
-            }
-
-            return $returnData;
-        } else {
-            if ($isApi) {
-                return $this->returns('success.massage.center.found', collect($returnData));
-            }
-
-            return $returnData;
+        if (!empty($query) && !$query->isEmpty()) {
+            $query->map(function($data, $key) use(&$returnData) {
+                $returnData[$key]['id']               = $data->id;
+                $returnData[$key]['name']             = $data->name;
+                $returnData[$key]['address']          = $data->address;
+                $returnData[$key]['latitude']         = $data->latitude;
+                $returnData[$key]['longitude']        = $data->longitude;
+                $returnData[$key]['total_services']   = $data->totalServices;
+                $returnData[$key]['center_hours']     = $data->centerHours;
+            });
         }
+
+        if ($isApi) {
+            return $this->returns('success.massage.center.found', collect($returnData));
+        }
+
+        return $returnData;
     }
 
     public function getPreference(Request $request, int $limit = 10)

@@ -163,6 +163,11 @@ class Shop extends BaseModel implements CanResetPasswordContract
         return $this->hasMany('App\Massage', 'shop_id', 'id');
     }
 
+    public function therapies()
+    {
+        return $this->hasMany('App\Therapy', 'shop_id', 'id');
+    }
+
     public function bookings()
     {
         return $this->hasMany('App\Booking', 'shop_id', 'id');
@@ -177,12 +182,17 @@ class Shop extends BaseModel implements CanResetPasswordContract
     {
         return $this->hasMany('App\Booking', 'shop_id', 'id')->where('booking_type', '0');
     }
-    
-    public function receptionist() 
+
+    public function receptionist()
     {
         return $this->hasOne('App\Receptionist');
     }
-    
+
+    public function centerHours()
+    {
+        return $this->hasMany('App\ShopHour', 'shop_id', 'id');
+    }
+
      /**
      * Send the password reset notification.
      *
@@ -258,5 +268,18 @@ class Shop extends BaseModel implements CanResetPasswordContract
         ];
         BookingMassage::create($bookingMassageData);
     }
-    
+
+    public function totalServices()
+    {
+        $totalMassages  = $this->massages->count();
+
+        $totalTherapies = $this->therapies->count();
+
+        return $totalMassages + $totalTherapies;
+    }
+
+    public function getTotalServicesAttribute()
+    {
+        return $this->totalServices();
+    }
 }
