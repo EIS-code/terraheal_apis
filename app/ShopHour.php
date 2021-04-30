@@ -2,11 +2,10 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 use App\Shop;
 
-class ShopHour extends Model
+class ShopHour extends BaseModel
 {
     protected $fillable = [
         'sunday',
