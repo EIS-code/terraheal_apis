@@ -13,7 +13,8 @@ class Massage extends BaseModel
     protected $fillable = [
         'name',
         'image',
-        'icon'
+        'icon',
+        'shop_id'
     ];
 
     public $fileSystem = 'public';

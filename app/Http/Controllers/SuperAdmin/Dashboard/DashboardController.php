@@ -11,31 +11,33 @@ use App\Shop;
 use App\User;
 use App\Booking;
 use App\BookingInfo;
-use App\BookingMassage;
-use App\MassagePrice;
-use App\TherapiesPrices;
 use DB;
 
 class DashboardController extends BaseController {
 
     public $successMsg = [
-        'data.found' => 'Dashboard details found successfully.',
+        'dashboard.data.found' => 'Dashboard details found successfully.',
+        'sidebar.data.found' => 'Sidebar details found successfully.',
+        'centers' => 'All centers found successfully.',
+        'center.details' => 'Center details found successfully.',
     ];
 
     public function getDetails() {
 
         $massages = Massage::all()->count();
         $therapies = Therapy::all()->count();
-        $shops = Shop::where('is_admin', Shop::IS_ADMIN)->get()->count();
+        $shops = Shop::all()->count();
         $therapists = Therapist::all()->count();
         $clients = User::all()->count();
 
-        return $this->returnSuccess(__($this->successMsg['data.found']), ['massages' => $massages, 'therapies' => $therapies, 'shops' => $shops,
+        return $this->returnSuccess(__($this->successMsg['dashboard.data.found']), ['massages' => $massages, 'therapies' => $therapies, 'shops' => $shops,
                     'therapists' => $therapists, 'clients' => $clients]);
     }
 
     public function getSidebarDetails(Request $request) {
 
+        $shopModel = new Shop();
+        
         $appUsers = User::all()->count();
         $homeBooking = Booking::where('booking_type', Booking::BOOKING_TYPE_HHV)->get()->count();
         $totalSales = DB::table('booking_massages')
@@ -51,37 +53,16 @@ class DashboardController extends BaseController {
                 ->where('booking_infos.is_done', (string) BookingInfo::IS_DONE)
                 ->sum('booking_massages.cost');
         $totalEarning = number_format(($totalSales - $totalCost) / ($totalCost * 100), 2);
+        $topItems = $shopModel->getTopItems($request);
 
-        $massageModel = new Massage();
-        $therapyModel = new Therapy();
-
-        $massageModel->setMysqlStrictFalse();
-        $therapyModel->setMysqlStrictFalse();
-
-        $service = $request->service ? $request->service : Booking::MASSAGES;
-        if ($service == Booking::MASSAGES) {
-            $getTopItems = $massageModel->select(Massage::getTableName() . ".id", Massage::getTableName() . ".name", Massage::getTableName() . ".icon", BookingMassage::getTableName() . '.price', DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
-                    ->leftJoin(MassagePrice::getTableName(), Massage::getTableName() . '.id', '=', MassagePrice::getTableName() . '.massage_id')
-                    ->leftJoin(BookingMassage::getTableName(), MassagePrice::getTableName() . '.id', '=', BookingMassage::getTableName() . '.massage_prices_id')
-                    ->whereNotNull(BookingMassage::getTableName() . '.id')
-                    ->groupBy(Massage::getTableName() . '.id')
-                    ->orderBy(DB::RAW('SUM(' . BookingMassage::getTableName() . '.price)'), 'DESC')
-                    ->get();
-        }
-        if ($service == Booking::THERAPIES) {
-            $getTopItems = $therapyModel->select(Therapy::getTableName() . ".id", Therapy::getTableName() . ".name", Therapy::getTableName() . ".image", BookingMassage::getTableName() . '.price', DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
-                    ->leftJoin(TherapiesPrices::getTableName(), Therapy::getTableName() . '.id', '=', TherapiesPrices::getTableName() . '.therapy_id')
-                    ->leftJoin(BookingMassage::getTableName(), TherapiesPrices::getTableName() . '.id', '=', BookingMassage::getTableName() . '.therapy_timing_id')
-                    ->whereNotNull(BookingMassage::getTableName() . '.id')
-                    ->groupBy(Therapy::getTableName() . '.id')
-                    ->orderBy(DB::RAW('SUM(' . BookingMassage::getTableName() . '.price)'), 'DESC')
-                    ->get();
-        }
-
-        $massageModel->setMysqlStrictTrue();
-        $therapyModel->setMysqlStrictTrue();
-
-        return $this->returnSuccess(__($this->successMsg['data.found']), ['appUsers' => $appUsers, 'homeBooking' => $homeBooking,
-                    'totalSales' => $totalSales, 'totalEarning' => $totalEarning, 'getTopItems' => $getTopItems]);
+        return $this->returnSuccess(__($this->successMsg['sidebar.data.found']), ['appUsers' => $appUsers, 'homeBooking' => $homeBooking,
+                    'totalSales' => $totalSales, 'totalEarning' => $totalEarning, 'topItems' => $topItems]);
     }
+
+    public function getCenters() {
+
+        $centers = Shop::all();
+        return $this->returnSuccess(__($this->successMsg['centers']), $centers);
+    }
+
 }

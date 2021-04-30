@@ -9,6 +9,8 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use App\BookingInfo;
 use App\UserPack;
+use Illuminate\Http\Request;
+use DB;
 
 class Shop extends BaseModel implements CanResetPasswordContract
 {
@@ -142,7 +144,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
 
     public function getOpenDayFromAttribute($value)
     {
-        if (empty($value)) {
+        if (is_null($value)) {
             return $value;
         }
 
@@ -259,4 +261,55 @@ class Shop extends BaseModel implements CanResetPasswordContract
         BookingMassage::create($bookingMassageData);
     }
     
+    public function getMassages(Request $request) {
+        
+         $services = Massage::with('timing', 'pricing')->select('id', 'name', 'image', 'icon', 'shop_id')
+                        ->where('shop_id', $request->center_id)->get();
+         return $services;
+    }
+    
+    public function getTherapies(Request $request) {
+        
+         $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->center_id)->get();
+         return $services;
+    }
+    
+    public function getTopItems(Request $request) {
+
+        $massageModel = new Massage();
+        $therapyModel = new Therapy();
+
+        $service = $request->service ? $request->service : Booking::MASSAGES;
+        if ($service == Booking::MASSAGES) {
+            $massageModel->setMysqlStrictFalse();
+            $getTopMassages = $massageModel->select(Massage::getTableName() . ".id", Massage::getTableName() . ".name", Massage::getTableName() . ".icon", BookingMassage::getTableName() . '.price', Massage::getTableName() . ".shop_id", DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
+                    ->leftJoin(MassagePrice::getTableName(), Massage::getTableName() . '.id', '=', MassagePrice::getTableName() . '.massage_id')
+                    ->leftJoin(BookingMassage::getTableName(), MassagePrice::getTableName() . '.id', '=', BookingMassage::getTableName() . '.massage_prices_id')
+                    ->whereNotNull(BookingMassage::getTableName() . '.id');
+            if (!empty($request->center_id)) {
+                $getTopMassages->where(Massage::getTableName() . ".shop_id", $request->center_id);
+            }
+            $getTopMassages = $getTopMassages->groupBy(Massage::getTableName() . '.id')
+                    ->orderBy('totalEarning', 'DESC')
+                    ->get();
+            $massageModel->setMysqlStrictTrue();
+            return $getTopMassages;
+        }
+        if ($service == Booking::THERAPIES) {
+            $therapyModel->setMysqlStrictFalse();
+            $getTopTherapies = $therapyModel->select(Therapy::getTableName() . ".id", Therapy::getTableName() . ".name", Therapy::getTableName() . ".image", BookingMassage::getTableName() . '.price', Therapy::getTableName() . ".shop_id", DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
+                    ->leftJoin(TherapiesPrices::getTableName(), Therapy::getTableName() . '.id', '=', TherapiesPrices::getTableName() . '.therapy_id')
+                    ->leftJoin(BookingMassage::getTableName(), TherapiesPrices::getTableName() . '.id', '=', BookingMassage::getTableName() . '.therapy_timing_id')
+                    ->whereNotNull(BookingMassage::getTableName() . '.id');
+            if (!empty($request->center_id)) {
+                $getTopTherapies->where(Therapy::getTableName() . ".shop_id", $request->center_id);
+            }
+            $getTopTherapies = $getTopTherapies->groupBy(Therapy::getTableName() . '.id')
+                    ->orderBy('totalEarning', 'DESC')
+                    ->get();
+            $therapyModel->setMysqlStrictTrue();
+            return $getTopTherapies;
+        }
+    }
+
 }

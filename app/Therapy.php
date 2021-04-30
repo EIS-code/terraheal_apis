@@ -9,7 +9,8 @@ class Therapy extends BaseModel
 {
     protected $fillable = [
         'name',
-        'image'
+        'image',
+        'shop_id'
     ];
 
     public $fileSystem = 'public';
