@@ -27,6 +27,8 @@ class UsersTable extends Migration
             $table->string('nif')->nullable();
             // $table->string('address')->nullable();
             $table->string('id_passport')->nullable();
+            $table->string('id_passport_front')->nullable();
+            $table->string('id_passport_back')->nullable();
             // $table->string('photo');
             $table->string('avatar')->nullable();
             $table->string('avatar_original')->nullable();

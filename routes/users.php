@@ -22,6 +22,10 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
 
     $router->group(['prefix' => 'profile'], function () use($router) {
         $router->post('update', 'UserController@updateProfile');
+        $router->group(['prefix' => 'document'], function () use($router) {
+            $router->post('/upload', 'UserController@updateDocument');
+            $router->post('/remove', 'UserController@removeDocument');
+        });
     });
 
     $router->group(['prefix' => 'setting'], function () use($router) {

@@ -29,6 +29,8 @@ use App\UserPackGift;
 use DB;
 use Carbon\Carbon;
 use App\Libraries\CurrencyHelper;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 
 class UserController extends BaseController
 {
@@ -55,8 +57,9 @@ class UserController extends BaseController
         'error.proper.id' => 'Please provide valid id.',
         'error.booking.therapists.not.found' => 'Booking therapists not found.',
         'error.booking.places.not.found' => 'Booking places not found.',
-        'error.booking.not.found' => 'Booking not found !',
-        'error.provide.menu.id' => 'Please provide menu id !'
+        'error.booking.not.found' => 'Booking not found.',
+        'error.provide.menu.id' => 'Please provide menu id.',
+        'error.user.document.found' => 'Document not found.'
     ];
 
     public $successMsg = [
@@ -104,7 +107,9 @@ class UserController extends BaseController
         'success.user.pack.ordered' => 'User pack ordered successfully !',
         'success.user.pack.gift.created' => 'User pack gift created successfully !',
         'success.user.qr.matched' => 'User QR code matched !',
-        'success.user.qr.matched.not.matched' => 'User QR code does not matched !'
+        'success.user.qr.matched.not.matched' => 'User QR code does not matched !',
+        'success.user.document.updated' => 'User document updated successfully !',
+        'success.user.document.removed' => 'User document removed successfully !'
     ];
 
     public function __construct()
@@ -1402,5 +1407,88 @@ class UserController extends BaseController
             'msg'  => $message,
             'data' => $isChecked
         ]);
+    }
+
+    public function updateDocument(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new User();
+        $userId = (int)$request->get('user_id', false);
+
+        if (!empty($userId)) {
+            $user = $model->find($userId);
+
+            if (!empty($user)) {
+                $idPassportFront = $request->file('id_passport_front', []);
+
+                if (!empty($idPassportFront) && $idPassportFront instanceof UploadedFile) {
+                    $checkMime = $model->checkMimeTypes($request, $idPassportFront, 'jpeg,png,jpg');
+                    if ($checkMime->fails()) {
+                        return $this->returns($checkMime->errors()->first(), NULL, true);
+                    }
+
+                    $fileName                   = time() . '_' . $userId . '.' . $idPassportFront->getClientOriginalExtension();
+                    $storeFile                  = $idPassportFront->storeAs($model->idPassportPath, $fileName, $model->fileSystem);
+                    $user->id_passport_front    = $storeFile ? $fileName : NULL;
+                }
+
+                $idPassportBack = $request->file('id_passport_back', []);
+
+                if (!empty($idPassportBack) && $idPassportBack instanceof UploadedFile) {
+                    $checkMime = $model->checkMimeTypes($request, $idPassportBack, 'jpeg,png,jpg');
+                    if ($checkMime->fails()) {
+                        return $this->returns($checkMime->errors()->first(), NULL, true);
+                    }
+
+                    $fileName                   = time() . '_' . $userId . '.' . $idPassportBack->getClientOriginalExtension();
+                    $storeFile                  = $idPassportBack->storeAs($model->idPassportPath, $fileName, $model->fileSystem);
+                    $user->id_passport_back     = $storeFile ? $fileName : NULL;
+                }
+
+                if ($user->save()) {
+                    return $this->returns('success.user.document.updated', $model->getGlobalResponse($userId));
+                }
+
+                return $this->returns('error.something', NULL, true);
+            }
+        }
+
+        return $this->returns('error.user.not.found', NULL, true);
+    }
+
+    public function removeDocument(Request $request)
+    {
+        $model  = new User();
+        $userId = (int)$request->get('user_id', false);
+
+        if (!empty($userId)) {
+            $user = $model->find($userId);
+
+            if (!empty($user)) {
+                $document = $request->get('document', NULL);
+
+                if ($document == "id_passport_front") {
+                    $delete = File::delete(public_path('storage\\' . $model->idPassportPath . $user->getAttributes()[$document]));
+
+                    if ($delete) {
+                        $user->{$document} = NULL;
+                    }
+                } elseif ($document == "id_passport_back") {
+                    $delete = File::delete(public_path('storage\\' . $model->idPassportPath . $user->getAttributes()[$document]));
+
+                    if ($delete) {
+                        $user->{$document} = NULL;
+                    }
+                } else {
+                    return $this->returns('error.user.document.found', NULL, true);
+                }
+
+                if ($user->save()) {
+                    return $this->returns('success.user.document.removed', $model->getGlobalResponse($userId));
+                }
+            }
+        }
+
+        return $this->returns('error.user.not.found', NULL, true);
     }
 }

@@ -39,6 +39,8 @@ class User extends BaseModel implements Authenticatable
         'nif',
         'address',
         'id_passport',
+        'id_passport_front',
+        'id_passport_back',
         'avatar',
         'avatar_original',
         'device_token',
@@ -74,6 +76,7 @@ class User extends BaseModel implements Authenticatable
 
     public $fileSystem       = 'public';
     public $profilePhotoPath = 'user\profile\\';
+    public $idPassportPath   = 'user\id_passport\\';
     public $qrCodePath       = 'user\qr_codes\\';
 
     public static $notRemoved = '0';
@@ -147,6 +150,8 @@ class User extends BaseModel implements Authenticatable
             'nif'                  => ['string', 'max:255'],
             'address'              => ['string', 'max:255'],
             'id_passport'          => ['string', 'max:255'],
+            'id_passport_front'    => ['string', 'max:255'],
+            'id_passport_back'     => ['string', 'max:255'],
             'password'             => ['min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'],
             'shop_id'              => ['integer', 'exists:' . Shop::getTableName() . ',id'],
             // 'shop_id'           => ['required', 'integer'],
@@ -166,6 +171,15 @@ class User extends BaseModel implements Authenticatable
             'is_removed'           => ['integer', 'in:0,1'],
         ], [
             'password.regex'  => 'Password should contains at least one [a-z, A-Z, 0-9, @, $, !, %, *, #, ?, &].'
+        ]);
+    }
+
+    public function checkMimeTypes($request, $file, $mimes = 'jpeg,png,jpg,doc,docx,pdf')
+    {
+        return Validator::make($request->all(), [
+            'file.*' => 'mimes:jpeg,png,jpg,doc,docx,pdf',
+        ], [
+            'file.*' => __('Please select proper file. The file must be a file of type: ' . $mimes . '.')
         ]);
     }
 
@@ -207,6 +221,34 @@ class User extends BaseModel implements Authenticatable
         }
 
         return $default;
+    }
+
+    public function getIdPassportFrontAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        $idPassportPath = (str_ireplace("\\", "/", $this->idPassportPath));
+        if (Storage::disk($this->fileSystem)->exists($idPassportPath . $value)) {
+            return Storage::disk($this->fileSystem)->url($idPassportPath . $value);
+        }
+
+        return $value;
+    }
+
+    public function getIdPassportBackAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        $idPassportPath = (str_ireplace("\\", "/", $this->idPassportPath));
+        if (Storage::disk($this->fileSystem)->exists($idPassportPath . $value)) {
+            return Storage::disk($this->fileSystem)->url($idPassportPath . $value);
+        }
+
+        return $value;
     }
 
     public function getQrCodePathAttribute($value)
