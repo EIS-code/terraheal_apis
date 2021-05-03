@@ -30,7 +30,7 @@ use DB;
 use Carbon\Carbon;
 use App\Libraries\CurrencyHelper;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends BaseController
 {
@@ -1468,7 +1468,7 @@ class UserController extends BaseController
                 $document = $request->get('document', NULL);
 
                 if ($document == "id_passport_front") {
-                    $delete = File::delete(public_path('storage\\' . $model->idPassportPath . $user->getAttributes()[$document]));
+                    $delete = Storage::disk($model->fileSystem)->delete(public_path('storage\\' . $model->idPassportPath . $user->getAttributes()[$document]));
 
                     if ($delete) {
                         $user->{$document} = NULL;
