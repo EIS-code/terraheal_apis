@@ -777,9 +777,9 @@ class UserController extends BaseController
     public function getPeople(Request $request)
     {
         $model      = new UserPeople();
-        $id         = (int)$request->get('id', false);
+        $id         = (int)$request->get('user_id', false);
 
-        $userPeople = $model->where('user_id', $id)->where('is_removed', $model::$notRemoved)->get();
+        $userPeople = $model->where('user_id', $id)->where('is_removed', (string)$model::$notRemoved)->get();
 
         // Get user gender preference.
         $userGenderPreference = UserGenderPreference::where('is_removed', UserGenderPreference::$notRemoved)->get();
