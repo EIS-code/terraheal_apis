@@ -1468,7 +1468,7 @@ class UserController extends BaseController
                 $document = $request->get('document', NULL);
 
                 if ($document == "id_passport_front") {
-                    $delete = Storage::disk($model->fileSystem)->delete(public_path('storage\\' . $model->idPassportPath . $user->getAttributes()[$document]));
+                    $delete = Storage::disk($model->fileSystem)->delete($model->idPassportPath . $user->getAttributes()[$document]);
 
                     if ($delete) {
                         $user->{$document} = NULL;
