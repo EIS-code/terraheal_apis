@@ -1474,7 +1474,7 @@ class UserController extends BaseController
                         $user->{$document} = NULL;
                     }
                 } elseif ($document == "id_passport_back") {
-                    $delete = File::delete(public_path('storage\\' . $model->idPassportPath . $user->getAttributes()[$document]));
+                    $delete = Storage::disk($model->fileSystem)->delete($model->idPassportPath . $user->getAttributes()[$document]);
 
                     if ($delete) {
                         $user->{$document} = NULL;
