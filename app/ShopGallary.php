@@ -23,4 +23,14 @@ class ShopGallary extends Model
             'shop_id' => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id']
         ]);
     }
+    
+    public function validateImages($request)
+    {
+        return Validator::make($request, [
+            'gallery' => 'mimes:jpeg,png,jpg',
+        ], [
+            'gallery.*' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        ]);
+    }
+    
 }

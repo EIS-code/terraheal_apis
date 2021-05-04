@@ -15,14 +15,23 @@ use App\Pack;
 use App\PackShop;
 use App\Receptionist;
 use App\Manager;
+use Illuminate\Support\Facades\Hash;
+use App\ShopGallary;
+use App\ShopHour;
+use Carbon\Carbon;
+use App\ShopCompany;
 
 class CenterController extends BaseController {
 
     public $successMsg = [
         'center.details' => 'Center details found successfully.',
+        'center.add.details' => 'Center details added successfully.',
+        'company.add.details' => 'Company details added successfully.',
+        'owner.add.details' => 'Owner details added successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
+        'something.wrong' => 'Something goes wrong!!',
     ];
 
     public function getSoldVoucher(Request $request) {
@@ -91,5 +100,176 @@ class CenterController extends BaseController {
                     'home_visits' => $homeBooking, 'center_visits' => $centerBooking, 'vouchers' => $vouchers, 'packs' => $packs, 'earning' => $earning,
                     'totalBookings' => $totalBookings, 'cancelledBookings' => $cancelledBookings, 'staff' => $staff, 'shop' => $shop, 'topItems' => $topItems]);
     }
+    
+    public function addOrUpdateDetails(Request $request) {
+        $data = $request->all();
+        $shopModel = new Shop();
 
+        /* For featured Image */
+        if ($request->hasFile('featured_image')) {
+            $checkImage = $shopModel->validateFeaturedImage($data);
+            if ($checkImage->fails()) {
+                unset($data['featured_image']);
+
+                return $this->returnError($checkImage->errors()->first(), NULL, true);
+            }
+            $fileName = time() . '.' . $data['featured_image']->getClientOriginalExtension();
+            $storeFile = $data['featured_image']->storeAs($shopModel->profilePhotoPath, $fileName, $shopModel->fileSystem);
+
+            if ($storeFile) {
+                $data['featured_image'] = $fileName;
+            }
+        }
+        $data['country_id'] = $data['location']['country_id'] ? $data['location']['country_id'] : null;
+        $data['province_id'] = $data['location']['province_id'] ? $data['location']['province_id'] : null;
+        $data['city_id'] = $data['location']['city_id'] ? $data['location']['city_id'] : null;
+        $data['longitude'] = $data['location']['longitude'] ? $data['location']['longitude'] : null;
+        $data['latitude'] = $data['location']['latitude'] ? $data['location']['latitude'] : null;
+        $data['zoom'] = $data['location']['zoom'] ? $data['location']['zoom'] : null;
+        $data['pin_code'] = $data['location']['pin_code'] ? $data['location']['pin_code'] : null;
+        $data['address'] = $data['location']['address'] ? $data['location']['address'] : null;
+        $data['address2'] = $data['location']['address2'] ? $data['location']['address2'] : null;
+        $data['shop_password'] = Hash::make($data['shop_password']);
+        $data['manager_password'] = Hash::make($data['manager_password']);
+        unset($data['location']);
+
+        $checks = $shopModel->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $center = $shopModel->create($data);
+        return $center;
+    }
+    
+    public function addGallery(Request $request, $center) {
+        
+        $galleryModel = new ShopGallary();
+
+        $checkImage = $galleryModel->validateImages($request->gallery);
+        if ($checkImage->fails()) {
+            return $this->returnError($checkImage->errors()->first(), NULL, true);
+        }
+        if($request->hasfile('gallery')) {
+            foreach($request->file('gallery') as $file)
+            {
+                $name = $file->getClientOriginalName();
+                $fileName = time() . '_' . $name;
+                $storeFile = $file->storeAs($galleryModel->storageFolderName, $fileName, $galleryModel->fileSystem);
+
+                if ($storeFile) {
+                    $gallery['image'] = $fileName;
+                    $gallery['shop_id'] = $center->id;
+                } 
+                $check = $galleryModel->validator($gallery);
+                if ($check->fails()) {
+                    return $this->returnError($check->errors()->first(), NULL, true);
+                }
+                $galleryModel->create($gallery);
+                $imgData[] = $gallery;
+            }
+        }
+        return $imgData;
+    }
+    
+    public function addOrUpdateTimeTable(Request $request, $center) {
+        
+        $shopHourModel = new ShopHour();
+        $data = $request->all();
+        
+        foreach ($data['timetable']['open_at'] as $key => $value) {
+            $time = Carbon::createFromTimestampMs($value);
+            $data['timetable']['open_at'][$key] = $time->format("h:i:s");
+        }
+        foreach ($data['timetable']['close_at'] as $key => $value) {
+            $time = Carbon::createFromTimestampMs($value);
+            $data['timetable']['close_at'][$key] = $time->format("h:i:s");
+            $timeTable = [
+               'day_name' => (string) $key,
+               'is_open' => (string) ShopHour::IS_OPEN,
+               'open_at' => $data['timetable']['open_at'][$key],
+               'close_at' => $data['timetable']['close_at'][$key],
+               'shop_id' => $center->id,
+            ];
+            $check = $shopHourModel->validator($timeTable);
+            if ($check->fails()) {
+                return $this->returnError($check->errors()->first(), NULL, true);
+            }
+            $shopHourModel->create($timeTable);
+            $shopHours[] = $timeTable;
+        }
+        return $shopHours;
+    }
+    
+    public function addCenterDetails(Request $request) {
+
+        DB::beginTransaction();
+        try {
+
+            $center = $this->addOrUpdateDetails($request);
+            $gallery = $this->addGallery($request, $center);
+            $timetable = $this->addOrUpdateTimeTable($request, $center);
+            if ($center && $gallery && $timetable) {
+                DB::commit();
+                return $this->returnSuccess(__($this->successMsg['center.add.details']), [$center, $gallery, $timetable]);
+            } else {
+                return $this->returnSuccess(__($this->successMsg['something.wrong']));
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+    
+    public function addOrUpdateCompanyDetails(Request $request) {
+        
+        $data = $request->all();
+        $companyModel =  new ShopCompany();
+        $company = [
+            'name' => $data['name'],
+            'nif' => $data['nif'],
+            'address' => $data['location']['address'] ? $data['location']['address'] : null,
+            'city_id' => $data['location']['city_id'] ? $data['location']['city_id'] : null,
+            'province_id' => $data['location']['province_id'] ? $data['location']['province_id'] : null,
+            'country_id' => $data['location']['country_id'] ? $data['location']['country_id'] : null,
+            'longitude' => $data['location']['longitude'] ? $data['location']['longitude'] : null,
+            'latitude' => $data['location']['latitude'] ? $data['location']['latitude'] : null,
+            'zoom' => $data['location']['zoom'] ? $data['location']['zoom'] : null,
+            'shop_id' => $data['center_id'] ? $data['center_id'] : null
+        ];
+
+        $checks = $companyModel->validator($company);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $companyData = $companyModel->updateOrCreate($company);
+        return $this->returnSuccess(__($this->successMsg['company.add.details']), $companyData);
+    }
+
+    public function addOwnerDetails(Request $request) {
+     
+        $data = $request->all();
+        $shopModel = new Shop();
+        $ownerData = [
+            'owner_name' => $data['owner_name'],
+            'owner_surname' => $data['owner_surname'],
+            'owner_email' => $data['owner_email'],
+            'owner_mobile_number' => $data['owner_mobile_number'],
+            'owner_mobile_number_alternative' => $data['owner_mobile_number_alternative'],
+            'finacial_situation' => $data['finacial_situation'],
+            'shop_id' => $request->center_id
+        ];
+        
+        $checks = $shopModel->validatorOwner($ownerData, $request->center_id, true);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $center = $shopModel->find($request->center_id);
+        $center->update($ownerData);
+        
+        return $this->returnSuccess(__($this->successMsg['owner.add.details']), $center);
+    }
 }
