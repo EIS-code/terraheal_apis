@@ -21,6 +21,7 @@ use App\ShopHour;
 use Carbon\Carbon;
 use App\ShopCompany;
 use App\ShopFeaturedImage;
+use App\ShopPaymentDetail;
 
 class CenterController extends BaseController {
 
@@ -29,6 +30,8 @@ class CenterController extends BaseController {
         'center.add.details' => 'Center details added successfully.',
         'company.add.details' => 'Company details added successfully.',
         'owner.add.details' => 'Owner details added successfully.',
+        'payment.add.details' => 'Payment details added successfully.',
+        'payment.agreement.add' => 'Payment agreement details added successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
@@ -127,7 +130,7 @@ class CenterController extends BaseController {
         return $center;
     }
     
-    public function addFeaturedImages(Request $request, $center) {
+    public function addFeaturedImages(Request $request, $centerId) {
         
         $featuredModel = new ShopFeaturedImage();
 
@@ -144,7 +147,7 @@ class CenterController extends BaseController {
 
                 if ($storeFile) {
                     $image['image'] = $fileName;
-                    $image['shop_id'] = $center->id;
+                    $image['shop_id'] = $centerId;
                 } 
                 $check = $featuredModel->validator($image);
                 if ($check->fails()) {
@@ -157,7 +160,7 @@ class CenterController extends BaseController {
         return $imgData;
     }
     
-    public function addGallery(Request $request, $center) {
+    public function addGallery(Request $request, $centerId) {
         
         $galleryModel = new ShopGallary();
 
@@ -174,7 +177,7 @@ class CenterController extends BaseController {
 
                 if ($storeFile) {
                     $gallery['image'] = $fileName;
-                    $gallery['shop_id'] = $center->id;
+                    $gallery['shop_id'] = $centerId;
                 } 
                 $check = $galleryModel->validator($gallery);
                 if ($check->fails()) {
@@ -187,7 +190,7 @@ class CenterController extends BaseController {
         return $imgData;
     }
     
-    public function addOrUpdateTimeTable(Request $request, $center) {
+    public function addOrUpdateTimeTable(Request $request, $centerId) {
         
         $shopHourModel = new ShopHour();
         $data = $request->all();
@@ -204,7 +207,7 @@ class CenterController extends BaseController {
                'is_open' => (string) ShopHour::IS_OPEN,
                'open_at' => $data['timetable']['open_at'][$key],
                'close_at' => $data['timetable']['close_at'][$key],
-               'shop_id' => $center->id,
+               'shop_id' => $centerId,
             ];
             $check = $shopHourModel->validator($timeTable);
             if ($check->fails()) {
@@ -225,15 +228,15 @@ class CenterController extends BaseController {
             if(!is_array($center)) {
                 return $this->returnError($center->errors()->first(), NULL, true);
             }
-            $featuredImages = $this->addFeaturedImages($request, $center);
+            $featuredImages = $this->addFeaturedImages($request, $center->id);
             if(!is_array($featuredImages)) {
                 return $this->returnError($featuredImages->errors()->first(), NULL, true);
             }
-            $gallery = $this->addGallery($request, $center);
+            $gallery = $this->addGallery($request, $center->id);
             if(!is_array($gallery)) {
                 return $this->returnError($gallery->errors()->first(), NULL, true);
             }
-            $timetable = $this->addOrUpdateTimeTable($request, $center);
+            $timetable = $this->addOrUpdateTimeTable($request, $center->id);
             if(!is_array($timetable)) {
                 return $this->returnError($timetable->errors()->first(), NULL, true);
             }
@@ -269,7 +272,7 @@ class CenterController extends BaseController {
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        $companyData = $companyModel->updateOrCreate($company);
+        $companyData = $companyModel->updateOrCreate(['shop_id' => $request->center_id], $company);
         return $this->returnSuccess(__($this->successMsg['company.add.details']), $companyData);
     }
 
@@ -298,5 +301,43 @@ class CenterController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['owner.add.details']), $center);
     }
     
+    public function addPaymentDetails(Request $request) {
+        
+        $paymentModel = new ShopPaymentDetail();
+        
+        $paymentDetails = [
+            'iban' => $request->iban,
+            'paypal_secret' => $request->paypal_secret,
+            'paypal_client_id' => $request->paypal_client_id,
+            'google_pay_number' => $request->google_pay_number,
+            'apple_pay_number' => $request->apple_pay_number,
+            'shop_id' => $request->center_id 
+        ];
+        $checks = $paymentModel->validator($paymentDetails);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->center_id], $paymentDetails);
+        
+        return $this->returnSuccess(__($this->successMsg['payment.add.details']), $payment);
+    }
     
+    public function addPaymentAgreement(Request $request) {
+        
+        $paymentModel = new ShopPaymentDetail();
+        
+        $paymentDetails = [
+            'sales_percentage' => $request->sales_percentage,
+            'inital_amount' => $request->inital_amount,
+            'fixed_amount' => $request->fixed_amount,
+            'shop_id' => $request->center_id
+        ];
+        $checks = $paymentModel->validateAgreement($paymentDetails);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->center_id], $paymentDetails);
+        
+        return $this->returnSuccess(__($this->successMsg['payment.agreement.add']), $payment);
+    }
 }
