@@ -38,6 +38,11 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->group(['prefix' => 'center'], function () use($router) {
         
         $router->post('details/get', 'Center\CenterController@getCenterDetails');
+        $router->post('details/add', 'Center\CenterController@addCenterDetails');
+        $router->post('company/details/add', 'Center\CenterController@addOrUpdateCompanyDetails');
+        $router->post('owner/details/add', 'Center\CenterController@addOwnerDetails');
+        $router->post('payment/details/add', 'Center\CenterController@addPaymentDetails');
+        $router->post('paymentAgreement/details/add', 'Center\CenterController@addPaymentAgreement');
     });
     
     $router->group(['prefix' => 'sidebar'], function () use($router) {

@@ -24,6 +24,8 @@ class ShopCompany extends Model
         'shop_id'
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+    
     public function validator(array $data)
     {
         return Validator::make($data, [

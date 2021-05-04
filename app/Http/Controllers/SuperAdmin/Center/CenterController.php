@@ -15,14 +15,27 @@ use App\Pack;
 use App\PackShop;
 use App\Receptionist;
 use App\Manager;
+use Illuminate\Support\Facades\Hash;
+use App\ShopGallary;
+use App\ShopHour;
+use Carbon\Carbon;
+use App\ShopCompany;
+use App\ShopFeaturedImage;
+use App\ShopPaymentDetail;
 
 class CenterController extends BaseController {
 
     public $successMsg = [
         'center.details' => 'Center details found successfully.',
+        'center.add.details' => 'Center details added successfully.',
+        'company.add.details' => 'Company details added successfully.',
+        'owner.add.details' => 'Owner details added successfully.',
+        'payment.add.details' => 'Payment details added successfully.',
+        'payment.agreement.add' => 'Payment agreement details added successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
+        'something.wrong' => 'Something goes wrong!!',
     ];
 
     public function getSoldVoucher(Request $request) {
@@ -91,5 +104,240 @@ class CenterController extends BaseController {
                     'home_visits' => $homeBooking, 'center_visits' => $centerBooking, 'vouchers' => $vouchers, 'packs' => $packs, 'earning' => $earning,
                     'totalBookings' => $totalBookings, 'cancelledBookings' => $cancelledBookings, 'staff' => $staff, 'shop' => $shop, 'topItems' => $topItems]);
     }
+    
+    public function addOrUpdateDetails(Request $request) {
+        $data = $request->all();
+        $shopModel = new Shop();
+        
+        $data['country_id'] = $data['location']['country_id'] ? $data['location']['country_id'] : null;
+        $data['province_id'] = $data['location']['province_id'] ? $data['location']['province_id'] : null;
+        $data['city_id'] = $data['location']['city_id'] ? $data['location']['city_id'] : null;
+        $data['longitude'] = $data['location']['longitude'] ? $data['location']['longitude'] : null;
+        $data['latitude'] = $data['location']['latitude'] ? $data['location']['latitude'] : null;
+        $data['zoom'] = $data['location']['zoom'] ? $data['location']['zoom'] : null;
+        $data['pin_code'] = $data['location']['pin_code'] ? $data['location']['pin_code'] : null;
+        $data['address'] = $data['location']['address'] ? $data['location']['address'] : null;
+        $data['address2'] = $data['location']['address2'] ? $data['location']['address2'] : null;
+        $data['shop_password'] = Hash::make($data['shop_password']);
+        $data['manager_password'] = Hash::make($data['manager_password']);
+        unset($data['location']);
 
+        $checks = $shopModel->validator($data);
+        if ($checks->fails()) {
+            return $checks;
+        }
+        $center = $shopModel->create($data);
+        return $center;
+    }
+    
+    public function addFeaturedImages(Request $request, $centerId) {
+        
+        $featuredModel = new ShopFeaturedImage();
+
+        $checkImage = $featuredModel->validateImages($request->featured_images);
+        if ($checkImage->fails()) {
+            return $this->returnError($checkImage->errors()->first(), NULL, true);
+        }
+        if($request->hasfile('featured_images')) {
+            foreach($request->file('featured_images') as $file)
+            {
+                $name = $file->getClientOriginalName();
+                $fileName = time() . '_' . $name;
+                $storeFile = $file->storeAs($featuredModel->storageFolderName, $fileName, $featuredModel->fileSystem);
+
+                if ($storeFile) {
+                    $image['image'] = $fileName;
+                    $image['shop_id'] = $centerId;
+                } 
+                $check = $featuredModel->validator($image);
+                if ($check->fails()) {
+                    return $check;
+                }
+                $featuredModel->create($image);
+                $imgData[] = $image;
+            }
+        }
+        return $imgData;
+    }
+    
+    public function addGallery(Request $request, $centerId) {
+        
+        $galleryModel = new ShopGallary();
+
+        $checkImage = $galleryModel->validateImages($request->gallery);
+        if ($checkImage->fails()) {
+            return $this->returnError($checkImage->errors()->first(), NULL, true);
+        }
+        if($request->hasfile('gallery')) {
+            foreach($request->file('gallery') as $file)
+            {
+                $name = $file->getClientOriginalName();
+                $fileName = time() . '_' . $name;
+                $storeFile = $file->storeAs($galleryModel->storageFolderName, $fileName, $galleryModel->fileSystem);
+
+                if ($storeFile) {
+                    $gallery['image'] = $fileName;
+                    $gallery['shop_id'] = $centerId;
+                } 
+                $check = $galleryModel->validator($gallery);
+                if ($check->fails()) {
+                    return $check;
+                }
+                $galleryModel->create($gallery);
+                $imgData[] = $gallery;
+            }
+        }
+        return $imgData;
+    }
+    
+    public function addOrUpdateTimeTable(Request $request, $centerId) {
+        
+        $shopHourModel = new ShopHour();
+        $data = $request->all();
+        
+        foreach ($data['timetable']['open_at'] as $key => $value) {
+            $time = Carbon::createFromTimestampMs($value);
+            $data['timetable']['open_at'][$key] = $time->format("h:i:s");
+        }
+        foreach ($data['timetable']['close_at'] as $key => $value) {
+            $time = Carbon::createFromTimestampMs($value);
+            $data['timetable']['close_at'][$key] = $time->format("h:i:s");
+            $timeTable = [
+               'day_name' => (string) $key,
+               'is_open' => (string) ShopHour::IS_OPEN,
+               'open_at' => $data['timetable']['open_at'][$key],
+               'close_at' => $data['timetable']['close_at'][$key],
+               'shop_id' => $centerId,
+            ];
+            $check = $shopHourModel->validator($timeTable);
+            if ($check->fails()) {
+                return $check;
+            }
+            $shopHourModel->create($timeTable);
+            $shopHours[] = $timeTable;
+        }
+        return $shopHours;
+    }
+    
+    public function addCenterDetails(Request $request) {
+
+        DB::beginTransaction();
+        try {
+
+            $center = $this->addOrUpdateDetails($request);
+            if(!is_array($center)) {
+                return $this->returnError($center->errors()->first(), NULL, true);
+            }
+            $featuredImages = $this->addFeaturedImages($request, $center->id);
+            if(!is_array($featuredImages)) {
+                return $this->returnError($featuredImages->errors()->first(), NULL, true);
+            }
+            $gallery = $this->addGallery($request, $center->id);
+            if(!is_array($gallery)) {
+                return $this->returnError($gallery->errors()->first(), NULL, true);
+            }
+            $timetable = $this->addOrUpdateTimeTable($request, $center->id);
+            if(!is_array($timetable)) {
+                return $this->returnError($timetable->errors()->first(), NULL, true);
+            }
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['center.add.details']), [$center, $featuredImages, $gallery, $timetable]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+    
+    public function addOrUpdateCompanyDetails(Request $request) {
+        
+        $data = $request->all();
+        $companyModel =  new ShopCompany();
+        $company = [
+            'name' => $data['name'],
+            'nif' => $data['nif'],
+            'address' => $data['location']['address'] ? $data['location']['address'] : null,
+            'city_id' => $data['location']['city_id'] ? $data['location']['city_id'] : null,
+            'province_id' => $data['location']['province_id'] ? $data['location']['province_id'] : null,
+            'country_id' => $data['location']['country_id'] ? $data['location']['country_id'] : null,
+            'longitude' => $data['location']['longitude'] ? $data['location']['longitude'] : null,
+            'latitude' => $data['location']['latitude'] ? $data['location']['latitude'] : null,
+            'zoom' => $data['location']['zoom'] ? $data['location']['zoom'] : null,
+            'shop_id' => $data['center_id'] ? $data['center_id'] : null
+        ];
+
+        $checks = $companyModel->validator($company);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $companyData = $companyModel->updateOrCreate(['shop_id' => $request->center_id], $company);
+        return $this->returnSuccess(__($this->successMsg['company.add.details']), $companyData);
+    }
+
+    public function addOwnerDetails(Request $request) {
+     
+        $data = $request->all();
+        $shopModel = new Shop();
+        $ownerData = [
+            'owner_name' => $data['owner_name'],
+            'owner_surname' => $data['owner_surname'],
+            'owner_email' => $data['owner_email'],
+            'owner_mobile_number' => $data['owner_mobile_number'],
+            'owner_mobile_number_alternative' => $data['owner_mobile_number_alternative'],
+            'finacial_situation' => $data['finacial_situation'],
+            'shop_id' => $request->center_id
+        ];
+        
+        $checks = $shopModel->validatorOwner($ownerData, $request->center_id, true);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $center = $shopModel->find($request->center_id);
+        $center->update($ownerData);
+        
+        return $this->returnSuccess(__($this->successMsg['owner.add.details']), $center);
+    }
+    
+    public function addPaymentDetails(Request $request) {
+        
+        $paymentModel = new ShopPaymentDetail();
+        
+        $paymentDetails = [
+            'iban' => $request->iban,
+            'paypal_secret' => $request->paypal_secret,
+            'paypal_client_id' => $request->paypal_client_id,
+            'google_pay_number' => $request->google_pay_number,
+            'apple_pay_number' => $request->apple_pay_number,
+            'shop_id' => $request->center_id 
+        ];
+        $checks = $paymentModel->validator($paymentDetails);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->center_id], $paymentDetails);
+        
+        return $this->returnSuccess(__($this->successMsg['payment.add.details']), $payment);
+    }
+    
+    public function addPaymentAgreement(Request $request) {
+        
+        $paymentModel = new ShopPaymentDetail();
+        
+        $paymentDetails = [
+            'sales_percentage' => $request->sales_percentage,
+            'inital_amount' => $request->inital_amount,
+            'fixed_amount' => $request->fixed_amount,
+            'shop_id' => $request->center_id
+        ];
+        $checks = $paymentModel->validateAgreement($paymentDetails);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->center_id], $paymentDetails);
+        
+        return $this->returnSuccess(__($this->successMsg['payment.agreement.add']), $payment);
+    }
 }

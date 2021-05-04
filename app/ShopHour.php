@@ -8,27 +8,39 @@ use App\Shop;
 class ShopHour extends BaseModel
 {
     protected $fillable = [
-        'sunday',
-        'monday',
-        'tuesday',
-        'wednesday',
-        'thursday',
-        'friday',
-        'saturday',
+        'day_name',
+        'is_open',
+        'open_at',
+        'close_at',
         'shop_id'
     ];
+    public $shopDays = [
+        '0' => 'Sunday',
+        '1' => 'Monday',
+        '2' => 'Tuesday',
+        '3' => 'Wednesday',
+        '4' => 'Thursday',
+        '5' => 'Friday',
+        '6' => 'Saturday'
+    ];
+    const IS_OPEN = 1;
 
     public function validator(array $data)
     {
         return Validator::make($data, [
-            'sunday'    => ['in:0,1'],
-            'monday'    => ['in:0,1'],
-            'tuesday'   => ['in:0,1'],
-            'wednesday' => ['in:0,1'],
-            'thursday'  => ['in:0,1'],
-            'friday'    => ['in:0,1'],
-            'saturday'  => ['in:0,1'],
-            'shop_id'   => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id']
+            'day_name'            => ['nullable', 'in:' . implode(",", array_keys($this->shopDays))],
+            'open_time'           => ['nullable', 'date_format:H:i'],
+            'close_time'          => ['nullable', 'date_format:H:i'],
+            'shop_id'             => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id']
         ]);
+    }
+    
+    public function getDayNameAttribute($value)
+    {
+        if (is_null($value)) {
+            return $value;
+        }
+
+        return $this->shopDays[$value];
     }
 }
