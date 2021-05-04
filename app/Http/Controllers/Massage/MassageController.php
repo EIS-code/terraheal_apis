@@ -87,10 +87,9 @@ class MassageController extends BaseController
     public function getMassageCenters(array $data = [], $isApi = true, int $limit = 10)
     {
         $request   = request();
-        $data      = $request->all();
+        // $data      = $request->all();
         $latitude  = (!empty($data['latitude'])) ? $data['latitude'] : $request->get('latitude', NULL);
         $longitude = (!empty($data['longitude'])) ? $data['longitude'] : $request->get('longitude', NULL);
-        echo $latitude, PHP_EOL, $longitude;exit;
         $limit     = (!is_numeric($limit)) ? 10 : $limit;
         $distance  = 45;
 
