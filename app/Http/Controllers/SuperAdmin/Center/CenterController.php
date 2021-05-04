@@ -35,6 +35,8 @@ class CenterController extends BaseController {
         'payment.add.details' => 'Payment details added successfully.',
         'payment.agreement.add' => 'Payment agreement details added successfully.',
         'documents.upload' => 'Center documents uploaded successfully.',
+        'center.vouchers' => 'Vouchers added successfully.',
+        'center.packs' => 'Packs added successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
@@ -371,5 +373,65 @@ class CenterController extends BaseController {
         
         $documents = $docModel->updateOrCreate(['shop_id' => $request->center_id], $imgData);
         return $this->returnSuccess(__($this->successMsg['documents.upload']), $documents);
+    }
+    
+    public function addVouchers(Request $request) {
+        
+        DB::beginTransaction();
+        try {
+            if(!empty($request->vouchers)) {
+                $voucherModel = new VoucherShop();
+                foreach ($request->vouchers as $key => $voucher) {
+                    $data = [
+                        'voucher_id' => $voucher,
+                        'shop_id' => $request->center_id
+                    ];
+                    $checks = $voucherModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $voucherModel->updateOrCreate($data,$data);
+                    $vouchers[] = $data;
+                }
+                DB::commit();
+                return $this->returnSuccess(__($this->successMsg['center.vouchers']), $vouchers);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+    
+    public function addPacks(Request $request) {
+        
+        DB::beginTransaction();
+        try {
+            if(!empty($request->packs)) {
+                $packModel = new PackShop();
+                foreach ($request->packs as $key => $pack) {
+                    $data = [
+                        'pack_id' => $pack,
+                        'shop_id' => $request->center_id
+                    ];
+                    $checks = $packModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $packModel->updateOrCreate($data,$data);
+                    $packs[] = $data;
+                }
+                DB::commit();
+                return $this->returnSuccess(__($this->successMsg['center.packs']), $packs);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 }
