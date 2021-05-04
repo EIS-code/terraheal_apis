@@ -118,4 +118,10 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     $router->group(['prefix' => 'match'], function () use($router) {
         $router->post('/qr', 'UserController@checkQRCode');
     });
+
+    $router->group(['prefix' => 'favorite'], function () use($router) {
+        $router->post('/get', 'UserController@getFavorite');
+        $router->post('/save', 'UserController@saveFavorite');
+        $router->post('/remove', 'UserController@removeFavorite');
+    });
 });

@@ -26,6 +26,7 @@ use App\UserPack;
 use App\UserPackOrder;
 use App\UserPackMassage;
 use App\UserPackGift;
+use App\UserFavoriteService;
 use DB;
 use Carbon\Carbon;
 use App\Libraries\CurrencyHelper;
@@ -59,7 +60,9 @@ class UserController extends BaseController
         'error.booking.places.not.found' => 'Booking places not found.',
         'error.booking.not.found' => 'Booking not found.',
         'error.provide.menu.id' => 'Please provide menu id.',
-        'error.user.document.found' => 'Document not found.'
+        'error.user.document.found' => 'Document not found.',
+        'error.user.favorite.provide.serviceid' => 'Please provide proper service id.',
+        'error.user.favorite.serviceid.not.found' => 'User favorite not found.'
     ];
 
     public $successMsg = [
@@ -109,7 +112,11 @@ class UserController extends BaseController
         'success.user.qr.matched' => 'User QR code matched !',
         'success.user.qr.matched.not.matched' => 'User QR code does not matched !',
         'success.user.document.updated' => 'User document updated successfully !',
-        'success.user.document.removed' => 'User document removed successfully !'
+        'success.user.document.removed' => 'User document removed successfully !',
+        'success.user.favorite.created' => 'User favorite created successfully !',
+        'success.user.favorite.removed' => 'User favorite removed successfully !',
+        'success.user.favorite.found' => 'User favorite found successfully !',
+        'success.user.favorite.not.found' => 'User favorite not found !'
     ];
 
     public function __construct()
@@ -1490,5 +1497,74 @@ class UserController extends BaseController
         }
 
         return $this->returns('error.user.not.found', NULL, true);
+    }
+
+    public function saveFavorite(Request $request)
+    {
+        $model      = new UserFavoriteService();
+        $modelUser  = new User();
+        $serviceId  = (int)$request->get('service_id', false);
+        $type       = (string)$request->get('type', $model::TYPE_MASSAGE);
+        $userId     = (int)$request->get('user_id', false);
+
+        $data       =   [
+                            'service_id' => $serviceId,
+                            'type'       => $type,
+                            'user_id'    => $userId
+                        ];
+
+        $validator = $model->validator($data);
+        if ($validator->fails()) {
+            return $this->returns($validator->errors()->first(), NULL, true);
+        }
+
+        if ($model->checkServiceIdExists($serviceId, $type)) {
+            $create = $model->updateOrCreate($data);
+
+            if ($create) {
+                return $this->returns('success.user.favorite.created', $modelUser->getGlobalResponse($userId));
+            }
+        } else {
+            return $this->returns('error.user.favorite.provide.serviceid', NULL, true);
+        }
+
+        return $this->returns('error.something', NULL, true);
+    }
+
+    public function removeFavorite(Request $request)
+    {
+        $model      = new UserFavoriteService();
+        $modelUser  = new User();
+        $serviceId  = (int)$request->get('service_id', false);
+        $type       = (string)$request->get('type', false);
+        $userId     = (int)$request->get('user_id', false);
+
+        if (!empty($serviceId)) {
+            $record = $model->where('service_id', $serviceId)->where('type', $type)->where('user_id', $userId)->first();
+
+            if (!empty($record)) {
+                $remove = $record->delete();
+
+                if ($remove) {
+                    return $this->returns('success.user.favorite.removed', $modelUser->getGlobalResponse($userId));
+                }
+            }
+        }
+
+        return $this->returns('error.user.favorite.serviceid.not.found', NULL, true);
+    }
+
+    public function getFavorite(Request $request)
+    {
+        $model  = new UserFavoriteService();
+        $userId = (int)$request->get('user_id', false);
+
+        if (!empty($userId)) {
+            $records = $model->where('user_id', $userId)->get();
+
+            return $this->returns('success.user.favorite.found', $records);
+        }
+
+        return $this->returns('success.user.favorite.not.found', collect([]));
     }
 }
