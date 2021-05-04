@@ -20,6 +20,7 @@ use App\ShopGallary;
 use App\ShopHour;
 use Carbon\Carbon;
 use App\ShopCompany;
+use App\ShopFeaturedImage;
 
 class CenterController extends BaseController {
 
@@ -104,22 +105,7 @@ class CenterController extends BaseController {
     public function addOrUpdateDetails(Request $request) {
         $data = $request->all();
         $shopModel = new Shop();
-
-        /* For featured Image */
-        if ($request->hasFile('featured_image')) {
-            $checkImage = $shopModel->validateFeaturedImage($data);
-            if ($checkImage->fails()) {
-                unset($data['featured_image']);
-
-                return $this->returnError($checkImage->errors()->first(), NULL, true);
-            }
-            $fileName = time() . '.' . $data['featured_image']->getClientOriginalExtension();
-            $storeFile = $data['featured_image']->storeAs($shopModel->profilePhotoPath, $fileName, $shopModel->fileSystem);
-
-            if ($storeFile) {
-                $data['featured_image'] = $fileName;
-            }
-        }
+        
         $data['country_id'] = $data['location']['country_id'] ? $data['location']['country_id'] : null;
         $data['province_id'] = $data['location']['province_id'] ? $data['location']['province_id'] : null;
         $data['city_id'] = $data['location']['city_id'] ? $data['location']['city_id'] : null;
@@ -135,10 +121,40 @@ class CenterController extends BaseController {
 
         $checks = $shopModel->validator($data);
         if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
+            return $checks;
         }
         $center = $shopModel->create($data);
         return $center;
+    }
+    
+    public function addFeaturedImages(Request $request, $center) {
+        
+        $featuredModel = new ShopFeaturedImage();
+
+        $checkImage = $featuredModel->validateImages($request->featured_images);
+        if ($checkImage->fails()) {
+            return $this->returnError($checkImage->errors()->first(), NULL, true);
+        }
+        if($request->hasfile('featured_images')) {
+            foreach($request->file('featured_images') as $file)
+            {
+                $name = $file->getClientOriginalName();
+                $fileName = time() . '_' . $name;
+                $storeFile = $file->storeAs($featuredModel->storageFolderName, $fileName, $featuredModel->fileSystem);
+
+                if ($storeFile) {
+                    $image['image'] = $fileName;
+                    $image['shop_id'] = $center->id;
+                } 
+                $check = $featuredModel->validator($image);
+                if ($check->fails()) {
+                    return $check;
+                }
+                $featuredModel->create($image);
+                $imgData[] = $image;
+            }
+        }
+        return $imgData;
     }
     
     public function addGallery(Request $request, $center) {
@@ -162,7 +178,7 @@ class CenterController extends BaseController {
                 } 
                 $check = $galleryModel->validator($gallery);
                 if ($check->fails()) {
-                    return $this->returnError($check->errors()->first(), NULL, true);
+                    return $check;
                 }
                 $galleryModel->create($gallery);
                 $imgData[] = $gallery;
@@ -192,7 +208,7 @@ class CenterController extends BaseController {
             ];
             $check = $shopHourModel->validator($timeTable);
             if ($check->fails()) {
-                return $this->returnError($check->errors()->first(), NULL, true);
+                return $check;
             }
             $shopHourModel->create($timeTable);
             $shopHours[] = $timeTable;
@@ -206,14 +222,23 @@ class CenterController extends BaseController {
         try {
 
             $center = $this->addOrUpdateDetails($request);
-            $gallery = $this->addGallery($request, $center);
-            $timetable = $this->addOrUpdateTimeTable($request, $center);
-            if ($center && $gallery && $timetable) {
-                DB::commit();
-                return $this->returnSuccess(__($this->successMsg['center.add.details']), [$center, $gallery, $timetable]);
-            } else {
-                return $this->returnSuccess(__($this->successMsg['something.wrong']));
+            if(!is_array($center)) {
+                return $this->returnError($center->errors()->first(), NULL, true);
             }
+            $featuredImages = $this->addFeaturedImages($request, $center);
+            if(!is_array($featuredImages)) {
+                return $this->returnError($featuredImages->errors()->first(), NULL, true);
+            }
+            $gallery = $this->addGallery($request, $center);
+            if(!is_array($gallery)) {
+                return $this->returnError($gallery->errors()->first(), NULL, true);
+            }
+            $timetable = $this->addOrUpdateTimeTable($request, $center);
+            if(!is_array($timetable)) {
+                return $this->returnError($timetable->errors()->first(), NULL, true);
+            }
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['center.add.details']), [$center, $featuredImages, $gallery, $timetable]);
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;
@@ -272,4 +297,6 @@ class CenterController extends BaseController {
         
         return $this->returnSuccess(__($this->successMsg['owner.add.details']), $center);
     }
+    
+    
 }

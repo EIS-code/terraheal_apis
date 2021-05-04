@@ -49,9 +49,6 @@ class Shop extends BaseModel implements CanResetPasswordContract
     const IS_ADMIN = '0';
     const MASSAGES = '0';
     const THERAPIES = '1';
-
-    public $fileSystem = 'public';
-    public $profilePhotoPath = 'shop\featured_image\\';
     
     public function validator(array $data, $id = false, $isUpdate = false)
     {
@@ -64,7 +61,6 @@ class Shop extends BaseModel implements CanResetPasswordContract
 
         return Validator::make($data, [
             'name'                => ['nullable', 'string', 'max:255'],
-            'featured_image'      => ['nullable', 'string', 'max:255'],
             'address'             => ['nullable', 'string', 'max:255'],
             'address2'            => ['nullable', 'string', 'max:255'],
             'description'         => ['nullable', 'string'],
@@ -114,15 +110,6 @@ class Shop extends BaseModel implements CanResetPasswordContract
             'city_id'     => ['required', 'integer'],
             'country_id'  => ['required', 'integer'],
             'pin_code'    => ['nullable', 'string', 'max:255']
-        ]);
-    }
-
-    public function validateFeaturedImage($request)
-    {
-        return Validator::make($request, [
-            'featured_image' => 'mimes:jpeg,png,jpg',
-        ], [
-            'featured_image' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
         ]);
     }
    
