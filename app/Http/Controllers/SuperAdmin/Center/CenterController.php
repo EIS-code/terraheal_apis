@@ -22,6 +22,8 @@ use Carbon\Carbon;
 use App\ShopCompany;
 use App\ShopFeaturedImage;
 use App\ShopPaymentDetail;
+use App\ShopDocument;
+use App\Libraries\CommonHelper;
 
 class CenterController extends BaseController {
 
@@ -32,10 +34,10 @@ class CenterController extends BaseController {
         'owner.add.details' => 'Owner details added successfully.',
         'payment.add.details' => 'Payment details added successfully.',
         'payment.agreement.add' => 'Payment agreement details added successfully.',
+        'documents.upload' => 'Center documents uploaded successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
-        'something.wrong' => 'Something goes wrong!!',
     ];
 
     public function getSoldVoucher(Request $request) {
@@ -336,8 +338,38 @@ class CenterController extends BaseController {
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->center_id], $paymentDetails);
         
+        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->center_id], $paymentDetails);
         return $this->returnSuccess(__($this->successMsg['payment.agreement.add']), $payment);
+    }
+    
+    public function uploadDocuments(Request $request) {
+        
+        $docModel = new ShopDocument();
+        $data = $request->all();
+        $checkImages = $docModel->validateImages($data);
+        if ($checkImages->fails()) {
+            return $this->returnError($checkImages->errors()->first(), NULL, true);
+        }
+        if($request->hasfile('franchise_contact')) {
+            $image = CommonHelper::uploadImage($data['franchise_contact'], $docModel->storageFolderNameFranchise, $docModel->fileSystem);
+            $imgData['franchise_contact'] = $image ? $image : null;
+        }
+        if($request->hasfile('id_passport')) {
+            $image = CommonHelper::uploadImage($data['id_passport'], $docModel->storageFolderNameIdPassport, $docModel->fileSystem);
+            $imgData['id_passport'] = $image ? $image : null;
+        }
+        if($request->hasfile('registration')) {
+            $image = CommonHelper::uploadImage($data['registration'], $docModel->storageFolderNameRegistration, $docModel->fileSystem);
+            $imgData['registration'] = $image ? $image : null;
+        }
+        $imgData['shop_id'] = $data['center_id'];
+        $checks = $docModel->validator($imgData);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $documents = $docModel->updateOrCreate(['shop_id' => $request->center_id], $imgData);
+        return $this->returnSuccess(__($this->successMsg['documents.upload']), $documents);
     }
 }

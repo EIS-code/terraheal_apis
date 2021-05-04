@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use App\Shop;
 
 class ShopDocument extends Model
@@ -15,12 +16,14 @@ class ShopDocument extends Model
         'shop_id'
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+    
     public $fileSystem  = 'public';
-    public $storageFolderNameFranchise    = 'shop\\document\\franchise';
-    public $storageFolderNameIdPassport   = 'shop\\document\\id_passport';
-    public $storageFolderNameRegistration = 'shop\\document\\registrations';
+    public $storageFolderNameFranchise    = 'shop\\document\\franchise\\';
+    public $storageFolderNameIdPassport   = 'shop\\document\\id_passport\\';
+    public $storageFolderNameRegistration = 'shop\\document\\registrations\\';
 
-    public function validator(array $data, $id = false, $isUpdate = false)
+    public function validator(array $data)
     {
         return Validator::make($data, [
             'franchise_contact' => ['nullable', 'string', 'max:255'],
@@ -76,5 +79,18 @@ class ShopDocument extends Model
         }
 
         return $default;
+    }
+    
+    public function validateImages($request)
+    {
+        return Validator::make($request, [
+            'franchise_contact' => 'mimes:jpeg,png,jpg',
+            'id_passport' => 'mimes:jpeg,png,jpg',
+            'registration' => 'mimes:jpeg,png,jpg',
+        ], [
+            'franchise_contact' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.',
+            'id_passport' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.',
+            'registration' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        ]);
     }
 }
