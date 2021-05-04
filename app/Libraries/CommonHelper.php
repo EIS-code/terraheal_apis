@@ -53,4 +53,15 @@ class CommonHelper {
         return "$h:$m";
     }
 
+    public static function uploadImage($data ,$storagePath, $fileSystem) {
+        
+        $name = $data->getClientOriginalName();
+        $fileName = time() . '_' . $name;
+        $storeFile = $data->storeAs($storagePath, $fileName, $fileSystem);
+
+        if ($storeFile) {
+            return $fileName;
+        }
+        return false;
+    }
 }

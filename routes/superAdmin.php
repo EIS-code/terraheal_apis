@@ -43,6 +43,9 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('owner/details/add', 'Center\CenterController@addOwnerDetails');
         $router->post('payment/details/add', 'Center\CenterController@addPaymentDetails');
         $router->post('paymentAgreement/details/add', 'Center\CenterController@addPaymentAgreement');
+        $router->post('documents/upload', 'Center\CenterController@uploadDocuments');
+        $router->post('vouchers/add', 'Center\CenterController@addVouchers');
+        $router->post('packs/add', 'Center\CenterController@addPacks');
     });
     
     $router->group(['prefix' => 'sidebar'], function () use($router) {
