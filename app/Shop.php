@@ -50,10 +50,9 @@ class Shop extends BaseModel implements CanResetPasswordContract
     const MASSAGES = '0';
     const THERAPIES = '1';
     
-    public function validator(array $data, $id = false, $isUpdate = false)
+    public function validator(array $data, $id = false)
     {
-        $user = NULL;
-        if ($isUpdate === true && !empty($id)) {
+        if (!empty($id)) {
             $emailValidator      = ['unique:shops,email,' . $id];
         } else {
             $emailValidator      = ['unique:shops'];
@@ -80,9 +79,9 @@ class Shop extends BaseModel implements CanResetPasswordContract
         ]);
     }
 
-    public function validatorOwner(array $data, $id = false, $isUpdate = false)
+    public function validatorOwner(array $data, $id = false)
     {
-        if ($isUpdate === true && !empty($id)) {
+        if (!empty($id)) {
             $ownerEmailValidator = ['unique:shops,owner_email,' . $id];
         } else {
             $ownerEmailValidator = ['unique:shops'];
@@ -147,13 +146,37 @@ class Shop extends BaseModel implements CanResetPasswordContract
     {
         return $this->hasOne('App\ShopHour', 'shop_id', 'id');
     }
-
-     /**
-     * Send the password reset notification.
-     *
-     * @param  string  $token
-     * @return void
-     */
+    
+    public function featuredImages()
+    {
+        return $this->hasMany('App\ShopFeaturedImage', 'shop_id', 'id');
+    }
+    
+    public function gallery()
+    {
+        return $this->hasMany('App\ShopGallary', 'shop_id', 'id');
+    }
+    
+    public function timetable()
+    {
+        return $this->hasMany('App\ShopHour', 'shop_id', 'id');
+    }
+    
+    public function documents()
+    {
+        return $this->hasMany('App\ShopDocument', 'shop_id', 'id');
+    }
+    
+    public function company()
+    {
+        return $this->hasOne('App\ShopCompany', 'id', 'shop_id');
+    }
+    
+    public function payment()
+    {
+        return $this->hasOne('App\ShopPaymentDetail', 'shop_id');
+    }
+    
     public function sendPasswordResetNotification($token)
     {
         $classPasswordNotification = new ResetPasswordNotification($token);

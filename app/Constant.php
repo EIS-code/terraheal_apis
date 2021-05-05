@@ -12,6 +12,8 @@ class Constant extends BaseModel
         'is_removed'
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+    
     public function validator(array $data)
     {
         return Validator::make($data, [

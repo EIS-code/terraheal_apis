@@ -46,6 +46,10 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('documents/upload', 'Center\CenterController@uploadDocuments');
         $router->post('vouchers/add', 'Center\CenterController@addVouchers');
         $router->post('packs/add', 'Center\CenterController@addPacks');
+        $router->get('constants/get', 'Center\CenterController@getConstants');
+        $router->post('constants/add', 'Center\CenterController@addConstants');
+        $router->post('featuredImages/delete', 'Center\CenterController@deleteFeaturedImages');
+        $router->post('galleryImages/delete', 'Center\CenterController@deleteGalleryImages');
     });
     
     $router->group(['prefix' => 'sidebar'], function () use($router) {

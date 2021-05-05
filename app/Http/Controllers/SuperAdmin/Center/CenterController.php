@@ -24,6 +24,8 @@ use App\ShopFeaturedImage;
 use App\ShopPaymentDetail;
 use App\ShopDocument;
 use App\Libraries\CommonHelper;
+use App\Constant;
+use Illuminate\Support\Facades\Storage;
 
 class CenterController extends BaseController {
 
@@ -37,9 +39,13 @@ class CenterController extends BaseController {
         'documents.upload' => 'Center documents uploaded successfully.',
         'center.vouchers' => 'Vouchers added successfully.',
         'center.packs' => 'Packs added successfully.',
+        'center.constant' => 'Center constant details found successfully.',
+        'center.constant.add' => 'Center constant details added successfully.',
+        'image' => 'Image deleted successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
+        'image.not.found' => 'Image not found.',
     ];
 
     public function getSoldVoucher(Request $request) {
@@ -109,7 +115,7 @@ class CenterController extends BaseController {
                     'totalBookings' => $totalBookings, 'cancelledBookings' => $cancelledBookings, 'staff' => $staff, 'shop' => $shop, 'topItems' => $topItems]);
     }
     
-    public function addOrUpdateDetails(Request $request) {
+    public function addOrUpdateDetails(Request $request, $centerId) {
         $data = $request->all();
         $shopModel = new Shop();
         
@@ -126,57 +132,68 @@ class CenterController extends BaseController {
         $data['manager_password'] = Hash::make($data['manager_password']);
         unset($data['location']);
 
-        $checks = $shopModel->validator($data);
+        $checks = $shopModel->validator($data, $centerId);
         if ($checks->fails()) {
             return $checks;
         }
-        $center = $shopModel->create($data);
+        if(!empty($centerId)) {
+            $center = $shopModel->find($centerId);
+            $center->update($data);
+        } else {            
+            $center = $shopModel->create($data);
+        }
         return $center;
     }
     
     public function addFeaturedImages(Request $request, $centerId) {
         
-        $featuredModel = new ShopFeaturedImage();
+        $imgData = [];
+        if (!empty($request->featured_images)) {
+            $featuredModel = new ShopFeaturedImage();
 
-        $checkImage = $featuredModel->validateImages($request->featured_images);
-        if ($checkImage->fails()) {
-            return $this->returnError($checkImage->errors()->first(), NULL, true);
-        }
-        if($request->hasfile('featured_images')) {
-            foreach($request->file('featured_images') as $file)
-            {
-                $name = $file->getClientOriginalName();
-                $fileName = time() . '_' . $name;
-                $storeFile = $file->storeAs($featuredModel->storageFolderName, $fileName, $featuredModel->fileSystem);
+            $checkImage = $featuredModel->validateImages($request->featured_images);
+            if ($checkImage->fails()) {
+                return $this->returnError($checkImage->errors()->first(), NULL, true);
+            }
+            if ($request->hasfile('featured_images')) {
+                foreach ($request->file('featured_images') as $file) {
+                    $name = $file->getClientOriginalExtension();
+                    $fileName = time() . '_' . $centerId . '.' . $name;
+                    $storeFile = $file->storeAs($featuredModel->storageFolderName, $fileName, $featuredModel->fileSystem);
 
-                if ($storeFile) {
-                    $image['image'] = $fileName;
-                    $image['shop_id'] = $centerId;
-                } 
-                $check = $featuredModel->validator($image);
-                if ($check->fails()) {
-                    return $check;
+                    if ($storeFile) {
+                        $image['image'] = $fileName;
+                        $image['shop_id'] = $centerId;
+                    }
+                    $check = $featuredModel->validator($image);
+                    if ($check->fails()) {
+                        return $check;
+                    }
+                    $featuredModel->create($image);
+                    $imgData[] = $image;
                 }
-                $featuredModel->create($image);
-                $imgData[] = $image;
             }
         }
         return $imgData;
     }
-    
+
     public function addGallery(Request $request, $centerId) {
         
-        $galleryModel = new ShopGallary();
+        $imgData = [];
+        if(!empty($request->gallery)) {
+            
+            $galleryModel = new ShopGallary();
 
-        $checkImage = $galleryModel->validateImages($request->gallery);
-        if ($checkImage->fails()) {
-            return $this->returnError($checkImage->errors()->first(), NULL, true);
+            $checkImage = $galleryModel->validateImages($request->gallery);
+            if ($checkImage->fails()) {
+                return $this->returnError($checkImage->errors()->first(), NULL, true);
+            }
+            if($request->hasfile('gallery')) {
         }
-        if($request->hasfile('gallery')) {
             foreach($request->file('gallery') as $file)
             {
-                $name = $file->getClientOriginalName();
-                $fileName = time() . '_' . $name;
+                $name = $file->getClientOriginalExtension();
+                $fileName = time() . '_' . $centerId . '.' . $name;
                 $storeFile = $file->storeAs($galleryModel->storageFolderName, $fileName, $galleryModel->fileSystem);
 
                 if ($storeFile) {
@@ -195,57 +212,70 @@ class CenterController extends BaseController {
     }
     
     public function addOrUpdateTimeTable(Request $request, $centerId) {
-        
-        $shopHourModel = new ShopHour();
+
+        $shopHours = [];
         $data = $request->all();
-        
-        foreach ($data['timetable']['open_at'] as $key => $value) {
-            $time = Carbon::createFromTimestampMs($value);
-            $data['timetable']['open_at'][$key] = $time->format("h:i:s");
-        }
-        foreach ($data['timetable']['close_at'] as $key => $value) {
+        if (!empty($data['timetable'])) {
+            $shopHourModel = new ShopHour();
+
+            foreach ($data['timetable']['open_at'] as $key => $value) {
+                $time = Carbon::createFromTimestampMs($value);
+                $data['timetable']['open_at'][$key] = $time->format("h:i:s");
+            }
+            foreach ($data['timetable']['close_at'] as $key => $value) {
+                
+            }
             $time = Carbon::createFromTimestampMs($value);
             $data['timetable']['close_at'][$key] = $time->format("h:i:s");
             $timeTable = [
-               'day_name' => (string) $key,
-               'is_open' => (string) ShopHour::IS_OPEN,
-               'open_at' => $data['timetable']['open_at'][$key],
-               'close_at' => $data['timetable']['close_at'][$key],
-               'shop_id' => $centerId,
+                'day_name' => (string) $key,
+                'is_open' => (string) ShopHour::IS_OPEN,
+                'open_at' => $data['timetable']['open_at'][$key],
+                'close_at' => $data['timetable']['close_at'][$key],
+                'shop_id' => $centerId,
             ];
             $check = $shopHourModel->validator($timeTable);
             if ($check->fails()) {
                 return $check;
             }
-            $shopHourModel->create($timeTable);
+            $shopHourModel->updateOrCreate($timeTable, $timeTable);
             $shopHours[] = $timeTable;
         }
         return $shopHours;
     }
-    
+
     public function addCenterDetails(Request $request) {
 
         DB::beginTransaction();
         try {
-
-            $center = $this->addOrUpdateDetails($request);
-            if(!is_array($center)) {
+            $centerId = null;
+            if (!empty($request->center_id)) {
+                $center = Shop::find($request->center_id);
+                if (empty($center)) {
+                    return $this->returnSuccess(__($this->errorMsg['center.not.found']));
+                }
+                $centerId = $center->id;
+            }
+            $center = $this->addOrUpdateDetails($request, $centerId);
+            if(!is_object($center)) {
                 return $this->returnError($center->errors()->first(), NULL, true);
             }
-            $featuredImages = $this->addFeaturedImages($request, $center->id);
+            $centerId = $center->id;
+            $featuredImages = $this->addFeaturedImages($request, $centerId);
             if(!is_array($featuredImages)) {
                 return $this->returnError($featuredImages->errors()->first(), NULL, true);
             }
-            $gallery = $this->addGallery($request, $center->id);
+            $gallery = $this->addGallery($request, $centerId);
             if(!is_array($gallery)) {
                 return $this->returnError($gallery->errors()->first(), NULL, true);
             }
-            $timetable = $this->addOrUpdateTimeTable($request, $center->id);
+            $timetable = $this->addOrUpdateTimeTable($request, $centerId);
             if(!is_array($timetable)) {
                 return $this->returnError($timetable->errors()->first(), NULL, true);
             }
             DB::commit();
-            return $this->returnSuccess(__($this->successMsg['center.add.details']), [$center, $featuredImages, $gallery, $timetable]);
+            $centerDetails = Shop::with('company','featuredImages','gallery','timetable')->where('id',$centerId)->get();
+            return $this->returnSuccess(__($this->successMsg['center.add.details']),$centerDetails);
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;
@@ -354,15 +384,15 @@ class CenterController extends BaseController {
             return $this->returnError($checkImages->errors()->first(), NULL, true);
         }
         if($request->hasfile('franchise_contact')) {
-            $image = CommonHelper::uploadImage($data['franchise_contact'], $docModel->storageFolderNameFranchise, $docModel->fileSystem);
+            $image = CommonHelper::uploadImage($data['franchise_contact'], $docModel->storageFolderNameFranchise, $docModel->fileSystem, $data['center_id']);
             $imgData['franchise_contact'] = $image ? $image : null;
         }
         if($request->hasfile('id_passport')) {
-            $image = CommonHelper::uploadImage($data['id_passport'], $docModel->storageFolderNameIdPassport, $docModel->fileSystem);
+            $image = CommonHelper::uploadImage($data['id_passport'], $docModel->storageFolderNameIdPassport, $docModel->fileSystem, $data['center_id']);
             $imgData['id_passport'] = $image ? $image : null;
         }
         if($request->hasfile('registration')) {
-            $image = CommonHelper::uploadImage($data['registration'], $docModel->storageFolderNameRegistration, $docModel->fileSystem);
+            $image = CommonHelper::uploadImage($data['registration'], $docModel->storageFolderNameRegistration, $docModel->fileSystem, $data['center_id']);
             $imgData['registration'] = $image ? $image : null;
         }
         $imgData['shop_id'] = $data['center_id'];
@@ -433,5 +463,87 @@ class CenterController extends BaseController {
             DB::rollback();
             throw $e;
         }
+    }
+    
+    public function getConstants() {
+        
+        $constants = Constant::all();
+        return $this->returnSuccess(__($this->successMsg['center.constant']), $constants);
+    }
+    
+    public function addConstants(Request $request) {
+        
+        $constModel = new Constant();
+        $data = $request->all();
+        
+        $checks = $constModel->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $constants = $constModel->create($data);
+        return $this->returnSuccess(__($this->successMsg['center.constant.add']), $constants);
+    }
+    
+    public function deleteFeaturedImages(Request $request) {
+     
+        DB::beginTransaction();
+        try {
+            $featuredModel = new ShopFeaturedImage();
+            $image = $featuredModel->where(['id' => $request->image_id, 'shop_id' => $request->center_id])->first();
+            if(empty($image)) {
+                return $this->returnSuccess(__($this->errorMsg['image.not.found']));
+            }
+            $pathinfo = pathinfo($image->image);
+            if (empty($pathinfo['filename'])) {
+                return $this->returnSuccess(__($this->errorMsg['image.not.found']));
+            }
+            $storageFolderNameRegistration = (str_ireplace("\\", "/", $featuredModel->storageFolderName));
+            $imagePath = $storageFolderNameRegistration . $pathinfo['filename'].'.'.$pathinfo['extension'];
+            if (Storage::disk($featuredModel->fileSystem)->exists($imagePath)) {
+                    Storage::disk($featuredModel->fileSystem)->delete($imagePath);
+            }
+            $image->delete();
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['image']));
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }    
+    }
+    
+    public function deleteGalleryImages(Request $request) {
+     
+        DB::beginTransaction();
+        try {
+            $galleryModel = new ShopGallary();
+            $image = $galleryModel->where(['id' => $request->image_id, 'shop_id' => $request->center_id])->first();
+            if(empty($image)) {
+                return $this->returnSuccess(__($this->errorMsg['image.not.found']));
+            }
+            $pathinfo = pathinfo($image->image);
+            if (empty($pathinfo['filename'])) {
+                return $this->returnSuccess(__($this->errorMsg['image.not.found']));
+            }
+            $storageFolderNameRegistration = (str_ireplace("\\", "/", $galleryModel->storageFolderName));
+            $imagePath = $storageFolderNameRegistration . $pathinfo['filename'].'.'.$pathinfo['extension'];
+            if (Storage::disk($galleryModel->fileSystem)->exists($imagePath)) {
+                    Storage::disk($galleryModel->fileSystem)->delete($imagePath);
+            }
+            $image->delete();
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['image']));
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }    
     }
 }
