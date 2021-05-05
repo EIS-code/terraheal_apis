@@ -158,47 +158,50 @@ class ClientController extends BaseController {
                 ->where(['shop_id' => $request->shop_id,'id' => $userId])
                 ->first();
         
-        $bookingModel = new Booking();
-        
-        $totalAppointments = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
-        $lastVisit = $totalAppointments->first();
-        $lastVisit = Carbon::createFromTimestampMs($lastVisit[0]['massage_date']);
-        
-        $recipient = UserPeople::where('user_id',$userId)->get()->count();
-        $addresses = UserAddress::where('user_id',$userId)->get()->count();
-        $therapists = $bookingModel->getGlobalQuery($request)->groupBy('therapist_id')->count();
-        $is_verified = false;
-        if($client->is_email_verified == 1 && $client->is_mobile_verified == 1 && $client->is_document_verified == 1) {
-            $is_verified = true;
-        }        
-        $questionnaries = TherapyQuestionnaire::with('questionnaireAnswer')->get();
-        
-        $ratings = TherapistUserRating::where('user_id',$userId)->get();
-        $avg_rating = $ratings->avg('rating');
-        
-        $ratingData = $this->getRatings($ratings);
-        
-        $request->request->add(['bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
-        $noShow = $bookingModel->getGlobalQuery($request)->groupBy('booking_id')->count();
-               
-        $infoForTherapy = UserMassagePreferences::with('massagePreference:id,name','massagePreferenceOption:id,name')->where('user_id',$request->user_id)->get();
-        
-        $packs = Pack::with('users')->whereHas('users', function($q) use($userId) {
-                            $q->where('users_id',$userId);
-                        })->get();
-        $vouchers = Voucher::with('users')->whereHas('users', function($q) use($userId) {
-                            $q->where('user_id',$userId);
-                        })->get();
-                        
-        $client['totalAppointments'] = $totalAppointments->count();
-        $client['noShow'] = $noShow;
-        $client['registeredAt'] = $client->created_at;
-        $client['lastVisited'] = $lastVisit;
-        $client['avg_rating'] = number_format($avg_rating, 2);
-        $client['is_verified'] = $is_verified;
-        return $this->returnSuccess(__($this->successMsg['client.data.found']), 
-                ["client" => $client, "recipient" => $recipient, "addresses" => $addresses, "therapists" => $therapists,"questionnaries" => $questionnaries, "ratings" => $ratingData,
-                    "infoForTherapy" => $infoForTherapy, "packs" => $packs, "vouchers" => $vouchers]);
+        if($client) {
+            $bookingModel = new Booking();
+
+            $totalAppointments = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
+            $lastVisit = $totalAppointments->first();
+            $lastVisit = !empty($lastVisit) ? Carbon::createFromTimestampMs($lastVisit[0]['massage_date']) : null;
+
+            $recipient = UserPeople::where('user_id',$userId)->get()->count();
+            $addresses = UserAddress::where('user_id',$userId)->get()->count();
+            $therapists = $bookingModel->getGlobalQuery($request)->groupBy('therapist_id')->count();
+            $is_verified = false;
+            if($client->is_email_verified == 1 && $client->is_mobile_verified == 1 && $client->is_document_verified == 1) {
+                $is_verified = true;
+            }        
+            $questionnaries = TherapyQuestionnaire::with('questionnaireAnswer')->get();
+
+            $ratings = TherapistUserRating::where('user_id',$userId)->get();
+            $avg_rating = $ratings->avg('rating');
+
+            $ratingData = $this->getRatings($ratings);
+
+            $request->request->add(['bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
+            $noShow = $bookingModel->getGlobalQuery($request)->groupBy('booking_id')->count();
+
+            $infoForTherapy = UserMassagePreferences::with('massagePreference:id,name','massagePreferenceOption:id,name')->where('user_id',$request->user_id)->get();
+
+            $packs = Pack::with('users')->whereHas('users', function($q) use($userId) {
+                                $q->where('users_id',$userId);
+                            })->get();
+            $vouchers = Voucher::with('users')->whereHas('users', function($q) use($userId) {
+                                $q->where('user_id',$userId);
+                            })->get();
+
+            $client['totalAppointments'] = $totalAppointments->count();
+            $client['noShow'] = $noShow;
+            $client['registeredAt'] = $client->created_at;
+            $client['lastVisited'] = $lastVisit;
+            $client['avg_rating'] = number_format($avg_rating, 2);
+            $client['is_verified'] = $is_verified;
+            return $this->returnSuccess(__($this->successMsg['client.data.found']), 
+                    ["client" => $client, "recipient" => $recipient, "addresses" => $addresses, "therapists" => $therapists,"questionnaries" => $questionnaries, "ratings" => $ratingData,
+                        "infoForTherapy" => $infoForTherapy, "packs" => $packs, "vouchers" => $vouchers]);
+        }
+        return $this->returnSuccess(__($this->successMsg['client.not.found']));
     }
      
     public function getFutureBookings(Request $request) {
