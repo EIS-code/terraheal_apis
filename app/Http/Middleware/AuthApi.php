@@ -24,8 +24,21 @@ class AuthApi
     {
         $apiKey = (!empty($request->header('api-key'))) ? $request->header('api-key') : false;
 
-        // Exclude client APIs temporary as Prasangsir said we will add it later after whole app complete. 20212904
-        if ($request->is('user*') || $request->is('location*') || $request->is('massage*') || $request->is('therapy*')) {
+        // Exclude client and Shop APIs temporary as Prasangsir said we will add it later after whole app complete. 20212904
+        if (
+                $request->is('user*') || 
+                $request->is('location*') || 
+                $request->is('massage*') || 
+                $request->is('therapy*') || 
+                $request->is('shops*') || 
+                $request->is('dashboard*') || 
+                $request->is('events*') || 
+                $request->is('clients*') || 
+                $request->is('rooms*') || 
+                $request->is('receptionist*') || 
+                $request->is('therapist*') || 
+                $request->is('waiting*')
+        ) {
             return $next($request);
         }
 
