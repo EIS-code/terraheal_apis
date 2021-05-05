@@ -24,6 +24,7 @@ use App\ShopFeaturedImage;
 use App\ShopPaymentDetail;
 use App\ShopDocument;
 use App\Libraries\CommonHelper;
+use App\Constant;
 
 class CenterController extends BaseController {
 
@@ -37,6 +38,8 @@ class CenterController extends BaseController {
         'documents.upload' => 'Center documents uploaded successfully.',
         'center.vouchers' => 'Vouchers added successfully.',
         'center.packs' => 'Packs added successfully.',
+        'center.constant' => 'Center constant details found successfully.',
+        'center.constant.add' => 'Center constant details added successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
@@ -229,7 +232,7 @@ class CenterController extends BaseController {
         try {
 
             $center = $this->addOrUpdateDetails($request);
-            if(!is_array($center)) {
+            if(!is_object($center)) {
                 return $this->returnError($center->errors()->first(), NULL, true);
             }
             $featuredImages = $this->addFeaturedImages($request, $center->id);
@@ -433,5 +436,25 @@ class CenterController extends BaseController {
             DB::rollback();
             throw $e;
         }
+    }
+    
+    public function getConstants() {
+        
+        $constants = Constant::all();
+        return $this->returnSuccess(__($this->successMsg['center.constant']), $constants);
+    }
+    
+    public function addConstants(Request $request) {
+        
+        $constModel = new Constant();
+        $data = $request->all();
+        
+        $checks = $constModel->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $constants = $constModel->create($data);
+        return $this->returnSuccess(__($this->successMsg['center.constant.add']), $constants);
     }
 }
