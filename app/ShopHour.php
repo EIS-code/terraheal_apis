@@ -15,6 +15,9 @@ class ShopHour extends Model
         'close_at',
         'shop_id'
     ];
+    
+    protected $hidden = ['created_at', 'updated_at'];
+    
     public $shopDays = [
         '0' => 'Sunday',
         '1' => 'Monday',

@@ -53,10 +53,10 @@ class CommonHelper {
         return "$h:$m";
     }
 
-    public static function uploadImage($data ,$storagePath, $fileSystem) {
+    public static function uploadImage($data ,$storagePath, $fileSystem, $centerId) {
         
-        $name = $data->getClientOriginalName();
-        $fileName = time() . '_' . $name;
+        $name = $data->getClientOriginalExtension();
+        $fileName = time() . '_' . $centerId . '.' . $name;
         $storeFile = $data->storeAs($storagePath, $fileName, $fileSystem);
 
         if ($storeFile) {
