@@ -198,6 +198,11 @@ class User extends BaseModel implements Authenticatable
         return $this->hasOne('App\City', 'id', 'city_id');
     }
 
+    public function userFavoriteServices()
+    {
+        return $this->hasMany('App\UserFavoriteService', 'user_id', 'id');
+    }
+
     public function validateProfilePhoto($request)
     {
         return Validator::make($request->all(), [
@@ -398,7 +403,16 @@ class User extends BaseModel implements Authenticatable
 
     public function getGlobalResponse(int $id)
     {
-        $data = $this->where('id', $id)->with(['country', 'city'])->first();
+        $model  = new UserFavoriteService();
+        $data   = $this->where('id', $id)->with(['country', 'city', 'userFavoriteServices'])->get();
+
+        if (!empty($data)) {
+            foreach ($data as &$record){
+                if (!empty($record->userFavoriteServices) && !$record->userFavoriteServices->isEmpty()) {
+                    $record->user_favorite_services = $model::mergeResponse($record->userFavoriteServices);
+                }
+            }
+        }
 
         return $data;
     }

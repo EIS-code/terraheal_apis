@@ -35,13 +35,29 @@ class UserFavoriteService extends BaseModel
         ]);
     }
 
-    public function service()
+    public function services()
     {
         if ($this->type == self::TYPE_THERAPY) {
             return $this->hasOne('App\Therapy', 'id', 'service_id');
         }
 
         return $this->hasOne('App\Massage', 'id', 'service_id');
+    }
+
+    public static function mergeResponse($collection)
+    {
+        $collection->map(function($record) {
+            if (!empty($record->services)) {
+                $record->shop_id        = $record->services->shop_id;
+                $record->service_name   = $record->services->name;
+                $record->service_image  = $record->services->image;
+                $record->service_icon   = $record->services->icon;
+
+                unset($record->services);
+            }
+        });
+
+        return $collection;
     }
 
     public function checkServiceIdExists(int $id, $type = self::TYPE_MASSAGE):Bool

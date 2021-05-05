@@ -1562,7 +1562,11 @@ class UserController extends BaseController
         if (!empty($userId)) {
             $records = $model->where('user_id', $userId)->get();
 
-            return $this->returns('success.user.favorite.found', $records);
+            if (!empty($records) && !$records->isEmpty()) {
+                $records = $model::mergeResponse($records);
+
+                return $this->returns('success.user.favorite.found', $records);
+            }
         }
 
         return $this->returns('success.user.favorite.not.found', collect([]));
