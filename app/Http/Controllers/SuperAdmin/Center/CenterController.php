@@ -115,36 +115,6 @@ class CenterController extends BaseController {
                     'totalBookings' => $totalBookings, 'cancelledBookings' => $cancelledBookings, 'staff' => $staff, 'shop' => $shop, 'topItems' => $topItems]);
     }
     
-    public function addOrUpdateDetails(Request $request, $centerId) {
-        $data = $request->all();
-        $shopModel = new Shop();
-        
-        $data['country_id'] = $data['location']['country_id'] ? $data['location']['country_id'] : null;
-        $data['province_id'] = $data['location']['province_id'] ? $data['location']['province_id'] : null;
-        $data['city_id'] = $data['location']['city_id'] ? $data['location']['city_id'] : null;
-        $data['longitude'] = $data['location']['longitude'] ? $data['location']['longitude'] : null;
-        $data['latitude'] = $data['location']['latitude'] ? $data['location']['latitude'] : null;
-        $data['zoom'] = $data['location']['zoom'] ? $data['location']['zoom'] : null;
-        $data['pin_code'] = $data['location']['pin_code'] ? $data['location']['pin_code'] : null;
-        $data['address'] = $data['location']['address'] ? $data['location']['address'] : null;
-        $data['address2'] = $data['location']['address2'] ? $data['location']['address2'] : null;
-        $data['shop_password'] = Hash::make($data['shop_password']);
-        $data['manager_password'] = Hash::make($data['manager_password']);
-        unset($data['location']);
-
-        $checks = $shopModel->validator($data, $centerId);
-        if ($checks->fails()) {
-            return $checks;
-        }
-        if(!empty($centerId)) {
-            $center = $shopModel->find($centerId);
-            $center->update($data);
-        } else {            
-            $center = $shopModel->create($data);
-        }
-        return $center;
-    }
-    
     public function addFeaturedImages(Request $request, $centerId) {
         
         $imgData = [];
@@ -223,23 +193,22 @@ class CenterController extends BaseController {
                 $data['timetable']['open_at'][$key] = $time->format("h:i:s");
             }
             foreach ($data['timetable']['close_at'] as $key => $value) {
-                
+                $time = Carbon::createFromTimestampMs($value);
+                $data['timetable']['close_at'][$key] = $time->format("h:i:s");
+                $timeTable = [
+                    'day_name' => (string) $key,
+                    'is_open' => (string) ShopHour::IS_OPEN,
+                    'open_at' => $data['timetable']['open_at'][$key],
+                    'close_at' => $data['timetable']['close_at'][$key],
+                    'shop_id' => $centerId,
+                ];
+                $check = $shopHourModel->validator($timeTable);
+                if ($check->fails()) {
+                    return $check;
+                }
+                $shopHourModel->updateOrCreate($timeTable, $timeTable);
+                $shopHours[] = $timeTable;
             }
-            $time = Carbon::createFromTimestampMs($value);
-            $data['timetable']['close_at'][$key] = $time->format("h:i:s");
-            $timeTable = [
-                'day_name' => (string) $key,
-                'is_open' => (string) ShopHour::IS_OPEN,
-                'open_at' => $data['timetable']['open_at'][$key],
-                'close_at' => $data['timetable']['close_at'][$key],
-                'shop_id' => $centerId,
-            ];
-            $check = $shopHourModel->validator($timeTable);
-            if ($check->fails()) {
-                return $check;
-            }
-            $shopHourModel->updateOrCreate($timeTable, $timeTable);
-            $shopHours[] = $timeTable;
         }
         return $shopHours;
     }
@@ -256,9 +225,30 @@ class CenterController extends BaseController {
                 }
                 $centerId = $center->id;
             }
-            $center = $this->addOrUpdateDetails($request, $centerId);
-            if(!is_object($center)) {
-                return $this->returnError($center->errors()->first(), NULL, true);
+            $data = $request->all();
+            $shopModel = new Shop();
+
+            $data['country_id'] = $data['location']['country_id'] ? $data['location']['country_id'] : null;
+            $data['province_id'] = $data['location']['province_id'] ? $data['location']['province_id'] : null;
+            $data['city_id'] = $data['location']['city_id'] ? $data['location']['city_id'] : null;
+            $data['longitude'] = $data['location']['longitude'] ? $data['location']['longitude'] : null;
+            $data['latitude'] = $data['location']['latitude'] ? $data['location']['latitude'] : null;
+            $data['zoom'] = $data['location']['zoom'] ? $data['location']['zoom'] : null;
+            $data['pin_code'] = $data['location']['pin_code'] ? $data['location']['pin_code'] : null;
+            $data['address'] = $data['location']['address'] ? $data['location']['address'] : null;
+            $data['address2'] = $data['location']['address2'] ? $data['location']['address2'] : null;
+            $data['shop_password'] = Hash::make($data['shop_password']);
+            $data['manager_password'] = Hash::make($data['manager_password']);
+            unset($data['location']);
+
+            $checks = $shopModel->validator($data, $centerId);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            if(!empty($centerId)) {
+                $center->update($data);
+            } else {            
+                $center = $shopModel->create($data);
             }
             $centerId = $center->id;
             $featuredImages = $this->addFeaturedImages($request, $centerId);

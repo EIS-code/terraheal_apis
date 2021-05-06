@@ -44,7 +44,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
         'pin_code'
     ];
 
-    protected $hidden = ['remember_token', 'created_at', 'updated_at'];
+    protected $hidden = ['shop_password','remember_token', 'created_at', 'updated_at'];
 
     const IS_ADMIN = '0';
     const MASSAGES = '0';
