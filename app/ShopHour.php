@@ -27,6 +27,12 @@ class ShopHour extends Model
         '5' => 'Friday',
         '6' => 'Saturday'
     ];
+    
+    public $open = [
+        '0' => 'No',
+        '1' => 'Yes'
+    ];
+    
     const IS_OPEN = 1;
 
     public function validator(array $data)
@@ -46,5 +52,14 @@ class ShopHour extends Model
         }
 
         return $this->shopDays[$value];
+    }
+    
+    public function getIsOpenAttribute($value)
+    {
+        if (is_null($value)) {
+            return $value;
+        }
+
+        return $this->open[$value];
     }
 }

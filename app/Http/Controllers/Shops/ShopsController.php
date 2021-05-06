@@ -10,6 +10,7 @@ use App\Therapist;
 use App\User;
 use App\MassagePreference;
 use App\Libraries\CommonHelper;
+use App\SessionType;
 
 class ShopsController extends BaseController {
 
@@ -24,6 +25,7 @@ class ShopsController extends BaseController {
         'services.found.successfully' => 'services found successfully',
         'clients.found.successfully' => 'clients found successfully',
         'preferences.found.successfully' => 'preferences found successfully',
+        'sessions.found.successfully' => 'Sessions types found successfully',
         'no.data.found' => 'No data found'
     ];
 
@@ -67,7 +69,7 @@ class ShopsController extends BaseController {
         
         $services = CommonHelper::getAllService($request);
         
-        if (count($services) > 0) {
+        if (!empty($services)) {
             return $this->returnSuccess(__($this->successMsg['services.found.successfully']), $services);
         } else {
             return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
@@ -77,8 +79,18 @@ class ShopsController extends BaseController {
     public function getAllClients(Request $request) {
 
         $clients = User::where('shop_id', $request->get('shop_id'))->get();
-        if (count($clients) > 0) {
+        if (!empty($clients)) {
             return $this->returnSuccess(__($this->successMsg['clients.found.successfully']), $clients);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
+        }
+    }
+    
+    public function getSessionTypes() {
+
+        $sessions = SessionType::all();
+        if (!empty($sessions)) {
+            return $this->returnSuccess(__($this->successMsg['sessions.found.successfully']), $sessions);
         } else {
             return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
         }
@@ -91,15 +103,15 @@ class ShopsController extends BaseController {
             $preferences = MassagePreference::with(['preferenceOptions'])
                             ->whereHas('preferenceOptions', function($q) use($type) {
                                 $q->where('massage_preference_id', '=', $type);
-                            })->get();
+                            })->first();
         } else {
             $preferences = MassagePreference::with('preferenceOptions')->get();
         }
-        if (count($preferences) > 0) {
+        if (!empty($preferences)) {
             return $this->returnSuccess(__($this->successMsg['preferences.found.successfully']), $preferences);
         } else {
             return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
         }
-    }    
+    }  
 
 }

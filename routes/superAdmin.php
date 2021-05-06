@@ -52,6 +52,11 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('galleryImages/delete', 'Center\CenterController@deleteGalleryImages');
     });
     
+    $router->group(['prefix' => 'therapists'], function () use($router) {
+
+        $router->get('get', 'Therapist\TherapistController@getTherapists');
+    });
+    
     $router->group(['prefix' => 'sidebar'], function () use($router) {
 
         $router->post('details/get', 'Dashboard\DashboardController@getSidebarDetails');
