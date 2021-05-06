@@ -35,7 +35,7 @@ class MassagePreferenceOption extends BaseModel
     ];
 
     public $fileSystem = 'public';
-    public $iconPath   = 'therapist\preference\icons\\';
+    public $iconPath   = 'therapists\preference\icons\\';
 
     public function validator(array $data)
     {
