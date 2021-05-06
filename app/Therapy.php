@@ -42,5 +42,4 @@ class Therapy extends BaseModel
     public function pricing() {
         return $this->hasMany('App\TherapiesPrices', 'therapy_id', 'id');
     }
-
 }

@@ -135,15 +135,25 @@ class TherapyController extends BaseController
         return $this->returns('success.therapy.questionnaire.answers.created', collect([]));
     }
 
-    public function getTherapies(Request $request)
+    public function getTherapies(Request $request, int $limit = 10)
     {
-        $request->merge(['type' => Shop::THERAPIES]);
+        /*$request->merge(['type' => Shop::THERAPIES]);
         $request->merge(['isGetAll' => true]);
 
-        $therapies = CommonHelper::getAllService($request);
+        $therapies = CommonHelper::getAllService($request);*/
 
-        if (!empty($therapies) && !$therapies->isEmpty()) {
-            return $this->returns('success.therapy.found', $therapies);
+        $model  = new Therapy();
+        $data   = $request->all();
+        $query  = (!empty($data['q'])) ? $data['q'] : NULL;
+        $limit  = (!is_numeric($limit)) ? 10 : $limit;
+        $shopId = (!empty($data['shop_id'])) ? (int)$data['shop_id'] : NULL;
+
+        $getTherapies = $model->where("name", "LIKE", "%{$query}%")->with(['timing' => function($qry) {
+            $qry->with('pricing');
+        }])->limit($limit)->get();
+
+        if (!empty($getTherapies) && !$getTherapies->isEmpty()) {
+            return $this->returns('success.therapy.found', $getTherapies);
         }
 
         return $this->returns('success.therapy.not.found', collect([]));
