@@ -55,7 +55,7 @@ class BookingMassage extends BaseModel
             'notes_of_injuries'                      => ['max:255'],
             'booking_info_id'                        => ['required', 'integer', 'exists:' . BookingInfo::getTableName() . ',id'],
             'pressure_preference'                    => $pressurePreference,
-            // 'gender_preference'                      => $genderPreference,
+            'gender_preference'                      => $genderPreference,
             'focus_area_preference'                  => $focusAreaPreference,
             'room_id'                                => ['nullable', 'integer', 'exists:' . Room::getTableName() . ',id'],
         ]);
