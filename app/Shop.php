@@ -249,7 +249,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "therapy_prices_id" => $isMassage ? NULL : $servicePrice->id,
             "booking_info_id" => $bookingInfo->id,
             "pressure_preference" => isset($user) ? $user['pressure_preference'] : $request->pressure_preference,
-            "gender_preference" => isset($user) ? $user['gender_preference'] : !empty($request->gender_preference) ? $request->gender_preference : NULL,
+            "gender_preference" => isset($user) ? $user['gender_preference'] : (!empty($request->gender_preference) ? $request->gender_preference : NULL),
             "focus_area_preference" => isset($user) ? $user['focus_area_preference'] : $request->focus_area_preference
         ];
         $checks = $bookingMassageModel->validator($bookingMassageData);
