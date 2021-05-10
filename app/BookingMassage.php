@@ -39,12 +39,9 @@ class BookingMassage extends BaseModel
     public function validator(array $data)
     {
         $pressurePreference = ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massagePressures[1])];
-        $genderPreference   = ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massageGenders[2])];
+        $genderPreference   = ['nullable', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massageGenders[2])];
         $focusAreaPreference   = ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massageFocucAreas[8])];
-echo "<pre>";
-print_r($pressurePreference);
-print_r($genderPreference);
-exit;
+
         $validator = Validator::make($data, [
             'price'                                  => ['required', 'between:0,99.99'],
             'cost'                                   => ['required', 'between:0,99.99'],
