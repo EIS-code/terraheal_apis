@@ -72,16 +72,17 @@ class BookingInfo extends BaseModel
     public function validator(array $data)
     {
         return Validator::make($data, [
-            '*.user_people_id'       => ['required', 'integer', 'exists:' . UserPeople::getTableName() . ',id'],
-            '*.location'             => ['required', 'max:255'],
-            '*.massage_date'         => ['nullable'],
-            '*.massage_time'         => ['nullable'],
-            '*.is_cancelled'         => ['in:' . implode(",", array_keys(self::$isCancelled))],
-            '*.cancelled_reason'     => ['mas:255'],
-            '*.imc_type'             => ['required', 'in:1,2'],
-            '*.therapist_id'         => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
-            '*.room_id'              => ['required', 'integer', 'exists:' . Room::getTableName() . ',id'],
-            '*.massage_info'         => ['required', 'array']
+            'user_people_id'       => ['nullable', 'integer', 'exists:' . UserPeople::getTableName() . ',id'],
+            'location'             => ['nullable', 'max:255'],
+            'massage_date'         => ['nullable'],
+            'massage_time'         => ['nullable'],
+            'is_cancelled'         => ['in:' . implode(",", array_keys(self::$isCancelled))],
+            'cancelled_reason'     => ['mas:255'],
+            'imc_type'             => ['nullable', 'in:1,2'],
+            'therapist_id'         => ['nullable', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
+            'booking_currency_id'  => ['required', 'integer', 'exists:' . Currency::getTableName() . ',id'],
+            'shop_currency_id'     => ['required', 'integer', 'exists:' . Currency::getTableName() . ',id'],
+            'booking_id'           => ['required', 'integer', 'exists:' . Booking::getTableName() . ',id'],
         ]);
     }
 

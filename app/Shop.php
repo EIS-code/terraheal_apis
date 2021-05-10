@@ -11,6 +11,7 @@ use App\BookingInfo;
 use App\UserPack;
 use Illuminate\Http\Request;
 use DB;
+use Carbon\Carbon;
 
 class Shop extends BaseModel implements CanResetPasswordContract
 {
@@ -197,23 +198,30 @@ class Shop extends BaseModel implements CanResetPasswordContract
         if(empty($shop)) {
             return ['isError' => true, 'message' => 'Shop not found'];
         }
+        $date = Carbon::createFromTimestampMs($infoData->booking_date_time);
         $bookingInfoData = [
             'location' => $shop->address,
             'booking_currency_id' => $shop->currency_id,
             'shop_currency_id' => $shop->currency_id,
             'booking_id' => $newBooking->id,
             'imc_type' => BookingInfo::IMC_TYPE_ASAP,
-            'massage_date' => explode(' ', $infoData->booking_date_time)[0],
-            'massage_time' => $infoData->booking_date_time,
+            'massage_date' => $date->format('Y-m-d'),
+            'massage_time' => $date,
             'user_people_id' => isset($newUser) ? $newUser->id : NULL,
             'therapist_id' => isset($pack) ? $pack->therapist_id : $therapist_id
         ];
+        $bookingInfoModel = new BookingInfo();
+        $checks = $bookingInfoModel->validator($bookingInfoData);
+        if ($checks->fails()) {
+            return ['isError' => true, 'message' => $checks->errors()->first()];
+        }
         $bookingInfo = BookingInfo::create($bookingInfoData);
         return $bookingInfo;
     }
     
     public function addBookingMassages($service, $bookingInfo, $request, $user, $isMassage) {
         
+        $bookingMassageModel = new BookingMassage();     
         if($isMassage)
         {
             $servicePrice = MassagePrice::where('massage_timing_id',$service['massage_timing_id'])->first();
@@ -221,7 +229,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             $servicePrice = TherapiesPrices::where('therapy_timing_id',$service['therapy_timing_id'])->first();
         }
         if(empty($servicePrice)) {
-                return $this->returnSuccess('Service Price not found');
+                return ['isError' => true, 'message' => 'Service price not found'];
         }
         $injuries = isset($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
         
@@ -241,7 +249,11 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "gender_preference" => isset($user) ? $user['gender_preference'] : $request->gender_preference,
             "focus_area_preference" => isset($user) ? $user['focus_area_preference'] : $request->focus_area_preference
         ];
-        BookingMassage::create($bookingMassageData);
+        $checks = $bookingMassageModel->validator($bookingMassageData);
+        if ($checks->fails()) {
+            return ['isError' => true, 'message' => $checks->errors()->first()];
+        }
+        return BookingMassage::create($bookingMassageData);
     }
     
     public function getMassages(Request $request) {

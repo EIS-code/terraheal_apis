@@ -352,18 +352,28 @@ class WaitingListController extends BaseController {
         DB::beginTransaction();
         try {
             $shopModel = new Shop();
+            $bookingModel = new Booking();
             
+            $date = !empty($request->booking_date_time) ? Carbon::createFromTimestampMs($request->booking_date_time) : null;
             $bookingData = [
                 'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
                 'special_notes' => $request->special_notes,
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
                 'session_id' => $request->session_id,
-                'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL
+                'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL,
+                'booking_date_time' => $date
             ];
+            $checks = $bookingModel->validator($bookingData);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
             $newBooking = Booking::create($bookingData);
             $isPack = !empty($request->pack_id) ? $request->pack_id : NULL;
             $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, NULL, $isPack);
+            if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
+                return $this->returnError($bookingInfo['message'], NULL, true);
+            }
             
             if(!empty($request->pack_id)) {
                 
@@ -372,9 +382,11 @@ class WaitingListController extends BaseController {
                     return ['isError' => true, 'message' => 'Pack not found'];
                 }
                 foreach ($pack->services as $key => $service) {
-
                     $isMassage = !empty($service->massage_id) && empty($service->therapy_id) ? true : false;
-                    $shopModel->addBookingMassages($service, $bookingInfo, $request, NULL, $isMassage);
+                    $service = $shopModel->addBookingMassages($service, $bookingInfo, $request, NULL, $isMassage);
+                    if (!empty($service['isError']) && !empty($service['message'])) {
+                        return $this->returnError($service['message'], NULL, true);
+                    }
                 }
             } else {
                 $isMassage = false;
@@ -382,19 +394,24 @@ class WaitingListController extends BaseController {
                 {
                     $isMassage = true;
                     foreach ($request->massages as $key => $massage) {
-
-                        $shopModel->addBookingMassages($massage, $bookingInfo, $request, NULL, $isMassage);
+                        $service = $shopModel->addBookingMassages($massage, $bookingInfo, $request, NULL, $isMassage);
+                        if (!empty($service['isError']) && !empty($service['message'])) {
+                            return $this->returnError($service['message'], NULL, true);
+                        }
                     }
                 }
                 if(count($request->therapies) > 0)
                 {
                     $isMassage = false;
                     foreach ($request->therapies as $key => $therapy) {
-
-                        $shopModel->addBookingMassages($therapy, $bookingInfo, $request, NULL, $isMassage);
+                        $service = $shopModel->addBookingMassages($therapy, $bookingInfo, $request, NULL, $isMassage);
+                        if (!empty($service['isError']) && !empty($service['message'])) {
+                            return $this->returnError($service['message'], NULL, true);
+                        }
                     }
                 }
                 if (!empty($request->users)) {
+                    $userModel = new UserPeople();
                     foreach ($request->users as $key => $user) {
                         $user_people = [
                             'name' => $user['name'],
@@ -403,26 +420,35 @@ class WaitingListController extends BaseController {
                             'user_gender_preference_id' => $user['gender_preference'],
                             'user_id' => $request->user_id
                         ];
+                        $checks = $userModel->validator($user_people);
+                        if ($checks->fails()) {
+                            return $this->returnError($checks->errors()->first(), NULL, true);
+                        }
                         $newUser = UserPeople::create($user_people);
 
                         $newUser['therapist_id'] = $user['therapist_id'];
                         $newUser['notes_of_injuries'] = $user['notes_of_injuries'];
                         
                         $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $newUser, NULL);
-
+                        if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
+                            return $this->returnError($bookingInfo['message'], NULL, true);
+                        }
+                        
                         if (count($user['massages']) > 0) {
-
                             $isMassage = true;
                             foreach ($user['massages'] as $key => $massage) {
-
-                                $shopModel->addBookingMassages($massage, $bookingInfo, $request, $user, $isMassage);
+                                $service = $shopModel->addBookingMassages($massage, $bookingInfo, $request, $user, $isMassage);
+                                if (!empty($service['isError']) && !empty($service['message'])) {
+                                    return $this->returnError($service['message'], NULL, true);
+                                }
                             }
                         } else {
-
                             $isMassage = false;
                             foreach ($user['therapies'] as $key => $therapy) {
-
-                                $shopModel->addBookingMassages($therapy, $bookingInfo, $request, $user, $isMassage);
+                                $service = $shopModel->addBookingMassages($therapy, $bookingInfo, $request, $user, $isMassage);
+                                if (!empty($service['isError']) && !empty($service['message'])) {
+                                    return $this->returnError($service['message'], NULL, true);
+                                }
                             }
                         }
                     }

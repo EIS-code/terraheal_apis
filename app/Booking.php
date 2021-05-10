@@ -81,11 +81,11 @@ class Booking extends BaseModel
             'user_id'              => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
             'shop_id'              => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
             'session_id'           => ['required', 'integer', 'exists:' . SessionType::getTableName() . ',id'],
+            'pack_id'              => ['nullable', 'integer', 'exists:' . Pack::getTableName() . ',id'],
             'total_persons'        => ['required', 'integer'],
             'bring_table_futon'    => ['in:' . implode(",", self::$tableFutons)],
             'table_futon_quantity' => ['integer'],
-            'booking_date_time'    => ['required'],
-            'booking_info'         => ['required', 'array']
+            'booking_date_time'    => ['required']
         ], $validatorExtended));
 
         return $validator;
