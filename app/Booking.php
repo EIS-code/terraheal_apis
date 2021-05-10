@@ -330,8 +330,9 @@ class Booking extends BaseModel
                     $bookingInfoModel::getTableName() . '.massage_date' => Carbon::now()->format('Y-m-d')]);
             }
             if (in_array(self::BOOKING_WAITING, $bookingsFilter)) {
-                $data->where([$bookingMassageModel::getTableName() . '.is_confirm' => (string)BookingMassage::IS_NOT_CONFIRM,
-                    $bookingInfoModel::getTableName() . '.massage_date' => Carbon::now()->format('Y-m-d')]);
+                $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_NOT_CONFIRM);
+
+                $data->whereDate($bookingInfoModel::getTableName() . '.massage_date', '>', Carbon::now()->format('Y-m-d'));
             }
             if (in_array(self::BOOKING_FUTURE, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', '>=', Carbon::now()->format('Y-m-d'));
