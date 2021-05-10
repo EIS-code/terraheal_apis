@@ -234,7 +234,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
         if(empty($servicePrice)) {
                 return ['isError' => true, 'message' => 'Service price not found'];
         }
-        $injuries = isset($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
+        $injuries = !empty($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
         
         $bookingMassageData = [
             "price" => $servicePrice->price,
@@ -248,9 +248,9 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "therapy_timing_id" => $isMassage ? NULL : $service['therapy_timing_id'],
             "therapy_prices_id" => $isMassage ? NULL : $servicePrice->id,
             "booking_info_id" => $bookingInfo->id,
-            "pressure_preference" => isset($user) ? $user['pressure_preference'] : $request->pressure_preference,
-            "gender_preference" => isset($user) ? $user['gender_preference'] : $request->gender_preference,
-            "focus_area_preference" => isset($user) ? $user['focus_area_preference'] : $request->focus_area_preference
+            "pressure_preference" => !empty($user) ? $user['pressure_preference'] : $request->pressure_preference,
+            "gender_preference" => !empty($user) ? $user['gender_preference'] : $request->gender_preference,
+            "focus_area_preference" => !empty($user) ? $user['focus_area_preference'] : $request->focus_area_preference
         ];
         $checks = $bookingMassageModel->validator($bookingMassageData);
         if ($checks->fails()) {
