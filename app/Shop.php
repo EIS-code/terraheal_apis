@@ -252,6 +252,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "gender_preference" => !empty($user) ? $user['gender_preference'] : $request->gender_preference,
             "focus_area_preference" => !empty($user) ? $user['focus_area_preference'] : $request->focus_area_preference
         ];
+        dd($bookingMassageData);
         $checks = $bookingMassageModel->validator($bookingMassageData);
         if ($checks->fails()) {
             return ['isError' => true, 'message' => $checks->errors()->first()];
