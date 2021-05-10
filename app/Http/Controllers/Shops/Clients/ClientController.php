@@ -155,8 +155,11 @@ class ClientController extends BaseController {
         
         $userId = $request->user_id;
         $client = User::with('shop:id,name','city:id,name','country:id,name')
-                ->where(['shop_id' => $request->shop_id,'id' => $userId])
-                ->first();
+                ->where('id', $userId);
+        if(!empty($client)) {
+            $client->where('shop_id', $request->shop_id);
+        }
+        $client = $client->first();
         
         if($client) {
             $bookingModel = new Booking();

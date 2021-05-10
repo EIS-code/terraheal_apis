@@ -36,28 +36,28 @@ class BookingMassage extends BaseModel
     const IS_CONFIRM = '1';
     const IS_NOT_CONFIRM = '0';
     
-    public function validator(array $data, $excludeBookingInfoId = false, $bookingType)
+    public function validator(array $data)
     {
-        $pressurePreference = $genderPreference = ['nullable'];
-
-        if ($bookingType == '1') {
-            $pressurePreference = ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massagePressures[1])];
-            $genderPreference   = ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massageGenders[2])];
-        }
+        $pressurePreference = ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massagePressures[1])];
+        $genderPreference   = ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massageGenders[2])];
+        $focusAreaPreference   = ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massageFocucAreas[8])];
 
         $validator = Validator::make($data, [
-            /*'price'                                => ['required', 'between:0,99.99'],
+            'price'                                  => ['required', 'between:0,99.99'],
             'cost'                                   => ['required', 'between:0,99.99'],
             'origional_price'                        => ['required', 'between:0,99.99'],
             'origional_cost'                         => ['required', 'between:0,99.99'],
             'exchange_rate'                          => ['required', 'between:0,99.99'],
-            'massage_timing_id'                      => ['required', 'integer', 'exists:' . MassageTiming::getTableName() . ',id'],*/
-            '*.massage_info.*.notes_of_injuries'     => ['max:255'],
-            '*.massage_info.*.massage_prices_id'     => ['required', 'integer', 'exists:' . MassagePrice::getTableName() . ',id'],
-            'booking_info_id'                        => ($excludeBookingInfoId) ? [] : ['required', 'integer', 'exists:' . BookingInfo::getTableName() . ',id'],
-            '*.massage_info.*.pressure_preference'   => $pressurePreference,
-            '*.massage_info.*.gender_preference'     => $genderPreference,
-            '*.massage_info.*.focus_area_preference' => ['required', 'integer', 'in:' . implode(",", MassagePreferenceOption::$massageFocucAreas[8])]
+            'massage_timing_id'                      => ['nullable', 'integer', 'exists:' . MassageTiming::getTableName() . ',id'],
+            'therapy_timing_id '                     => ['nullable', 'integer', 'exists:' . TherapiesTimings::getTableName() . ',id'],
+            'massage_prices_id'                      => ['nullable', 'integer', 'exists:' . MassagePrice::getTableName() . ',id'],
+            'therapy_prices_id'                      => ['nullable', 'integer', 'exists:' . TherapiesPrices::getTableName() . ',id'],
+            'notes_of_injuries'                      => ['max:255'],
+            'booking_info_id'                        => ['required', 'integer', 'exists:' . BookingInfo::getTableName() . ',id'],
+            'pressure_preference'                    => $pressurePreference,
+            'gender_preference'                      => $genderPreference,
+            'focus_area_preference'                  => $focusAreaPreference,
+            'room_id'                                => ['nullable', 'integer', 'exists:' . Room::getTableName() . ',id'],
         ]);
 
         return $validator;
