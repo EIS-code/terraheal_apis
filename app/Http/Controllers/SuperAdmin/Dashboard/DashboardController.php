@@ -61,7 +61,7 @@ class DashboardController extends BaseController {
 
     public function getCenters() {
 
-        $centers = Shop::all();
+        $centers = Shop::with('timetable')->withCount('massages', 'therapies')->get();
         return $this->returnSuccess(__($this->successMsg['centers']), $centers);
     }
 

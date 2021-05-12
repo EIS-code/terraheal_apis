@@ -48,10 +48,10 @@ class Booking extends BaseModel
     const BOOKING_PLATFORM_WEB = '1';
     const MASSAGES = '0';
     const THERAPIES = '1';
-    const TOMORROW = '0';
-    const THIS_WEEK = '1';
-    const THIS_MONTH = '2';
-    const CUSTOM = '3';
+    const TODAY = '0';
+    const YESTERDAY = '1';
+    const THIS_WEEK = '2';
+    const THIS_MONTH = '3';
     
 
     public static $defaultTableFutons = ['0', '1', '2'];

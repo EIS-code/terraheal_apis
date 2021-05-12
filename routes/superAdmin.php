@@ -11,8 +11,14 @@
 |
 */
 
-$router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' => 'superadmins'], function () use($router) {
+config(['auth.defaults.guard' => 'superadmin']);
+config(['auth.defaults.passwords' => 'superadmins']);
 
+
+$router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' => 'superadmin'], function () use($router) {
+
+    $router->post('password/forgot', 'Auth\ForgotPasswordController@sendResetLinkEmail');
+    
     // For vouchers
     $router->post('addVoucher', 'SuperAdminController@addVoucher');
     $router->post('updateVoucher', 'SuperAdminController@updateVoucher');
@@ -38,6 +44,8 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->group(['prefix' => 'center'], function () use($router) {
         
         $router->post('details/get', 'Center\CenterController@getCenterDetails');
+        $router->post('therapists/get', 'Center\CenterController@getTherapists');
+        $router->post('booking/details/get', 'Center\CenterController@getCenterBookings');
         $router->post('details/add', 'Center\CenterController@addCenterDetails');
         $router->post('company/details/add', 'Center\CenterController@addOrUpdateCompanyDetails');
         $router->post('owner/details/add', 'Center\CenterController@addOwnerDetails');

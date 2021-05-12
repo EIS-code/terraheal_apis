@@ -26,11 +26,15 @@ use App\ShopDocument;
 use App\Libraries\CommonHelper;
 use App\Constant;
 use Illuminate\Support\Facades\Storage;
+use App\User;
+use App\TherapistUserRating;
 
 class CenterController extends BaseController {
 
     public $successMsg = [
         'center.details' => 'Center details found successfully.',
+        'center.booking.details' => 'Center bookings details found successfully.',
+        'center.therapists.details' => 'Center therapists details found successfully.',
         'center.add.details' => 'Center details added successfully.',
         'company.add.details' => 'Company details added successfully.',
         'owner.add.details' => 'Owner details added successfully.',
@@ -82,7 +86,7 @@ class CenterController extends BaseController {
                 ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
                 ->where(['booking_infos.is_done' => (string) BookingInfo::IS_DONE, 'bookings.shop_id' => $request->center_id])
                 ->sum('booking_massages.cost');
-        $totalEarning = number_format(($totalSales - $totalCost) / ($totalCost * 100), 2);
+        $totalEarning = $totalCost == 0 ? 0 : number_format(($totalSales - $totalCost) / ($totalCost * 100), 2);
         return $totalEarning;
     }
 
@@ -95,24 +99,56 @@ class CenterController extends BaseController {
         } 
         $massages = $shopModel->getMassages($request)->count();
         $therapies = $shopModel->getTherapies($request)->count();
-        $homeBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_HHV, 'shop_id' => $request->center_id])->get()->count();
-        $centerBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_IMC, 'shop_id' => $request->center_id])->get()->count();
-        $vouchers = $this->getSoldVoucher($request)->count();
-        $packs = $this->getSoldPacks($request)->count();
-        $totalBookings = Booking::where('shop_id', $request->center_id)->get()->count();
-        $cancelledBookings = DB::table('bookings')
-                ->join('booking_infos', 'booking_infos.booking_id', '=', 'bookings.id')
-                ->where('booking_infos.is_cancelled', (string) BookingInfo::IS_CANCELLED)->get()->count();
-        $earning = $this->getEarning($request);
-        $topItems = $shopModel->getTopItems($request);
         $therapists = Therapist::where('shop_id', $request->center_id)->get()->count();
-        $receptionists = Receptionist::where('shop_id', $request->center_id)->get()->count();
-        $managers = Manager::where('shop_id', $request->center_id)->get()->count();
-        $staff = $therapists + $receptionists + $managers;
+        $clients = User::with('shop:id,name','city:id,name','country:id,name')->where('shop_id', $request->center_id)->get()->count();
+        
+//        $homeBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_HHV, 'shop_id' => $request->center_id])->get()->count();
+//        $centerBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_IMC, 'shop_id' => $request->center_id])->get()->count();
+//        $vouchers = $this->getSoldVoucher($request)->count();
+//        $packs = $this->getSoldPacks($request)->count();
+//        $totalBookings = Booking::where('shop_id', $request->center_id)->get()->count();
+//        $cancelledBookings = DB::table('bookings')
+//                ->join('booking_infos', 'booking_infos.booking_id', '=', 'bookings.id')
+//                ->where('booking_infos.is_cancelled', (string) BookingInfo::IS_CANCELLED)->get()->count();
+//        $earning = $this->getEarning($request);
+//        $topItems = $shopModel->getTopItems($request);
+//        $receptionists = Receptionist::where('shop_id', $request->center_id)->get()->count();
+//        $managers = Manager::where('shop_id', $request->center_id)->get()->count();
+//        $staff = $therapists + $receptionists + $managers;
 
-        return $this->returnSuccess(__($this->successMsg['center.details']), ['massages' => $massages, 'therapies' => $therapies, 'services' => $massages + $therapies,
-                    'home_visits' => $homeBooking, 'center_visits' => $centerBooking, 'vouchers' => $vouchers, 'packs' => $packs, 'earning' => $earning,
-                    'totalBookings' => $totalBookings, 'cancelledBookings' => $cancelledBookings, 'staff' => $staff, 'shop' => $shop, 'topItems' => $topItems]);
+        return $this->returnSuccess(__($this->successMsg['center.details']), ['massages' => $massages, 'therapies' => $therapies, 'therapists' => $therapists,'clients' => $clients, 'shop' => $shop]);
+    }
+    
+    public function getCenterBookings(Request $request) {
+        
+        $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
+        $booking = DB::table('booking_massages')
+                ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*');
+        
+        $now = Carbon::now();
+        if ($dateFilter == Booking::TODAY) {
+            $booking->where('booking_infos.massage_date', Carbon::today()->format('Y-m-d'));
+        }
+        if ($dateFilter == Booking::YESTERDAY) {
+            $booking->where('booking_infos.massage_date', $now->subDays(1));
+        }
+        if ($dateFilter == Booking::THIS_WEEK) {
+            $weekStartDate = $now->startOfWeek()->format('Y-m-d');
+            $weekEndDate = $now->endOfWeek()->format('Y-m-d');
+
+            $booking->whereBetween('booking_infos.massage_date', [$weekStartDate, $weekEndDate]);
+        }
+        if ($dateFilter == Booking::THIS_MONTH) {
+            $booking->whereMonth('booking_infos.massage_date', $now->month);
+        }
+        $center = clone $booking;
+        
+        $homeVisit = $booking->where('bookings.booking_type' , Booking::BOOKING_TYPE_HHV)->get()->count();
+        $centerVisit = $center->where('bookings.booking_type' , Booking::BOOKING_TYPE_IMC)->get()->count();
+        
+        return $this->returnSuccess(__($this->successMsg['center.booking.details']), ['homeVisit' => $homeVisit, 'centerVisit' => $centerVisit]);
     }
     
     public function addFeaturedImages(Request $request, $centerId) {
@@ -535,5 +571,27 @@ class CenterController extends BaseController {
             DB::rollback();
             throw $e;
         }    
+    }
+    
+    public function getTherapists(Request $request) {
+        
+        $therapists = Therapist::withCount('selectedMassages', 'selectedTherapies')->where('shop_id', $request->center_id)->get();
+        
+        foreach ($therapists as $key => $therapist) {
+
+            $ratings = TherapistUserRating::where(['model_id' => $therapist->id, 'model' => 'App\Therapist'])->get();
+
+            $cnt = $rates = $avg = 0;
+            if ($ratings->count() > 0) {
+                foreach ($ratings as $i => $rating) {
+                    $rates += $rating->rating;
+                    $cnt++;
+                }
+                $avg = $rates / $cnt;
+            }
+            $therapist['average'] = number_format($avg, 2);
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['center.therapists.details']), $therapists);
     }
 }
