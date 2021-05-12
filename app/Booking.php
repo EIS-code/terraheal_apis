@@ -313,17 +313,19 @@ class Booking extends BaseModel
         if ($bookingMassageId) {
             $data->where($bookingMassageModel::getTableName() . '.id', '=', $bookingMassageId);
         }
-        if($service)
-        {
-            if($service == self::MASSAGES){
+
+        if (isset($service)) {
+            if ($service == self::MASSAGES) {
                 $data->whereNotNull($bookingMassageModel::getTableName().'.massage_prices_id')->whereNotNull($bookingMassageModel::getTableName().'.massage_timing_id')
                         ->where($bookingMassageModel::getTableName().'.therapy_timing_id',NULL)->where($bookingMassageModel::getTableName().'.therapy_prices_id',NULL);
-            } 
-            if($service == self::THERAPIES){
+            }
+
+            if ($service == self::THERAPIES) {
                 $data->whereNotNull($bookingMassageModel::getTableName().'.therapy_timing_id')->whereNotNull($bookingMassageModel::getTableName().'.therapy_prices_id')
                         ->where($bookingMassageModel::getTableName().'.massage_prices_id',NULL)->where($bookingMassageModel::getTableName().'.massage_timing_id',NULL);
             }
         }
+
         if (isset($bookingsFilter)) {
             if (in_array(self::BOOKING_ONGOING, $bookingsFilter)) {
                 $data->where([$bookingMassageModel::getTableName() . '.is_confirm' => (string)BookingMassage::IS_CONFIRM,
