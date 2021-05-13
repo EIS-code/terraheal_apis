@@ -46,6 +46,7 @@ class CenterController extends BaseController {
         'center.constant' => 'Center constant details found successfully.',
         'center.constant.add' => 'Center constant details added successfully.',
         'image' => 'Image deleted successfully.',
+        'center.users' => 'Users data found successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
@@ -149,6 +150,20 @@ class CenterController extends BaseController {
         $centerVisit = $center->where('bookings.booking_type' , Booking::BOOKING_TYPE_IMC)->get()->count();
         
         return $this->returnSuccess(__($this->successMsg['center.booking.details']), ['homeVisit' => $homeVisit, 'centerVisit' => $centerVisit]);
+    }
+    
+    public function getUsers() {
+        
+        $appUsers = DB::table('booking_massages')
+                ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
+                ->where('bookings.book_platform', (string) Booking::BOOKING_PLATFORM_APP)
+                ->get()
+                ->groupBy('bookings.user_id')->count();
+        $guestUsers = User::where('is_guest', (string) User::IS_GUEST)->get()->count();
+        $registeredUsers = User::where('is_guest', (string) User::IS_NOT_GUEST)->get()->count();
+        return $this->returnSuccess(__($this->successMsg['center.users']), ['appUsers' => $appUsers, 'guestUsers' => $guestUsers, 'registeredUsers' => $registeredUsers]);
     }
     
     public function addFeaturedImages(Request $request, $centerId) {
