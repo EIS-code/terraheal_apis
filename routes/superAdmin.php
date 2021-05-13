@@ -18,6 +18,8 @@ config(['auth.defaults.passwords' => 'superadmins']);
 $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' => 'superadmin'], function () use($router) {
 
     $router->post('password/forgot', 'Auth\ForgotPasswordController@sendResetLinkEmail');
+    $router->post('signIn', 'SuperAdminController@signIn');
+    $router->post('update/profile', 'SuperAdminController@updateProfile');
     
     // For vouchers
     $router->post('addVoucher', 'SuperAdminController@addVoucher');
@@ -33,7 +35,6 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->post('sharePack', 'SuperAdminController@sharePack');
     $router->post('purchasePack', 'SuperAdminController@purchasePack');
     
-    $router->post('signIn', 'SuperAdminController@signIn');
     
     $router->group(['prefix' => 'dashboard'], function () use($router) {
 

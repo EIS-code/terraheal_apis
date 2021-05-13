@@ -23,6 +23,7 @@ class SuperAdminController extends BaseController {
         'loginEmail' => "Please provide email.",
         'loginPass' => "Please provide password.",
         'loginBoth' => "Shop email or password seems wrong.",
+        'admin.not.found' => "Admin not found.",
     ];
     
     public $successMsg = [
@@ -39,6 +40,7 @@ class SuperAdminController extends BaseController {
         'pack.get' => 'Packs found successfully!',
         'pack.purchase' => 'Pack purchased successfully!',
         'login' => "Login successfully !",
+        'edit.profile' => "Profile updated successfully!",
     ];
 
     public function addVoucher(Request $request) {
@@ -301,5 +303,23 @@ class SuperAdminController extends BaseController {
             }
         }
         return $this->returnNull();
+    }
+    
+    public function updateProfile(Request $request) {
+        
+        $adminModel = new Superadmin();
+        $data = $request->all();
+        
+        $admin = $adminModel->find($data['superadmin_id']);
+        if(empty($admin)) {
+            return $this->returnError($this->errorMsg['admin.not.found']);
+        }
+        $checks = $adminModel->validator($data, $admin->id, true);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $admin->update($data);
+        return $this->returnSuccess(__($this->successMsg['edit.profile']), $admin);
     }
 }
