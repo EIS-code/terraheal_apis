@@ -95,7 +95,8 @@ class User extends BaseModel implements Authenticatable
     const OAUTH_PROVIDER_FACEBOOK = 2;
     const OAUTH_PROVIDER_TWITTER  = 3;
     const OAUTH_PROVIDER_LINKEDIN = 4;
-    const IS_GUEST = 1;
+    const IS_GUEST = 0;
+    const IS_NOT_GUEST = 1;
     const INTERNET = 0;
     const RECOMMENDATION = 1;
     const FLYER = 2;

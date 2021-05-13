@@ -4,10 +4,13 @@ namespace App;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Auth\Passwords\CanResetPassword;
 
-class Superadmin extends BaseModel
+class Superadmin extends BaseModel implements CanResetPasswordContract
 {
-    use Notifiable;
+    use CanResetPassword, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -15,7 +18,17 @@ class Superadmin extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name',
+        'email',
+        'password',
+        'dob',
+        'gender',
+        'nif',
+        'tel_number',
+        'emergency_tel_number',
+        'id_passport',
+        'country_id',
+        'city_id'
     ];
 
     /**
@@ -24,7 +37,7 @@ class Superadmin extends BaseModel
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'created_at', 'updated_at'
     ];
 
     public static function getTableName()
@@ -32,12 +45,34 @@ class Superadmin extends BaseModel
         return with(new static)->getTable();
     }
 
-    public function validator(array $data)
+    public function validator(array $data, $id = false, $isUpdate = false)
     {
+        if ($isUpdate === true && !empty($id)) {
+            $emailValidator      = ['unique:superadmins,email,' . $id];
+        } else {
+            $emailValidator      = ['unique:superadmins'];
+        }
+        
         return Validator::make($data, [
-            'name'      => ['required', 'string', 'max:255'],
-            'email'     => ['required', 'string', 'email', 'unique:superadmins', 'max:255'],
-            'password'  => ['required', 'string', 'min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/', 'max:255']
+            'name'                    => ['required', 'string', 'max:255'],
+            'email'                   => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
+            'gender'                  => ['nullable', 'string'],
+            'dob'                     => ['nullable', 'string'],
+            'nif'                     => ['nullable', 'string'],
+            'id_passport'             => ['nullable', 'string'],
+            'tel_number'              => ['nullable', 'string', 'max:50'],
+            'emergency_tel_number'    => ['nullable', 'string', 'max:50'],
+            'country_id'              => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
+            'city_id'                 => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']
         ]);
+    }
+    
+    public function sendPasswordResetNotification($token)
+    {
+        $classPasswordNotification = new ResetPasswordNotification($token);
+
+        $classPasswordNotification::$createUrlCallback = 'toMailContentsUrl';
+
+        $this->notify($classPasswordNotification);
     }
 }

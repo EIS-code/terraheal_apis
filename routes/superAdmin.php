@@ -11,8 +11,16 @@
 |
 */
 
-$router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' => 'superadmins'], function () use($router) {
+config(['auth.defaults.guard' => 'superadmin']);
+config(['auth.defaults.passwords' => 'superadmins']);
 
+
+$router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' => 'superadmin'], function () use($router) {
+
+    $router->post('password/forgot', 'Auth\ForgotPasswordController@sendResetLinkEmail');
+    $router->post('signIn', 'SuperAdminController@signIn');
+    $router->post('update/profile', 'SuperAdminController@updateProfile');
+    
     // For vouchers
     $router->post('addVoucher', 'SuperAdminController@addVoucher');
     $router->post('updateVoucher', 'SuperAdminController@updateVoucher');
@@ -27,7 +35,6 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->post('sharePack', 'SuperAdminController@sharePack');
     $router->post('purchasePack', 'SuperAdminController@purchasePack');
     
-    $router->post('signIn', 'SuperAdminController@signIn');
     
     $router->group(['prefix' => 'dashboard'], function () use($router) {
 
@@ -38,6 +45,8 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->group(['prefix' => 'center'], function () use($router) {
         
         $router->post('details/get', 'Center\CenterController@getCenterDetails');
+        $router->post('therapists/get', 'Center\CenterController@getTherapists');
+        $router->post('booking/details/get', 'Center\CenterController@getCenterBookings');
         $router->post('details/add', 'Center\CenterController@addCenterDetails');
         $router->post('company/details/add', 'Center\CenterController@addOrUpdateCompanyDetails');
         $router->post('owner/details/add', 'Center\CenterController@addOwnerDetails');
@@ -50,6 +59,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('constants/add', 'Center\CenterController@addConstants');
         $router->post('featuredImages/delete', 'Center\CenterController@deleteFeaturedImages');
         $router->post('galleryImages/delete', 'Center\CenterController@deleteGalleryImages');
+        $router->get('users/get', 'Center\CenterController@getUsers');
     });
     
     $router->group(['prefix' => 'therapists'], function () use($router) {

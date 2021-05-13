@@ -362,7 +362,8 @@ class WaitingListController extends BaseController {
                 'shop_id' => $request->shop_id,
                 'session_id' => $request->session_id,
                 'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL,
-                'booking_date_time' => $date
+                'booking_date_time' => $date,
+                'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL
             ];
             $checks = $bookingModel->validator($bookingData);
             if ($checks->fails()) {
