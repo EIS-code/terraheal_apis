@@ -71,7 +71,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     });
 
     $router->group(['prefix' => 'profile'], function () use($router) {
-        $router->get('/get', function (Request $request) {
+        $router->post('/get', function (Request $request) {
             $controller = new \App\Http\Controllers\Therapist\TherapistController();
 
             return $controller->getGlobalResponse(Therapist::IS_NOT_FREELANCER, $request);
@@ -134,6 +134,16 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->post('/', 'TherapistController@getAllServices');
     });
 
+    $router->group(['prefix' => 'verify'], function () use($router) {
+        $router->post('/mobile', 'TherapistController@verifyMobile');
+        $router->post('/email', 'TherapistController@verifyEmail');
+    });
+    
+    $router->group(['prefix' => 'compare'], function () use($router) {
+        $router->post('/otp/email', 'TherapistController@compareOtpEmail');
+        $router->post('/otp/mobile', 'TherapistController@compareOtpSms');
+    });
+    
     $router->post('get', 'TherapistController@getOthers');
     $router->post('/getServices', 'TherapistController@getAllServices');
     $router->post('/getTherapists', 'TherapistController@getTherapists');
