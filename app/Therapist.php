@@ -666,67 +666,71 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     
     public function getTherapist(Request $request) {
 
-        $therapists = DB::table('booking_massages')
-                ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
-                ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+        //0 for today, 1 for all therapist
+        if (!empty($request->filter) && $request->filter == 0) {
+            $therapists = DB::table('booking_massages')
+                ->leftJoin('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->join('therapists', 'therapists.id', '=', 'booking_infos.therapist_id')
                 ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_infos.massage_time as massageStartTime', 'booking_infos.massage_date as massageDate', 
                         'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo')
-                ->where('bookings.shop_id', $request->shop_id);
+                ->where('bookings.shop_id', $request->shop_id)->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'));
+        } else {
+            $therapists = DB::table('therapists')
+                ->leftJoin('booking_infos', 'booking_infos.therapist_id', '=', 'therapists.id')
+                ->leftJoin('booking_massages', 'booking_massages.booking_info_id', '=', 'booking_infos.id')
+                ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_infos.massage_time as massageStartTime', 'booking_infos.massage_date as massageDate', 
+                        'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo')
+                ->where('therapists.shop_id', $request->shop_id);
+        }
+        $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id')->toArray();
 
-        //0 for today, 1 for all therapist
-        if (isset($request->filter) && $request->filter == 0) {
+        $allTherapists = [];
+        foreach ($therapists as $key => $value) {
 
-            $therapists = $therapists->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'))->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id')->toArray();
-            $todayTherapist = [];
-            foreach ($therapists as $key => $value) {
+            $current = Carbon::now()->format('H:i');
+            $date = Carbon::parse($value[0]->massageStartTime);
 
-                $current = Carbon::now()->format('H:i');
-                $date = Carbon::parse($value[0]->massageStartTime);
-
-                if ($current >= $date->format('H:i')) {
-                    $available = 'now';
+            if ($current >= $date->format('H:i')) {
+                $available = 'now';
+            } else {
+                $start_time = new Carbon($current);
+                $end_time = new Carbon($date->format('H:i:s'));
+                $diff = $start_time->diff($end_time)->format("%h:%i");
+                $time = explode(':', $diff);
+                if ($time[0] == 0) {
+                    $available = 'In ' . $time[1] . ' min';
                 } else {
-                    $start_time = new Carbon($current);
-                    $end_time = new Carbon($date->format('H:i:s'));
-                    $diff = $start_time->diff($end_time)->format("%h:%i");
-                    $time = explode(':', $diff);
-                    if ($time[0] == 0) {
-                        $available = 'In ' . $time[1] . ' min';
-                    } else {
-                        $available = $diff;
-                    }
+                    $available = strtotime($diff) * 1000;
                 }
-                
-                $default = asset('images/therapists/therapist.png');
-
-                 // For set default image.
-                 if (empty($value[0]->profile_photo)) {
-                     $profile_photo = $default;
-                 }
-                 $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
-                 if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value[0]->profile_photo)) {
-                     $profile_photo = Storage::disk($this->fileSystem)->url($profilePhotoPath . $value[0]->profile_photo);
-                 } else {
-                     $profile_photo = $default;
-                 }
-
-                $data = [
-                    'therapistId' => $value[0]->therapist_id,
-                    'therapistName' => $value[0]->therapistName,
-                    'therapistPhoto' => $profile_photo,
-                    'massageDate' => $value[0]->massageDate,
-                    'massageStartTime' => strtotime($value[0]->massageStartTime) * 1000,
-                    'available' => $available
-                ];
-                array_push($todayTherapist, $data);
             }
 
-            return $todayTherapist;
-        } else {
-            $therapists = Therapist::all()->toArray();
-            return $therapists;
+            $default = asset('images/therapists/therapist.png');
+
+             // For set default image.
+             if (empty($value[0]->profile_photo)) {
+                 $profile_photo = $default;
+             }
+             $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
+             if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value[0]->profile_photo)) {
+                 $profile_photo = Storage::disk($this->fileSystem)->url($profilePhotoPath . $value[0]->profile_photo);
+             } else {
+                 $profile_photo = $default;
+             }
+
+            $data = [
+                'therapistId' => $value[0]->therapist_id,
+                'therapistName' => $value[0]->therapistName,
+                'therapistPhoto' => $profile_photo,
+                'massageDate' => $value[0]->massageDate,
+                'massageStartTime' => strtotime($value[0]->massageStartTime) * 1000,
+                'available' => $available
+            ];
+            array_push($allTherapists, $data);
         }
+
+        return $allTherapists;
     }
     
     public function country()
