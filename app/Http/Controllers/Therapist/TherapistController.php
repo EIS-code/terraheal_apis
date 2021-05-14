@@ -42,6 +42,7 @@ use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Storage;
 use App\User;
 use App\Shop;
+use App\TherapistEmailOtp;
 
 class TherapistController extends BaseController
 {
@@ -58,7 +59,13 @@ class TherapistController extends BaseController
         'dateRequired' => "Date is required.",
         'somethingWrong' => "Something went wrong.",
         'no.schedule.found' => "No schedule found.",
-        'no.document.found' => "No document found."
+        'no.document.found' => "No document found.",
+        'error.otp' => 'Please provide OTP properly.',
+        'error.otp.wrong' => 'OTP seems wrong.',
+        'error.otp.already.verified' => 'OTP already verified.',
+        'error.therapist.id' => 'Please provide valid therapist id.',
+        'error.email.already.verified' => 'This user email already verified with this ',
+        'error.email.id' => ' email id.',
     ];
 
     public $successMsg = [
@@ -96,7 +103,10 @@ class TherapistController extends BaseController
         'therapist.break' => 'Break done successfully !',
         'booking.pending.found.successfully' => 'Pending bookings found successfully !',
         'booking.upcoming.found.successfully' => 'Upcoming bookings found successfully !',
-        'therapist.document.delete' => 'Therapist document removed successfully !'
+        'therapist.document.delete' => 'Therapist document removed successfully !',
+        'success.email.otp.compare' => 'OTP matched successfully !',
+        'success.sms.sent' => 'SMS sent successfully !',
+        'success.email.sent' => 'Email sent successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -869,5 +879,133 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('no.document.found', NULL, true);
+    }
+    
+    public function verifyEmail(Request $request)
+    {
+        $data           = $request->all();
+        $model          = new Therapist();
+        $modelEmailOtp  = new TherapistEmailOtp();
+
+        $id      = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $getTherapist = $model->find($id);
+
+        if (!empty($getTherapist)) {
+            $emailId = (!empty($data['email'])) ? $data['email'] : NULL;
+
+            // Validate
+            $data = [
+                'therapist_id' => $id,
+                'otp'          => 1434,
+                'email'        => $emailId,
+                'is_send'      => '0'
+            ];
+
+            $validator = $modelEmailOtp->validate($data);
+            if ($validator['is_validate'] == '0') {
+                return $this->returns($validator['msg'], NULL, true);
+            }
+
+            if ($emailId == $getTherapist->email && $getTherapist->is_email_verified == '1') {
+                $this->errorMsg['error.email.already.verified'] = $this->errorMsg['error.email.already.verified'] . $emailId . $this->errorMsg['error.email.id'];
+
+                return $this->returns('error.email.already.verified', NULL, true);
+            }
+
+            $sendOtp         = $this->sendOtp($emailId);
+            $data['otp']     = NULL;
+            $data['is_send'] = '0';
+
+            if ($this->getJsonResponseCode($sendOtp) == '200') {
+                $data['is_send']     = '1';
+                $data['is_verified'] = '0';
+                $data['otp']         = $this->getJsonResponseOtp($sendOtp);
+            } else {
+                return $this->returns($this->getJsonResponseMsg($sendOtp), NULL, true);
+            }
+
+            $getData = $modelEmailOtp->where(['therapist_id' => $id])->get();
+
+            if (!empty($getData) && !$getData->isEmpty()) {
+                $updateOtp = $modelEmailOtp->updateOtp($id, $data);
+                
+                if (!empty($updateOtp['isError']) && !empty($updateOtp['message'])) {
+                    return $this->returns($updateOtp['message'], NULL, true);
+                }
+            } else {
+                $create = $modelEmailOtp->create($data);
+
+                if (!$create) {
+                    return $this->returns('error.something', NULL, true);
+                }
+            }
+        } else {
+            return $this->returns('error.therapist.id', NULL, true);
+        }
+
+        return $this->returns('success.email.sent', collect([]));
+    }
+
+    public function compareOtpEmail(Request $request)
+    {
+        $data       = $request->all();
+        $model      = new TherapistEmailOtp();
+        $modelUser  = new Therapist();
+
+        $therapistId = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $otp    = (!empty($data['otp'])) ? $data['otp'] : NULL;
+
+        if (empty($otp)) {
+            return $this->returns('error.otp', NULL, true);
+        }
+
+        if (strtolower(env('APP_ENV') != 'live') && $otp == '1234') {
+            $getTherapist = $model->where(['therapist_id' => $therapistId])->get();
+        } else {
+            $getTherapist = $model->where(['therapist_id' => $therapistId, 'otp' => $otp])->get();
+        }
+
+        if (!empty($getTherapist) && !$getTherapist->isEmpty()) {
+            $getTherapist = $getTherapist->first();
+
+            if ($getTherapist->is_verified == '1') {
+                return $this->returns('error.otp.already.verified', NULL, true);
+            } else {
+                $modelUser->where(['id' => $therapistId])->update(['email' => $getTherapist->email, 'is_email_verified' => '1']);
+
+                $model->setIsVerified($getTherapist->id, '1');
+            }
+        } else {
+            return $this->returns('error.otp.wrong', NULL, true);
+        }
+
+        return $this->returns('success.email.otp.compare', collect([]));
+    }
+
+    public function verifyMobile(Request $request)
+    {
+        $data   = $request->all();
+
+        /* TODO all things like email otp after get sms gateway. */
+
+        return $this->returns('success.sms.sent', collect([]));
+    }
+    
+    public function compareOtpSms(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new Therapist();
+
+        /* TODO all things like email otp compare after get sms gateway. */
+        $therapistId = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $otp    = (!empty($data['otp'])) ? $data['otp'] : NULL;
+
+        if (strtolower(env('APP_ENV') != 'live') && $otp == '1234') {
+            $model->where(['id' => $therapistId])->update(['is_mobile_verified' => '1']);
+        } else {
+            return $this->returns('error.otp.wrong', NULL, true);
+        }
+
+        return $this->returns('success.email.otp.compare', collect([]));
     }
 }

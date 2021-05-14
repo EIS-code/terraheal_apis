@@ -134,6 +134,16 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->post('/', 'TherapistController@getAllServices');
     });
 
+    $router->group(['prefix' => 'verify'], function () use($router) {
+        $router->post('/mobile', 'TherapistController@verifyMobile');
+        $router->post('/email', 'TherapistController@verifyEmail');
+    });
+    
+    $router->group(['prefix' => 'compare'], function () use($router) {
+        $router->post('/otp/email', 'TherapistController@compareOtpEmail');
+        $router->post('/otp/mobile', 'TherapistController@compareOtpSms');
+    });
+    
     $router->post('get', 'TherapistController@getOthers');
     $router->post('/getServices', 'TherapistController@getAllServices');
     $router->post('/getTherapists', 'TherapistController@getTherapists');
