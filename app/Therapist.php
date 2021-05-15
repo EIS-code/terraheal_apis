@@ -693,7 +693,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $date = Carbon::parse($value[0]->massageStartTime);
 
             if ($current >= $date->format('H:i')) {
-                $available = 'now';
+                $available = NULL;
             } else {
                 $start_time = new Carbon($current);
                 $end_time = new Carbon($date->format('H:i:s'));
@@ -723,7 +723,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 'therapistId' => $value[0]->therapist_id,
                 'therapistName' => $value[0]->therapistName,
                 'therapistPhoto' => $profile_photo,
-                'massageDate' => $value[0]->massageDate,
+                'massageDate' => strtotime($value[0]->massageDate) * 1000,
                 'massageStartTime' => strtotime($value[0]->massageStartTime) * 1000,
                 'available' => $available
             ];
