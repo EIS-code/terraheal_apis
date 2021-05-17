@@ -70,10 +70,14 @@ class ClientController extends BaseController {
         if(!empty($search_val))
         {
             if(is_numeric($search_val)) {
-                $clients->where($userModel::getTableName().'.id', $search_val);
+                $clients->where(function($query) use ($search_val, $userModel) {
+                    $query->where($userModel::getTableName().'.id', $search_val)
+                            ->orWhere($userModel::getTableName().'.tel_number', $search_val);
+                });
             } else {
                 $clients->where(function($query) use ($search_val, $userModel) {
                     $query->where($userModel::getTableName().'.name', 'like', $search_val.'%')
+                            ->orWhere($userModel::getTableName().'.surname', 'like', $search_val.'%')
                             ->orWhere($userModel::getTableName().'.email', $search_val);
                 });
             }
@@ -83,9 +87,7 @@ class ClientController extends BaseController {
         }
 
         if (!empty($request->dob)) {
-            // $clients->whereDate($userModel::getTableName().'.dob', $request->dob);
             $dob = Carbon::createFromTimestampMs($request->dob)->format('Y-m-d');
-
             $clients->whereRaw("DATE_FORMAT(FROM_UNIXTIME(`dob` / 1000), '%Y-%m-%d') = '{$dob}'");
         }
 
