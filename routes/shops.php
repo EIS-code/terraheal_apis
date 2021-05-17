@@ -23,6 +23,8 @@ $router->group(['prefix' => 'shops', 'namespace' => 'Shops'], function () use($r
     $router->post('/getClients', 'ShopsController@getAllClients');
     $router->post('/getPreferences', 'ShopsController@getPreferences');
     $router->get('sessions/get', 'ShopsController@getSessionTypes');
+    $router->post('shifts/add', 'ShopsController@addShift');
+    $router->post('shifts/get', 'ShopsController@getShifts');
 });
 
 $router->group(['prefix' => 'shops', 'namespace' => 'Shops', 'guard' => 'shop'], function () use($router) {
