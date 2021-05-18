@@ -159,8 +159,8 @@ class ShopsController extends BaseController {
             $freeSlots = [];
             do {
                 $freeSlots[] = [
-                    'startTime' => $openAt->format('H:i:s'),
-                    'endTime' => $openAt->addHour()->format('H:i:s')
+                    'startTime' => strtotime($openAt->format('H:i:s')) * 1000,
+                    'endTime' => strtotime($openAt->addHour()->format('H:i:s')) * 1000
                 ];
                 $diff = $openAt->diff($closeAt)->format("%H:%i");
             } while($diff != 0 );

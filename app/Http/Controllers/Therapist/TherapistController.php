@@ -43,6 +43,8 @@ use Illuminate\Support\Facades\Storage;
 use App\User;
 use App\Shop;
 use App\TherapistEmailOtp;
+use App\TherapistShift;
+use App\TherapistFreeSlot;
 
 class TherapistController extends BaseController
 {
@@ -107,6 +109,8 @@ class TherapistController extends BaseController
         'success.email.otp.compare' => 'OTP matched successfully !',
         'success.sms.sent' => 'SMS sent successfully !',
         'success.email.sent' => 'Email sent successfully !',
+        'therapist.availability' => 'Therapist availability added successfully !',
+        'therapist.freeslot' => 'Therapist freeslot added successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1007,5 +1011,55 @@ class TherapistController extends BaseController
         }
 
         return $this->returns('success.email.otp.compare', collect([]));
+    }
+    
+    public function addFreeSlots(Request $request) {
+        
+        dd($request->all());
+    }
+    
+    public function addAvailabilities(Request $request) {
+        
+        DB::beginTransaction();
+        try {
+            
+            $data = $request->all();
+            $scheduleModel = new TherapistWorkingSchedule();
+
+            $date = Carbon::createFromTimestampMs($data['date']);
+            $scheduleData = [
+                'date' => $date->format('Y-m-d'),
+                'is_working' => TherapistWorkingSchedule::WORKING,
+                'therapist_id' => $data['therapist_id'],
+            ];
+            $checks = $scheduleModel->validator($scheduleData);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            $schedule = $scheduleModel->create($scheduleData);
+            
+            $shiftModel = new TherapistShift();
+            foreach ($data['shifts'] as $key => $value) {
+                
+                $shiftData = [
+                    'shift_id' => $value,
+                    'schedule_id' => $schedule->id
+                ];
+                $checks = $shiftModel->validator($shiftData);
+                if ($checks->fails()) {
+                    return $this->returnError($checks->errors()->first(), NULL, true);
+                }
+                $shiftModel->create($shiftData);
+            }
+            $schedule = $scheduleModel->with('therapistShifts')->where('id',$schedule->id)->first();
+            DB::commit();
+            return $this->returns('therapist.availability', $schedule);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 }

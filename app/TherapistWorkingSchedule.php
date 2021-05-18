@@ -77,6 +77,11 @@ class TherapistWorkingSchedule extends BaseModel
         
         return $this->hasOne('App\Therapist', 'id', 'therapist_id');
     }
+    
+    public function therapistShifts()
+    {
+        return $this->hasMany('App\TherapistShift', 'schedule_id', 'id');
+    }
 
 //    public function getDateAttribute($value)
 //    {
