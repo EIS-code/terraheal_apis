@@ -97,7 +97,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             $router->post('/get', 'TherapistController@myAvailabilities');
             $router->post('/add', 'TherapistController@addAvailabilities');
             $router->post('/free/spots', 'TherapistController@myFreeSpots');
-            $router->post('add/free/spots', 'TherapistController@addFreeSlots');
+            $router->post('/add/free/spots', 'TherapistController@addFreeSlots');
             $router->post('/absent/store', 'TherapistController@absent');
         });
 

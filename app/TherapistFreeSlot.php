@@ -20,4 +20,22 @@ class TherapistFreeSlot extends BaseModel
             'endTime'           => ['required', 'date:H:i:s']
         ]);
     }
+    
+    public function getStartTimeAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
+    public function getEndTimeAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
 }

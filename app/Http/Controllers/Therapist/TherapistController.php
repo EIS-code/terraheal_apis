@@ -1015,7 +1015,30 @@ class TherapistController extends BaseController
     
     public function addFreeSlots(Request $request) {
         
-        dd($request->all());
+        
+        $freeSlots = [];
+        if(!empty($request->startTime) && !empty($request->endTime)) {
+            
+            foreach ($request->startTime as $key => $value) {
+                
+                $startTime = Carbon::createFromTimestampMs($value);
+                $endTime = Carbon::createFromTimestampMs($request->endTime[$key]);
+                $data = [
+                    'startTime' => $startTime,
+                    'endTime' => $endTime,
+                    'therapist_id' => $request->therapist_id,
+                ];
+
+                $slotModel = new TherapistFreeSlot();
+                $checks = $slotModel->validator($data);
+                if ($checks->fails()) {
+                    return $this->returnError($checks->errors()->first(), NULL, true);
+                }
+                $freeSlots[] = $slotModel->create($data);
+            }
+        }
+        
+        return $this->returns('therapist.freeslot', collect($freeSlots));
     }
     
     public function addAvailabilities(Request $request) {
@@ -1030,6 +1053,7 @@ class TherapistController extends BaseController
             $scheduleData = [
                 'date' => $date->format('Y-m-d'),
                 'is_working' => TherapistWorkingSchedule::WORKING,
+                'is_absent' => TherapistWorkingSchedule::NOT_ABSENT,
                 'therapist_id' => $data['therapist_id'],
             ];
             $checks = $scheduleModel->validator($scheduleData);
