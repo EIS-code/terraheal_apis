@@ -13,6 +13,7 @@ use App\Libraries\CommonHelper;
 use App\SessionType;
 use Carbon\Carbon;
 use App\ShopShift;
+use App\ShopHour;
 
 class ShopsController extends BaseController {
 
@@ -30,6 +31,8 @@ class ShopsController extends BaseController {
         'sessions.found.successfully' => 'Sessions types found successfully',
         'shifts.add' => 'Shift added successfully',
         'shifts.get' => 'Shifts data found successfully',
+        'shop.free.slots' => 'Shop freeslots are found successfully',
+        'shop.hours.not.found' => 'Shop hours not found',
         'no.data.found' => 'No data found'
     ];
 
@@ -140,6 +143,32 @@ class ShopsController extends BaseController {
         
         $shifts = ShopShift::where('shop_id',$request->shop_id)->get();
         return $this->returnSuccess(__($this->successMsg['shifts.get']), $shifts);
+    }
+    
+    public function getFreeSlots(Request $request) {
+        
+        $date = Carbon::createFromTimestampMs($request->date);
+        $hourModel = new ShopHour();
+        $day = array_search($date->format('l'), $hourModel->shopDays);
+        $hours = ShopHour::where(['shop_id' => $request->shop_id, 'day_name' => (string) $day])->first();
+        
+        if(!empty($hours)) {
+            $openAt = new Carbon($hours->open_at);
+            $closeAt = new Carbon($hours->close_at);
+
+            $freeSlots = [];
+            do {
+                $freeSlots[] = [
+                    'startTime' => $openAt->format('H:i:s'),
+                    'endTime' => $openAt->addHour()->format('H:i:s')
+                ];
+                $diff = $openAt->diff($closeAt)->format("%H:%i");
+            } while($diff != 0 );
+            
+            return $this->returnSuccess(__($this->successMsg['shop.free.slots']), $freeSlots);
+        }
+        return $this->returnSuccess(__($this->successMsg['shop.hours.not.found']));
+        
     }
 
 }

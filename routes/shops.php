@@ -25,6 +25,7 @@ $router->group(['prefix' => 'shops', 'namespace' => 'Shops'], function () use($r
     $router->get('sessions/get', 'ShopsController@getSessionTypes');
     $router->post('shifts/add', 'ShopsController@addShift');
     $router->post('shifts/get', 'ShopsController@getShifts');
+    $router->post('freeSlots/get', 'ShopsController@getFreeSlots');
 });
 
 $router->group(['prefix' => 'shops', 'namespace' => 'Shops', 'guard' => 'shop'], function () use($router) {
