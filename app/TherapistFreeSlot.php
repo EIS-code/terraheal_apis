@@ -16,8 +16,8 @@ class TherapistFreeSlot extends BaseModel
     {
         return Validator::make($data, [
             'therapist_id'      => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
-            'startTime'         => ['required', 'date:H:i:s'],
-            'endTime'           => ['required', 'date:H:i:s']
+            'startTime'         => ['required', 'date_format:H:i:s'],
+            'endTime'           => ['required', 'date_format:H:i:s']
         ]);
     }
     
