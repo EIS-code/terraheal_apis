@@ -8,7 +8,10 @@ class TherapistShift extends BaseModel
 {
     protected $fillable = [
         'schedule_id',
-        'shift_id'
+        'shift_id',
+        'is_working',
+        'is_absent',
+        'absent_reason'
     ];
 
     public function validator(array $data)

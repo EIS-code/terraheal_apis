@@ -656,20 +656,26 @@ class TherapistController extends BaseController
     public function absent(Request $request)
     {
         $id             = $request->get('id', false);
+        $shiftId        = $request->get('shift_id', NULL);
         $date           = $request->get('date', NULL);
         $date           = $date > 0 ? Carbon::createFromTimestampMs($date)->format('Y-m-d') : NULL;
         $absentReason   = $request->get('absent_reason', NULL);
-        $model          = new TherapistWorkingSchedule();
+        $scheduleModel       = new TherapistWorkingSchedule();
+        $shiftModel          = new TherapistShift();
 
         if (empty($date)) {
             return $this->returns('dateRequired', NULL, true);
         }
 
         if ($id && !empty($date)) {
-            $row = $model->where('therapist_id', $id)->whereDate('date', $date)->update(['is_absent' => $model::ABSENT, 'is_working' => $model::NOT_WORKING, 'absent_reason' => $absentReason]);
+            $schedule = $scheduleModel->where('therapist_id', $id)->whereDate('date', $date)->first();
+            if (!empty($schedule)) {
+                $shift = $shiftModel->where(['schedule_id' => $schedule->id, 'shift_id' => $shiftId])->first();
+                $row = $shift->update(['is_absent' => $scheduleModel::ABSENT, 'is_working' => $scheduleModel::NOT_WORKING, 'absent_reason' => $absentReason]);
 
-            if ($row) {
-                return $this->returns('therapist.absent.successfully', collect([]));
+                if ($row) {
+                    return $this->returns('therapist.absent.successfully', $shift);
+                }
             }
         }
 

@@ -11,9 +11,7 @@ use DB;
 class TherapistWorkingSchedule extends BaseModel
 {
     protected $fillable = [
-        'date',
-        'is_working',
-        'is_absent',
+        'date',       
         'therapist_id'
     ];
 
