@@ -14,8 +14,8 @@ class AddCancelTypeToBookingInfosTable extends Migration
     public function up()
     {
         Schema::table('booking_infos', function (Blueprint $table) {
-            $table->enum('cancel_type',[0,1,2,3,4])->nullable()->after('is_cancelled')
-                    ->comment('0: No show, 1: No availability, 2: Double booking 3: Wrong booking, 4: Other reason');
+            $table->enum('cancel_type',[0,1,2,3,4,5])->nullable()->after('is_cancelled')
+                    ->comment('0: No show, 1: No availability, 2: Double booking 3: Wrong booking, 4: Canceled By Client, 5: Other reason');
         });
     }
 
