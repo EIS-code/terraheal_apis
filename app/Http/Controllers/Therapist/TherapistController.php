@@ -108,8 +108,7 @@ class TherapistController extends BaseController
         'therapist.document.delete' => 'Therapist document removed successfully !',
         'success.email.otp.compare' => 'OTP matched successfully !',
         'success.sms.sent' => 'SMS sent successfully !',
-        'success.email.sent' => 'Email sent successfully !',
-        'therapist.availability' => 'Therapist availability added successfully !',
+        'success.email.sent' => 'Email sent successfully !',        
         'therapist.freeslot' => 'Therapist freeslot added successfully !',
     ];
 
@@ -657,20 +656,26 @@ class TherapistController extends BaseController
     public function absent(Request $request)
     {
         $id             = $request->get('id', false);
+        $shiftId        = $request->get('shift_id', NULL);
         $date           = $request->get('date', NULL);
         $date           = $date > 0 ? Carbon::createFromTimestampMs($date)->format('Y-m-d') : NULL;
         $absentReason   = $request->get('absent_reason', NULL);
-        $model          = new TherapistWorkingSchedule();
+        $scheduleModel       = new TherapistWorkingSchedule();
+        $shiftModel          = new TherapistShift();
 
         if (empty($date)) {
             return $this->returns('dateRequired', NULL, true);
         }
 
         if ($id && !empty($date)) {
-            $row = $model->where('therapist_id', $id)->whereDate('date', $date)->update(['is_absent' => $model::ABSENT, 'is_working' => $model::NOT_WORKING, 'absent_reason' => $absentReason]);
+            $schedule = $scheduleModel->where('therapist_id', $id)->whereDate('date', $date)->first();
+            if (!empty($schedule)) {
+                $shift = $shiftModel->where(['schedule_id' => $schedule->id, 'shift_id' => $shiftId])->first();
+                $row = $shift->update(['is_absent' => $scheduleModel::ABSENT, 'is_working' => $scheduleModel::NOT_WORKING, 'absent_reason' => $absentReason]);
 
-            if ($row) {
-                return $this->returns('therapist.absent.successfully', collect([]));
+                if ($row) {
+                    return $this->returns('therapist.absent.successfully', $shift);
+                }
             }
         }
 
@@ -1040,51 +1045,5 @@ class TherapistController extends BaseController
         }
         
         return $this->returns('therapist.freeslot', collect($freeSlots));
-    }
-    
-    public function addAvailabilities(Request $request) {
-        
-        DB::beginTransaction();
-        try {
-            
-            $data = $request->all();
-            $scheduleModel = new TherapistWorkingSchedule();
-
-            $date = Carbon::createFromTimestampMs($data['date']);
-            $scheduleData = [
-                'date' => $date->format('Y-m-d'),
-                'is_working' => TherapistWorkingSchedule::WORKING,
-                'is_absent' => TherapistWorkingSchedule::NOT_ABSENT,
-                'therapist_id' => $data['therapist_id'],
-            ];
-            $checks = $scheduleModel->validator($scheduleData);
-            if ($checks->fails()) {
-                return $this->returnError($checks->errors()->first(), NULL, true);
-            }
-            $schedule = $scheduleModel->updateOrCreate(['therapist_id' => $data['therapist_id']], $scheduleData);
-            
-            $shiftModel = new TherapistShift();
-            foreach ($data['shifts'] as $key => $value) {
-                
-                $shiftData = [
-                    'shift_id' => $value,
-                    'schedule_id' => $schedule->id
-                ];
-                $checks = $shiftModel->validator($shiftData);
-                if ($checks->fails()) {
-                    return $this->returnError($checks->errors()->first(), NULL, true);
-                }
-                $shiftModel->updateOrCreate($shiftData, $shiftData);
-            }
-            $schedule = $scheduleModel->with('therapistShifts')->where('id',$schedule->id)->first();
-            DB::commit();
-            return $this->returns('therapist.availability', $schedule);
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        } catch (\Throwable $e) {
-            DB::rollback();
-            throw $e;
-        }
-    }
+    }        
 }
