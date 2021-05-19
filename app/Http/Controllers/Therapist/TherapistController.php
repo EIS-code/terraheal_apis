@@ -1024,8 +1024,8 @@ class TherapistController extends BaseController
                 $startTime = Carbon::createFromTimestampMs($value);
                 $endTime = Carbon::createFromTimestampMs($request->endTime[$key]);
                 $data = [
-                    'startTime' => $startTime,
-                    'endTime' => $endTime,
+                    'startTime' => $startTime->format('H:i:s'),
+                    'endTime' => $endTime->format('H:i:s'),
                     'therapist_id' => $request->therapist_id,
                 ];
 
@@ -1034,7 +1034,8 @@ class TherapistController extends BaseController
                 if ($checks->fails()) {
                     return $this->returnError($checks->errors()->first(), NULL, true);
                 }
-                $freeSlots[] = $slotModel->create($data);
+                TherapistFreeSlot::updateOrCreate($data, $data);
+                $freeSlots[] = $data;
             }
         }
         
@@ -1060,7 +1061,7 @@ class TherapistController extends BaseController
             if ($checks->fails()) {
                 return $this->returnError($checks->errors()->first(), NULL, true);
             }
-            $schedule = $scheduleModel->create($scheduleData);
+            $schedule = $scheduleModel->updateOrCreate(['therapist_id' => $data['therapist_id']], $scheduleData);
             
             $shiftModel = new TherapistShift();
             foreach ($data['shifts'] as $key => $value) {
@@ -1073,7 +1074,7 @@ class TherapistController extends BaseController
                 if ($checks->fails()) {
                     return $this->returnError($checks->errors()->first(), NULL, true);
                 }
-                $shiftModel->create($shiftData);
+                $shiftModel->updateOrCreate($shiftData, $shiftData);
             }
             $schedule = $scheduleModel->with('therapistShifts')->where('id',$schedule->id)->first();
             DB::commit();
