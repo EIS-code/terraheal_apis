@@ -18,4 +18,19 @@ class TherapistShift extends BaseModel
             'shift_id'          => ['required', 'integer', 'exists:' . ShopShift::getTableName() . ',id']
         ]);
     }
+    
+    public function therapistSchedule()
+    {
+        return $this->belongsTo('App\TherapistWorkingSchedule', 'schedule_id', 'id');
+    }
+    
+    public function therapistShifts()
+    {
+        return $this->belongsTo('App\ShopShift', 'shift_id', 'id');
+    }
+    
+    public static function getAvailabilities(int $id, $date)
+    {
+        
+    }
 }

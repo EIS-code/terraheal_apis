@@ -125,35 +125,21 @@ class TherapistWorkingSchedule extends BaseModel
         $now   = Carbon::now();
         $date  = Carbon::createFromTimestampMs($date);
         $date  = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
-        $model = new TherapistWorkingScheduleTime();
 
-        /*$data  = $model::select(self::getTableName() . '.id AS schedule_id', DB::raw("UNIX_TIMESTAMP(" . self::getTableName() . ".date) * 1000 AS date"), self::getTableName() . '.therapist_id', $model::getTableName() . '.id AS schedule_time_id', DB::raw("UNIX_TIMESTAMP(" . $model::getTableName() . ".time) * 1000 AS time"))
-                       ->join(self::getTableName(), $model::getTableName() . '.schedule_id', '=', self::getTableName() . '.id')
-                       ->whereDate(self::getTableName() . '.date', $date)
-                       // ->whereDate($model::getTableName() . '.time', $date)
-                       ->where(self::getTableName() . '.therapist_id', $id)
-                       ->get();*/
-
-       $data = self::has('therapistWorkingScheduleTimeWithBreaks')->with('therapistWorkingScheduleTimeWithBreaks')->whereDate(self::getTableName() . '.date', $date)->where(self::getTableName() . '.therapist_id', $id)->first();
-
+        $data = TherapistShift::with('therapistSchedule', 'therapistShifts')
+                        ->whereHas('therapistSchedule', function($q) use($id, $date) {
+                            $q->where('date', $date)
+                            ->where('therapist_id', $id);
+                        })->get();
         if (!empty($data)) {
-            $scheduleTime       = $data->therapistWorkingScheduleTimeWithBreaks;
-
-            $data->start_time   = $scheduleTime->start_time;
-            $data->end_time     = $scheduleTime->end_time;
-            $data->schedule_id  = $scheduleTime->schedule_id;
-
-            $breaks = collect([]);
-            if (!empty($scheduleTime->therapistWorkingScheduleBreaks)) {
-                $breaks = $scheduleTime->therapistWorkingScheduleBreaks;
+            
+            $availability['schedule'] = $data[0]['therapistSchedule'];
+            foreach ($data as $key => $value) {
+                $availability['shifts'][] = $value['therapistShifts'];
             }
-
-            unset($data->therapistWorkingScheduleTimeWithBreaks);
-
-            $data->breaks = $breaks;
         }
 
-        return $data;
+        return collect($availability);
     }
 
     public static function getMissingDays(int $id, $month)
