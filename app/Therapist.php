@@ -80,6 +80,9 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     
     const IS_DELETED = '1';
     const IS_NOT_DELETED = '0';
+    
+    const IS_NOT_VERIFIED = '0';
+    const IS_VERIFIED = '1';
 
     public function getFullNameAttribute()
     {
@@ -537,7 +540,18 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         }
 
         // Insert therapist data.
-        $model::find($id)->update($data);
+        $therapist = $model::find($id);
+        if(isset($data['mobile_number']) && !empty($data['mobile_number'])) {
+            if($therapist->mobile_number != $data['mobile_number']) {
+                $data['is_mobile_verified'] = self::IS_NOT_VERIFIED;
+            }
+        }
+        if(isset($data['email']) && !empty($data['email'])) {
+            if($therapist->mobile_number != $data['email']) {
+                $data['is_email_verified'] = self::IS_NOT_VERIFIED;
+            }
+        }
+        $therapist->update($data);
 
         // Insert language spoken data.
         if (!empty($languageData)) {
