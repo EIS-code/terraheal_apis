@@ -110,6 +110,7 @@ class TherapistController extends BaseController
         'success.sms.sent' => 'SMS sent successfully !',
         'success.email.sent' => 'Email sent successfully !',        
         'therapist.freeslot' => 'Therapist freeslot added successfully !',
+        'all.therapist.shifts' => 'All therapist shifts found successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1019,8 +1020,7 @@ class TherapistController extends BaseController
     }
     
     public function addFreeSlots(Request $request) {
-        
-        
+                
         $freeSlots = [];
         if(!empty($request->startTime) && !empty($request->endTime)) {
             
@@ -1045,5 +1045,31 @@ class TherapistController extends BaseController
         }
         
         return $this->returns('therapist.freeslot', collect($freeSlots));
-    }        
+    }
+    
+    public function getTherapistShifts(Request $request) {
+
+        $now = Carbon::now();
+        $date = Carbon::createFromTimestampMs($request->date);
+        $date = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
+
+        $data = TherapistShift::with('therapistSchedule', 'therapistShifts')
+                        ->whereHas('therapistSchedule', function($q) use($date, $request) {
+                            $q->where('date', $date)->where('shop_id', $request->shop_id);
+                        })->get()->groupBy('schedule_id');
+
+        $shiftData = [];
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+                $availability['schedule'] = $value[0]['therapistSchedule'];
+                foreach ($value as $key => $shift) {
+                    $availability['shifts'][] = $shift['therapistShifts'];
+                }
+                array_push($shiftData, $availability);
+                unset($availability);
+            }
+        }
+        return $this->returns('all.therapist.shifts', collect($shiftData));
+    }
+
 }

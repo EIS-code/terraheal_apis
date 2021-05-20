@@ -87,6 +87,10 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             $router->post('remove', 'TherapistController@removeDocument');
         });
     });
+    
+    $router->group(['prefix' => 'shifts'], function () use($router) {
+        $router->post('/get', 'TherapistController@getTherapistShifts');
+    });
 
     $router->group(['prefix' => 'my'], function () use($router) {
         $router->group(['prefix' => 'working'], function () use($router) { 
@@ -99,7 +103,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
             $router->post('/add/free/spots', 'TherapistController@addFreeSlots');
             $router->post('/absent/store', 'TherapistController@absent');
         });
-
+        
         $router->group(['prefix' => 'ratings'], function () use($router) {
             $router->get('/', 'TherapistController@myRatings');
         });
