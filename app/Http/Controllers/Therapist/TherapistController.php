@@ -734,14 +734,22 @@ class TherapistController extends BaseController
 
     public function exchangeWithOthers(Request $request)
     {
-        $id     = $request->get('id', false);
         $date   = $request->get('date', false);
+        $data   = $request->all();
         $model  = new TherapistExchange();
 
         if (!empty($date) && $date > 0) {
             $date = Carbon::createFromTimestampMs($date)->format('Y-m-d H:i:s');
 
-            $data = ['date' => $date, 'is_approved' => $model::IS_NOT_APPROVED, 'therapist_id' => $id];
+            $data = [
+                'date' => $date,
+                'is_approved' => $model::IS_NOT_APPROVED,
+                'therapist_id' => $data['therapist_id'],
+                "with_therapist_id" => $data['with_therapist_id'],
+                "shift_id" => $data['shift_id'],
+                "with_shift_id" => $data['with_shift_id'],
+                "shop_id" => $data['shop_id']
+            ];
 
             $checks = $model->validator($data);
             if ($checks->fails()) {
