@@ -178,6 +178,11 @@ class Shop extends BaseModel implements CanResetPasswordContract
         return $this->hasOne('App\ShopPaymentDetail', 'shop_id');
     }
     
+    public function apiKey()
+    {
+        return $this->hasMany('App\ApiKeyShop', 'shop_id', 'id');
+    }
+    
     public function sendPasswordResetNotification($token)
     {
         $classPasswordNotification = new ResetPasswordNotification($token);

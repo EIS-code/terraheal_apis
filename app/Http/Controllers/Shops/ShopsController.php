@@ -41,7 +41,6 @@ class ShopsController extends BaseController {
         $email = (!empty($data['email'])) ? $data['email'] : NULL;
         $password = (!empty($data['shop_password'])) ? $data['shop_password'] : NULL;
 
-
         if (empty($email)) {
             return $this->returnError($this->errorMsg['loginEmail']);
         } elseif (empty($password)) {
@@ -50,10 +49,9 @@ class ShopsController extends BaseController {
 
         if (!empty($email) && !empty($password)) {
 
-            $shop = Shop::where(['email' => $email])->first();
+            $shop = Shop::with('apiKey')->where(['email' => $email])->first();
+            
             if (!empty($shop) && Hash::check($password, $shop->shop_password)) {
-                $shop = $shop->first();
-
                 return $this->returnSuccess(__($this->successMsg['login']), $shop);
             } else {
                 return $this->returnError($this->errorMsg['loginBoth']);
