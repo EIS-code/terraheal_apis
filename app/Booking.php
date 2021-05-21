@@ -52,7 +52,7 @@ class Booking extends BaseModel
     const YESTERDAY = '1';
     const THIS_WEEK = '2';
     const THIS_MONTH = '3';
-    
+    const TOMORROW = '4';
 
     public static $defaultTableFutons = ['0', '1', '2'];
     public static $tableFutons = ['0', '1', '2'];
@@ -357,7 +357,7 @@ class Booking extends BaseModel
         }
         if(isset($dateFilter)) {
             $now = Carbon::now();
-            if ($dateFilter == self::YESTERDAY) {
+            if ($dateFilter == self::TOMORROW) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::tomorrow()->format('Y-m-d'));
             }
             if ($dateFilter == self::THIS_WEEK) {
