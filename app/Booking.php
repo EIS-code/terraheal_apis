@@ -180,7 +180,7 @@ class Booking extends BaseModel
         $bookingMassageId   = $request->get('booking_massage_id');
         $month              = $request->get('month');
         $service            = $request->get('service');
-//        $dateFilter         = $request->get('date_filter');
+        $dateFilter         = $request->get('date_filter');
 
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
@@ -353,21 +353,21 @@ class Booking extends BaseModel
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::now()->format('Y-m-d'));
             }
         }
-//        if(isset($dateFilter)) {
-//            $now = Carbon::now();
-//            if ($dateFilter == self::TOMORROW) {
-//                $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::tomorrow()->format('Y-m-d'));
-//            }
-//            if ($dateFilter == self::THIS_WEEK) {
-//                $weekStartDate = $now->startOfWeek()->format('Y-m-d');
-//                $weekEndDate = $now->endOfWeek()->format('Y-m-d');
-//
-//                $data->whereBetween($bookingInfoModel::getTableName() . '.massage_date', [$weekStartDate, $weekEndDate]);
-//            }
-//            if ($dateFilter == self::THIS_MONTH) {
-//                $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', $now->month);
-//            }
-//        }
+        if(isset($dateFilter)) {
+            $now = Carbon::now();
+            if ($dateFilter == self::TOMORROW) {
+                $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::tomorrow()->format('Y-m-d'));
+            }
+            if ($dateFilter == self::THIS_WEEK) {
+                $weekStartDate = $now->startOfWeek()->format('Y-m-d');
+                $weekEndDate = $now->endOfWeek()->format('Y-m-d');
+
+                $data->whereBetween($bookingInfoModel::getTableName() . '.massage_date', [$weekStartDate, $weekEndDate]);
+            }
+            if ($dateFilter == self::THIS_MONTH) {
+                $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', $now->month);
+            }
+        }
 
         $data = $data->orderBy($bookingInfoModel::getTableName().'.massage_date','DESC')->get();
 

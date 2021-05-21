@@ -110,6 +110,7 @@ class TherapistController extends BaseController
         'success.sms.sent' => 'SMS sent successfully !',
         'success.email.sent' => 'Email sent successfully !',        
         'therapist.freeslot' => 'Therapist freeslot added successfully !',
+        'all.therapist.shifts' => 'All therapist shifts found successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -733,14 +734,22 @@ class TherapistController extends BaseController
 
     public function exchangeWithOthers(Request $request)
     {
-        $id     = $request->get('id', false);
         $date   = $request->get('date', false);
+        $data   = $request->all();
         $model  = new TherapistExchange();
 
         if (!empty($date) && $date > 0) {
             $date = Carbon::createFromTimestampMs($date)->format('Y-m-d H:i:s');
 
-            $data = ['date' => $date, 'is_approved' => $model::IS_NOT_APPROVED, 'therapist_id' => $id];
+            $data = [
+                'date' => $date,
+                'is_approved' => $model::IS_NOT_APPROVED,
+                'therapist_id' => $data['therapist_id'],
+                "with_therapist_id" => $data['with_therapist_id'],
+                "shift_id" => $data['shift_id'],
+                "with_shift_id" => $data['with_shift_id'],
+                "shop_id" => $data['shop_id']
+            ];
 
             $checks = $model->validator($data);
             if ($checks->fails()) {
@@ -1019,8 +1028,7 @@ class TherapistController extends BaseController
     }
     
     public function addFreeSlots(Request $request) {
-        
-        
+                
         $freeSlots = [];
         if(!empty($request->startTime) && !empty($request->endTime)) {
             
@@ -1045,5 +1053,31 @@ class TherapistController extends BaseController
         }
         
         return $this->returns('therapist.freeslot', collect($freeSlots));
-    }        
+    }
+    
+    public function getTherapistShifts(Request $request) {
+
+        $now = Carbon::now();
+        $date = Carbon::createFromTimestampMs($request->date);
+        $date = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
+
+        $data = TherapistShift::with('therapistSchedule', 'therapistShifts')
+                        ->whereHas('therapistSchedule', function($q) use($date, $request) {
+                            $q->where('date', $date)->where('shop_id', $request->shop_id);
+                        })->get()->groupBy('schedule_id');
+
+        $shiftData = [];
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+                $availability['schedule'] = $value[0]['therapistSchedule'];
+                foreach ($value as $key => $shift) {
+                    $availability['shifts'][] = $shift['therapistShifts'];
+                }
+                array_push($shiftData, $availability);
+                unset($availability);
+            }
+        }
+        return $this->returns('all.therapist.shifts', collect($shiftData));
+    }
+
 }
