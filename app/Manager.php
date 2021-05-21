@@ -20,7 +20,7 @@ class Manager extends BaseModel
     ];
 
     protected $table = 'manager';
-    protected $hidden = ['remember_token', 'created_at', 'updated_at'];
+    protected $hidden = ['password', 'remember_token', 'created_at', 'updated_at'];
 
 
     public function validator(array $data, $id = false, $isUpdate = false)
