@@ -1060,18 +1060,40 @@ class TherapistController extends BaseController
         $now = Carbon::now();
         $date = Carbon::createFromTimestampMs($request->date);
         $date = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
-
-        $data = TherapistShift::with('therapistSchedule', 'therapistShifts')
-                        ->whereHas('therapistSchedule', function($q) use($date, $request) {
-                            $q->where('date', $date)->where('shop_id', $request->shop_id);
-                        })->get()->groupBy('schedule_id');
-
+        $search_val = $request->search_val;
+        
+        $data = DB::table('therapists')
+                ->leftJoin('therapist_working_schedules', 'therapists.id', '=', 'therapist_working_schedules.therapist_id')
+                ->leftJoin('therapist_shifts', 'therapist_shifts.schedule_id', '=', 'therapist_working_schedules.id')
+                ->leftJoin('shop_shifts', 'shop_shifts.id', '=', 'therapist_shifts.shift_id')
+                ->select('therapists.*', 'therapist_working_schedules.*', 'therapist_shifts.*', 'shop_shifts.*')
+                ->where(['therapist_working_schedules.date' => $date, 'therapist_working_schedules.shop_id' => $request->shop_id,
+                    'therapist_shifts.is_absent' => TherapistShift::NOT_ABSENT, 'therapist_shifts.is_working' => TherapistShift::WORKING]);
+        
+        if(!empty($search_val)) {
+            $data->where(function($query) use ($search_val) {
+                $query->where('therapists.name', 'like', $search_val . '%')
+                        ->orWhere('therapists.surname', 'like', $search_val . '%')
+                        ->orWhere('therapists.email', $search_val);
+            });
+        }
+        
+        $data = $data->get()->groupBy('therapist_id');
+        
         $shiftData = [];
         if (!empty($data)) {
             foreach ($data as $key => $value) {
-                $availability['schedule'] = $value[0]['therapistSchedule'];
+                $availability['id'] = $value[0]->id;
+                $availability['name'] = $value[0]->name;
+                $availability['surname'] = $value[0]->surname;
+
                 foreach ($value as $key => $shift) {
-                    $availability['shifts'][] = $shift['therapistShifts'];
+                    $availability['shifts'][] = [
+                        'schedule_id' => $shift->schedule_id,
+                        'shift_id' => $shift->shift_id,
+                        'from' => $shift->from,
+                        'to' => $shift->to
+                    ];
                 }
                 array_push($shiftData, $availability);
                 unset($availability);

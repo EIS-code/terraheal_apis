@@ -14,23 +14,7 @@ class TherapistWorkingSchedule extends BaseModel
         'date',       
         'therapist_id'
     ];
-
-    const WORKING       = '1';
-    const NOT_WORKING   = '0';
-
-    public static $isWorking = [
-        self::WORKING       => 'Working',
-        self::NOT_WORKING   => 'Nope'
-    ];
-
-    const ABSENT        = '1';
-    const NOT_ABSENT    = '0';
-
-    public static $isAbsent = [
-        self::ABSENT        => 'Yes',
-        self::NOT_ABSENT    => 'Nope'
-    ];
-
+   
     public function __construct($attributes = [])
     {
         parent::__construct($attributes);
