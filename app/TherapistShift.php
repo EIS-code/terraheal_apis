@@ -14,6 +14,22 @@ class TherapistShift extends BaseModel
         'absent_reason'
     ];
 
+    const ABSENT        = '1';
+    const NOT_ABSENT    = '0';
+    
+    const WORKING       = '1';
+    const NOT_WORKING   = '0';
+    
+     public static $isWorking = [
+        self::WORKING       => 'Working',
+        self::NOT_WORKING   => 'Nope'
+    ];
+
+    public static $isAbsent = [
+        self::ABSENT        => 'Yes',
+        self::NOT_ABSENT    => 'Nope'
+    ];
+    
     public function validator(array $data)
     {
         return Validator::make($data, [

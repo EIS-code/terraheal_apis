@@ -8,10 +8,19 @@ use DB;
 use Carbon\Carbon;
 use App\TherapistWorkingSchedule;
 use App\TherapistShift;
+use App\Manager;
+use Illuminate\Support\Facades\Hash;
 
 class ManagerController extends BaseController {
 
+    public $errorMsg = [
+        'loginEmail' => "Please provide email.",
+        'loginPass' => "Please provide password.",
+        'loginBoth' => "Shop email or password seems wrong.",
+    ];
+    
     public $successMsg = [
+        'login' => "Manager found successfully !",
         'therapist.availability' => 'Therapist availability added successfully !',
     ];
 
@@ -61,4 +70,27 @@ class ManagerController extends BaseController {
         }
     }
 
+    public function signIn(Request $request) {
+        $data = $request->all();
+        $email = (!empty($data['email'])) ? $data['email'] : NULL;
+        $password = (!empty($data['password'])) ? $data['password'] : NULL;
+
+        if (empty($email)) {
+            return $this->returnError($this->errorMsg['loginEmail']);
+        } elseif (empty($password)) {
+            return $this->returnError($this->errorMsg['loginPass']);
+        }
+
+        if (!empty($email) && !empty($password)) {
+
+            $manager = Manager::where(['email' => $email])->first();
+            
+            if (!empty($manager) && Hash::check($password, $manager->password)) {
+                return $this->returnSuccess(__($this->successMsg['login']), $manager);
+            } else {
+                return $this->returnError($this->errorMsg['loginBoth']);
+            }
+        }
+        return $this->returnNull();
+    }
 }

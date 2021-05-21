@@ -111,6 +111,7 @@ $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($r
 
 $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use($router) {
     
+    $router->post('/signIn', 'Manager\ManagerController@signIn');
     $router->post('/availability/add', 'Manager\ManagerController@addAvailabilities');
 });
 
