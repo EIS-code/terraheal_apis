@@ -10,14 +10,7 @@ class News extends BaseModel
         'title',
         'sub_title',
         'description',
-        'is_read'
-    ];
-
-    const READ = '1';
-    const NOT_READ = '0';
-    public $isRead = [
-        self::READ      => 'Yes',
-        self::NOT_READ  => 'Nope'
+        'manager_id'
     ];
 
     public function validator(array $data)
@@ -26,16 +19,7 @@ class News extends BaseModel
             'title'         => ['required', 'string', 'max:255'],
             'sub_title'     => ['string', 'max:255'],
             'description'   => ['string'],
-            'is_read'       => ['in:', implode(",", array_keys($this->isRead))]
+            'manager_id'    => ['integer',  'exists:' . Manager::getTableName() . ',id'],
         ]);
-    }
-
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->addHidden('is_read');
-
-        $this->removeHidden('updated_at');
     }
 }

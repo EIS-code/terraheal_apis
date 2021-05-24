@@ -113,6 +113,14 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     
     $router->post('/signIn', 'Manager\ManagerController@signIn');
     $router->post('/availability/add', 'Manager\ManagerController@addAvailabilities');
+    
+    $router->group(['prefix' => 'news'], function () use($router) {
+    
+        $router->post('/add', 'News\NewsController@addNews');
+        $router->post('/update', 'News\NewsController@updateNews');
+        $router->post('/delete', 'News\NewsController@deleteNews');
+    });
+
 });
 
 $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {
