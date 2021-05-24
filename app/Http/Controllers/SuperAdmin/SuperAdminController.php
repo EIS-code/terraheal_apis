@@ -294,10 +294,8 @@ class SuperAdminController extends BaseController {
 
         if (!empty($email) && !empty($password)) {
 
-            $user = Superadmin::where(['email' => $email])->first();
+            $user = Superadmin::with('country','city')->where(['email' => $email])->first();
             if (!empty($user) && Hash::check($password, $user->password)) {
-                $user = $user->first();
-
                 return $this->returnSuccess(__($this->successMsg['login']), $user);
             } else {
                 return $this->returnError($this->errorMsg['loginBoth']);
@@ -337,6 +335,7 @@ class SuperAdminController extends BaseController {
         }
         
         $admin->update($data);
+        $admin = $adminModel->with('country','city')->find($data['superadmin_id']);
         return $this->returnSuccess(__($this->successMsg['edit.profile']), $admin);
     }
     
