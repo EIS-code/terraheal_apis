@@ -7,6 +7,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Support\Facades\Storage;
 
 class Superadmin extends BaseModel implements CanResetPasswordContract
 {
@@ -20,6 +21,7 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
     protected $fillable = [
         'name',
         'email',
+        'profile_photo',
         'password',
         'dob',
         'gender',
@@ -39,6 +41,9 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
     protected $hidden = [
         'password', 'remember_token', 'created_at', 'updated_at'
     ];
+    
+    public $fileSystem = 'public';
+    public $profilePhotoPath = 'superAdmin\profile\\';
 
     public static function getTableName()
     {
@@ -58,6 +63,7 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
         return Validator::make($data, [
             'name'                    => $nameValidator,
             'email'                   => $emailValidator,
+            'profile_photo'           => ['nullable', 'string'],
             'gender'                  => ['nullable', 'string'],
             'dob'                     => ['nullable', 'string'],
             'nif'                     => ['nullable', 'string'],
@@ -67,6 +73,32 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
             'country_id'              => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
             'city_id'                 => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']
         ]);
+    }
+    
+    public function validatePhoto($request)
+    {
+        return Validator::make($request, [
+            'profile_photo' => 'mimes:jpeg,png,jpg',
+        ], [
+            'profile_photo' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        ]);
+    }
+    
+    public function getProfilePhotoAttribute($value)
+    {
+
+        // For set default image.
+        if (empty($value)) {
+            return $value;
+        }
+
+        $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
+
+        if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value)) {
+            return Storage::disk($this->fileSystem)->url($profilePhotoPath . $value);
+        }
+
+        return $value;
     }
     
     public function sendPasswordResetNotification($token)

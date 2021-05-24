@@ -314,6 +314,22 @@ class SuperAdminController extends BaseController {
         if(empty($admin)) {
             return $this->returnError($this->errorMsg['admin.not.found']);
         }
+        
+        /* For profile Image */
+        if ($request->hasFile('profile_photo')) {
+            $checkImage = $adminModel->validatePhoto($data);
+            if ($checkImage->fails()) {
+                unset($data['profile_photo']);
+
+                return $this->returnError($checkImage->errors()->first(), NULL, true);
+            }
+            $fileName = time().'.' . $data['profile_photo']->getClientOriginalExtension();
+            $storeFile = $data['profile_photo']->storeAs($adminModel->profilePhotoPath, $fileName, $adminModel->fileSystem);
+
+            if ($storeFile) {
+                $data['profile_photo'] = $fileName;
+            }
+        }
         $checks = $adminModel->validator($data, $admin->id, true);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
