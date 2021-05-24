@@ -49,9 +49,4 @@ class TherapistShift extends BaseModel
     {
         return $this->belongsTo('App\ShopShift', 'shift_id', 'id');
     }
-    
-    public static function getAvailabilities(int $id, $date)
-    {
-        
-    }
 }
