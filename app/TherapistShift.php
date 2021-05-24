@@ -34,7 +34,9 @@ class TherapistShift extends BaseModel
     {
         return Validator::make($data, [
             'schedule_id'       => ['required', 'integer', 'exists:' . TherapistWorkingSchedule::getTableName() . ',id'],
-            'shift_id'          => ['required', 'integer', 'exists:' . ShopShift::getTableName() . ',id']
+            'shift_id'          => ['required', 'integer', 'exists:' . ShopShift::getTableName() . ',id'],
+            'is_working'        => ['in:' . implode(",", array_keys(self::$isWorking))],
+            'is_absent'         => ['in:' . implode(",", array_keys(self::$isAbsent))],
         ]);
     }
     

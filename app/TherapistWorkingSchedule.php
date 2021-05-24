@@ -25,8 +25,6 @@ class TherapistWorkingSchedule extends BaseModel
     {
         return Validator::make($data, [
             'date'          => ['required', 'date:Y-m-d'],
-            'is_working'    => ['in:' . implode(",", array_keys(self::$isWorking))],
-            'is_absent'     => ['nullable', 'in:' . implode(",", array_keys(self::$isWorking))],
             'therapist_id'  => ['required', 'exists:' . Therapist::getTableName() . ',id']
         ]);
     }

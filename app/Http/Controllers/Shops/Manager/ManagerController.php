@@ -31,36 +31,36 @@ class ManagerController extends BaseController {
 
             $data = $request->all();
             $scheduleModel = new TherapistWorkingSchedule();
-
-            $date = Carbon::createFromTimestampMs($data['date']);
-            $scheduleData = [
-                'date' => $date->format('Y-m-d'),
-                'is_working' => TherapistWorkingSchedule::WORKING,
-                'is_absent' => TherapistWorkingSchedule::NOT_ABSENT,
-                'therapist_id' => $data['therapist_id'],
-            ];
-            $checks = $scheduleModel->validator($scheduleData);
-            if ($checks->fails()) {
-                return $this->returnError($checks->errors()->first(), NULL, true);
-            }
-            $schedule = $scheduleModel->updateOrCreate(['therapist_id' => $data['therapist_id']], $scheduleData);
-
             $shiftModel = new TherapistShift();
-            foreach ($data['shifts'] as $key => $value) {
-
-                $shiftData = [
-                    'shift_id' => $value,
-                    'schedule_id' => $schedule->id
-                ];
-                $checks = $shiftModel->validator($shiftData);
-                if ($checks->fails()) {
-                    return $this->returnError($checks->errors()->first(), NULL, true);
+            $date = Carbon::createFromTimestampMs($data['date']);
+            
+            foreach ($data['shifts'] as $key => $shift) {
+                foreach ($shift['therapists'] as $key => $therapist) {
+                    
+                    $scheduleData = [
+                        'date' => $date->format('Y-m-d'),
+                        'therapist_id' => $therapist['therapist_id'],
+                    ];
+                    $checks = $scheduleModel->validator($scheduleData);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $schedule = $scheduleModel->updateOrCreate($scheduleData, $scheduleData);
+                    $shiftData = [
+                        'shift_id' => $shift['shift_id'],
+                        'is_working' => TherapistShift::WORKING,
+                        'is_absent' => TherapistShift::NOT_ABSENT,
+                        'schedule_id' => $schedule->id
+                    ];
+                    $checks = $shiftModel->validator($shiftData);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $shiftModel->updateOrCreate($shiftData, $shiftData);
                 }
-                $shiftModel->updateOrCreate($shiftData, $shiftData);
             }
-            $schedule = $scheduleModel->with('therapistShifts')->where('id', $schedule->id)->first();
             DB::commit();
-            return $this->returnSuccess(__($this->successMsg['therapist.availability']),$schedule);
+            return $this->returnSuccess(__($this->successMsg['therapist.availability']));
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;
