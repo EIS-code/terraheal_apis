@@ -30,7 +30,9 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
         'emergency_tel_number',
         'id_passport',
         'country_id',
-        'city_id'
+        'city_id',
+        'is_email_verified',
+        'is_mobile_verified',
     ];
 
     /**
@@ -99,6 +101,16 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
         }
 
         return $value;
+    }
+    
+    public function country()
+    {
+        return $this->hasOne('App\Country', 'id', 'country_id');
+    }
+
+    public function city()
+    {
+        return $this->hasOne('App\City', 'id', 'city_id');
     }
     
     public function sendPasswordResetNotification($token)

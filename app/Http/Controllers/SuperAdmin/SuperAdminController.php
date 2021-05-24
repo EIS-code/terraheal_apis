@@ -41,6 +41,7 @@ class SuperAdminController extends BaseController {
         'pack.purchase' => 'Pack purchased successfully!',
         'login' => "Login successfully !",
         'edit.profile' => "Profile updated successfully!",
+        'details.found' => "Admin details found successfully!",
     ];
 
     public function addVoucher(Request $request) {
@@ -337,5 +338,15 @@ class SuperAdminController extends BaseController {
         
         $admin->update($data);
         return $this->returnSuccess(__($this->successMsg['edit.profile']), $admin);
+    }
+    
+    public function getDetails(Request $request) {
+        
+        $admin = Superadmin::with('country','city')->where('id',$request->superadmin_id)->first();
+        if(empty($admin)) {
+            return $this->returnError($this->errorMsg['admin.not.found']);
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['details.found']), $admin);
     }
 }
