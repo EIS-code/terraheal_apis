@@ -10,6 +10,8 @@ use App\TherapistWorkingSchedule;
 use App\TherapistShift;
 use App\Manager;
 use Illuminate\Support\Facades\Hash;
+use App\TherapistNews;
+use App\Therapist;
 
 class ManagerController extends BaseController {
 
@@ -22,6 +24,7 @@ class ManagerController extends BaseController {
     public $successMsg = [
         'login' => "Manager found successfully !",
         'therapist.availability' => 'Therapist availability added successfully !',
+        'news' => 'News data found successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -92,5 +95,38 @@ class ManagerController extends BaseController {
             }
         }
         return $this->returnNull();
+    }
+    
+    public function getNews(Request $request) {
+        
+        $data = TherapistNews::with('therapists:id', 'news')->get()->groupBy('news_id');
+        $allTherapist = Therapist::where('shop_id', $request->shop_id)->get()->count();
+        
+        $allNews = [];
+        if(!empty($data)) {
+            foreach ($data as $key => $news) {
+
+                $value = $news[0]['news'];
+                $newsData = [
+                    'id' => $value['id'],
+                    'title' => $value['title'],
+                    'sub_title' => $value['sub_title'],
+                    'description' => $value['description'],
+                    'manager_id' => $value['manager_id'],
+                ];
+                $cnt = 0;
+                foreach ($news as $key => $value) {
+                    $cnt++;
+                }
+                $newsData['read'] = $cnt;
+                $newsData['unread'] = $allTherapist - $cnt;
+
+                array_push($allNews, $newsData);
+                unset($newsData);
+            }
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['news']), $allNews);
+        
     }
 }

@@ -19,4 +19,15 @@ class TherapistNews extends BaseModel
             'news_id'          => ['required', 'integer', 'exists:' . News::getTableName() . ',id'],
         ]);
     }
+    
+    public function therapists()
+    {
+        return $this->belongsTo('App\Therapist', 'therapist_id', 'id');
+    }
+    
+    public function news()
+    {
+        return $this->belongsTo('App\News', 'news_id', 'id');
+    }
+    
 }
