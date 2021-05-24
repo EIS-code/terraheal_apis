@@ -70,6 +70,5 @@ $router->group(['middleware' => ['auth']], function () use($router) {
     include("massages.php");
     include("therapies.php");
     include("shops.php");
-    include("news.php");
     include("superAdmin.php");
 });

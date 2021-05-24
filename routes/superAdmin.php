@@ -20,6 +20,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->post('password/forgot', 'Auth\ForgotPasswordController@sendResetLinkEmail');
     $router->post('signIn', 'SuperAdminController@signIn');
     $router->post('update/profile', 'SuperAdminController@updateProfile');
+    $router->post('details/get', 'SuperAdminController@getDetails');
     
     // For vouchers
     $router->post('addVoucher', 'SuperAdminController@addVoucher');
