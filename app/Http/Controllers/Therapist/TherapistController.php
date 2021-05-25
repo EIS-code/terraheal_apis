@@ -113,6 +113,7 @@ class TherapistController extends BaseController
         'therapist.freeslot' => 'Therapist freeslot added successfully !',
         'all.therapist.shifts' => 'All therapist shifts found successfully !',
         'news.read' => 'News read successfully !',
+        'new.therapist' => 'New therapist created successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1114,6 +1115,20 @@ class TherapistController extends BaseController
         
         $read = $model->updateOrCreate($request->all(), $request->all());
         return $this->returns('news.read', collect($read));
+    }
+    
+    public function newTherapist(Request $request) {
+        
+        $model = new Therapist();
+        $data = $request->all();
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $data['password'] = Hash::make($data['password']);
+        $therapist = $model->create($data);
+        
+        return $this->returns('new.therapist', $therapist);
     }
 
 }
