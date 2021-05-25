@@ -12,6 +12,7 @@ use App\Manager;
 use Illuminate\Support\Facades\Hash;
 use App\TherapistNews;
 use App\Therapist;
+use App\News;
 
 class ManagerController extends BaseController {
 
@@ -19,12 +20,14 @@ class ManagerController extends BaseController {
         'loginEmail' => "Please provide email.",
         'loginPass' => "Please provide password.",
         'loginBoth' => "Shop email or password seems wrong.",
+        'news.not.found' => "News not found.",
     ];
     
     public $successMsg = [
         'login' => "Manager found successfully !",
         'therapist.availability' => 'Therapist availability added successfully !',
         'news' => 'News data found successfully !',
+        'news.details' => 'News details found successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -98,12 +101,53 @@ class ManagerController extends BaseController {
     }
     
     public function getNews(Request $request) {
+
+        $data = TherapistNews::with('therapists:id', 'news')
+                ->whereHas('news', function($q) use($request) {
+            $q->where('manager_id', $request->manager_id);
+        });
+        $filter = !empty($request->filter) ? $request->filter : News::TODAY;
+        $todayDate = Carbon::now()->format('Y-m-d');
         
-        $data = TherapistNews::with('therapists:id', 'news')->get()->groupBy('news_id');
+        if ($filter == News::TODAY) {
+            $data->whereHas('news', function($q) use($todayDate) {
+                $q->whereDate('created_at', $todayDate);
+            });
+        }
+        if ($filter == News::CURRENT_MONTH) {
+            $data->whereHas('news', function($q) use($todayDate) {
+                $q->whereMonth('created_at', $todayDate->month);
+            });
+        }
+        if ($filter == News::LAST_7_DAYS) {
+            $agoDate = Carbon::now()->subDays(7)->format('Y-m-d');
+            $data->whereHas('news', function($q) use($todayDate, $agoDate){
+                $q->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            });
+        }
+        if ($filter == News::LAST_14_DAYS) {
+            $agoDate = Carbon::now()->subDays(14)->format('Y-m-d');
+            $data->whereHas('news', function($q) use($todayDate, $agoDate){
+                $q->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            });
+        }
+        if ($filter == News::LAST_30_DAYS) {
+            $agoDate = Carbon::now()->subDays(30)->format('Y-m-d');
+            $data->whereHas('news', function($q) use($todayDate, $agoDate){
+                $q->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            });
+        }
+        if ($filter == News::CUSTOM) {
+            $date = $date = Carbon::createFromTimestampMs($request->date);
+            $data->whereHas('news', function($q) use($date) {
+                $q->whereDate('created_at', $date);
+            });
+        }
+        $data = $data->get()->groupBy('news_id');
         $allTherapist = Therapist::where('shop_id', $request->shop_id)->get()->count();
-        
+
         $allNews = [];
-        if(!empty($data)) {
+        if (!empty($data)) {
             foreach ($data as $key => $news) {
 
                 $value = $news[0]['news'];
@@ -113,6 +157,7 @@ class ManagerController extends BaseController {
                     'sub_title' => $value['sub_title'],
                     'description' => $value['description'],
                     'manager_id' => $value['manager_id'],
+                    'created_at' => strtotime($value['created_at']) * 1000,
                 ];
                 $cnt = 0;
                 foreach ($news as $key => $value) {
@@ -125,8 +170,30 @@ class ManagerController extends BaseController {
                 unset($newsData);
             }
         }
-        
+
         return $this->returnSuccess(__($this->successMsg['news']), $allNews);
+    }
+
+    public function newsDetails(Request $request) {
         
+        $news = News::with('therapists')->where('id', $request->news_id)->first();
+        if(empty($news)) {
+            return $this->returnSuccess(__($this->errorMsg['news.not.found']));
+        }
+        $allTherapist = Therapist::where('shop_id', $request->shop_id)->get()->count();
+        $read = $news->therapists->count();
+        $unread = $allTherapist = 0 ? 0 : $allTherapist - $read ;
+        
+        $newsData = [
+            'id' => $news['id'],
+            'title' => $news['title'],
+            'sub_title' => $news['sub_title'],
+            'description' => $news['description'],
+            'manager_id' => $news['manager_id'],
+            'read' => $read,
+            'unread' => $unread 
+        ];
+        
+        return $this->returnSuccess(__($this->successMsg['news.details']), $newsData);
     }
 }

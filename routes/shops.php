@@ -120,6 +120,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/update', 'News\NewsController@updateNews');
         $router->post('/delete', 'News\NewsController@deleteNews');
         $router->post('/get', 'Manager\ManagerController@getNews');
+        $router->post('/details/get', 'Manager\ManagerController@newsDetails');
     });
 
 });
