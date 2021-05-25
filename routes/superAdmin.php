@@ -72,4 +72,15 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
 
         $router->post('details/get', 'Dashboard\DashboardController@getSidebarDetails');
     });
+    
+    $router->group(['prefix' => 'verify'], function () use($router) {
+        $router->post('/mobile', 'SuperAdminController@verifyMobile');
+        $router->post('/email', 'SuperAdminController@verifyEmail');
+    });
+    
+    $router->group(['prefix' => 'compare'], function () use($router) {
+        $router->post('/otp/email', 'SuperAdminController@compareOtpEmail');
+        $router->post('/otp/mobile', 'SuperAdminController@compareOtpSms');
+    });
+    
 });
