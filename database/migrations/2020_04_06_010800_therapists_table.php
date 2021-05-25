@@ -17,14 +17,14 @@ class TherapistsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('dob')->nullable();
-            $table->enum('gender', ['m', 'f'])->comment('m: Male, f: Female');
+            $table->enum('gender', ['m', 'f'])->comment('m: Male, f: Female')->nullable();
             $table->string('email')->unique();
             $table->string('tel_number', 50)->nullable();
             $table->string('hobbies')->nullable();
             // $table->string('spoken_language_ids')->comment('Comma separated language ids for spoken.');
             $table->text('short_description')->nullable();
             // $table->string('profile_photo');
-            $table->enum('is_freelancer', [0, 1])->comment('0: Nope, 1: Yes');
+            $table->enum('is_freelancer', [0, 1])->comment('0: Nope, 1: Yes')->default(0);
             $table->integer('paid_percentage')->default(0);
             $table->string('avatar')->nullable();
             $table->string('avatar_original')->nullable();
@@ -36,7 +36,7 @@ class TherapistsTable extends Migration
             $table->tinyInteger('oauth_provider')->nullable()->comment('1: google, 2: facebook, 3: apple, 4: linkedin');
             $table->string('profile_photo')->nullable();
             $table->string('password')->nullable();
-            $table->enum('is_deleted', [0, 1])->comment('0: Nope, 1: Yes');
+            $table->enum('is_deleted', [0, 1])->comment('0: Nope, 1: Yes')->default(0);
             $table->enum('is_email_verified', ['0', '1'])->default('0')->comment('0: Nope, 1: Yes');
             $table->enum('is_mobile_verified', ['0', '1'])->default('0')->comment('0: Nope, 1: Yes');
             $table->enum('is_document_verified', ['0', '1'])->default('0')->comment('0: Nope, 1: Yes');

@@ -21,9 +21,9 @@ class AddFieldsToTherapistsTable extends Migration
             $table->string('mobile_number')->nullable()->after('tel_number');
             $table->string('emergence_contact_number')->nullable()->after('mobile_number');
             $table->text('health_conditions_allergies')->nullable()->after('emergence_contact_number');
-            $table->bigInteger('city_id')->unsigned();
+            $table->bigInteger('city_id')->unsigned()->nullable();
             $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade')->after('shop_id');
-            $table->bigInteger('country_id')->unsigned();
+            $table->bigInteger('country_id')->unsigned()->nullable();
             $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade')->after('city_id');
         });
     }

@@ -54,7 +54,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         'city_id',
         'country_id',
         'personal_description',
-        'address'
+        'address',
+        'active_app'
     ];
 
     protected $hidden = ['is_deleted', 'created_at', 'updated_at', 'password'];
@@ -83,6 +84,14 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     
     const IS_NOT_VERIFIED = '0';
     const IS_VERIFIED = '1';
+    
+    const IS_NOT_ACTIVE = '0';
+    const IS_ACTIVE = '1';
+    
+    public static $active = [
+        self::IS_ACTIVE     => 'Yes',
+        self::IS_NOT_ACTIVE => 'No'
+    ];
 
     public function getFullNameAttribute()
     {
@@ -108,7 +117,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             'hobbies'              => array_merge(['string', 'max:255'], !empty($requiredFileds['hobbies']) ? $requiredFileds['hobbies'] : ['nullable']),
             'short_description'    => array_merge(['string', 'max:255'], !empty($requiredFileds['short_description']) ? $requiredFileds['short_description'] : ['nullable']),
             'shop_id'              => array_merge(['integer'], !empty($requiredFileds['shop_id']) ? $requiredFileds['shop_id'] : ['required']),
-            'is_freelancer'        => array_merge(['required', 'in:' . implode(",", array_keys(self::$isFreelancer))], !empty($requiredFileds['is_freelancer']) ? $requiredFileds['is_freelancer'] : ['required']),
+            'is_freelancer'        => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$isFreelancer))]),
+            'active_app'           => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$active))]),
             'paid_percentage'      => array_merge(['integer'], !empty($requiredFileds['paid_percentage']) ? $requiredFileds['paid_percentage'] : ['nullable']),
             'avatar'               => array_merge(['max:255'], !empty($requiredFileds['avatar']) ? $requiredFileds['avatar'] : ['nullable']),
             'avatar_original'      => array_merge(['max:255'], !empty($requiredFileds['avatar_original']) ? $requiredFileds['avatar_original'] : ['nullable']),
@@ -127,6 +137,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             'health_conditions_allergies' => array_merge(['string'], !empty($requiredFileds['health_conditions_allergies']) ? $requiredFileds['health_conditions_allergies'] : ['nullable']),
             'mobile_number'             => array_merge(['string', 'max:255'], !empty($requiredFileds['mobile_number']) ? $requiredFileds['mobile_number'] : ['nullable']),
             'emergence_contact_number'  => array_merge(['string', 'max:255'], !empty($requiredFileds['emergence_contact_number']) ? $requiredFileds['emergence_contact_number'] : ['nullable']),
+            'country_id'            => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
+            'city_id'               => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']
         ], $extraFields), [
             'password.regex'    => __('Password should contains at least one [a-z, A-Z, 0-9, @, $, !, %, *, #, ?, &].')
         ]);
