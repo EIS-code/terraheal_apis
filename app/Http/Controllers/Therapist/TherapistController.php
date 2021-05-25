@@ -45,6 +45,7 @@ use App\Shop;
 use App\TherapistEmailOtp;
 use App\TherapistShift;
 use App\TherapistFreeSlot;
+use App\TherapistNews;
 
 class TherapistController extends BaseController
 {
@@ -111,6 +112,7 @@ class TherapistController extends BaseController
         'success.email.sent' => 'Email sent successfully !',        
         'therapist.freeslot' => 'Therapist freeslot added successfully !',
         'all.therapist.shifts' => 'All therapist shifts found successfully !',
+        'news.read' => 'News read successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1100,6 +1102,18 @@ class TherapistController extends BaseController
             }
         }
         return $this->returns('all.therapist.shifts', collect($shiftData));
+    }
+    
+    public function readNews(Request $request) {
+        
+        $model = new TherapistNews();
+        $checks = $model->validator($request->all());
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $read = $model->updateOrCreate($request->all(), $request->all());
+        return $this->returns('news.read', collect($read));
     }
 
 }
