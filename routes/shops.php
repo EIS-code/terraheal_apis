@@ -112,6 +112,7 @@ $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($r
 $router->group(['prefix' => 'staffs', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/add', 'Staffs\StaffsController@createStaff');
+    $router->post('/list', 'Staffs\StaffsController@staffList');
 });
 
 $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use($router) {

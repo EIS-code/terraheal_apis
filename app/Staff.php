@@ -71,4 +71,14 @@ class Staff extends Model
         return $this->hasMany('App\StaffWorkingSchedule', 'staff_id', 'id');
     }
     
+    public function country()
+    {
+        return $this->hasOne('App\Country', 'id', 'country_id');
+    }
+    
+    public function city()
+    {
+        return $this->hasOne('App\City', 'id', 'city_id');
+    }
+    
 }

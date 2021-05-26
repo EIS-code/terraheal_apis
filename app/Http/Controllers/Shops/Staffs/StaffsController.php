@@ -14,7 +14,8 @@ class StaffsController extends BaseController {
 
     public $successMsg = [
         
-        'staff.create' => 'Staff added successfully'
+        'staff.create' => 'Staff added successfully',
+        'staff.list' => 'Staff data found successfully'
     ];
     
     public function createStaff(Request $request) {
@@ -65,4 +66,9 @@ class StaffsController extends BaseController {
         }
     }
 
+    public function staffList(Request $request) {
+        
+        $staffs = Staff::with('schedule','country','city')->where('shop_id', $request->shop_id)->get();
+        return $this->returnSuccess(__($this->successMsg['staff.list']),$staffs);
+    }
 }
