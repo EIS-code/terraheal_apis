@@ -109,6 +109,11 @@ $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($r
     $router->post('/getRooms', 'Rooms\RoomsController@getRooms');
 });
 
+$router->group(['prefix' => 'staffs', 'namespace' => 'Shops'], function () use($router) {
+    
+    $router->post('/add', 'Staffs\StaffsController@createStaff');
+});
+
 $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/signIn', 'Manager\ManagerController@signIn');
