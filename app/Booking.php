@@ -7,6 +7,11 @@ use App\Shop;
 use App\SessionType;
 use App\BookingInfo;
 use App\UserGenderPreference;
+use App\BookingMassage;
+use App\UserPeople;
+use App\MassagePrice;
+use App\MassageTiming;
+use App\BookingMassageStart;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use DB;
@@ -26,7 +31,8 @@ class Booking extends BaseModel
         'user_id',
         'shop_id',
         'booking_date_time',
-        'pack_id'
+        'pack_id',
+        'book_platform'
     ];
 
     const BOOKING_TYPE_IMC = '1';
@@ -38,6 +44,15 @@ class Booking extends BaseModel
     const BOOKING_CANCELLED = '4';
     const BOOKING_PAST = '5';
     const BOOKING_TODAY = '6';
+    const BOOKING_PLATFORM_APP = '0';
+    const BOOKING_PLATFORM_WEB = '1';
+    const MASSAGES = '0';
+    const THERAPIES = '1';
+    const TODAY = '0';
+    const YESTERDAY = '1';
+    const THIS_WEEK = '2';
+    const THIS_MONTH = '3';
+    const TOMORROW = '4';
 
     public static $defaultTableFutons = ['0', '1', '2'];
     public static $tableFutons = ['0', '1', '2'];
@@ -45,6 +60,11 @@ class Booking extends BaseModel
     public static $bookingTypes = [
         self::BOOKING_TYPE_IMC => 'In massage center',
         self::BOOKING_TYPE_HHV => 'Home / Hotel visit'
+    ];
+    
+    public static $bookingPlatforms = [
+        self::BOOKING_PLATFORM_APP => 'App',
+        self::BOOKING_PLATFORM_WEB => 'Web'
     ];
 
     public function validator(array $data, $isUpdate = false)
@@ -62,11 +82,11 @@ class Booking extends BaseModel
             'user_id'              => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
             'shop_id'              => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
             'session_id'           => ['required', 'integer', 'exists:' . SessionType::getTableName() . ',id'],
+            'pack_id'              => ['nullable', 'integer', 'exists:' . Pack::getTableName() . ',id'],
             'total_persons'        => ['required', 'integer'],
             'bring_table_futon'    => ['in:' . implode(",", self::$tableFutons)],
             'table_futon_quantity' => ['integer'],
-            'booking_date_time'    => ['required'],
-            'booking_info'         => ['required', 'array']
+            'booking_date_time'    => ['required']
         ], $validatorExtended));
 
         return $validator;
@@ -85,6 +105,11 @@ class Booking extends BaseModel
     {
         return (isset(self::$bookingTypes[$value])) ? self::$bookingTypes[$value] : $value;
     }
+    
+    public function getBookPlatformAttribute($value)
+    {
+        return (isset(self::$bookingPlatforms[$value])) ? self::$bookingPlatforms[$value] : $value;
+    }
 
     public function bookingInfo()
     {
@@ -93,7 +118,7 @@ class Booking extends BaseModel
 
     public function bookingInfoWithFilters($type = 'today')
     {
-        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['id', 'booking_id', 'id as booking_info_id', 'massage_date', 'massage_time', 'user_people_id', 'therapist_id'])
+        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['id', 'booking_id', 'id as booking_info_id', 'massage_date', 'massage_time', 'user_people_id', 'therapist_id', 'is_done'])
                     ->where(function($query) use($type) {
                         $query->filterDatas();
                     })->with(['userPeople' => function($query) {
@@ -101,6 +126,8 @@ class Booking extends BaseModel
                     }, 'therapist', 'bookingMassages' => function($query) {
                         $query->with(['massageTiming' => function($query1) {
                             return $query1->with('massage');
+                        }, 'therapyTiming' => function($query2) {
+                            return $query2->with('therapy');
                         }]);
                     }]);
     }
@@ -151,6 +178,9 @@ class Booking extends BaseModel
         $date               = $request->get('date');
         $userId             = $request->get('user_id');
         $bookingMassageId   = $request->get('booking_massage_id');
+        $month              = $request->get('month');
+        $service            = $request->get('service');
+        $dateFilter         = $request->get('date_filter');
 
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
@@ -168,70 +198,83 @@ class Booking extends BaseModel
         $therapiesModel                 = new Therapy();
         $therapiesTimingModel           = new TherapiesTimings();
         $therapiesPriceModel            = new TherapiesPrices();
+        $bookingMassageStartModel       = new BookingMassageStart();
 
         $data = $this
                 ->select(
                         DB::RAW(
-                            'CONCAT(' . $userModel::getTableName() . '.name, " ", ' . $userModel::getTableName() . '.surname) as client_name, ' . 
-                            $userPeopleModel::getTableName() . '.name as client_name, '. 
+                            $this::getTableName().'.id as booking_id,'.
                             $bookingInfoModel::getTableName() . '.id as booking_info_id, '.
                             $bookingMassageModel::getTableName() . '.id as booking_massage_id, ' .
+                            $this::getTableName() . '.user_id as client_id,'.
+                            'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name, ' . 
+                            'CASE ' . $userPeopleModel::getTableName() . '.gender WHEN "m" THEN "' . $userPeopleModel->gender[$userPeopleModel::MALE] . '" WHEN "f" THEN "' . $userPeopleModel->gender[$userPeopleModel::FEMALE] . '" ELSE "" END as client_gender, ' . 
+                            $userPeopleModel::getTableName() . '.age as client_age, ' . 
                             $bookingInfoModel::getTableName() . '.user_people_id, '.
-                            $sessionTypeModel::getTableName() . '.type as session_type, ' . 
+                            $userPeopleModel::getTableName() . '.name as user_people_name, '. 
+                            $this::getTableName().'.session_id as sessionId,'.
+                            $sessionTypeModel::getTableName() . '.type as session_type, ' .
+                            $this::getTableName() . '.booking_type, ' . 
+                            $this::getTableName() . '.book_platform, ' .
+                            $this::getTableName().'.shop_id as shop_id,'.
+                            $shopModel::getTableName() . '.name as shop_name, ' . 
+                            'CONCAT(' . $shopModel::getTableName() . '.address, " ", ' . $shopModel::getTableName() . '.address2) as shop_address, ' . 
+                            $therapistModel::getTableName().'.id as therapist_id,'.
+                            'CONCAT_WS(" ",' . $therapistModel::getTableName() . '.name,' . $therapistModel::getTableName() . '.surname) as therapistName, ' . 
+                            $roomModel::getTableName().'.id as room_id,'.
+                            $roomModel::getTableName().'.name as roomName,'.
+                            $roomModel::getTableName().'.total_rooms as totalRooms,'.
                             $massageModel::getTableName() . '.name as massage_name,' . 
+                            $therapiesModel::getTableName() . '.name as therapy_name,' . 
+                            $bookingInfoModel::getTableName() . '.massage_date as massage_date,' . 
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
                             $bookingInfoModel::getTableName() . '.massage_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . 
-                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, ' . 
+                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $massageTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, UNIX_TIMESTAMP(' . 
+                            'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $therapiesTimingModel::getTableName() . '.time MINUTE)) * 1000 as therapy_end_time, ' . 
+                            'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as massage_day_name, ' . 
+                            'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' . 
+                            'CONCAT(' . $therapiesTimingModel::getTableName() . '.time, " ", "Mins") as therapy_duration, ' . 
+                            $massagePriceModel::getTableName().'.cost,'.
                             'gender.name as gender_preference, ' . 
                             'pressure.name as pressure_preference, ' . 
                             $this::getTableName() . '.special_notes as notes, ' .
                             $bookingMassageModel::getTableName() . '.notes_of_injuries as injuries, ' . 
                             'focus_area.name as focus_area, ' . 
                             $this::getTableName() . '.table_futon_quantity, ' . 
-                            $this::getTableName() . '.booking_type, ' . 
-                            $shopModel::getTableName() . '.name as shop_name, ' . 
-                            'CONCAT(' . $shopModel::getTableName() . '.address, " ", ' . $shopModel::getTableName() . '.address2) as shop_address, ' . 
-                            'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as massage_day_name, ' . 
-                            $userPeopleModel::getTableName() . '.age as client_age, ' . 
-                            'CASE ' . $userPeopleModel::getTableName() . '.gender WHEN "m" THEN "' . $userPeopleModel->gender[$userPeopleModel::MALE] . '" WHEN "f" THEN "' . $userPeopleModel->gender[$userPeopleModel::FEMALE] . '" ELSE "" END as client_gender, ' . 
-                            'CONCAT(' . $massageTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' .                            
                             $userModel::getTableName() . '.qr_code_path, ' . 
-                            $this::getTableName() . '.user_id,'.
+                            $userGenderPreferenceModel::getTableName().'.name as genderPreference,' . 
+                            $bookingMassageModel::getTableName().'.massage_timing_id,' . 
+                            $bookingMassageModel::getTableName().'.massage_prices_id,' . 
+                            $bookingMassageModel::getTableName().'.therapy_timing_id,' . 
+                            $bookingMassageModel::getTableName().'.therapy_prices_id,' . 
                             $bookingMassageModel::getTableName() . '.is_confirm, ' . 
-                            $this::getTableName().'.id as booking_id,'.
-                            $this::getTableName().'.shop_id as shop_id,'.
-                            $this::getTableName().'.session_id as sessionId,'.
-                            'CONCAT(' . $therapistModel::getTableName() . '.name, " ", ' . $therapistModel::getTableName() . '.surname) as therapistName, ' . 
-                            $roomModel::getTableName().'.name as roomName,'.
-                            $userGenderPreferenceModel::getTableName().'.name as genderPreference,'.
-                            $massagePriceModel::getTableName().'.cost,'.
-                            $therapistModel::getTableName().'.id as therapist_id,'.
-                            $roomModel::getTableName().'.id as room_id,'.
-                            $therapiesModel::getTableName().'.name as therapy_name,'.
-                            $bookingMassageModel::getTableName().'.massage_timing_id,'.
-                            $bookingMassageModel::getTableName().'.massage_prices_id,'.
-                            $bookingMassageModel::getTableName().'.therapy_timing_id,'.
-                            $bookingMassageModel::getTableName().'.therapy_prices_id'
+                            $bookingInfoModel::getTableName().'.is_done,' . 
+                            $bookingInfoModel::getTableName().'.is_cancelled,' . 
+                            $bookingInfoModel::getTableName().'.cancel_type,' . 
+                            $bookingInfoModel::getTableName().'.cancelled_reason, ' . 
+                            $bookingMassageStartModel::getTableName().'.start_time as actual_start_time, ' . 
+                            $bookingMassageStartModel::getTableName().'.end_time as actual_end_time'
                         )
                 )
                 ->join($bookingInfoModel::getTableName(), $this::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')
-                ->join($userPeopleModel::getTableName(), $bookingInfoModel::getTableName() . '.user_people_id', '=', $userPeopleModel::getTableName() . '.id')
+                ->join($bookingMassageModel::getTableName(), $bookingInfoModel::getTableName() . '.id', '=', $bookingMassageModel::getTableName() . '.booking_info_id')
                 ->join($shopModel::getTableName(), $this::getTableName() . '.shop_id', '=', $shopModel::getTableName() . '.id')
                 ->join($userModel::getTableName(), $this::getTableName() . '.user_id', '=', $userModel::getTableName() . '.id')
-                ->join($therapistModel::getTableName(),$bookingInfoModel::getTableName().'.therapist_id', '=', $therapistModel::getTableName().'.id')
-                ->join($bookingMassageModel::getTableName(), $bookingInfoModel::getTableName() . '.id', '=', $bookingMassageModel::getTableName() . '.booking_info_id')
+                ->join($sessionTypeModel::getTableName(), $this::getTableName() . '.session_id', '=', $sessionTypeModel::getTableName() . '.id')
+                ->leftJoin($userPeopleModel::getTableName(), $bookingInfoModel::getTableName() . '.user_people_id', '=', $userPeopleModel::getTableName() . '.id')
                 ->leftJoin($roomModel::getTableName(),$bookingMassageModel::getTableName().'.room_id', '=', $roomModel::getTableName().'.id')
                 ->leftJoin($userGenderPreferenceModel::getTableName(),$bookingMassageModel::getTableName().'.gender_preference', '=', $userGenderPreferenceModel::getTableName().'.id')
-                ->join($sessionTypeModel::getTableName(), $this::getTableName() . '.session_id', '=', $sessionTypeModel::getTableName() . '.id')
+                ->leftJoin($therapistModel::getTableName(),$bookingInfoModel::getTableName().'.therapist_id', '=', $therapistModel::getTableName().'.id')
                 ->leftJoin($massagePriceModel::getTableName(), $bookingMassageModel::getTableName() . '.massage_prices_id', '=', $massagePriceModel::getTableName() . '.id')
                 ->leftJoin($massageModel::getTableName(), $massagePriceModel::getTableName() . '.massage_id', '=', $massageModel::getTableName() . '.id')
                 ->leftJoin($massageTimingModel::getTableName(), $massagePriceModel::getTableName() . '.massage_timing_id', '=', $massageTimingModel::getTableName() . '.id')
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as gender', $bookingMassageModel::getTableName() . '.gender_preference', '=', 'gender.id')
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as pressure', $bookingMassageModel::getTableName() . '.pressure_preference', '=', 'pressure.id')
-                ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as focus_area', $bookingMassageModel::getTableName() . '.focus_area_preference', '=', 'focus_area.id')            
+                ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as focus_area', $bookingMassageModel::getTableName() . '.focus_area_preference', '=', 'focus_area.id')
                 ->leftJoin($therapiesPriceModel::getTableName(), $bookingMassageModel::getTableName() . '.therapy_prices_id', '=', $therapiesPriceModel::getTableName() . '.id')
                 ->leftJoin($therapiesModel::getTableName(), $therapiesPriceModel::getTableName() . '.therapy_id', '=', $therapiesModel::getTableName() . '.id')
                 ->leftJoin($therapiesTimingModel::getTableName(), $therapiesPriceModel::getTableName() . '.therapy_timing_id', '=', $therapiesTimingModel::getTableName() . '.id')
+                ->leftJoin($bookingMassageStartModel::getTableName(), $bookingMassageModel::getTableName() . '.id', '=', $bookingMassageStartModel::getTableName() . '.booking_massage_id')
                 ->where($this::getTableName() . '.shop_id', (int)$shopId)
                 ->whereNull($bookingMassageModel::getTableName().'.deleted_at');
 
@@ -259,7 +302,10 @@ class Booking extends BaseModel
             $data->where($this::getTableName() . '.id', $bookingId);
         }
         if ($date) {
-            $data->where($bookingInfoModel::getTableName() . '.massage_date', '=', $date);
+            $data->where($bookingInfoModel::getTableName() . '.massage_date', $date);
+        }
+        if ($month) {
+            $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', '=', $month->month);
         }
         if($userId) {
             $data->where($this::getTableName() . '.user_id', '=', $userId);
@@ -267,38 +313,72 @@ class Booking extends BaseModel
         if ($bookingMassageId) {
             $data->where($bookingMassageModel::getTableName() . '.id', '=', $bookingMassageId);
         }
+
+        if (isset($service)) {
+            if ($service == self::MASSAGES) {
+                $data->whereNotNull($bookingMassageModel::getTableName().'.massage_prices_id')->whereNotNull($bookingMassageModel::getTableName().'.massage_timing_id')
+                        ->where($bookingMassageModel::getTableName().'.therapy_timing_id',NULL)->where($bookingMassageModel::getTableName().'.therapy_prices_id',NULL);
+            }
+
+            if ($service == self::THERAPIES) {
+                $data->whereNotNull($bookingMassageModel::getTableName().'.therapy_timing_id')->whereNotNull($bookingMassageModel::getTableName().'.therapy_prices_id')
+                        ->where($bookingMassageModel::getTableName().'.massage_prices_id',NULL)->where($bookingMassageModel::getTableName().'.massage_timing_id',NULL);
+            }
+        }
+
         if (isset($bookingsFilter)) {
-            if (in_array(Booking::BOOKING_ONGOING, $bookingsFilter)) {
-                $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_CONFIRM);
+            if (in_array(self::BOOKING_ONGOING, $bookingsFilter)) {
+                $data->where([$bookingMassageModel::getTableName() . '.is_confirm' => (string)BookingMassage::IS_CONFIRM,
+                    $bookingInfoModel::getTableName() . '.massage_date' => Carbon::now()->format('Y-m-d')]);
             }
-            if (in_array(Booking::BOOKING_WAITING, $bookingsFilter)) {
-                $data->where($bookingMassageModel::getTableName() . '.is_confirm', (string)BookingMassage::IS_NOT_CONFIRM);
+            if (in_array(self::BOOKING_WAITING, $bookingsFilter)) {
+                $data->where([$bookingMassageModel::getTableName() . '.is_confirm' => (string)BookingMassage::IS_NOT_CONFIRM,
+                              $bookingInfoModel::getTableName() . '.is_cancelled' => (string)BookingInfo::IS_NOT_CANCELLED]);
+
+                $data->whereDate($bookingInfoModel::getTableName() . '.massage_date', '>=', Carbon::now()->format('Y-m-d'));
             }
-            if (in_array(Booking::BOOKING_FUTURE, $bookingsFilter)) {
-                $data->where($bookingInfoModel::getTableName() . '.massage_date', '>=', Carbon::now()->format('Y-m-d'));
+            if (in_array(self::BOOKING_FUTURE, $bookingsFilter)) {
+                $data->where($bookingInfoModel::getTableName() . '.massage_date', '>=', Carbon::now()->format('Y-m-d'))
+                        ->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_NOT_CANCELLED);
             }
-            if (in_array(Booking::BOOKING_COMPLETED, $bookingsFilter)) {
-                $data->where($bookingInfoModel::getTableName() . '.is_done', (string)BookingInfo::IS_DONE);
+            if (in_array(self::BOOKING_COMPLETED, $bookingsFilter)) {
+                $data->where($bookingInfoModel::getTableName() . '.is_done', (string) BookingInfo::IS_DONE)
+                        ->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_NOT_CANCELLED);
             }
-            if (in_array(Booking::BOOKING_CANCELLED, $bookingsFilter)) {
+            if (in_array(self::BOOKING_CANCELLED, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_CANCELLED);
             }
-            if (in_array(Booking::BOOKING_PAST, $bookingsFilter)) {
+            if (in_array(self::BOOKING_PAST, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', '<=', Carbon::now()->format('Y-m-d'));
             }
-            if (in_array(Booking::BOOKING_TODAY, $bookingsFilter)) {
-                $data->where($bookingInfoModel::getTableName() . '.massage_date', '=', Carbon::now()->format('Y-m-d'));
+            if (in_array(self::BOOKING_TODAY, $bookingsFilter)) {
+                $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::now()->format('Y-m-d'));
+            }
+        }
+        if(isset($dateFilter)) {
+            $now = Carbon::now();
+            if ($dateFilter == self::TOMORROW) {
+                $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::tomorrow()->format('Y-m-d'));
+            }
+            if ($dateFilter == self::THIS_WEEK) {
+                $weekStartDate = $now->startOfWeek()->format('Y-m-d');
+                $weekEndDate = $now->endOfWeek()->format('Y-m-d');
+
+                $data->whereBetween($bookingInfoModel::getTableName() . '.massage_date', [$weekStartDate, $weekEndDate]);
+            }
+            if ($dateFilter == self::THIS_MONTH) {
+                $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', $now->month);
             }
         }
 
         $data = $data->orderBy($bookingInfoModel::getTableName().'.massage_date','DESC')->get();
 
         if (!empty($data) && !$data->isEmpty()) {
-            $data->map(function(&$record) use($userModel) {
+            $data->map(function(&$record) use($userModel, $bookingMassageModel, $bookingMassageStartModel, $bookingInfoModel) {
                 $record->qr_code_path = $userModel->getQrCodePathAttribute($record->qr_code_path);
 
                 if (empty($record->qr_code_path)) {
-                    $find = $userModel::find($record->user_id);
+                    $find = $userModel::find($record->client_id);
 
                     if (!empty($find)) {
                         $find->storeQRCode();
@@ -307,10 +387,131 @@ class Booking extends BaseModel
                     }
                 }
 
-                $record->massage_date = strtotime($record->massage_date) * 1000;
+                $record->massage_date = $bookingInfoModel->getMassageDateAttribute($record->massage_date);
+
+                $bookingType = $record->getAttributes()['booking_type'];
+
+                unset($record->booking_type);
+
+                $record->booking_type_value = $bookingType;
+
+                $bookingMassage = $bookingMassageModel::find($record->booking_massage_id);
+
+                $record->service_status = $bookingMassage->getServiceStatus();
+
+                if (!empty($record->actual_start_time)) {
+                    $record->actual_start_time = $bookingMassageStartModel->getStartTimeAttribute($record->actual_start_time);
+                }
+
+                if (!empty($record->actual_end_time)) {
+                    $record->actual_end_time = $bookingMassageStartModel->getEndTimeAttribute($record->actual_end_time);
+                }
             });
+
+            // $data->put('total_massages', $bookingInfoModel->getMassageCountByTherapist($therapistId));
+            // $data->put('total_therapies', $bookingInfoModel->getTherapyCountByTherapist($therapistId));
         }
 
         return $data;
+    }
+
+    public function getWherePastFuture($userId, $isPast = false, $isUpcoming = true, $isPending = false)
+    {
+        $now                 = Carbon::now();
+
+        $modelBookingMassage = new BookingMassage();
+        $modelBookingInfo    = new BookingInfo();
+        $modelShop           = new Shop();
+        $modelUserPeople     = new UserPeople();
+        $modelSessionType    = new SessionType();
+        $modelMassage        = new Massage();
+        $modelMassagePrice   = new MassagePrice();
+        $modelMassageTiming  = new MassageTiming();
+
+        $bookings = $this->select(DB::RAW(self::getTableName() . '.id, massage_date, massage_time, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, user_people_id, ' . $modelBookingInfo::getTableName() . '.id as bookingInfoId, ' . $modelUserPeople::getTableName() . '.name as user_people_name, ' . $modelUserPeople::getTableName() . '.age as user_people_age, ' . $modelUserPeople::getTableName() . '.gender as user_people_gender, ' . $modelUserPeople::getTableName() . '.photo as user_prople_photo'))
+                         ->join($modelBookingInfo::getTableName(), self::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
+                         ->join($modelUserPeople::getTableName(), $modelBookingInfo::getTableName() . '.user_people_id', '=', $modelUserPeople::getTableName() . '.id')
+                         ->leftJoin($modelShop::getTableName(), self::getTableName() . '.shop_id', '=', $modelShop::getTableName() . '.id')
+                         ->leftJoin($modelSessionType::getTableName(), self::getTableName() . '.session_id', '=', $modelSessionType::getTableName() . '.id')
+                         ->where($modelBookingInfo::getTableName() . '.massage_date', ($isPast === true ? '<' : '>='), $now);
+
+        if (!empty($userId) && is_numeric($userId)) {
+            $bookings->where(self::getTableName() . '.user_id', $userId);
+        }
+
+        $bookings       = $bookings->get();
+
+        $returnBookings = [];
+
+        if (!empty($bookings) && !$bookings->isEmpty()) {
+
+            $userPeopleIds  = $bookings->pluck('user_people_id');
+            $userPeoples    = $massagePrices = $bookingMassages = $massages = [];
+
+            if (!empty($userPeopleIds) && !$userPeopleIds->isEmpty()) {
+                $userPeoples = $modelUserPeople->select('id', 'name', 'age', 'gender')->whereIn('id', array_unique($userPeopleIds->toArray()))->get();
+
+                if (!empty($userPeoples) && !$userPeoples->isEmpty()) {
+                    $userPeoples = $userPeoples->keyBy('id');
+                }
+            }
+
+            $return = [];
+            $bookings->map(function($data, $index) use(&$return) {
+                $return[$data->id][] = $data;
+            });
+
+            foreach ($return as $bookingId => $datas) {
+                $returnUserPeoples = [];
+
+                foreach ($datas as $index => $data) {
+                    $bookingInfoId = $data->bookingInfoId;
+                    $userPeopleId  = $data->user_people_id;
+
+                    $returnUserPeoples[$bookingId][$index] = [
+                        'id'     => $userPeopleId,
+                        'name'   => $data->user_people_name,
+                        'age'    => $data->user_people_age,
+                        'gender' => $data->user_people_gender,
+                        'photo'  => $data->user_prople_photo
+                    ];
+
+                    $bookingMassages = $modelBookingMassage
+                                            ->select($modelMassage::getTableName() . '.name', $modelBookingMassage::getTableName() . '.price', $modelMassageTiming::getTableName() . '.time')
+                                            ->join($modelMassagePrice::getTableName(), $modelBookingMassage::getTableName() . '.massage_prices_id', '=', $modelMassagePrice::getTableName() . '.id')
+                                            ->join($modelMassageTiming::getTableName(), $modelMassagePrice::getTableName() . '.massage_timing_id', '=', $modelMassageTiming::getTableName() . '.id')
+                                            ->join($modelMassage::getTableName(), $modelMassagePrice::getTableName() . '.massage_id', '=', $modelMassage::getTableName() . '.id')
+                                            ->where('booking_info_id', $bookingInfoId)
+                                            ->get();
+
+                    if (!empty($bookingMassages) && !$bookingMassages->isEmpty()) {
+                        $returnUserPeoples[$bookingId][$index]['booking_massages'] = $bookingMassages;
+
+                        if (isset($returnBookings[$bookingId]['total_price'])) {
+                            $returnBookings[$bookingId]['total_price'] += $bookingMassages->sum('price');
+                        } else {
+                            $returnBookings[$bookingId]['total_price'] = $bookingMassages->sum('price');
+                        }
+                    }
+
+                    $returnBookings[$bookingId] = [
+                        'id'               => $bookingId,
+                        'booking_type'     => $data->booking_type,
+                        'shop_name'        => $data->shop_name,
+                        'shop_description' => $data->shop_description,
+                        'session_type'     => $data->session_type,
+                        'massage_date'     => $data->massage_date,
+                        'massage_time'     => $data->massage_time,
+                        'total_price'      => number_format($returnBookings[$bookingId]['total_price'], 2)
+                    ];
+                }
+
+                $returnBookings[$bookingId]['user_people'] = $returnUserPeoples[$bookingId];
+            }
+
+            $returnBookings = array_values($returnBookings);
+        }
+
+        return $returnBookings;
     }
 }

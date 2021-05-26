@@ -28,4 +28,10 @@ class TherapistSelectedMassage extends BaseModel
             '*.therapist_id' => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
         ]);
     }
+
+    public function massage()
+    {
+        return $this->hasOne('App\Massage', 'id', 'massage_id');
+    }
+    
 }

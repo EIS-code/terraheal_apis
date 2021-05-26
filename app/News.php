@@ -10,15 +10,15 @@ class News extends BaseModel
         'title',
         'sub_title',
         'description',
-        'is_read'
+        'manager_id'
     ];
-
-    const READ = '1';
-    const NOT_READ = '0';
-    public $isRead = [
-        self::READ      => 'Yes',
-        self::NOT_READ  => 'Nope'
-    ];
+    
+     const TODAY = '0';
+    const CURRENT_MONTH = '1';
+    const LAST_7_DAYS = '2';
+    const LAST_14_DAYS = '3';
+    const LAST_30_DAYS = '4';
+    const CUSTOM = '5';
 
     public function validator(array $data)
     {
@@ -26,16 +26,12 @@ class News extends BaseModel
             'title'         => ['required', 'string', 'max:255'],
             'sub_title'     => ['string', 'max:255'],
             'description'   => ['string'],
-            'is_read'       => ['in:', implode(",", array_keys($this->isRead))]
+            'manager_id'    => ['integer',  'exists:' . Manager::getTableName() . ',id'],
         ]);
     }
-
-    public function __construct()
+    
+    public function therapists()
     {
-        parent::__construct();
-
-        $this->addHidden('is_read');
-
-        $this->removeHidden('updated_at');
+        return $this->hasMany('App\TherapistNews', 'news_id', 'id');
     }
 }

@@ -13,7 +13,7 @@ class BaseModel extends Model
 
     public static $removedColumn = 'is_removed';
 
-    protected $hidden = ['is_removed', 'created_at', 'updated_at'];
+    protected $hidden = ['is_removed', 'created_at', 'updated_at', 'deleted_at'];
 
     public static $storage = NULL;
 

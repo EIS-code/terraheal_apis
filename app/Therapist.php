@@ -10,6 +10,11 @@ use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Massage;
+use App\BookingInfo;
+use App\BookingMassage;
+use Illuminate\Http\UploadedFile;
+use DB;
+use Carbon\Carbon;
 
 class Therapist extends BaseModel implements CanResetPasswordContract
 {
@@ -49,6 +54,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         'city_id',
         'country_id',
         'personal_description',
+        'address',
+        'active_app'
     ];
 
     protected $hidden = ['is_deleted', 'created_at', 'updated_at', 'password'];
@@ -74,6 +81,17 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     
     const IS_DELETED = '1';
     const IS_NOT_DELETED = '0';
+    
+    const IS_NOT_VERIFIED = '0';
+    const IS_VERIFIED = '1';
+    
+    const IS_NOT_ACTIVE = '0';
+    const IS_ACTIVE = '1';
+    
+    public static $active = [
+        self::IS_ACTIVE     => 'Yes',
+        self::IS_NOT_ACTIVE => 'No'
+    ];
 
     public function getFullNameAttribute()
     {
@@ -99,7 +117,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             'hobbies'              => array_merge(['string', 'max:255'], !empty($requiredFileds['hobbies']) ? $requiredFileds['hobbies'] : ['nullable']),
             'short_description'    => array_merge(['string', 'max:255'], !empty($requiredFileds['short_description']) ? $requiredFileds['short_description'] : ['nullable']),
             'shop_id'              => array_merge(['integer'], !empty($requiredFileds['shop_id']) ? $requiredFileds['shop_id'] : ['required']),
-            'is_freelancer'        => array_merge(['required', 'in:' . implode(",", array_keys(self::$isFreelancer))], !empty($requiredFileds['is_freelancer']) ? $requiredFileds['is_freelancer'] : ['required']),
+            'is_freelancer'        => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$isFreelancer))]),
+            'active_app'           => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$active))]),
             'paid_percentage'      => array_merge(['integer'], !empty($requiredFileds['paid_percentage']) ? $requiredFileds['paid_percentage'] : ['nullable']),
             'avatar'               => array_merge(['max:255'], !empty($requiredFileds['avatar']) ? $requiredFileds['avatar'] : ['nullable']),
             'avatar_original'      => array_merge(['max:255'], !empty($requiredFileds['avatar_original']) ? $requiredFileds['avatar_original'] : ['nullable']),
@@ -118,6 +137,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             'health_conditions_allergies' => array_merge(['string'], !empty($requiredFileds['health_conditions_allergies']) ? $requiredFileds['health_conditions_allergies'] : ['nullable']),
             'mobile_number'             => array_merge(['string', 'max:255'], !empty($requiredFileds['mobile_number']) ? $requiredFileds['mobile_number'] : ['nullable']),
             'emergence_contact_number'  => array_merge(['string', 'max:255'], !empty($requiredFileds['emergence_contact_number']) ? $requiredFileds['emergence_contact_number'] : ['nullable']),
+            'country_id'            => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
+            'city_id'               => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']
         ], $extraFields), [
             'password.regex'    => __('Password should contains at least one [a-z, A-Z, 0-9, @, $, !, %, *, #, ?, &].')
         ]);
@@ -224,8 +245,13 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                       ->get();
 
         if (!empty($data) && !$data->isEmpty($data)) {
-            $data->map(function($record, $key) {
-                $record->selected_services = $record->selectedServices();
+            $bookingInfo = new BookingInfo();
+
+            $data->map(function($record, $key) use($bookingInfo, $request) {
+                $record->selected_services  = $record->selectedServices();
+
+                $record->total_massages     = $bookingInfo->getMassageCountByTherapist($record->id);
+                $record->total_therapies    = $bookingInfo->getTherapyCountByTherapist($record->id);
             });
         }
 
@@ -297,16 +323,16 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $data['is_freelancer'] = $isFreelancer;
 
         if (empty($id)) {
-            return $this->returns('notFound', NULL, true);
+            return ['isError' => true, 'message' => 'notFound'];
         }
 
         if (!$model::find($id)->where('is_freelancer', (string)$isFreelancer)->exists()) {
-            return $this->returns('notFound', NULL, true);
+            return ['isError' => true, 'message' => 'notFound'];
         }
 
         $checks = $model->validator($data, [], [], $id, true);
         if ($checks->fails()) {
-            return $this->returns($checks->errors()->first(), NULL, true);
+            return ['isError' => true, 'message' => $checks->errors()->first()];
         }
 
         /* For language spoken. */
@@ -324,7 +350,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
                 $checks = $modelTherapistLanguage->validators($languageData);
                 if ($checks->fails()) {
-                    return $this->returns($checks->errors()->first(), NULL, true);
+                    return ['isError' => true, 'message' => $checks->errors()->first()];
                 }
             }
         }
@@ -359,7 +385,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
             $checks = $modelTherapistLanguage->validators($languageData);
             if ($checks->fails()) {
-                return $this->returns($checks->errors()->first(), NULL, true);
+                return ['isError' => true, 'message' => $checks->errors()->first()];
             }
         }
 
@@ -370,11 +396,13 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             if ($checkImage->fails()) {
                 unset($data['profile_photo']);
 
-                return $this->returns($checkImage->errors()->first(), NULL, true);
+                return ['isError' => true, 'message' => $checks->errors()->first()];
             }
 
-            $fileName = $data['profile_photo']->getClientOriginalName();
-            $fileName = time() . '_' . $id . '.' . $data['profile_photo']->getClientOriginalExtension();
+            $extension = $data['profile_photo']->getClientOriginalExtension();
+            $extension = empty($extension) ? $data['profile_photo']->extension() : $extension;
+
+            $fileName = time() . '_' . $id . '.' . $extension;
 
             $storeFile = $data['profile_photo']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
 
@@ -391,7 +419,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $getDocument = self::getDocumentFromRequest($request, $key, $format, $inc, $type);
 
             if (!empty($getDocument['error'])) {
-                return $this->returns($getDocument['error'], NULL, true);
+                return ['isError' => true, 'message' => $getDocument['error']];
             } elseif (!empty($getDocument)) {
                 foreach ((array)$getDocument as $document) {
                     if (!empty($document['error'])) {
@@ -411,7 +439,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg', $inc, $modelTherapistDocument::TYPE_IDENTITY_PROOF_FRONT);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -421,7 +449,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg', $inc, $modelTherapistDocument::TYPE_IDENTITY_PROOF_BACK);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -431,7 +459,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf', $inc, $modelTherapistDocument::TYPE_INSURANCE);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -441,7 +469,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf', $inc, $modelTherapistDocument::TYPE_FREELANCER_FINANCIAL_DOCUMENT);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -451,17 +479,17 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf', $inc, $modelTherapistDocument::TYPE_CERTIFICATES);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
                 case 'document_cv':
                     $key = 'document_cv';
 
-                    $checkDocumentError = $checkDocument($request, $key, 'pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_CV);
+                    $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_CV);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -471,7 +499,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_REFERENCE_LATTER);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -481,7 +509,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_OTHERS);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -491,7 +519,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                     $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf', $inc, $modelTherapistDocument::PERSONAL_EXPERIENCES);
 
                     if ($checkDocumentError) {
-                        return $this->returns($checkDocumentError, NULL, true);
+                        return ['isError' => true, 'message' => $checkDocumentError];
                     }
 
                     break;
@@ -519,12 +547,23 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
             $checks = $modelTherapistSelectedMassage->validators($massageData);
             if ($checks->fails()) {
-                return $this->returns($checks->errors()->first(), NULL, true);
+                return ['isError' => true, 'message' => $checks->errors()->first()];
             }
         }
 
         // Insert therapist data.
-        $model::find($id)->update($data);
+        $therapist = $model::find($id);
+        if(isset($data['mobile_number']) && !empty($data['mobile_number'])) {
+            if($therapist->mobile_number != $data['mobile_number']) {
+                $data['is_mobile_verified'] = self::IS_NOT_VERIFIED;
+            }
+        }
+        if(isset($data['email']) && !empty($data['email'])) {
+            if($therapist->mobile_number != $data['email']) {
+                $data['is_email_verified'] = self::IS_NOT_VERIFIED;
+            }
+        }
+        $therapist->update($data);
 
         // Insert language spoken data.
         if (!empty($languageData)) {
@@ -532,6 +571,15 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
             foreach ($languageData as $language) {
                 $modelTherapistLanguage::updateOrCreate(['language_id' => $language['language_id'], 'therapist_id' => $language['therapist_id']], $language);
+            }
+        }
+        
+        if(!empty($data['doc_name']) && !empty($data['document']))
+        {
+            $key = 'document';
+            $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg,pdf,doc,docx', $inc, $modelTherapistDocument::TYPE_OTHERS);
+            if ($checkDocumentError) {
+                return $this->returns($checkDocumentError, NULL, true);
             }
         }
 
@@ -547,6 +595,13 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $storeFile = $document[$document['key']]->storeAs($modelTherapistDocument->directory, $fileName, $modelTherapistDocument->fileSystem);
 
                 if ($storeFile) {
+                    if($document['key'] == 'document')
+                    {
+                        $document['doc_name'] = $data['doc_name'];
+                        $document['is_expired'] = $data['is_expired'];
+                        $document['expired_date'] = $data['expired_date'];
+                        $document['uploaded_by'] = $data['uploaded_by'];
+                    }
                     if (in_array($document['type'], [$modelTherapistDocument::TYPE_CERTIFICATES, $modelTherapistDocument::TYPE_OTHERS, $modelTherapistDocument::PERSONAL_EXPERIENCES])) {
                         $modelTherapistDocument::create($document);
                     } else {
@@ -585,10 +640,13 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
             $data     = [];
 
-            if (!empty($pathInfo['extension'])) {
-                $ramdomStrings = generateRandomString(6);
+            $ramdomStrings = generateRandomString(6);
 
-                $fileName = !empty($pathInfo['filename']) ? $pathInfo['filename'] . $ramdomStrings . "." . $pathInfo['extension'] : $ramdomStrings . "." . $pathInfo['extension'];
+            $extension = $file->getClientOriginalExtension();
+            $extension = empty($extension) ? $file->extension() : $extension;
+
+            if (!empty($extension)) {
+                $fileName  = !empty($pathInfo['filename']) ? $pathInfo['filename'] . $ramdomStrings . "." . $extension : $ramdomStrings . "." . $extension;
 
                 $data = [
                     'type'          => $type,
@@ -604,6 +662,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 } else {
                     $inc++;
                 }
+            } else {
+                return ['error' => "File extension not found.", 'data' => NULL];
             }
 
             return ['error' => false, 'data' => $data];
@@ -628,5 +688,170 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         }
 
         return $documentData;
+    }
+    
+    public function getTherapist(Request $request) {
+
+        //0 for today, 1 for all therapist
+        if (!empty($request->filter) && $request->filter == 0) {
+            $therapists = DB::table('booking_massages')
+                ->leftJoin('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                ->join('therapists', 'therapists.id', '=', 'booking_infos.therapist_id')
+                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_infos.massage_time as massageStartTime', 'booking_infos.massage_date as massageDate', 
+                        'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo')
+                ->where('bookings.shop_id', $request->shop_id)->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'));
+        } else {
+            $therapists = DB::table('therapists')
+                ->leftJoin('booking_infos', 'booking_infos.therapist_id', '=', 'therapists.id')
+                ->leftJoin('booking_massages', 'booking_massages.booking_info_id', '=', 'booking_infos.id')
+                ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_infos.massage_time as massageStartTime', 'booking_infos.massage_date as massageDate', 
+                        'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo')
+                ->where('therapists.shop_id', $request->shop_id);
+        }
+        $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id')->toArray();
+
+        $allTherapists = [];
+        foreach ($therapists as $key => $value) {
+
+            $current = Carbon::now()->format('H:i');
+            $date = Carbon::parse($value[0]->massageStartTime);
+
+            if ($current >= $date->format('H:i')) {
+                $available = NULL;
+            } else {
+                $start_time = new Carbon($current);
+                $end_time = new Carbon($date->format('H:i:s'));
+                $diff = $start_time->diff($end_time)->format("%h:%i");
+                $time = explode(':', $diff);
+                if ($time[0] == 0) {
+                    $available = 'In ' . $time[1] . ' min';
+                } else {
+                    $available = strtotime($diff) * 1000;
+                }
+            }
+
+            $default = asset('images/therapists/therapist.png');
+
+             // For set default image.
+             if (empty($value[0]->profile_photo)) {
+                 $profile_photo = $default;
+             }
+             $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
+             if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value[0]->profile_photo)) {
+                 $profile_photo = Storage::disk($this->fileSystem)->url($profilePhotoPath . $value[0]->profile_photo);
+             } else {
+                 $profile_photo = $default;
+             }
+
+            $data = [
+                'therapistId' => $value[0]->therapist_id,
+                'therapistName' => $value[0]->therapistName,
+                'therapistPhoto' => $profile_photo,
+                'massageDate' => strtotime($value[0]->massageDate) * 1000,
+                'massageStartTime' => strtotime($value[0]->massageStartTime) * 1000,
+                'available' => $available
+            ];
+            array_push($allTherapists, $data);
+        }
+
+        return $allTherapists;
+    }
+    
+    public function country()
+    {
+        return $this->hasOne('App\Country', 'id', 'country_id');
+    }
+    
+    public function city()
+    {
+        return $this->hasOne('App\City', 'id', 'city_id');
+    }
+    
+    public function shop()
+    {
+        return $this->hasOne('App\Shop', 'id', 'shop_id');
+    }
+    
+    public function serviceStart(Request $request) {
+        
+        $model              = new BookingMassageStart();
+        $data               = $request->all();
+        $bookingMassageId   = $request->get('booking_massage_id', false);
+
+        if (empty($bookingMassageId)) {
+            return ['isError' => true, 'message' => __('Booking massage not found.')];
+        }
+
+        $data['actual_total_time']  = BookingMassage::getMassageTime($bookingMassageId);
+
+        $data['start_time']         = !empty($data['start_time']) ? Carbon::createFromTimestampMs($data['start_time']) : false;
+        $startTime                  = clone $data['start_time'];
+        $data['end_time']           = !empty($startTime) ? $startTime->addMinutes($data['actual_total_time'])->format('H:i:s') : false;
+        $data['start_time']         = !empty($data['start_time']) ? $data['start_time']->format('H:i:s') : false;
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return ['isError' => true, 'message' => $checks->errors()->first()];
+        }
+
+        // Check already exists.
+        $find = BookingMassageStart::where('booking_massage_id', $bookingMassageId)->first();
+        if (!empty($find)) {
+            return ['isError' => true, 'message' => __('Given booking massage already started.')];
+        }
+
+        $create = $model::updateOrCreate(['booking_massage_id' => $bookingMassageId], $data);
+
+        return collect(['create' => $create]);
+    }
+    
+    public function serviceEnd(Request $request) {
+        
+        $model              = new BookingMassageStart();
+        $data               = $request->all();
+        $bookingMassageId   = $request->get('booking_massage_id', false);
+
+        $currentTime        = Carbon::now();
+
+
+        if (empty($data['end_time'])) {
+            return ['isError' => true, 'message' => __('End time not found.')];
+        }
+
+        $find = $model::where('booking_massage_id', $bookingMassageId)->first();
+
+        if (empty($find)) {
+            return ['isError' => true, 'message' => __('Booking massage not found.')];
+        }
+
+        $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
+
+        if (empty($data['end_time'])) {
+            return ['isError' => true, 'message' => __('Provide proper end time.')];
+        }
+
+        if ($find->start_time > (strtotime($data['end_time']) * 1000)) {
+            return ['isError' => true, 'message' => __('End time always greater than start time.')];
+        }
+
+        $data['taken_total_time'] = (new Carbon($find->start_time))->diffInMinutes($currentTime->format('H:i:s'));
+        
+        $find->end_time         = $data['end_time'];
+
+        $find->taken_total_time = $data['taken_total_time'];
+
+        $update = $find->update();
+
+        if ($update) {
+            $bookingMassage = BookingMassage::find($bookingMassageId);
+
+            if (!empty($bookingMassage)) {
+                BookingInfo::massageDone($bookingMassage->booking_info_id);
+            }
+        }
+
+        return collect(['find' => $find]);
     }
 }

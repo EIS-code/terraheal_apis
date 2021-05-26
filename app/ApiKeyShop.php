@@ -11,6 +11,8 @@ class ApiKeyShop extends BaseModel
         'shop_id'
     ];
 
+    protected $hidden = ['created_at', 'updated_at'];
+    
     public function validator(array $data, $id = false, $isUpdate = false)
     {
         return Validator::make($data, [

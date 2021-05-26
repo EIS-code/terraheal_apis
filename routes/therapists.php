@@ -57,9 +57,13 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
     $router->group(['prefix' => 'booking'], function () use($router) {
         $router->post('/', 'TherapistController@getBookingDetails');
+        $router->post('/all', 'TherapistController@getBookings');
         $router->post('/list/today', 'TherapistController@getTodayBooking');
         $router->post('/list/future', 'TherapistController@getFutureBooking');
         $router->post('/list/past', 'TherapistController@getPastBooking');
+        $router->post('/list/pending', 'TherapistController@getPendingBooking');
+        $router->post('/list/upcoming', 'TherapistController@getUpcomingBooking');
+        $router->post('/list/pasts', 'TherapistController@getPastBookings');
         $router->group(['prefix' => 'massage'], function () use($router) {
             $router->post('start', 'TherapistController@startMassageTime');
             $router->post('end', 'TherapistController@endMassageTime');
@@ -67,7 +71,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     });
 
     $router->group(['prefix' => 'profile'], function () use($router) {
-        $router->get('/get', function (Request $request) {
+        $router->post('/get', function (Request $request) {
             $controller = new \App\Http\Controllers\Therapist\TherapistController();
 
             return $controller->getGlobalResponse(Therapist::IS_NOT_FREELANCER, $request);
@@ -78,19 +82,28 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
             return $controller->updateProfile(Therapist::IS_NOT_FREELANCER, $request);
         });
+
+        $router->group(['prefix' => 'document'], function () use($router) {
+            $router->post('remove', 'TherapistController@removeDocument');
+        });
+    });
+    
+    $router->group(['prefix' => 'shifts'], function () use($router) {
+        $router->post('/get', 'TherapistController@getTherapistShifts');
     });
 
     $router->group(['prefix' => 'my'], function () use($router) {
-        $router->group(['prefix' => 'working'], function () use($router) {
+        $router->group(['prefix' => 'working'], function () use($router) { 
             $router->post('/schedule', 'TherapistController@myWorkingSchedules');
         });
 
         $router->group(['prefix' => 'availability'], function () use($router) {
-            $router->post('/get', 'TherapistController@myAvailabilities');
+            $router->post('/get', 'TherapistController@myAvailabilities');            
             $router->post('/free/spots', 'TherapistController@myFreeSpots');
+            $router->post('/add/free/spots', 'TherapistController@addFreeSlots');
             $router->post('/absent/store', 'TherapistController@absent');
         });
-
+        
         $router->group(['prefix' => 'ratings'], function () use($router) {
             $router->get('/', 'TherapistController@myRatings');
         });
@@ -107,6 +120,10 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->group(['prefix' => 'missing'], function () use($router) {
             $router->post('/days', 'TherapistController@myMissingDays');
         });
+
+        $router->group(['prefix' => 'break'], function () use($router) {
+            $router->post('/', 'TherapistController@takeBreaks');
+        });
     });
 
     $router->group(['prefix' => 'rating'], function () use($router) {
@@ -122,6 +139,20 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->post('/', 'TherapistController@getAllServices');
     });
 
+    $router->group(['prefix' => 'verify'], function () use($router) {
+        $router->post('/mobile', 'TherapistController@verifyMobile');
+        $router->post('/email', 'TherapistController@verifyEmail');
+    });
+    
+    $router->group(['prefix' => 'compare'], function () use($router) {
+        $router->post('/otp/email', 'TherapistController@compareOtpEmail');
+        $router->post('/otp/mobile', 'TherapistController@compareOtpSms');
+    });
+    
+    $router->group(['prefix' => 'news'], function () use($router) {
+        $router->post('/read', 'TherapistController@readNews');
+    });
+    
     $router->post('get', 'TherapistController@getOthers');
     $router->post('/getServices', 'TherapistController@getAllServices');
     $router->post('/getTherapists', 'TherapistController@getTherapists');
@@ -131,4 +162,5 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     $router->post('/searchClients', 'TherapistController@searchClients');
     $router->get('/complaintsSuggestion', 'TherapistController@getComplaintsSuggestion');
     $router->get('/getSessionTypes', 'TherapistController@getSessionTypes');
+    $router->post('/new', 'TherapistController@newTherapist');
 });

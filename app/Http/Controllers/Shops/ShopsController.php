@@ -10,6 +10,10 @@ use App\Therapist;
 use App\User;
 use App\MassagePreference;
 use App\Libraries\CommonHelper;
+use App\SessionType;
+use Carbon\Carbon;
+use App\ShopShift;
+use App\ShopHour;
 
 class ShopsController extends BaseController {
 
@@ -24,6 +28,11 @@ class ShopsController extends BaseController {
         'services.found.successfully' => 'services found successfully',
         'clients.found.successfully' => 'clients found successfully',
         'preferences.found.successfully' => 'preferences found successfully',
+        'sessions.found.successfully' => 'Sessions types found successfully',
+        'shifts.add' => 'Shift added successfully',
+        'shifts.get' => 'Shifts data found successfully',
+        'shop.free.slots' => 'Shop freeslots are found successfully',
+        'shop.hours.not.found' => 'Shop hours not found',
         'no.data.found' => 'No data found'
     ];
 
@@ -31,7 +40,6 @@ class ShopsController extends BaseController {
         $data = $request->all();
         $email = (!empty($data['email'])) ? $data['email'] : NULL;
         $password = (!empty($data['shop_password'])) ? $data['shop_password'] : NULL;
-
 
         if (empty($email)) {
             return $this->returnError($this->errorMsg['loginEmail']);
@@ -41,10 +49,9 @@ class ShopsController extends BaseController {
 
         if (!empty($email) && !empty($password)) {
 
-            $shop = Shop::where(['email' => $email])->first();
+            $shop = Shop::with('apiKey')->where(['email' => $email])->first();
+            
             if (!empty($shop) && Hash::check($password, $shop->shop_password)) {
-                $shop = $shop->first();
-
                 return $this->returnSuccess(__($this->successMsg['login']), $shop);
             } else {
                 return $this->returnError($this->errorMsg['loginBoth']);
@@ -67,7 +74,7 @@ class ShopsController extends BaseController {
         
         $services = CommonHelper::getAllService($request);
         
-        if (count($services) > 0) {
+        if (!empty($services)) {
             return $this->returnSuccess(__($this->successMsg['services.found.successfully']), $services);
         } else {
             return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
@@ -77,8 +84,18 @@ class ShopsController extends BaseController {
     public function getAllClients(Request $request) {
 
         $clients = User::where('shop_id', $request->get('shop_id'))->get();
-        if (count($clients) > 0) {
+        if (!empty($clients)) {
             return $this->returnSuccess(__($this->successMsg['clients.found.successfully']), $clients);
+        } else {
+            return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
+        }
+    }
+    
+    public function getSessionTypes() {
+
+        $sessions = SessionType::all();
+        if (!empty($sessions)) {
+            return $this->returnSuccess(__($this->successMsg['sessions.found.successfully']), $sessions);
         } else {
             return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
         }
@@ -87,19 +104,69 @@ class ShopsController extends BaseController {
     public function getPreferences(Request $request) {
         
         $type = $request->get('type');
-        if (isset($type)) {
+        if (!empty($type)) {
             $preferences = MassagePreference::with(['preferenceOptions'])
                             ->whereHas('preferenceOptions', function($q) use($type) {
                                 $q->where('massage_preference_id', '=', $type);
-                            })->get();
+                            })->first();
         } else {
             $preferences = MassagePreference::with('preferenceOptions')->get();
         }
-        if (count($preferences) > 0) {
+        if (!empty($preferences)) {
             return $this->returnSuccess(__($this->successMsg['preferences.found.successfully']), $preferences);
         } else {
             return $this->returnSuccess(__($this->successMsg['no.data.found']), null);
         }
-    }    
+    }
+    
+    public function addShift(Request $request) {
+        
+        $data = $request->all();
+        $from = Carbon::createFromTimestampMs($data['from']);
+        $to = Carbon::createFromTimestampMs($data['to']);
+        
+        $data['from'] = $from;
+        $data['to'] = $to;
+        
+        $model = new ShopShift();
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $shift = ShopShift::create($data);
+        return $this->returnSuccess(__($this->successMsg['shifts.add']), $shift);
+    }
+    
+    public function getShifts(Request $request) {
+        
+        $shifts = ShopShift::where('shop_id',$request->shop_id)->get();
+        return $this->returnSuccess(__($this->successMsg['shifts.get']), $shifts);
+    }
+    
+    public function getFreeSlots(Request $request) {
+        
+        $date = Carbon::createFromTimestampMs($request->date);
+        $hourModel = new ShopHour();
+        $day = array_search($date->format('l'), $hourModel->shopDays);
+        $hours = ShopHour::where(['shop_id' => $request->shop_id, 'day_name' => (string) $day])->first();
+        
+        if(!empty($hours)) {
+            $openAt = new Carbon($hours->open_at);
+            $closeAt = new Carbon($hours->close_at);
+
+            $freeSlots = [];
+            do {
+                $freeSlots[] = [
+                    'startTime' => strtotime($openAt->format('H:i:s')) * 1000,
+                    'endTime' => strtotime($openAt->addHour()->format('H:i:s')) * 1000
+                ];
+                $diff = $openAt->diff($closeAt)->format("%H:%i");
+            } while($diff != 0 );
+            
+            return $this->returnSuccess(__($this->successMsg['shop.free.slots']), $freeSlots);
+        }
+        return $this->returnSuccess(__($this->successMsg['shop.hours.not.found']));
+        
+    }
 
 }

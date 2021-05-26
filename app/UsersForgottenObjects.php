@@ -25,4 +25,13 @@ class UsersForgottenObjects extends BaseModel
             'is_returned' => ['required', 'integer']
         ]);
     }
+    
+    public function shops()
+    {
+        return $this->hasOne('App\Shop', 'id', 'shop_id');
+    }
+    public function rooms()
+    {
+        return $this->hasOne('App\Room', 'id', 'room_id');
+    }
 }

@@ -31,6 +31,8 @@ use App\TherapistQuitCollaboration;
 use App\TherapistSuspendCollaboration;
 use App\TherapistExchange;
 use App\Receptionist;
+use App\TherapistWorkingScheduleBreak;
+use App\Therapy;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -39,6 +41,11 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Storage;
 use App\User;
+use App\Shop;
+use App\TherapistEmailOtp;
+use App\TherapistShift;
+use App\TherapistFreeSlot;
+use App\TherapistNews;
 
 class TherapistController extends BaseController
 {
@@ -53,7 +60,15 @@ class TherapistController extends BaseController
         'notFoundData' => "No data found.",
         'endTimeIsNotProper' => "End time always greater than start time.",
         'dateRequired' => "Date is required.",
-        'somethingWrong' => "Something went wrong."
+        'somethingWrong' => "Something went wrong.",
+        'no.schedule.found' => "No schedule found.",
+        'no.document.found' => "No document found.",
+        'error.otp' => 'Please provide OTP properly.',
+        'error.otp.wrong' => 'OTP seems wrong.',
+        'error.otp.already.verified' => 'OTP already verified.',
+        'error.therapist.id' => 'Please provide valid therapist id.',
+        'error.email.already.verified' => 'This user email already verified with this ',
+        'error.email.id' => ' email id.',
     ];
 
     public $successMsg = [
@@ -71,6 +86,7 @@ class TherapistController extends BaseController
         'therapist.complaint' => "Complaint registered successfully !",
         'therapist.ratings' => "Therapist ratings get successfully !",
         'booking.start' => "Massage started successfully !",
+        'booking.end' => "Massage ended successfully !",
         'other.therapist.found' => 'Other therapist found successfully !',
         'my.availability.found' => 'My availability found successfully !',
         'therapist.absent.successfully' => 'Therapist absent successfully !',
@@ -87,6 +103,17 @@ class TherapistController extends BaseController
         'client.data.found' => 'Client data found successfully !',
         'therapist.complaints.suggestions' => 'Therapist complaints and suggestions found successfully !',
         'session.types' => 'Session types found successfully !',
+        'therapist.break' => 'Break done successfully !',
+        'booking.pending.found.successfully' => 'Pending bookings found successfully !',
+        'booking.upcoming.found.successfully' => 'Upcoming bookings found successfully !',
+        'therapist.document.delete' => 'Therapist document removed successfully !',
+        'success.email.otp.compare' => 'OTP matched successfully !',
+        'success.sms.sent' => 'SMS sent successfully !',
+        'success.email.sent' => 'Email sent successfully !',        
+        'therapist.freeslot' => 'Therapist freeslot added successfully !',
+        'all.therapist.shifts' => 'All therapist shifts found successfully !',
+        'news.read' => 'News read successfully !',
+        'new.therapist' => 'New therapist created successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -103,7 +130,7 @@ class TherapistController extends BaseController
         }
 
         if (!empty($email) && !empty($password)) {
-            $getTherapist = $model->where(['email' => $email, 'is_freelancer' => (string)$isFreelancer])->first();
+            $getTherapist = $model->where(['email' => $email, 'is_freelancer' => (string)$isFreelancer, 'active_app' => Therapist::IS_ACTIVE])->first();
 
             if (!empty($getTherapist) && Hash::check($password, $getTherapist->password)) {
                 $getTherapist = $getTherapist->first();
@@ -122,6 +149,19 @@ class TherapistController extends BaseController
         $bookingModel = new Booking();
 
         $data = $bookingModel->getGlobalQuery($request)->first();
+
+        if (!empty($data)) {
+            return $this->returnSuccess(__($this->successMsg['booking.details.found.successfully']), $data);
+        }
+
+        return $this->returnNull();
+    }
+
+    public function getBookings(Request $request)
+    {
+        $bookingModel = new Booking();
+
+        $data = $bookingModel->getGlobalQuery($request);
 
         if (!empty($data)) {
             return $this->returnSuccess(__($this->successMsg['booking.details.found.successfully']), $data);
@@ -171,7 +211,8 @@ class TherapistController extends BaseController
                                 }
 
                                 $returnData[$increments]['booking_id']           = $data->id;
-                                $returnData[$increments]['booking_type']         = $data->getAttributes()['booking_type'];
+                                $returnData[$increments]['booking_type']         = $data->booking_type;
+                                $returnData[$increments]['booking_type_value']   = $data->getAttributes()['booking_type'];
                                 $returnData[$increments]['special_notes']        = $data->special_notes;
                                 $returnData[$increments]['bring_table_futon']    = $data->bring_table_futon;
                                 $returnData[$increments]['table_futon_quantity'] = $data->table_futon_quantity;
@@ -187,7 +228,13 @@ class TherapistController extends BaseController
                                 $returnData[$increments]['therapist_id']         = $bookingInfo->therapist_id;
                                 $returnData[$increments]['user_name']            = $bookingInfo->userPeople->name;
                                 $returnData[$increments]['therapist_name']       = $bookingInfo->therapist->fullName;
-                                $returnData[$increments]['massage_name']         = $bookingMassage->massageTiming->massage->name;
+                                $returnData[$increments]['massage_name']         = !empty($bookingMassage->massageTiming) ? $bookingMassage->massageTiming->massage->name : NULL;
+                                $returnData[$increments]['therapy_name']         = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy->name : NULL;
+                                $returnData[$increments]['massage_id']           = !empty($bookingMassage->massageTiming) ? $bookingMassage->massageTiming->massage_id : NULL;
+                                $returnData[$increments]['therapy_id']           = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy_id : NULL;
+                                $returnData[$increments]['is_done']              = $bookingInfo->is_done;
+                                $returnData[$increments]['service_status']       = $bookingMassage->getServiceStatus();
+                                $returnData[$increments]['booking_massage_id']   = $bookingMassage->id;
 
                                 $increments++;
                             }
@@ -235,6 +282,39 @@ class TherapistController extends BaseController
         return $this->returns('booking.past.found.successfully', $data);
     }
 
+    public function getPendingBooking(Request $request)
+    {
+        $bookingModel = new Booking();
+
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_TODAY]]);
+
+        $data = $bookingModel->getGlobalQuery($request);
+
+        return $this->returns('booking.pending.found.successfully', $data);
+    }
+
+    public function getUpcomingBooking(Request $request)
+    {
+        $bookingModel = new Booking();
+
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_FUTURE]]);
+
+        $data = $bookingModel->getGlobalQuery($request);
+
+        return $this->returns('booking.upcoming.found.successfully', $data);
+    }
+
+    public function getPastBookings(Request $request)
+    {
+        $bookingModel = new Booking();
+
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_PAST]]);
+
+        $data = $bookingModel->getGlobalQuery($request);
+
+        return $this->returns('booking.past.found.successfully', $data);
+    }
+
     public function getCalender(Request $request)
     {
         $model  = new BookingInfo();
@@ -273,7 +353,11 @@ class TherapistController extends BaseController
 
     public function updateProfile(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
     {
-        Therapist::updateProfile($isFreelancer, $request);
+        $store = Therapist::updateProfile($isFreelancer, $request);
+
+        if (!empty($store['isError']) && !empty($store['message'])) {
+            return $this->returns($store['message'], NULL, true);
+        }
 
         return $this->returns('profile.update.successfully', $this->getGlobalResponse($isFreelancer, $request, false));
     }
@@ -471,76 +555,40 @@ class TherapistController extends BaseController
 
     public function startMassageTime(Request $request)
     {
-        $model              = new BookingMassageStart();
-        $data               = $request->all();
-        $bookingMassageId   = $request->get('booking_massage_id', false);
+        $model  = new Therapist();
 
-        if (empty($bookingMassageId)) {
-            return $this->returns('notFoundBookingMassage', NULL, true);
+        $create = $model->serviceStart($request);
+
+        if (!empty($create['isError']) && !empty($create['message'])) {
+            return $this->returns($create['message'], NULL, true);
         }
-
-        $data['actual_total_time']  = BookingMassage::getMassageTime($bookingMassageId);
-
-        $data['start_time']         = !empty($data['start_time']) ? Carbon::createFromTimestampMs($data['start_time']) : false;
-        $startTime                  = clone $data['start_time'];
-        $data['end_time']           = !empty($startTime) ? $startTime->addMinutes($data['actual_total_time'])->format('H:i:s') : false;
-        $data['start_time']         = !empty($data['start_time']) ? $data['start_time']->format('H:i:s') : false;
-
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returns($checks->errors()->first(), NULL, true);
-        }
-
-        $create = $model::updateOrCreate(['booking_massage_id' => $bookingMassageId], $data);
 
         return $this->returns('booking.start', $create);
     }
 
     public function endMassageTime(Request $request)
     {
-        $model              = new BookingMassageStart();
-        $data               = $request->all();
-        $bookingMassageId   = $request->get('booking_massage_id', false);
+        $model = new Therapist();
 
-        $currentTime        = Carbon::now();
+        $find  = $model->serviceEnd($request);
 
-        $data['end_time']   = !empty($data['end_time']) ? Carbon::createFromTimestampMs($data['end_time'])->format('H:i:s') : false;
-
-        if (empty($data['end_time'])) {
-            return $this->returns('notFoundEndTime', NULL, true);
+        if (!empty($find['isError']) && !empty($find['message'])) {
+            return $this->returns($find['message'], NULL, true);
         }
 
-        $find = $model::where('booking_massage_id', $bookingMassageId)->first();
-
-        if (empty($find)) {
-            return $this->returns('notFoundBookingMassage', NULL, true);
-        }
-
-        if ($find->start_time > $data['end_time']) {
-            return $this->returns('endTimeIsNotProper', NULL, true);
-        }
-
-        $data['taken_total_time'] = (new Carbon($find->start_time))->diffInMinutes($currentTime);
-
-        $find->end_time         = $data['end_time'];
-
-        $find->taken_total_time = $data['taken_total_time'];
-
-        $find->update();
-
-        return $this->returns('booking.start', $find);
+        return $this->returns('booking.end', $find);
     }
 
     public function getAllServices(Request $request)
     {
-         // 1 for massages , 2 for therapies
-        if ($request->service == 1) {
+        if ($request->service == Shop::MASSAGES) {
             $services = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
-        } else {
+        } 
+        if ($request->service == Shop::THERAPIES) {
             $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
         }
 
-        if (isset($request->search_val)) {
+        if (!empty($request->search_val)) {
             $services = $services->where('name', 'like', $request->search_val . '%');
         }
 
@@ -612,20 +660,26 @@ class TherapistController extends BaseController
     public function absent(Request $request)
     {
         $id             = $request->get('id', false);
+        $shiftId        = $request->get('shift_id', NULL);
         $date           = $request->get('date', NULL);
         $date           = $date > 0 ? Carbon::createFromTimestampMs($date)->format('Y-m-d') : NULL;
         $absentReason   = $request->get('absent_reason', NULL);
-        $model          = new TherapistWorkingSchedule();
+        $scheduleModel       = new TherapistWorkingSchedule();
+        $shiftModel          = new TherapistShift();
 
         if (empty($date)) {
             return $this->returns('dateRequired', NULL, true);
         }
 
         if ($id && !empty($date)) {
-            $row = $model->where('therapist_id', $id)->whereDate('date', $date)->update(['is_absent' => $model::ABSENT, 'is_working' => $model::NOT_WORKING, 'absent_reason' => $absentReason]);
+            $schedule = $scheduleModel->where('therapist_id', $id)->whereDate('date', $date)->first();
+            if (!empty($schedule)) {
+                $shift = $shiftModel->where(['schedule_id' => $schedule->id, 'shift_id' => $shiftId])->first();
+                $row = $shift->update(['is_absent' => $scheduleModel::ABSENT, 'is_working' => $scheduleModel::NOT_WORKING, 'absent_reason' => $absentReason]);
 
-            if ($row) {
-                return $this->returns('therapist.absent.successfully', collect([]));
+                if ($row) {
+                    return $this->returns('therapist.absent.successfully', $shift);
+                }
             }
         }
 
@@ -676,33 +730,29 @@ class TherapistController extends BaseController
     
     public function getTherapists(Request $request)
     {
-        $query = DB::table('booking_massages')
-                        ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
-                        ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
-                        ->join('therapists', 'therapists.id', '=', 'booking_infos.therapist_id')
-                        ->select('booking_infos.massage_time as massageStartTime','booking_infos.massage_date as massageDate',
-                                DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'))
-                        ->where('bookings.shop_id', $request->shop_id);
-
-        if (isset($request->filter) && $request->filter == 1) {
-            $therapists = $query->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'))->get();
-        } else {
-            $therapists = $query->get();
-        }
-
+        $model = new Therapist();
+        $therapists = $model->getTherapist($request);
         return $this->returnSuccess(__($this->successMsg['therapist.data.found']), $therapists);
     }
 
     public function exchangeWithOthers(Request $request)
     {
-        $id     = $request->get('id', false);
         $date   = $request->get('date', false);
+        $data   = $request->all();
         $model  = new TherapistExchange();
 
         if (!empty($date) && $date > 0) {
             $date = Carbon::createFromTimestampMs($date)->format('Y-m-d H:i:s');
 
-            $data = ['date' => $date, 'is_approved' => $model::IS_NOT_APPROVED, 'therapist_id' => $id];
+            $data = [
+                'date' => $date,
+                'is_approved' => $model::IS_NOT_APPROVED,
+                'therapist_id' => $data['therapist_id'],
+                "with_therapist_id" => $data['with_therapist_id'],
+                "shift_id" => $data['shift_id'],
+                "with_shift_id" => $data['with_shift_id'],
+                "shop_id" => $data['shop_id']
+            ];
 
             $checks = $model->validator($data);
             if ($checks->fails()) {
@@ -779,6 +829,19 @@ class TherapistController extends BaseController
         $data           = $complaints->union($suggestions)->get();
 
         if (!empty($data) && !$data->isEmpty()) {
+            $therapistModel     = new Therapist();
+            $receptionistModel  = new Receptionist();
+
+            $data->each(function($record) use($therapistModel, $receptionistModel) {
+                if (!empty($record->therapist_photo)) {
+                    $record->therapist_photo = $therapistModel->getProfilePhotoAttribute($record->therapist_photo);
+                }
+
+                if (!empty($record->receptionist_photo)) {
+                    $record->receptionist_photo = $receptionistModel->getPhotoAttribute($record->receptionist_photo);
+                }
+            });
+
             return $this->returns('therapist.complaints.suggestions', $data);
         }
 
@@ -791,4 +854,281 @@ class TherapistController extends BaseController
                 
         return $this->returnSuccess(__($this->successMsg['session.types']), $sessionTypes);
     }
+
+    public function takeBreaks(Request $request)
+    {
+        $id = $request->get('id', false);
+
+        if ($id) {
+            $date           = new Carbon($request->get('date', NULL) / 1000);
+            $minutes        = $request->get('minutes', 0);
+            $breakFor       = $request->get('break_for', TherapistWorkingScheduleBreak::OTHER);
+            $breakReason    = $request->get('break_reason', NULL);
+
+            $save           = TherapistWorkingScheduleBreak::takeBreaks($id, $date->format('Y-m-d'), $minutes, $breakFor, $breakReason);
+
+            if (!empty($save['isError']) && !empty($save['msg'])) {
+                return $this->returns($save['msg'], NULL, true);
+            }
+
+            return $this->returns('therapist.break', $save);
+        }
+
+        return $this->returns('no.schedule.found', NULL, true);
+    }
+
+    public function removeDocument(Request $request)
+    {
+        $documentId = (int)$request->get('document_id', false);
+
+        $model      = new TherapistDocument();
+
+        if (!empty($documentId)) {
+            $find = $model::find($documentId);
+
+            if (!empty($find)) {
+                // $documentName = $find->getAttributes()['file_name'];
+
+                $remove       = $find->delete();
+
+                /*if ($remove && !empty($documentName)) {
+                    $model->removeDocument($documentName);
+                }*/
+
+                return $this->returns('therapist.document.delete', collect([]));
+            }
+        }
+
+        return $this->returns('no.document.found', NULL, true);
+    }
+    
+    public function verifyEmail(Request $request)
+    {
+        $data           = $request->all();
+        $model          = new Therapist();
+        $modelEmailOtp  = new TherapistEmailOtp();
+
+        $id      = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $getTherapist = $model->find($id);
+
+        if (!empty($getTherapist)) {
+            $emailId = (!empty($data['email'])) ? $data['email'] : NULL;
+
+            // Validate
+            $data = [
+                'therapist_id' => $id,
+                'otp'          => 1434,
+                'email'        => $emailId,
+                'is_send'      => '0'
+            ];
+
+            $validator = $modelEmailOtp->validate($data);
+            if ($validator['is_validate'] == '0') {
+                return $this->returns($validator['msg'], NULL, true);
+            }
+
+            if ($emailId == $getTherapist->email && $getTherapist->is_email_verified == '1') {
+                $this->errorMsg['error.email.already.verified'] = $this->errorMsg['error.email.already.verified'] . $emailId . $this->errorMsg['error.email.id'];
+
+                return $this->returns('error.email.already.verified', NULL, true);
+            }
+
+            $sendOtp         = $this->sendOtp($emailId);
+            $data['otp']     = NULL;
+            $data['is_send'] = '0';
+
+            if ($this->getJsonResponseCode($sendOtp) == '200') {
+                $data['is_send']     = '1';
+                $data['is_verified'] = '0';
+                $data['otp']         = $this->getJsonResponseOtp($sendOtp);
+            } else {
+                return $this->returns($this->getJsonResponseMsg($sendOtp), NULL, true);
+            }
+
+            $getData = $modelEmailOtp->where(['therapist_id' => $id])->get();
+
+            if (!empty($getData) && !$getData->isEmpty()) {
+                $updateOtp = $modelEmailOtp->updateOtp($id, $data);
+                
+                if (!empty($updateOtp['isError']) && !empty($updateOtp['message'])) {
+                    return $this->returns($updateOtp['message'], NULL, true);
+                }
+            } else {
+                $create = $modelEmailOtp->create($data);
+
+                if (!$create) {
+                    return $this->returns('error.something', NULL, true);
+                }
+            }
+        } else {
+            return $this->returns('error.therapist.id', NULL, true);
+        }
+
+        return $this->returns('success.email.sent', collect([]));
+    }
+
+    public function compareOtpEmail(Request $request)
+    {
+        $data       = $request->all();
+        $model      = new TherapistEmailOtp();
+        $modelUser  = new Therapist();
+
+        $therapistId = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $otp    = (!empty($data['otp'])) ? $data['otp'] : NULL;
+
+        if (empty($otp)) {
+            return $this->returns('error.otp', NULL, true);
+        }
+
+        if (strtolower(env('APP_ENV') != 'live') && $otp == '1234') {
+            $getTherapist = $model->where(['therapist_id' => $therapistId])->get();
+        } else {
+            $getTherapist = $model->where(['therapist_id' => $therapistId, 'otp' => $otp])->get();
+        }
+
+        if (!empty($getTherapist) && !$getTherapist->isEmpty()) {
+            $getTherapist = $getTherapist->first();
+
+            if ($getTherapist->is_verified == '1') {
+                return $this->returns('error.otp.already.verified', NULL, true);
+            } else {
+                $modelUser->where(['id' => $therapistId])->update(['email' => $getTherapist->email, 'is_email_verified' => '1']);
+
+                $model->setIsVerified($getTherapist->id, '1');
+            }
+        } else {
+            return $this->returns('error.otp.wrong', NULL, true);
+        }
+
+        return $this->returns('success.email.otp.compare', collect([]));
+    }
+
+    public function verifyMobile(Request $request)
+    {
+        $data   = $request->all();
+
+        /* TODO all things like email otp after get sms gateway. */
+
+        return $this->returns('success.sms.sent', collect([]));
+    }
+    
+    public function compareOtpSms(Request $request)
+    {
+        $data   = $request->all();
+        $model  = new Therapist();
+
+        /* TODO all things like email otp compare after get sms gateway. */
+        $therapistId = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $otp    = (!empty($data['otp'])) ? $data['otp'] : NULL;
+
+        if (strtolower(env('APP_ENV') != 'live') && $otp == '1234') {
+            $model->where(['id' => $therapistId])->update(['is_mobile_verified' => '1']);
+        } else {
+            return $this->returns('error.otp.wrong', NULL, true);
+        }
+
+        return $this->returns('success.email.otp.compare', collect([]));
+    }
+    
+    public function addFreeSlots(Request $request) {
+                
+        $freeSlots = [];
+        if(!empty($request->startTime) && !empty($request->endTime)) {
+            
+            foreach ($request->startTime as $key => $value) {
+                
+                $startTime = Carbon::createFromTimestampMs($value);
+                $endTime = Carbon::createFromTimestampMs($request->endTime[$key]);
+                $data = [
+                    'startTime' => $startTime->format('H:i:s'),
+                    'endTime' => $endTime->format('H:i:s'),
+                    'therapist_id' => $request->therapist_id,
+                ];
+
+                $slotModel = new TherapistFreeSlot();
+                $checks = $slotModel->validator($data);
+                if ($checks->fails()) {
+                    return $this->returnError($checks->errors()->first(), NULL, true);
+                }
+                TherapistFreeSlot::updateOrCreate($data, $data);
+                $freeSlots[] = $data;
+            }
+        }
+        
+        return $this->returns('therapist.freeslot', collect($freeSlots));
+    }
+    
+    public function getTherapistShifts(Request $request) {
+
+        $now = Carbon::now();
+        $date = Carbon::createFromTimestampMs($request->date);
+        $date = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
+        $search_val = $request->search_val;
+        
+        $data = DB::table('therapists')
+                ->leftJoin('therapist_working_schedules', 'therapists.id', '=', 'therapist_working_schedules.therapist_id')
+                ->leftJoin('therapist_shifts', 'therapist_shifts.schedule_id', '=', 'therapist_working_schedules.id')
+                ->leftJoin('shop_shifts', 'shop_shifts.id', '=', 'therapist_shifts.shift_id')
+                ->select('therapists.*', 'therapist_working_schedules.*', 'therapist_shifts.*', 'shop_shifts.*')
+                ->where(['therapist_working_schedules.date' => $date, 'therapist_working_schedules.shop_id' => $request->shop_id,
+                    'therapist_shifts.is_absent' => TherapistShift::NOT_ABSENT, 'therapist_shifts.is_working' => TherapistShift::WORKING]);
+        
+        if(!empty($search_val)) {
+            $data->where(function($query) use ($search_val) {
+                $query->where('therapists.name', 'like', $search_val . '%')
+                        ->orWhere('therapists.surname', 'like', $search_val . '%')
+                        ->orWhere('therapists.email', $search_val);
+            });
+        }
+        
+        $data = $data->get()->groupBy('therapist_id');
+        
+        $shiftData = [];
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+                $availability['id'] = $value[0]->id;
+                $availability['name'] = $value[0]->name;
+                $availability['surname'] = $value[0]->surname;
+
+                foreach ($value as $key => $shift) {
+                    $availability['shifts'][] = [
+                        'schedule_id' => $shift->schedule_id,
+                        'shift_id' => $shift->shift_id,
+                        'from' => $shift->from,
+                        'to' => $shift->to
+                    ];
+                }
+                array_push($shiftData, $availability);
+                unset($availability);
+            }
+        }
+        return $this->returns('all.therapist.shifts', collect($shiftData));
+    }
+    
+    public function readNews(Request $request) {
+        
+        $model = new TherapistNews();
+        $checks = $model->validator($request->all());
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $read = $model->updateOrCreate($request->all(), $request->all());
+        return $this->returns('news.read', collect($read));
+    }
+    
+    public function newTherapist(Request $request) {
+        
+        $model = new Therapist();
+        $data = $request->all();
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $data['password'] = Hash::make($data['password']);
+        $therapist = $model->create($data);
+        
+        return $this->returns('new.therapist', $therapist);
+    }
+
 }

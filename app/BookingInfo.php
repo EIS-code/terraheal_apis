@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Validator;
 use App\UserPeople;
 use App\Therapist;
 use App\Room;
+use App\BookingMassage;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -16,6 +17,7 @@ class BookingInfo extends BaseModel
         'massage_date',
         'massage_time',
         'is_cancelled',
+        'cancel_type',
         'cancelled_reason',
         'imc_type',
         'is_done',
@@ -70,16 +72,17 @@ class BookingInfo extends BaseModel
     public function validator(array $data)
     {
         return Validator::make($data, [
-            '*.user_people_id'       => ['required', 'integer', 'exists:' . UserPeople::getTableName() . ',id'],
-            '*.location'             => ['required', 'max:255'],
-            '*.massage_date'         => ['nullable'],
-            '*.massage_time'         => ['nullable'],
-            '*.is_cancelled'         => ['in:' . implode(",", array_keys(self::$isCancelled))],
-            '*.cancelled_reason'     => ['mas:255'],
-            '*.imc_type'             => ['required', 'in:1,2'],
-            '*.therapist_id'         => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
-            '*.room_id'              => ['required', 'integer', 'exists:' . Room::getTableName() . ',id'],
-            '*.massage_info'         => ['required', 'array']
+            'user_people_id'       => ['nullable', 'integer', 'exists:' . UserPeople::getTableName() . ',id'],
+            'location'             => ['nullable', 'max:255'],
+            'massage_date'         => ['nullable'],
+            'massage_time'         => ['nullable'],
+            'is_cancelled'         => ['in:' . implode(",", array_keys(self::$isCancelled))],
+            'cancelled_reason'     => ['mas:255'],
+            'imc_type'             => ['nullable', 'in:1,2'],
+            'therapist_id'         => ['nullable', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
+            'booking_currency_id'  => ['required', 'integer', 'exists:' . Currency::getTableName() . ',id'],
+            'shop_currency_id'     => ['required', 'integer', 'exists:' . Currency::getTableName() . ',id'],
+            'booking_id'           => ['required', 'integer', 'exists:' . Booking::getTableName() . ',id'],
         ]);
     }
 
@@ -230,5 +233,56 @@ class BookingInfo extends BaseModel
         }
 
         return collect($return);
+    }
+
+    public function getMassageCountByTherapist(int $therapistId)
+    {
+        $model = new BookingMassage();
+
+        $model->setMysqlStrictFalse();
+
+        $data = $model::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
+                              ->where('therapist_id', $therapistId)->where('is_cancelled', (string)self::IS_CANCELLED_NOPE)
+                              ->whereNotNull(BookingMassage::getTableName() . '.massage_timing_id')
+                              ->whereNull(BookingMassage::getTableName() . '.therapy_timing_id')
+                              ->groupBy(BookingMassage::getTableName() . '.massage_timing_id')
+                              ->get()
+                              ->count();
+
+        $model->setMysqlStrictTrue();
+
+        return $data;
+    }
+
+    public function getTherapyCountByTherapist(int $therapistId)
+    {
+        $model = new BookingMassage();
+
+        $model->setMysqlStrictFalse();
+
+        $data = $model::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
+                              ->where('therapist_id', $therapistId)->where('is_cancelled', (string)self::IS_CANCELLED_NOPE)
+                              ->whereNotNull(BookingMassage::getTableName() . '.therapy_timing_id')
+                              ->whereNull(BookingMassage::getTableName() . '.massage_timing_id')
+                              ->groupBy(BookingMassage::getTableName() . '.therapy_timing_id')
+                              ->get()
+                              ->count();
+
+        $model->setMysqlStrictTrue();
+
+        return $data;
+    }
+
+    public static function massageDone(int $id)
+    {
+        $find = self::find($id);
+
+        if (!empty($find)) {
+            $find->is_done = (string)self::IS_DONE;
+
+            return $find->update();
+        }
+
+        return false;
     }
 }
