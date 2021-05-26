@@ -16,8 +16,8 @@ class CreateStaffWorkSchedulesTable extends Migration
         Schema::create('staff_work_schedules', function (Blueprint $table) {
             $table->id();
             $table->enum('day_name',[0,1,2,3,4,5,6])->comment('0: Sunday, 1: Monday, 2: Tuesday, 3: Wednesday, 4: Thursday, 5: Friday, 6: Saturday');
-            $table->time('startTime');
-            $table->time('endTime');
+            $table->time('start_time');
+            $table->time('end_time');
             $table->bigInteger('staff_id')->unsigned();
             $table->foreign('staff_id')->references('id')->on('staff')->onDelete('cascade');
             $table->timestamps();

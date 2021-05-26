@@ -8,8 +8,8 @@ class StaffWorkingSchedule extends BaseModel
 {
     protected $fillable = [
         'day_name',
-        'startTime',
-        'endTime',
+        'start_time',
+        'end_time',
         'staff_id'
     ];
 
@@ -32,10 +32,37 @@ class StaffWorkingSchedule extends BaseModel
     {
         return Validator::make($data, [
             'day_name'   => ['required', 'in:' . implode(",", array_keys($this->days))],
-            'startTime'  => ['required', 'date:Y-m-d H:i:s'],
-            'endTime'    => ['required', 'date:Y-m-d H:i:s'],
+            'start_time'  => ['required', 'date:Y-m-d H:i:s'],
+            'end_time'    => ['required', 'date:Y-m-d H:i:s'],
             'staff_id'   => ['required', 'exists:staff,id']
         ]);
+    }
+    
+    public function getDayNameAttribute($value)
+    {
+        if (is_null($value)) {
+            return $value;
+        }
+
+        return $this->days[$value];
+    }
+    
+    public function getStartTimeAttribute($value)
+    {
+        if (is_null($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
+    public function getEndTimeAttribute($value)
+    {
+        if (is_null($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
     }
     
     public function staff()

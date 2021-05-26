@@ -66,6 +66,25 @@ class Staff extends Model
         ]);
     }
     
+    public function getDobAttribute($value)
+    {
+        if (is_null($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
+    public function getDayNameAttribute($value)
+    {
+        if (is_null($value)) {
+            return $value;
+        }
+
+        return $this->shopDays[$value];
+    }
+    
+    
     public function schedule()
     {
         return $this->hasMany('App\StaffWorkingSchedule', 'staff_id', 'id');

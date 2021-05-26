@@ -30,18 +30,19 @@ class StaffsController extends BaseController {
                 return $this->returnError($checks->errors()->first(), NULL, true);
             }
             
+            $data['dob'] = $data['dob'] ? Carbon::createFromTimestampMs($data['dob']) : NULL;
             $data['password'] = Hash::make($data['password']);
             $staff = Staff::create($data);
             
             if(!empty($data['schedule'])) {
                 foreach ($data['schedule'] as $key => $value) {
 
-                    $startTime  = Carbon::createFromTimestampMs($value['startTime']);
-                    $endTime  = Carbon::createFromTimestampMs($value['endTime']);
+                    $startTime  = Carbon::createFromTimestampMs($value['start_time']);
+                    $endTime  = Carbon::createFromTimestampMs($value['end_time']);
                     $scheduleData = [
                         "day_name" => $value['day_name'],
-                        "startTime" => $startTime,
-                        "endTime" => $endTime,
+                        "start_time" => $startTime,
+                        "end_time" => $endTime,
                         "staff_id" => $staff->id
                     ];
 
