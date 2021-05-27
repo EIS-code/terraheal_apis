@@ -13,13 +13,13 @@ use App\StaffWorkingSchedule;
 class StaffsController extends BaseController {
 
     public $errorMsg = [
-        'staff.not.found' => 'Staff not found'
+        'staff.not.found' => 'Staff not found.'
     ];
     
     public $successMsg = [
-        'staff.create' => 'Staff added successfully',
-        'staff.update' => 'Staff data updated successfully',
-        'staff.list' => 'Staff data found successfully'
+        'staff.create' => 'Staff added successfully !',
+        'staff.update' => 'Staff data updated successfully !',
+        'staff.list' => 'Staff data found successfully !'
     ];
     
     public function createStaff(Request $request) {
