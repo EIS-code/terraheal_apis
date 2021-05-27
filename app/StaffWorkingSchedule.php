@@ -32,8 +32,8 @@ class StaffWorkingSchedule extends BaseModel
     {
         return Validator::make($data, [
             'day_name'   => ['required', 'in:' . implode(",", array_keys($this->days))],
-            'start_time'  => ['required', 'date:Y-m-d H:i:s'],
-            'end_time'    => ['required', 'date:Y-m-d H:i:s'],
+            'start_time'  => ['required', 'date_format:H:i:s'],
+            'end_time'    => ['required', 'date_format:H:i:s'],
             'staff_id'   => ['required', 'exists:staff,id']
         ]);
     }

@@ -42,7 +42,7 @@ class Staff extends Model
 
         return Validator::make($data, [
                 'full_name'             => ['required', 'string', 'max:255'],
-                'email'                 => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
+                'email'                 => array_merge([(!$isUpdate ? 'required': ''), 'string', 'email', 'max:255'], $emailValidator),
                 'password'              => array_merge([(!$isUpdate ? 'required': ''), 'min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/']),
                 'mobile_number'         => ['nullable', 'string', 'max:50'],
                 'emergency_number'      => ['nullable', 'string', 'max:50'],
