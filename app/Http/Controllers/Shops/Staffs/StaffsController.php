@@ -94,8 +94,7 @@ class StaffsController extends BaseController {
             if(!empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             }
-            
-            $model->update($data);
+            $staff->update($data);
             
             if(!empty($data['schedule'])) {
                 foreach ($data['schedule'] as $key => $value) {
