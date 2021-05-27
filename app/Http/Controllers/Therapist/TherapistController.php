@@ -639,7 +639,7 @@ class TherapistController extends BaseController
 
         $data = $model::getAvailabilities($id, $date);
 
-        if (!empty($data)) {
+        if ($data->count()) {
             return $this->returns('my.availability.found', $data);
         } else {
             return $this->returns('no.data.found');
