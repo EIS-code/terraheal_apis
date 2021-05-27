@@ -111,7 +111,9 @@ class TherapistWorkingSchedule extends BaseModel
                             $q->where('date', $date)
                             ->where('therapist_id', $id);
                         })->get();
-        if (!empty($data)) {
+
+        $availability = [];
+        if ($data->count()) {
             
             $availability['schedule'] = $data[0]['therapistSchedule'];
             foreach ($data as $key => $value) {
