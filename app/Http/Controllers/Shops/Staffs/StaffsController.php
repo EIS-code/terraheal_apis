@@ -45,8 +45,8 @@ class StaffsController extends BaseController {
                     $endTime  = Carbon::createFromTimestampMs($value['end_time']);
                     $scheduleData = [
                         "day_name" => $value['day_name'],
-                        "start_time" => $startTime,
-                        "end_time" => $endTime,
+                        "start_time" => $startTime->format("H:i:s"),
+                        "end_time" => $endTime->format("H:i:s"),
                         "staff_id" => $staff->id
                     ];
 
@@ -77,20 +77,21 @@ class StaffsController extends BaseController {
         try {
             
             $model = new Staff();
-            
             $staff = Staff::where('id', $request->staff_id)->first();
             if(empty($staff)) {
                 return $this->returnError(__($this->errorMsg['staff.not.found']));
             }
             
             $data = $request->all();
+            if(!empty($data['dob'])) {
+                $data['dob'] = $data['dob'] ? Carbon::createFromTimestampMs($data['dob']) : NULL;
+            }
+            
             $checks = $model->validator($data, $request->staff_id, true);
             if ($checks->fails()) {
                 return $this->returnError($checks->errors()->first(), NULL, true);
             }
-            if(empty($data['dob'])) {
-                $data['dob'] = $data['dob'] ? Carbon::createFromTimestampMs($data['dob']) : NULL;
-            }
+            
             if(!empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             }
@@ -131,7 +132,18 @@ class StaffsController extends BaseController {
 
     public function staffList(Request $request) {
         
-        $staffs = Staff::with('schedule','country','city')->where('shop_id', $request->shop_id)->get();
-        return $this->returnSuccess(__($this->successMsg['staff.list']),$staffs);
+        $staffs = Staff::with('schedule','country','city')->where('shop_id', $request->shop_id);
+        $search_val = $request->search_val;
+        
+        if(!empty($search_val)) {
+            $staffs->where(function($query) use ($search_val) {
+                    $query->where('full_name', 'like', $search_val.'%')
+                            ->orWhere('email', $search_val)
+                            ->orWhere('dob', $search_val)
+                            ->orWhere('mobile_number', $search_val)
+                            ->orWhere('nif', $search_val);
+                });
+        }
+        return $this->returnSuccess(__($this->successMsg['staff.list']),$staffs->get());
     }
 }
