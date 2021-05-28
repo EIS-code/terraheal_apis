@@ -132,7 +132,18 @@ class StaffsController extends BaseController {
 
     public function staffList(Request $request) {
         
-        $staffs = Staff::with('schedule','country','city')->where('shop_id', $request->shop_id)->get();
-        return $this->returnSuccess(__($this->successMsg['staff.list']),$staffs);
+        $staffs = Staff::with('schedule','country','city')->where('shop_id', $request->shop_id);
+        $search_val = $request->search_val;
+        
+        if(!empty($search_val)) {
+            $staffs->where(function($query) use ($search_val) {
+                    $query->where('full_name', 'like', $search_val.'%')
+                            ->orWhere('email', $search_val)
+                            ->orWhere('dob', $search_val)
+                            ->orWhere('mobile_number', $search_val)
+                            ->orWhere('nif', $search_val);
+                });
+        }
+        return $this->returnSuccess(__($this->successMsg['staff.list']),$staffs->get());
     }
 }
