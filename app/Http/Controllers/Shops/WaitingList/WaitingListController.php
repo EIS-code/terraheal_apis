@@ -606,6 +606,7 @@ class WaitingListController extends BaseController {
         
         $schedules = TherapistWorkingSchedule::with('therapistWorkingScheduleTimes', 'therapist:id,name,shop_id')                   
                         ->whereMonth('date', $date->month)
+                        ->whereYear('date', $date->year)
                         ->whereHas('therapist', function($q) use($request) {
                                 $q->where('shop_id',$request->shop_id);
                         });

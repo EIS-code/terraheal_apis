@@ -28,6 +28,8 @@ class Staff extends Model
         'pay_scale',
         'amount',
         'address',
+        'login_access'.
+        'status'
     ];
     
     protected $hidden = ['created_at', 'updated_at', 'password'];
@@ -54,6 +56,22 @@ class Staff extends Model
     public static $payScle = [
         self::MONTHLY   => 'Fixed monthly',
         self::HOURLY => 'Fixed hourly'
+    ];
+    
+    const  DEACTIVE = '0';
+    const  ACTIVE = '1';
+    
+    public static $status = [
+        self::DEACTIVE   => 'Deactive',
+        self::ACTIVE => 'Active'
+    ];
+    
+    const  DISABLE = '0';
+    const  ENABLE = '1';
+    
+    public static $loginAccess = [
+        self::DISABLE => 'Disable',
+        self::ENABLE   => 'Enable'
     ];
     
     public function validator(array $data, $id = false, $isUpdate = false)
@@ -84,7 +102,9 @@ class Staff extends Model
                 'address'               => ['nullable', 'string', 'max:255'],
                 'shop_id'               => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
                 'country_id'            => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
-                'city_id'               => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']
+                'city_id'               => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id'],
+                'login_access'          => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$loginAccess))]),
+                'status'                => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$status))])
                 ], [
             'password.regex' => 'Password should contains at least one [a-z, A-Z, 0-9, @, $, !, %, *, #, ?, &].'
         ]);
@@ -121,7 +141,17 @@ class Staff extends Model
     public function getPayScaleAttribute($value)
     {
         return (isset(self::$payScle[$value])) ? self::$payScle[$value] : $value;
-    }   
+    }
+    
+    public function getLoginAccessAttribute($value)
+    {
+        return (isset(self::$loginAccess[$value])) ? self::$loginAccess[$value] : $value;
+    }
+    
+    public function getStatusAttribute($value)
+    {
+        return (isset(self::$status[$value])) ? self::$status[$value] : $value;
+    } 
     
     public function schedule()
     {
