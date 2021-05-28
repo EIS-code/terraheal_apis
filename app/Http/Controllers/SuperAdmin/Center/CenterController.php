@@ -241,11 +241,11 @@ class CenterController extends BaseController {
 
             foreach ($data['timetable']['open_at'] as $key => $value) {
                 $time = Carbon::createFromTimestampMs($value);
-                $data['timetable']['open_at'][$key] = $time->format("h:i:s");
+                $data['timetable']['open_at'][$key] = $time->format("H:i:s");
             }
             foreach ($data['timetable']['close_at'] as $key => $value) {
                 $time = Carbon::createFromTimestampMs($value);
-                $data['timetable']['close_at'][$key] = $time->format("h:i:s");
+                $data['timetable']['close_at'][$key] = $time->format("H:i:s");
                 $timeTable = [
                     'day_name' => (string) $key,
                     'is_open' => (string) ShopHour::IS_OPEN,

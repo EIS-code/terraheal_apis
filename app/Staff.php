@@ -25,13 +25,37 @@ class Staff extends Model
         'account_number',
         'language_spoken',
         'health_condition',
-        'pay_sacle',
+        'pay_scale',
         'amount',
         'address',
     ];
     
     protected $hidden = ['created_at', 'updated_at', 'password'];
+    
+    const GENDER_MALE   = 'm';
+    const GENDER_FEMALE = 'f';
 
+    public static $gender = [
+        self::GENDER_MALE   => 'Male',
+        self::GENDER_FEMALE => 'Female'
+    ];
+    
+    const RECEPTIONIST = '0';
+    const CLEANING_LADY = '1';
+    
+    public static $roles = [
+        self::RECEPTIONIST   => 'Receptionist',
+        self::CLEANING_LADY => 'Cleaning lady'
+    ];
+
+    const MONTHLY = '0';
+    const HOURLY = '1';
+    
+    public static $payScle = [
+        self::MONTHLY   => 'Fixed monthly',
+        self::HOURLY => 'Fixed hourly'
+    ];
+    
     public function validator(array $data, $id = false, $isUpdate = false)
     {
         if ($isUpdate === true && !empty($id)) {
@@ -42,13 +66,13 @@ class Staff extends Model
 
         return Validator::make($data, [
                 'full_name'             => ['required', 'string', 'max:255'],
-                'email'                 => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
+                'email'                 => array_merge([(!$isUpdate ? 'required': ''), 'string', 'email', 'max:255'], $emailValidator),
                 'password'              => array_merge([(!$isUpdate ? 'required': ''), 'min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/']),
                 'mobile_number'         => ['nullable', 'string', 'max:50'],
                 'emergency_number'      => ['nullable', 'string', 'max:50'],
-                'gender'                => ['nullable', ['in:0,1']],
-                'role'                  => ['nullable', ['in:0,1']],
-                'pay_sacle'             => ['nullable', ['in:0,1']],
+                'gender'                => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$gender))]),
+                'role'                  => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$roles))]),
+                'pay_scale'             => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$payScle))]),
                 'dob'                   => ['nullable', 'string', 'max:255'],
                 'nif'                   => ['nullable', 'string', 'max:255'],
                 'security_number'       => ['nullable', 'string', 'max:255'],
@@ -84,6 +108,20 @@ class Staff extends Model
         return $this->shopDays[$value];
     }
     
+    public function getGenderAttribute($value)
+    {
+        return (isset(self::$gender[$value])) ? self::$gender[$value] : $value;
+    }
+    
+    public function getRoleAttribute($value)
+    {
+        return (isset(self::$roles[$value])) ? self::$roles[$value] : $value;
+    }
+    
+    public function getPayScaleAttribute($value)
+    {
+        return (isset(self::$payScle[$value])) ? self::$payScle[$value] : $value;
+    }   
     
     public function schedule()
     {
