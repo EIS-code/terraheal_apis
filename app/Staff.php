@@ -91,7 +91,7 @@ class Staff extends Model
                 'gender'                => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$gender))]),
                 'role'                  => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$roles))]),
                 'pay_scale'             => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$payScle))]),
-                'dob'                   => ['nullable', 'string', 'max:255'],
+                'dob'                   => ['nullable', 'date:Y-m-d'],
                 'nif'                   => ['nullable', 'string', 'max:255'],
                 'security_number'       => ['nullable', 'string', 'max:255'],
                 'bank_name'             => ['nullable', 'string', 'max:255'],
