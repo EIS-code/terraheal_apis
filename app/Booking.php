@@ -305,7 +305,8 @@ class Booking extends BaseModel
             $data->where($bookingInfoModel::getTableName() . '.massage_date', $date);
         }
         if ($month) {
-            $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', '=', $month->month);
+            $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', '=', $month->month)
+                 ->whereYear($bookingInfoModel::getTableName() . '.massage_date', '=', $month->year);
         }
         if($userId) {
             $data->where($this::getTableName() . '.user_id', '=', $userId);
@@ -367,7 +368,8 @@ class Booking extends BaseModel
                 $data->whereBetween($bookingInfoModel::getTableName() . '.massage_date', [$weekStartDate, $weekEndDate]);
             }
             if ($dateFilter == self::THIS_MONTH) {
-                $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', $now->month);
+                $data->whereMonth($bookingInfoModel::getTableName() . '.massage_date', $now->month)
+                     ->whereYear($bookingInfoModel::getTableName() . '.massage_date', $now->year);
             }
         }
 
