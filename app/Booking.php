@@ -358,6 +358,9 @@ class Booking extends BaseModel
         }
         if(isset($dateFilter)) {
             $now = Carbon::now();
+            if ($dateFilter == self::YESTERDAY) {
+                $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::yesterday()->format('Y-m-d'));
+            }
             if ($dateFilter == self::TOMORROW) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::tomorrow()->format('Y-m-d'));
             }

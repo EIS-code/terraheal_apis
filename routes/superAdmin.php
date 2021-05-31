@@ -60,7 +60,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('constants/add', 'Center\CenterController@addConstants');
         $router->post('featuredImages/delete', 'Center\CenterController@deleteFeaturedImages');
         $router->post('galleryImages/delete', 'Center\CenterController@deleteGalleryImages');
-        $router->get('users/get', 'Center\CenterController@getUsers');
+        $router->post('users/get', 'Center\CenterController@getUsers');
     });
     
     $router->group(['prefix' => 'therapists'], function () use($router) {
