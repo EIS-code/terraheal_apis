@@ -6,12 +6,15 @@ use App\Repositories\ApiKeyRepository;
 use Closure;
 use App\ApiKey;
 use App\ApiKeyShop;
+use DB;
 
 class AuthApi
 {
     private $excludedRoutes = [
         
     ];
+
+    private $isSuperadmin = false;
 
     /**
      * Handle an incoming request.
@@ -64,12 +67,15 @@ class AuthApi
             ]);
         }
 
-        // Superadmin ID
-        $request->merge(['superadmin_id' => $getKeyInfo->superadmin_id]);
-        // Shop ID
-        $request->merge(['shop_id' => $getKeyInfo->shop_id]);
-        // Model ID
-        $request->merge(['id' => $getKeyInfo->model_id]);
+        if ($this->isSuperadmin) {
+            // Superadmin ID
+            $request->merge(['superadmin_id' => $getKeyInfo->superadmin_id]);
+        } else {
+            // Shop ID
+            $request->merge(['shop_id' => $getKeyInfo->shop_id]);
+            // Model ID
+            $request->merge(['id' => $getKeyInfo->model_id]);
+        }
 
         return $next($request);
     }
@@ -96,14 +102,24 @@ class AuthApi
 
     private function isSuperadmin(string $key)
     {
-        $apiKeySuperadmin = ApiKeyShop::select(ApiKey::getTableName() . '.*', ApiKeyShop::getTableName() . '.shop_id', ApiKeyShop::getTableName() . '.superadmin_id')
+        /*$apiKeySuperadmin = ApiKeyShop::select(ApiKey::getTableName() . '.*', ApiKeyShop::getTableName() . '.shop_id', ApiKeyShop::getTableName() . '.superadmin_id')
                                       ->whereNull('shop_id')
                                       ->whereNotNull('superadmin_id')
                                       ->where(ApiKeyShop::getTableName() . '.key', $key)
                                       ->leftJoin(ApiKey::getTableName(), ApiKey::getTableName() . '.api_key_id', '=', ApiKeyShop::getTableName() . '.id')
-                                      ->first();
+                                      ->first();*/
 
-        return $apiKeySuperadmin;
+        $apiKeyModel      = new ApiKey();
+        $apiKeyShopModel  = new ApiKeyShop();
+        $apiKeySuperadmin = DB::select("select `" . $apiKeyModel::getTableName() . "`.*, `" . $apiKeyShopModel::getTableName() . "`.`shop_id`, `" . $apiKeyShopModel::getTableName() . "`.`superadmin_id` from `" . $apiKeyShopModel::getTableName() . "` left join `" . $apiKeyModel::getTableName() . "` on `" . $apiKeyModel::getTableName() . "`.`api_key_id` = `" . $apiKeyShopModel::getTableName() . "`.`id` where `shop_id` is null and `superadmin_id` is not null and `" . $apiKeyShopModel::getTableName() . "`.`key` = '" . $key . "'");
+
+        if (!empty($apiKeySuperadmin[0])) {
+            $this->isSuperadmin = true;
+
+            return $apiKeySuperadmin[0];
+        }
+
+        return [];
     }
 
     private function totalLogins(ApiKey $apiKey)
