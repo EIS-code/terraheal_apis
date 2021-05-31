@@ -604,9 +604,9 @@ class WaitingListController extends BaseController {
         $date  = Carbon::createFromTimestampMs($request->date);
         $date = !empty($request->date) ? $date : Carbon::now();
         
-        $schedules = TherapistWorkingSchedule::with('therapistWorkingScheduleTimes', 'therapist:id,name,shop_id')                   
-                        ->where(['is_working' => TherapistWorkingSchedule::WORKING, 'is_absent' => TherapistWorkingSchedule::NOT_ABSENT])
+        $schedules = TherapistWorkingSchedule::with('therapistWorkingScheduleTime', 'therapist:id,name,shop_id')                   
                         ->whereMonth('date', $date->month)
+                        ->whereYear('date', $date->year)
                         ->whereHas('therapist', function($q) use($request) {
                                 $q->where('shop_id',$request->shop_id);
                         });
