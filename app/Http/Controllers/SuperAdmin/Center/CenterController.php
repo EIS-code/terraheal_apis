@@ -642,7 +642,9 @@ class CenterController extends BaseController {
             }
             $therapist['average'] = number_format($avg, 2);
         }
+        $therapists = $therapists->sortByDesc('average');
+        $therapists = $therapists->toArray();
         
-        return $this->returnSuccess(__($this->successMsg['center.therapists.details']), $therapists);
+        return $this->returnSuccess(__($this->successMsg['center.therapists.details']), array_values($therapists));
     }
 }
