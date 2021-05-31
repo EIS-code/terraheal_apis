@@ -58,7 +58,7 @@ class CenterController extends BaseController {
         $voucherModel = new Voucher();
         $voucherShopModel = new VoucherShop();
 
-        $vouchers = $voucherModel->getVoucherQuery()->where($voucherShopModel::getTableName() . '.shop_id', $request->center_id)->get();
+        $vouchers = $voucherModel->getVoucherQuery()->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)->get();
 
         return $vouchers;
     }
@@ -79,13 +79,13 @@ class CenterController extends BaseController {
                 ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
-                ->where(['booking_infos.is_done' => (string) BookingInfo::IS_DONE, 'bookings.shop_id' => $request->center_id])
+                ->where(['booking_infos.is_done' => (string) BookingInfo::IS_DONE, 'bookings.shop_id' => $request->shop_id])
                 ->sum('booking_massages.price');
         $totalCost = DB::table('booking_massages')
                 ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
-                ->where(['booking_infos.is_done' => (string) BookingInfo::IS_DONE, 'bookings.shop_id' => $request->center_id])
+                ->where(['booking_infos.is_done' => (string) BookingInfo::IS_DONE, 'bookings.shop_id' => $request->shop_id])
                 ->sum('booking_massages.cost');
         $totalEarning = $totalCost == 0 ? 0 : number_format(($totalSales - $totalCost) / ($totalCost * 100), 2);
         return $totalEarning;
@@ -100,21 +100,21 @@ class CenterController extends BaseController {
         } 
         $massages = $shopModel->getMassages($request)->count();
         $therapies = $shopModel->getTherapies($request)->count();
-        $therapists = Therapist::where('shop_id', $request->center_id)->get()->count();
-        $clients = User::with('shop:id,name','city:id,name','country:id,name')->where('shop_id', $request->center_id)->get()->count();
+        $therapists = Therapist::where('shop_id', $request->shop_id)->get()->count();
+        $clients = User::with('shop:id,name','city:id,name','country:id,name')->where('shop_id', $request->shop_id)->get()->count();
         
-//        $homeBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_HHV, 'shop_id' => $request->center_id])->get()->count();
-//        $centerBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_IMC, 'shop_id' => $request->center_id])->get()->count();
+//        $homeBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_HHV, 'shop_id' => $request->shop_id])->get()->count();
+//        $centerBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_IMC, 'shop_id' => $request->shop_id])->get()->count();
 //        $vouchers = $this->getSoldVoucher($request)->count();
 //        $packs = $this->getSoldPacks($request)->count();
-//        $totalBookings = Booking::where('shop_id', $request->center_id)->get()->count();
+//        $totalBookings = Booking::where('shop_id', $request->shop_id)->get()->count();
 //        $cancelledBookings = DB::table('bookings')
 //                ->join('booking_infos', 'booking_infos.booking_id', '=', 'bookings.id')
 //                ->where('booking_infos.is_cancelled', (string) BookingInfo::IS_CANCELLED)->get()->count();
 //        $earning = $this->getEarning($request);
 //        $topItems = $shopModel->getTopItems($request);
-//        $receptionists = Receptionist::where('shop_id', $request->center_id)->get()->count();
-//        $managers = Manager::where('shop_id', $request->center_id)->get()->count();
+//        $receptionists = Receptionist::where('shop_id', $request->shop_id)->get()->count();
+//        $managers = Manager::where('shop_id', $request->shop_id)->get()->count();
 //        $staff = $therapists + $receptionists + $managers;
 
         return $this->returnSuccess(__($this->successMsg['center.details']), ['massages' => $massages, 'therapies' => $therapies, 'therapists' => $therapists,'clients' => $clients, 'shop' => $shop]);
@@ -126,7 +126,8 @@ class CenterController extends BaseController {
         $booking = DB::table('booking_massages')
                 ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
-                ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*');
+                ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
+                ->where('bookings.shop_id', $request->shop_id);
         
         $now = Carbon::now();
         if ($dateFilter == Booking::TODAY) {
@@ -269,8 +270,8 @@ class CenterController extends BaseController {
         DB::beginTransaction();
         try {
             $centerId = null;
-            if (!empty($request->center_id)) {
-                $center = Shop::find($request->center_id);
+            if (!empty($request->shop_id)) {
+                $center = Shop::find($request->shop_id);
                 if (empty($center)) {
                     return $this->returnSuccess(__($this->errorMsg['center.not.found']));
                 }
@@ -340,14 +341,14 @@ class CenterController extends BaseController {
             'longitude' => $data['location']['longitude'] ? $data['location']['longitude'] : null,
             'latitude' => $data['location']['latitude'] ? $data['location']['latitude'] : null,
             'zoom' => $data['location']['zoom'] ? $data['location']['zoom'] : null,
-            'shop_id' => $data['center_id'] ? $data['center_id'] : null
+            'shop_id' => $data['shop_id'] ? $data['shop_id'] : null
         ];
 
         $checks = $companyModel->validator($company);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        $companyData = $companyModel->updateOrCreate(['shop_id' => $request->center_id], $company);
+        $companyData = $companyModel->updateOrCreate(['shop_id' => $request->shop_id], $company);
         return $this->returnSuccess(__($this->successMsg['company.add.details']), $companyData);
     }
 
@@ -362,15 +363,15 @@ class CenterController extends BaseController {
             'owner_mobile_number' => $data['owner_mobile_number'],
             'owner_mobile_number_alternative' => $data['owner_mobile_number_alternative'],
             'finacial_situation' => $data['finacial_situation'],
-            'shop_id' => $request->center_id
+            'shop_id' => $request->shop_id
         ];
         
-        $checks = $shopModel->validatorOwner($ownerData, $request->center_id, true);
+        $checks = $shopModel->validatorOwner($ownerData, $request->shop_id, true);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
         
-        $center = $shopModel->find($request->center_id);
+        $center = $shopModel->find($request->shop_id);
         $center->update($ownerData);
         
         return $this->returnSuccess(__($this->successMsg['owner.add.details']), $center);
@@ -386,13 +387,13 @@ class CenterController extends BaseController {
             'paypal_client_id' => $request->paypal_client_id,
             'google_pay_number' => $request->google_pay_number,
             'apple_pay_number' => $request->apple_pay_number,
-            'shop_id' => $request->center_id 
+            'shop_id' => $request->shop_id 
         ];
         $checks = $paymentModel->validator($paymentDetails);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->center_id], $paymentDetails);
+        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->shop_id], $paymentDetails);
         
         return $this->returnSuccess(__($this->successMsg['payment.add.details']), $payment);
     }
@@ -405,14 +406,14 @@ class CenterController extends BaseController {
             'sales_percentage' => $request->sales_percentage,
             'inital_amount' => $request->inital_amount,
             'fixed_amount' => $request->fixed_amount,
-            'shop_id' => $request->center_id
+            'shop_id' => $request->shop_id
         ];
         $checks = $paymentModel->validateAgreement($paymentDetails);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
         
-        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->center_id], $paymentDetails);
+        $payment = $paymentModel->updateOrCreate(['shop_id' => $request->shop_id], $paymentDetails);
         return $this->returnSuccess(__($this->successMsg['payment.agreement.add']), $payment);
     }
     
@@ -425,24 +426,24 @@ class CenterController extends BaseController {
             return $this->returnError($checkImages->errors()->first(), NULL, true);
         }
         if($request->hasfile('franchise_contact')) {
-            $image = CommonHelper::uploadImage($data['franchise_contact'], $docModel->storageFolderNameFranchise, $docModel->fileSystem, $data['center_id']);
+            $image = CommonHelper::uploadImage($data['franchise_contact'], $docModel->storageFolderNameFranchise, $docModel->fileSystem, $data['shop_id']);
             $imgData['franchise_contact'] = $image ? $image : null;
         }
         if($request->hasfile('id_passport')) {
-            $image = CommonHelper::uploadImage($data['id_passport'], $docModel->storageFolderNameIdPassport, $docModel->fileSystem, $data['center_id']);
+            $image = CommonHelper::uploadImage($data['id_passport'], $docModel->storageFolderNameIdPassport, $docModel->fileSystem, $data['shop_id']);
             $imgData['id_passport'] = $image ? $image : null;
         }
         if($request->hasfile('registration')) {
-            $image = CommonHelper::uploadImage($data['registration'], $docModel->storageFolderNameRegistration, $docModel->fileSystem, $data['center_id']);
+            $image = CommonHelper::uploadImage($data['registration'], $docModel->storageFolderNameRegistration, $docModel->fileSystem, $data['shop_id']);
             $imgData['registration'] = $image ? $image : null;
         }
-        $imgData['shop_id'] = $data['center_id'];
+        $imgData['shop_id'] = $data['shop_id'];
         $checks = $docModel->validator($imgData);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
         
-        $documents = $docModel->updateOrCreate(['shop_id' => $request->center_id], $imgData);
+        $documents = $docModel->updateOrCreate(['shop_id' => $request->shop_id], $imgData);
         return $this->returnSuccess(__($this->successMsg['documents.upload']), $documents);
     }
     
@@ -455,7 +456,7 @@ class CenterController extends BaseController {
                 foreach ($request->vouchers as $key => $voucher) {
                     $data = [
                         'voucher_id' => $voucher,
-                        'shop_id' => $request->center_id
+                        'shop_id' => $request->shop_id
                     ];
                     $checks = $voucherModel->validator($data);
                     if ($checks->fails()) {
@@ -485,7 +486,7 @@ class CenterController extends BaseController {
                 foreach ($request->packs as $key => $pack) {
                     $data = [
                         'pack_id' => $pack,
-                        'shop_id' => $request->center_id
+                        'shop_id' => $request->shop_id
                     ];
                     $checks = $packModel->validator($data);
                     if ($checks->fails()) {
@@ -531,7 +532,7 @@ class CenterController extends BaseController {
         DB::beginTransaction();
         try {
             $featuredModel = new ShopFeaturedImage();
-            $image = $featuredModel->where(['id' => $request->image_id, 'shop_id' => $request->center_id])->first();
+            $image = $featuredModel->where(['id' => $request->image_id, 'shop_id' => $request->shop_id])->first();
             if(empty($image)) {
                 return $this->returnSuccess(__($this->errorMsg['image.not.found']));
             }
@@ -562,7 +563,7 @@ class CenterController extends BaseController {
         DB::beginTransaction();
         try {
             $galleryModel = new ShopGallary();
-            $image = $galleryModel->where(['id' => $request->image_id, 'shop_id' => $request->center_id])->first();
+            $image = $galleryModel->where(['id' => $request->image_id, 'shop_id' => $request->shop_id])->first();
             if(empty($image)) {
                 return $this->returnSuccess(__($this->errorMsg['image.not.found']));
             }
@@ -590,7 +591,7 @@ class CenterController extends BaseController {
     
     public function getTherapists(Request $request) {
         
-        $therapists = Therapist::withCount('selectedMassages', 'selectedTherapies')->where('shop_id', $request->center_id)->get();
+        $therapists = Therapist::withCount('selectedMassages', 'selectedTherapies')->where('shop_id', $request->shop_id)->get();
         
         foreach ($therapists as $key => $therapist) {
 

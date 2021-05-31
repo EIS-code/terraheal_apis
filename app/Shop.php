@@ -281,13 +281,13 @@ class Shop extends BaseModel implements CanResetPasswordContract
     public function getMassages(Request $request) {
         
          $services = Massage::with('timing', 'pricing')->select('id', 'name', 'image', 'icon', 'shop_id')
-                        ->where('shop_id', $request->center_id)->get();
+                        ->where('shop_id', $request->shop_id)->get();
          return $services;
     }
     
     public function getTherapies(Request $request) {
         
-         $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->center_id)->get();
+         $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->shop_id)->get();
          return $services;
     }
     
@@ -303,8 +303,8 @@ class Shop extends BaseModel implements CanResetPasswordContract
                     ->leftJoin(MassagePrice::getTableName(), Massage::getTableName() . '.id', '=', MassagePrice::getTableName() . '.massage_id')
                     ->leftJoin(BookingMassage::getTableName(), MassagePrice::getTableName() . '.id', '=', BookingMassage::getTableName() . '.massage_prices_id')
                     ->whereNotNull(BookingMassage::getTableName() . '.id');
-            if (!empty($request->center_id)) {
-                $getTopMassages->where(Massage::getTableName() . ".shop_id", $request->center_id);
+            if (!empty($request->shop_id)) {
+                $getTopMassages->where(Massage::getTableName() . ".shop_id", $request->shop_id);
             }
             $getTopMassages = $getTopMassages->groupBy(Massage::getTableName() . '.id')
                     ->orderBy('totalEarning', 'DESC')
@@ -318,8 +318,8 @@ class Shop extends BaseModel implements CanResetPasswordContract
                     ->leftJoin(TherapiesPrices::getTableName(), Therapy::getTableName() . '.id', '=', TherapiesPrices::getTableName() . '.therapy_id')
                     ->leftJoin(BookingMassage::getTableName(), TherapiesPrices::getTableName() . '.id', '=', BookingMassage::getTableName() . '.therapy_timing_id')
                     ->whereNotNull(BookingMassage::getTableName() . '.id');
-            if (!empty($request->center_id)) {
-                $getTopTherapies->where(Therapy::getTableName() . ".shop_id", $request->center_id);
+            if (!empty($request->shop_id)) {
+                $getTopTherapies->where(Therapy::getTableName() . ".shop_id", $request->shop_id);
             }
             $getTopTherapies = $getTopTherapies->groupBy(Therapy::getTableName() . '.id')
                     ->orderBy('totalEarning', 'DESC')
