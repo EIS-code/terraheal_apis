@@ -94,7 +94,7 @@ class CenterController extends BaseController {
     public function getCenterDetails(Request $request) {
 
         $shopModel = new Shop();
-        $shop = Shop::find($request->center_id);
+        $shop = Shop::find($request->shop_id);
         if (empty($shop)) {
             return $this->returnError($this->errorMsg['center.not.found']);
         } 
