@@ -481,6 +481,8 @@ class WaitingListController extends BaseController {
         foreach ($bookingOverviews as $key => $bookings) {
             $therapist_id = $bookings[0]['therapist_id'];
             $therapist_name = $bookings[0]['therapistName'];
+            $session_id = $bookings[0]['sessionId'];
+            $session_type = $bookings[0]['session_type'];
             $services = [];
             foreach ($bookings as $key => $booking) {
                 $services[] = [
@@ -491,13 +493,15 @@ class WaitingListController extends BaseController {
                     "massage_end_time" => $booking['massage_end_time'],
                     "massage_duration" => $booking['massage_duration'],
                     "therapy_name" => $booking['therapy_name'],
-                    "theropy_end_time" => $booking['theropy_end_time'],
-                    "theropy_duration" => $booking['theropy_duration']
+                    "therapy_end_time" => $booking['theropy_end_time'],
+                    "therapy_duration" => $booking['theropy_duration']
                 ];
             }
             $allBookings[] =[
                 "therapist_id" => $therapist_id,
                 "therapist_name" => $therapist_name,
+                "session_id" => $session_id,
+                "session_type" => $session_type,
                 "services" => $services
              ];
         }
@@ -520,6 +524,8 @@ class WaitingListController extends BaseController {
                 $room_id = $bookings[0]['room_id'];
                 $room_name = $bookings[0]['roomName'];
                 $total_beds = $bookings[0]['totalBeds'];
+                $session_id = $bookings[0]['sessionId'];
+                $session_type = $bookings[0]['session_type'];
                 $services = [];
                 foreach ($bookings as $key => $booking) {
                     $services[] = [
@@ -530,14 +536,16 @@ class WaitingListController extends BaseController {
                         "massage_end_time" => $booking['massage_end_time'],
                         "massage_duration" => $booking['massage_duration'],
                         "therapy_name" => $booking['therapy_name'],
-                        "theropy_end_time" => $booking['theropy_end_time'],
-                        "theropy_duration" => $booking['theropy_duration']
+                        "therapy_end_time" => $booking['theropy_end_time'],
+                        "therapy_duration" => $booking['theropy_duration']
                     ];
                 }
                 $allBookings[] =[
                     "room_id" => $room_id,
                     "room_name" => $room_name,
                     "total_beds" => $total_beds,
+                    "session_id" => $session_id,
+                    "session_type" => $session_type,
                     "services" => $services
                  ];
             }
