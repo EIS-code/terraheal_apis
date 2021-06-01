@@ -14,7 +14,7 @@ class AddTotalRoomsToRoomsTable extends Migration
     public function up()
     {
         Schema::table('rooms', function (Blueprint $table) {
-            $table->mediumInteger('total_rooms')->nullable()->after('shop_id');
+            $table->mediumInteger('total_beds')->nullable()->after('shop_id');
         });
     }
 
@@ -26,7 +26,7 @@ class AddTotalRoomsToRoomsTable extends Migration
     public function down()
     {
         Schema::table('rooms', function (Blueprint $table) {
-            $table->dropColumn('total_rooms');
+            $table->dropColumn('total_beds');
         });
     }
 }

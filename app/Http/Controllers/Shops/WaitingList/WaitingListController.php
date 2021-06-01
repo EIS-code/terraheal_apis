@@ -515,30 +515,32 @@ class WaitingListController extends BaseController {
         $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id')->groupBy('room_id');
         
         $allBookings = [];
-        foreach ($roomOccupied as $key => $bookings) {
-            $room_id = $bookings[0]['room_id'];
-            $room_name = $bookings[0]['roomName'];
-            $total_rooms = $bookings[0]['totalRooms'];
-            $services = [];
-            foreach ($bookings as $key => $booking) {
-                $services[] = [
-                    "service_day_name" => $booking['massage_day_name'],
-                    "massage_date" => $booking['massage_date'],
-                    "massage_name" => $booking['massage_name'],
-                    "massage_start_time" => $booking['massage_start_time'],
-                    "massage_end_time" => $booking['massage_end_time'],
-                    "massage_duration" => $booking['massage_duration'],
-                    "therapy_name" => $booking['therapy_name'],
-                    "theropy_end_time" => $booking['theropy_end_time'],
-                    "theropy_duration" => $booking['theropy_duration']
-                ];
+        if(!empty($roomOccupied)) {
+            foreach ($roomOccupied as $key => $bookings) {
+                $room_id = $bookings[0]['room_id'];
+                $room_name = $bookings[0]['roomName'];
+                $total_beds = $bookings[0]['totalBeds'];
+                $services = [];
+                foreach ($bookings as $key => $booking) {
+                    $services[] = [
+                        "service_day_name" => $booking['massage_day_name'],
+                        "massage_date" => $booking['massage_date'],
+                        "massage_name" => $booking['massage_name'],
+                        "massage_start_time" => $booking['massage_start_time'],
+                        "massage_end_time" => $booking['massage_end_time'],
+                        "massage_duration" => $booking['massage_duration'],
+                        "therapy_name" => $booking['therapy_name'],
+                        "theropy_end_time" => $booking['theropy_end_time'],
+                        "theropy_duration" => $booking['theropy_duration']
+                    ];
+                }
+                $allBookings[] =[
+                    "room_id" => $room_id,
+                    "room_name" => $room_name,
+                    "total_beds" => $total_beds,
+                    "services" => $services
+                 ];
             }
-            $allBookings[] =[
-                "room_id" => $room_id,
-                "room_name" => $room_name,
-                "total_rooms" => $total_rooms,
-                "services" => $services
-             ];
         }
         
         return $this->returnSuccess(__($this->successMsg['booking.overview']), $allBookings);

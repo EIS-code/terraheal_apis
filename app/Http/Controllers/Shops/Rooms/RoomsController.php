@@ -27,7 +27,7 @@ class RoomsController extends BaseController {
     
     public function getRooms(Request $request) {
         
-        $rooms = Room::where('shop_id', $request->shop_id)->pluck('name','id');
+        $rooms = Room::where('shop_id', $request->shop_id)->get();
         return $this->returnSuccess(__($this->successMsg['rooms.data.found']),$rooms);
     }
 
