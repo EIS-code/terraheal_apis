@@ -85,8 +85,13 @@ class ReceptionistController extends BaseController {
                 $data['photo'] = $fileName;
             }
         }
-        $date = Carbon::createFromTimestampMs($data['dob']);
-        $data['dob'] = $date->format('Y-m-d');
+//        dd(!empty($data['dob']));
+        if(!empty($data['dob'])) {
+            $date = Carbon::createFromTimestampMs($data['dob']);
+            $data['dob'] = $date->format('Y-m-d');
+        } else {
+            unset($data['dob']);
+        }
         $receptionist->update($data);
         
         return $this->returnSuccess(__($this->successMsg['receptionist.update']),$receptionist);
