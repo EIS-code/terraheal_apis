@@ -97,7 +97,7 @@ class ReceptionistController extends BaseController {
         } else {
             $receptionistId = $request->receptionist_id;
         }
-        $receptionist = Receptionist::with('country','city','shop:id,name','documents')->where('id',$receptionistId)->get();
+        $receptionist = Receptionist::with('country','city','shop:id,name','documents')->where('id',$receptionistId)->first();
         
         if($receptionist->count() > 0) {
             return $this->returnSuccess(__($this->successMsg['receptionist.data']),$receptionist);
