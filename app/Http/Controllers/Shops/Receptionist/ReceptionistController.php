@@ -85,7 +85,6 @@ class ReceptionistController extends BaseController {
                 $data['photo'] = $fileName;
             }
         }
-//        dd(!empty($data['dob']));
         if(!empty($data['dob'])) {
             $date = Carbon::createFromTimestampMs($data['dob']);
             $data['dob'] = $date->format('Y-m-d');
