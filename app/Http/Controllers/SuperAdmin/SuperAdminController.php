@@ -17,6 +17,11 @@ use DB;
 use App\Superadmin;
 use Illuminate\Support\Facades\Hash;
 use App\SuperAdminEmailOtp;
+use App\Service;
+use App\ServiceTiming;
+use App\ServicePricing;
+use App\ServiceRequirement;
+use App\ServiceImage;
 
 class SuperAdminController extends BaseController {
 
@@ -30,7 +35,8 @@ class SuperAdminController extends BaseController {
         'error.otp.already.verified' => 'OTP already verified.',
         'error.admin.id' => 'Please provide valid admin id.',
         'error.email.already.verified' => 'This user email already verified with this ',
-        'error.email.id' => ' email id.',
+        'error.email.id' => 'email id.',
+        'error.mimes' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
     ];
     
     public $successMsg = [
@@ -52,6 +58,7 @@ class SuperAdminController extends BaseController {
         'success.email.otp.compare' => 'OTP matched successfully !',
         'success.sms.sent' => 'SMS sent successfully !',
         'success.email.sent' => 'Email sent successfully !',
+        'service.add' => 'Service added successfully !',
     ];
 
     public function addVoucher(Request $request) {
@@ -506,5 +513,153 @@ class SuperAdminController extends BaseController {
         }
 
         return $this->returns('success.email.otp.compare', collect([]));
+    }
+    
+    public function addTimingsPricings(Request $request, $service) {
+     
+        $timingModel = new ServiceTiming();
+        $pricingModel = new ServicePricing();
+        
+        $data = $request->all();
+        $serviceData = [];
+        foreach ($data['timings'] as $key => $value) { 
+            $timingData = [
+                'time' => $value,
+                'service_id' => $service->id
+            ];
+            $checks = $timingModel->validator($timingData);
+            if ($checks->fails()) {
+                return ['error' => $checks->errors()->first(), 'data' => NULL];
+            }
+            $timing = $timingModel->create($timingData);
+            $pricingData = [
+                'service_id' => $service->id,
+                'service_timing_id' => $timing->id,
+                'price' => $data['pricings'][$key]
+            ];
+            $check = $pricingModel->validator($pricingData);
+            if ($check->fails()) {
+                return ['error' => $check->errors()->first(), 'data' => NULL];
+            }
+            $pricingModel->create($pricingData);
+            $serviceData[] = [
+                'time' => $value,
+                'service_id' => $service->id,
+                'service_timing_id' => $timing->id,
+                'price' => $data['pricings'][$key]
+            ];
+        }
+        
+        return $serviceData;
+    }
+    
+    public function addRequirements(Request $request, $service) {
+        
+        $requirementModel = new ServiceRequirement();
+        $data = $request->all();
+        $requirementData = [
+            'service_id' => $service->id,
+            'massage_through' => $data['massage_through'],
+            'special_tools' => $data['special_tools'],
+            'platform' => $data['platform'],
+            'oil_usage' => $data['oil_usage']
+        ];
+        $checks = $requirementModel->validator($requirementData);
+        if ($checks->fails()) {
+            return ['error' => $checks->errors()->first(), 'data' => NULL];
+        }
+        $requirement = $requirementModel->create($requirementData);
+        return $requirement;
+    }
+    
+    public function addImages(Request $request, $service, $key, $type) {
+        
+        $imgData = [];
+        if (!empty($request->$key)) {
+            $imageModel = new ServiceImage();        
+            
+            if ($request->hasfile($key)) {
+                foreach ($request->file($key) as $file) {
+                    
+                    $allowedfileExtension=['pdf','jpg','png','jpeg'];
+                    $name = $file->getClientOriginalExtension();
+                    $fileName = mt_rand(). time() . '_' . $service->id . '.' . $name;
+                    $check=in_array($name,$allowedfileExtension);
+
+                    if($check) {
+                        $image['image'] = $fileName;
+                        $image['service_id'] = $service->id;
+                        $image['is_featured'] = $type;
+
+                        $storeFile = $file->storeAs($imageModel->directory, $fileName, $imageModel->fileSystem);
+                        if($storeFile) {
+                            $check = $imageModel->validator($image);
+                            if ($check->fails()) {
+                                return ['error' => $check->errors()->first(), 'data' => NULL];
+                            }
+                            $imageModel->create($image);
+                        }
+                        $imgData[] = $image;
+                    } else {
+                        return ['error' => $this->errorMsg['error.mimes'], 'data' => NULL];
+                    }
+                }
+            }
+        }
+        return $imgData;
+    }
+    
+    public function addService(Request $request) {
+        
+        DB::beginTransaction();
+        try {
+            
+            $data   = $request->all();
+            $serviceData = [
+                'english_name' => $data['english_name'],
+                'portugese_name' => $data['portugese_name'],
+                'short_description' => $data['short_description'],
+                'priority' => $data['priority'],
+                'expenses' => $data['expenses'],
+                'service_type' => $data['service_type']
+            ];
+            $model  = new Service();
+            
+            $checks = $model->validator($serviceData);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            $service = $model->create($serviceData);
+            
+            $timingPricing = $this->addTimingsPricings($request, $service);
+            if (!empty($timingPricing['error'])) {
+                return ['isError' => true, 'message' => $timingPricing['error']];
+            }
+            
+            $requirements = $this->addRequirements($request, $service);
+            if (!empty($requirements['error'])) {
+                return ['isError' => true, 'message' => $requirements['error']];
+            }
+            
+            $featuredImages = $this->addImages($request, $service, 'featured_images', ServiceImage::IS_FEATURED);
+            if (!empty($featuredImages['error'])) {
+                return ['isError' => true, 'message' => $featuredImages['error']];
+            }
+            
+            $galleryImages = $this->addImages($request, $service, 'gallery', ServiceImage::IS_NOT_FEATURED);
+            if (!empty($galleryImages['error'])) {
+                return ['isError' => true, 'message' => $galleryImages['error']];
+            }
+            
+            $service = Service::with('timings', 'pricings', 'images', 'requirement')->where('id', $service->id)->first();
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['service.add']), $service);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 }

@@ -36,6 +36,8 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->post('sharePack', 'SuperAdminController@sharePack');
     $router->post('purchasePack', 'SuperAdminController@purchasePack');
     
+    //service    
+    $router->post('service/add', 'SuperAdminController@addService');
     
     $router->group(['prefix' => 'dashboard'], function () use($router) {
 

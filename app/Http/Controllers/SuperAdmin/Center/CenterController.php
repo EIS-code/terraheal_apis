@@ -210,12 +210,12 @@ class CenterController extends BaseController {
 
             $checkImage = $featuredModel->validateImages($request->featured_images);
             if ($checkImage->fails()) {
-                return $this->returnError($checkImage->errors()->first(), NULL, true);
+                return $checkImage;
             }
             if ($request->hasfile('featured_images')) {
                 foreach ($request->file('featured_images') as $file) {
                     $name = $file->getClientOriginalExtension();
-                    $fileName = time() . '_' . $centerId . '.' . $name;
+                    $fileName = mt_rand(). time() . '_' . $centerId . '.' . $name;
                     $storeFile = $file->storeAs($featuredModel->storageFolderName, $fileName, $featuredModel->fileSystem);
 
                     if ($storeFile) {
@@ -250,7 +250,7 @@ class CenterController extends BaseController {
             foreach($request->file('gallery') as $file)
             {
                 $name = $file->getClientOriginalExtension();
-                $fileName = time() . '_' . $centerId . '.' . $name;
+                $fileName = mt_rand(). time() . '_' . $centerId . '.' . $name;
                 $storeFile = $file->storeAs($galleryModel->storageFolderName, $fileName, $galleryModel->fileSystem);
 
                 if ($storeFile) {
