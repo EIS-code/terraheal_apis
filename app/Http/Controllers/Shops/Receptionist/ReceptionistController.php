@@ -60,14 +60,12 @@ class ReceptionistController extends BaseController {
     public function updateReceptionist(Request $request) {
         
         $model = new Receptionist();
-        $data = $request->all();
-        
-        $receptionist = $model->where('email', $data['email'])->first();
-        
+        $receptionist = $model->where('id', $request->receptionist_id)->first();
         if(empty($receptionist)) {
             return $this->returnSuccess(__($this->successMsg['receptionist.not.found']));
         }
         
+        $data = $request->all();
         $checks = $model->validator($data, $receptionist->id, true);
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
