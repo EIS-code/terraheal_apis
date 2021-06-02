@@ -135,6 +135,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
 $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/createReceptionist', 'Receptionist\ReceptionistController@createReceptionist');
+    $router->post('/update', 'Receptionist\ReceptionistController@updateReceptionist');
     $router->post('/addDocument', 'Receptionist\ReceptionistController@addDocument');
     $router->post('/getReceptionist', 'Receptionist\ReceptionistController@getReceptionist');
     $router->post('/getStatistics', 'Receptionist\ReceptionistController@getStatistics');

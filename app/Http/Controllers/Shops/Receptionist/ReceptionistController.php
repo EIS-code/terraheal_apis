@@ -16,7 +16,9 @@ class ReceptionistController extends BaseController {
 
     public $successMsg = [
         
+        'receptionist.not.found' => 'Receptionist not found.',
         'receptionist.create' => 'Receptionist created successfully',
+        'receptionist.update' => 'Receptionist data updated successfully',
         'receptionist.document' => 'Receptionist document uploaded successfully',
         'receptionist.data' => 'Receptionist found successfully',
         'receptionist.statistics' => 'Receptionist statistics data found successfully',
@@ -54,6 +56,42 @@ class ReceptionistController extends BaseController {
         $receptionist = $model->create($data);
         
         return $this->returnSuccess(__($this->successMsg['receptionist.create']),$receptionist);
+    }
+    public function updateReceptionist(Request $request) {
+        
+        $model = new Receptionist();
+        $data = $request->all();
+        
+        $receptionist = $model->where('email', $data['email'])->first();
+        
+        if(empty($receptionist)) {
+            return $this->returnSuccess(__($this->successMsg['receptionist.not.found']));
+        }
+        
+        $checks = $model->validator($data, $receptionist->id, true);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        /* For profile Image */
+        if ($request->hasFile('photo')) {
+            $checkImage = $model->validatePhoto($data);
+            if ($checkImage->fails()) {
+                unset($data['photo']);
+
+                return $this->returnError($checkImage->errors()->first(), NULL, true);
+            }
+            $fileName = time().'.' . $data['photo']->getClientOriginalExtension();
+            $storeFile = $data['photo']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
+
+            if ($storeFile) {
+                $data['photo'] = $fileName;
+            }
+        }
+        $date = Carbon::createFromTimestampMs($data['dob']);
+        $data['dob'] = $date->format('Y-m-d');
+        $receptionist->update($data);
+        
+        return $this->returnSuccess(__($this->successMsg['receptionist.update']),$receptionist);
     }
 
     public function addDocument(Request $request) {
