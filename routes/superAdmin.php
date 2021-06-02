@@ -38,6 +38,8 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     
     //service    
     $router->post('service/add', 'SuperAdminController@addService');
+    $router->get('massages/get', 'SuperAdminController@getMassages');
+    $router->get('therapies/get', 'SuperAdminController@getTherapies');
     
     $router->group(['prefix' => 'dashboard'], function () use($router) {
 

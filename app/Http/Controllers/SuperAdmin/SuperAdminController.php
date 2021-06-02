@@ -59,6 +59,8 @@ class SuperAdminController extends BaseController {
         'success.sms.sent' => 'SMS sent successfully !',
         'success.email.sent' => 'Email sent successfully !',
         'service.add' => 'Service added successfully !',
+        'massages' => 'Massages found successfully !',
+        'therapies' => 'Therapies found successfully !',
     ];
 
     public function addVoucher(Request $request) {
@@ -661,5 +663,17 @@ class SuperAdminController extends BaseController {
             DB::rollback();
             throw $e;
         }
+    }
+    
+    public function getMassages() {
+        
+        $massages = Service::with('timings', 'pricings', 'images', 'requirement')->where('service_type', Service::MASSAGE)->get();
+        return $this->returnSuccess(__($this->successMsg['massages']), $massages);
+    }
+    
+    public function getTherapies() {
+        
+        $massages = Service::with('timings', 'pricings', 'images', 'requirement')->where('service_type', Service::THERAPY)->get();
+        return $this->returnSuccess(__($this->successMsg['therapies']), $massages);
     }
 }
