@@ -14,6 +14,8 @@ class ReceptionistDocuments extends BaseModel
         'is_expired',
         'expire_date'
     ];
+    
+    protected $hidden = ['updated_at'];
 
     public $fileSystem = 'public';
     public $directory  = 'receptionist\document\\';
@@ -48,6 +50,15 @@ class ReceptionistDocuments extends BaseModel
     }
     
     public function getExpireDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
+    public function getCreatedAtAttribute($value)
     {
         if (empty($value)) {
             return $value;
