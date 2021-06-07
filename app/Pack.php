@@ -11,6 +11,7 @@ class Pack extends BaseModel
 {
     protected $fillable = [
         'name',
+        'sub_title',
         'number',
         'image',
         'total_price',

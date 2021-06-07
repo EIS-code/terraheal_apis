@@ -796,8 +796,7 @@ class WaitingListController extends BaseController {
         $packShopModel = new PackShop();
         
         $packs = $packModel
-                ->select(DB::RAW($packShopModel::getTableName() . '.*,' .$packModel::getTableName() . '.*,' . 
-                        'UNIX_TIMESTAMP(' . $packModel::getTableName() . '.expired_date) * 1000 as expired_date'))
+                ->select(DB::RAW($packShopModel::getTableName() . '.*,' .$packModel::getTableName() . '.*' ))
                 ->join($packShopModel::getTableName(), $packShopModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->where($packShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($packModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
