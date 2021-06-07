@@ -20,6 +20,9 @@ class Pack extends BaseModel
         'is_personalized'
     ];
     
+    const ACTIVE = '0';
+    const USED = '1';
+    
     public $fileSystem = 'public';
     public $profilePhotoPath = 'pack\images\\';
 

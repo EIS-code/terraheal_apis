@@ -16,6 +16,9 @@ class Voucher extends BaseModel
         'expired_date'
     ];
 
+    const ACTIVE = '0';
+    const USED = '1';
+    
     public $fileSystem = 'public';
     public $profilePhotoPath = 'voucher\images\\';
 

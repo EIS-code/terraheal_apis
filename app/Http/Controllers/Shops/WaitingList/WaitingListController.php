@@ -810,10 +810,15 @@ class WaitingListController extends BaseController {
     }
     public function searchPacks(Request $request) {
         
-        if ($request->filter) {
-            $packs = $this->searchUsedPacks($request);
-        } else {
+        $filter = !empty($request->filter) ? $request->filter : Pack::ACTIVE;
+        
+        $packs = collect();
+        
+        if ($filter == Pack::ACTIVE) {
             $packs = $this->searchActivePacks($request);
+        } 
+        if($filter == Pack::USED) {
+            $packs = $this->searchUsedPacks($request);
         }
         if (count($packs) > 0) {
             return $this->returnSuccess(__($this->successMsg['data.found']), $packs);
@@ -865,10 +870,15 @@ class WaitingListController extends BaseController {
     
     public function searchVouchers(Request $request) {
 
-        if ($request->filter) {
-            $vouchers = $this->searchUsedVoucher($request);
-        } else {
+        $filter = !empty($request->filter) ? $request->filter : Voucher::ACTIVE;
+        
+        $vouchers = collect();
+        
+        if ($filter == Voucher::ACTIVE) {
             $vouchers = $this->searchActiveVoucher($request);
+        } 
+        if($filter == Voucher::USED) {
+            $vouchers = $this->searchUsedVoucher($request);
         }
         if (count($vouchers) > 0) {
             return $this->returnSuccess(__($this->successMsg['data.found']), $vouchers);
