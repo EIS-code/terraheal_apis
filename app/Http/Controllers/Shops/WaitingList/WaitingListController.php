@@ -741,7 +741,7 @@ class WaitingListController extends BaseController {
         $voucherModel       = new Voucher();
         $voucherShopModel   = new VoucherShop();
         
-        $vouchers = $voucherModel->getVoucherUsedeQuery()
+        $vouchers = $voucherModel->getVoucherQuery()
                 ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->paginate(10, ['*'], 'page', $pageNumber);
