@@ -43,7 +43,7 @@ class Voucher extends BaseModel
     
     public function getImageAttribute($value)
     {
-        $default = asset('voucher/images/voucher.png');
+        $default = asset('storage/voucher/images/voucher.png');
 
         // For set default image.
         if (empty($value)) {

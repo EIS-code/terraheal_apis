@@ -50,7 +50,8 @@ class Pack extends BaseModel
     
     public function getImageAttribute($value)
     {
-        $default = asset('pack/images/pack.png');
+        
+        $default = asset('storage/pack/images/pack.png');
 
         // For set default image.
         if (empty($value)) {
