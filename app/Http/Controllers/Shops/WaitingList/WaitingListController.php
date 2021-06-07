@@ -855,8 +855,7 @@ class WaitingListController extends BaseController {
         $voucherShopModel   = new VoucherShop();
         
         $vouchers = $voucherModel
-                ->select(DB::RAW($voucherShopModel::getTableName() . '.*,' .$voucherModel::getTableName() . '.*,' 
-                        . 'UNIX_TIMESTAMP(' . $voucherModel::getTableName() . '.expired_date) * 1000 as expired_date'))
+                ->select(DB::RAW($voucherShopModel::getTableName() . '.*,' .$voucherModel::getTableName() . '.*'))
                 ->join($voucherShopModel::getTableName(), $voucherShopModel::getTableName() . '.voucher_id', '=', $voucherModel::getTableName() . '.id')
                 ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
