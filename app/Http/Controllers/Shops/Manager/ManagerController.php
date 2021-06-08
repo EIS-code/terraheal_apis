@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use App\TherapistNews;
 use App\Therapist;
 use App\News;
+use App\TherapistShop;
 
 class ManagerController extends BaseController {
 
@@ -28,6 +29,7 @@ class ManagerController extends BaseController {
         'news' => 'News data found successfully !',
         'news.details' => 'News details found successfully !',
         'new.therapist' => 'New therapist created successfully !',
+        'existing.therapist' => 'Existing therapist added successfully to this shop!',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -199,5 +201,18 @@ class ManagerController extends BaseController {
         $therapist = $model->create($data);
         
         return $this->returnSuccess(__($this->successMsg['new.therapist']), $therapist);
+    }
+    
+    public function existingTherapist(Request $request) {
+        
+        $model = new TherapistShop();
+        $data = $request->all();
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $therapist = $model->updateOrCreate($data, $data);
+        return $this->returnSuccess(__($this->successMsg['existing.therapist']), $therapist);
     }
 }

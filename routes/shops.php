@@ -146,6 +146,7 @@ $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function ()
 $router->group(['prefix' => 'therapist', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/new', 'Manager\ManagerController@newTherapist');
+    $router->post('/existing', 'Manager\ManagerController@existingTherapist');
     $router->post('/myBookings', 'Therapist\TherapistController@myBookings');
     $router->post('/getTherapists', 'Therapist\TherapistController@getTherapists');
     $router->post('/getInfo', 'Therapist\TherapistController@getInfo');
