@@ -43,7 +43,7 @@ use Illuminate\Support\Facades\Storage;
 use App\User;
 use App\Shop;
 use App\TherapistEmailOtp;
-use App\TherapistShift;
+use App\TherapistShop;
 use App\TherapistFreeSlot;
 use App\TherapistNews;
 
@@ -69,6 +69,11 @@ class TherapistController extends BaseController
         'error.therapist.id' => 'Please provide valid therapist id.',
         'error.email.already.verified' => 'This user email already verified with this ',
         'error.email.id' => ' email id.',
+        'shift.not.found' => 'Shift not found.',
+        'not.belong' => 'This therapist is not belong to this shop.',
+        'shift.approved' => 'Shift already approved.',
+        'shift.exchanger.error' => 'Your shift is not found, please select proper shift.',
+        'shift.receiver.error' => 'Your selected therapist is not available during your shift, please select another therapist shift.',
     ];
 
     public $successMsg = [
@@ -114,6 +119,9 @@ class TherapistController extends BaseController
         'all.therapist.shifts' => 'All therapist shifts found successfully !',
         'news.read' => 'News read successfully !',
         'new.therapist' => 'New therapist created successfully !',
+        'exchange.list' => 'Therapist exchange shifts list found successfully !',
+        'shift.approve' => 'Shift approve successfully !',
+        'shift.reject' => 'Shift reject successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -124,7 +132,7 @@ class TherapistController extends BaseController
         $password = (!empty($data['password'])) ? $data['password'] : NULL;
 
         if (empty($email)) {
-            return $this->returnError($this->errorMsg['loginEmail']);
+            return $this->returnError($this->errorMsg['loginEmail']);            
         } elseif (empty($password)) {
             return $this->returnError($this->errorMsg['loginPass']);
         }
@@ -744,9 +752,26 @@ class TherapistController extends BaseController
         if (!empty($date) && $date > 0) {
             $date = Carbon::createFromTimestampMs($date)->format('Y-m-d H:i:s');
 
+            $therapist_shift = TherapistWorkingSchedule::where(['therapist_id' => $data['therapist_id'], 
+                'date' => $date, "shift_id" => $data['shift_id'], "shop_id" => $data['shop_id']])->first();
+
+            if(empty($therapist_shift)) {
+                return $this->returnError($this->errorMsg['shift.exchanger.error']);
+            }
+
+            $check = TherapistShop::where(['therapist_id' => $data['with_therapist_id'], "shop_id" => $data['shop_id']])->first();
+            if(empty($check)) {
+                return $this->returnError($this->errorMsg['not.belong']);
+            }
+            $therapist_with_shift = TherapistWorkingSchedule::where(['therapist_id' => $data['with_therapist_id'], 
+                'date' => $date, "shift_id" => $data['with_shift_id'], "shop_id" => $data['shop_id']])->first();
+
+            if(!empty($therapist_with_shift)) {
+                return $this->returnError($this->errorMsg['shift.receiver.error']);
+            }
+            
             $data = [
                 'date' => $date,
-                'is_approved' => $model::IS_NOT_APPROVED,
                 'therapist_id' => $data['therapist_id'],
                 "with_therapist_id" => $data['with_therapist_id'],
                 "shift_id" => $data['shift_id'],
@@ -758,14 +783,12 @@ class TherapistController extends BaseController
             if ($checks->fails()) {
                 return $this->returns($checks->errors()->first(), NULL, true);
             }
-
             $create = $model::updateOrCreate($data, $data);
 
             if ($create) {
                 return $this->returns('therapist.exchange.shift', $create);
             }
         }
-
         return $this->returns('somethingWrong', null, true);
     }
 
@@ -1067,11 +1090,10 @@ class TherapistController extends BaseController
         
         $data = DB::table('therapists')
                 ->leftJoin('therapist_working_schedules', 'therapists.id', '=', 'therapist_working_schedules.therapist_id')
-                ->leftJoin('therapist_shifts', 'therapist_shifts.schedule_id', '=', 'therapist_working_schedules.id')
-                ->leftJoin('shop_shifts', 'shop_shifts.id', '=', 'therapist_shifts.shift_id')
-                ->select('therapists.*', 'therapist_working_schedules.*', 'therapist_shifts.*', 'shop_shifts.*')
-                ->where(['therapist_working_schedules.date' => $date, 'therapist_working_schedules.shop_id' => $request->shop_id,
-                    'therapist_shifts.is_absent' => TherapistShift::NOT_ABSENT, 'therapist_shifts.is_working' => TherapistShift::WORKING]);
+                ->leftJoin('shop_shifts', 'shop_shifts.id', '=', 'therapist_working_schedules.shift_id')
+                ->select('therapists.id', 'therapists.name', 'therapists.surname', 'therapists.email',
+                        'therapist_working_schedules.*', 'shop_shifts.from', 'shop_shifts.to')
+                ->where(['therapist_working_schedules.date' => $date, 'therapist_working_schedules.is_working' => TherapistWorkingSchedule::WORKING]);
         
         if(!empty($search_val)) {
             $data->where(function($query) use ($search_val) {
@@ -1081,22 +1103,26 @@ class TherapistController extends BaseController
             });
         }
         
-        $data = $data->get()->groupBy('therapist_id');
+        $data = $data->get()->groupBy(['therapist_id', 'shop_id']);
         
         $shiftData = [];
         if (!empty($data)) {
             foreach ($data as $key => $value) {
-                $availability['id'] = $value[0]->id;
-                $availability['name'] = $value[0]->name;
-                $availability['surname'] = $value[0]->surname;
-
-                foreach ($value as $key => $shift) {
-                    $availability['shifts'][] = [
-                        'schedule_id' => $shift->schedule_id,
-                        'shift_id' => $shift->shift_id,
-                        'from' => $shift->from,
-                        'to' => $shift->to
-                    ];
+                foreach ($value as $key => $shifts) {
+                    $availability['therapist_id'] = $shifts[0]->therapist_id;
+                    $availability['name'] = $shifts[0]->name;
+                    $availability['surname'] = $shifts[0]->surname;
+                    $availability['date'] = strtotime($shifts[0]->date) * 1000;
+                    foreach ($shifts as $key => $shift) {
+                        $therapist_shifts[] = [
+                            'shop_id' => $shift->shop_id,
+                            'shift_id' => $shift->shift_id,
+                            'from' => strtotime($shift->from) * 1000,
+                            'to' => strtotime($shift->to) * 1000
+                        ];
+                    }
+                    $availability['shifts'][] = $therapist_shifts;
+                    unset($therapist_shifts);
                 }
                 array_push($shiftData, $availability);
                 unset($availability);
@@ -1131,4 +1157,90 @@ class TherapistController extends BaseController
         return $this->returns('new.therapist', $therapist);
     }
 
+    public function getList(Request $request) {
+
+        $lists = TherapistExchange::with('therapist', 'withTherapist', 'shifts', 'withShifts', 'shop')
+                        ->where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id,
+                                'status' => TherapistExchange::NO_ACTION])->get();
+
+        $shiftList = [];
+        foreach ($lists as $key => $value) {
+
+            $your_shift = [
+                'therapist_id' => $value->therapist_id,
+                'therapist_name' => $value->therapist->name,
+                'therapist_surname' => $value->therapist->surname,
+                'shift_id' => $value->shift_id,
+                'from' => $value->shifts->from,
+                'to' => $value->shifts->to,
+            ];
+            $with_shift = [
+                'therapist_id' => $value->with_therapist_id,
+                'therapist_name' => $value->withTherapist->name,
+                'therapist_surname' => $value->withTherapist->surname,
+                'shift_id' => $value->with_shift_id,
+                'from' => $value->withShifts->from,
+                'to' => $value->withShifts->to,
+            ];
+            
+            $list = [
+                'date' => $value->date,
+                'status' => $value->status,
+                'shop_id' => $value->shop->id,
+                'your_shift' => $your_shift,
+                'with_shift' => $with_shift
+            ];
+            array_push($shiftList, $list);
+        }
+        return $this->returns('exchange.list', collect($shiftList));
+    }
+    
+    public function approveShift(Request $request) {
+        
+        DB::beginTransaction();
+        try {
+            
+            $shift = TherapistExchange::where('id', $request->exchange_shift_id)->where('status', '!=', TherapistExchange::REJECT)->first();
+            if(empty($shift)) {
+                return $this->returnError($this->errorMsg['shift.not.found']);
+            }
+            if($shift->status == TherapistExchange::$status[TherapistExchange::APPROVED]) {
+                return $this->returnError($this->errorMsg['shift.approved']);
+            }
+            
+            $shift->update(['status' => TherapistExchange::APPROVED]);
+            
+            $schedule = TherapistWorkingSchedule::where(['therapist_id' => $shift->therapist_id, 'shift_id' => $shift->shift_id])->first();
+            $schedule->update(['is_exchange' => TherapistWorkingSchedule::IS_EXCHANGE]);
+            
+            $date = Carbon::createFromTimestampMs($schedule->date);
+            $exchange_schedule = [
+                'therapist_id' => $shift->with_therapist_id,
+                'shift_id' => $shift->with_shift_id,
+                'shop_id' => $shift->shop_id,
+                'date' => $date->format('Y-m-d'),
+                'is_working' => TherapistWorkingSchedule::WORKING
+            ];
+            TherapistWorkingSchedule::create($exchange_schedule);
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['shift.approve']), $shift);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+    
+    public function rejectShift(Request $request) {
+        
+        $shift = TherapistExchange::where('id', $request->exchange_shift_id)->first();
+        if(empty($shift)) {
+            return $this->returnError($this->errorMsg['shift.not.found']);
+        }
+        $shift->update(['status' => TherapistExchange::REJECT]);
+        
+        return $this->returnSuccess(__($this->successMsg['shift.reject']), $shift);
+    }
 }

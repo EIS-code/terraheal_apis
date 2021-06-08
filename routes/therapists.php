@@ -115,6 +115,13 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
         $router->group(['prefix' => 'exchange'], function () use($router) {
             $router->post('/', 'TherapistController@exchangeWithOthers');
+            
+            $router->group(['prefix' => 'shifts'], function () use($router) {
+                $router->post('/list', 'TherapistController@getList');
+                $router->post('/approve', 'TherapistController@approveShift');
+                $router->post('/reject', 'TherapistController@rejectShift');
+            });
+        
         });
 
         $router->group(['prefix' => 'missing'], function () use($router) {

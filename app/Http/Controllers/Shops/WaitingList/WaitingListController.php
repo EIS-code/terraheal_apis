@@ -491,8 +491,10 @@ class WaitingListController extends BaseController {
                     "massage_end_time" => $booking['massage_end_time'],
                     "massage_duration" => $booking['massage_duration'],
                     "therapy_name" => $booking['therapy_name'],
-                    "theropy_end_time" => $booking['theropy_end_time'],
-                    "theropy_duration" => $booking['theropy_duration']
+                    "therapy_end_time" => $booking['theropy_end_time'],
+                    "therapy_duration" => $booking['theropy_duration'],
+                    "session_type" => $booking['sessionId'],
+                    "services" => $booking['session_type']
                 ];
             }
             $allBookings[] =[
@@ -515,30 +517,34 @@ class WaitingListController extends BaseController {
         $roomOccupied = $bookingModel->getGlobalQuery($request)->whereNotNull('room_id')->groupBy('room_id');
         
         $allBookings = [];
-        foreach ($roomOccupied as $key => $bookings) {
-            $room_id = $bookings[0]['room_id'];
-            $room_name = $bookings[0]['roomName'];
-            $total_rooms = $bookings[0]['totalRooms'];
-            $services = [];
-            foreach ($bookings as $key => $booking) {
-                $services[] = [
-                    "service_day_name" => $booking['massage_day_name'],
-                    "massage_date" => $booking['massage_date'],
-                    "massage_name" => $booking['massage_name'],
-                    "massage_start_time" => $booking['massage_start_time'],
-                    "massage_end_time" => $booking['massage_end_time'],
-                    "massage_duration" => $booking['massage_duration'],
-                    "therapy_name" => $booking['therapy_name'],
-                    "theropy_end_time" => $booking['theropy_end_time'],
-                    "theropy_duration" => $booking['theropy_duration']
-                ];
+        if(!empty($roomOccupied)) {
+            foreach ($roomOccupied as $key => $bookings) {
+                $room_id = $bookings[0]['room_id'];
+                $room_name = $bookings[0]['roomName'];
+                $total_beds = $bookings[0]['totalBeds'];
+                $services = [];
+                foreach ($bookings as $key => $booking) {
+                    $services[] = [
+                        "service_day_name" => $booking['massage_day_name'],
+                        "massage_date" => $booking['massage_date'],
+                        "massage_name" => $booking['massage_name'],
+                        "massage_start_time" => $booking['massage_start_time'],
+                        "massage_end_time" => $booking['massage_end_time'],
+                        "massage_duration" => $booking['massage_duration'],
+                        "therapy_name" => $booking['therapy_name'],
+                        "therapy_end_time" => $booking['theropy_end_time'],
+                        "therapy_duration" => $booking['theropy_duration'],
+                        "session_type" => $booking['sessionId'],
+                        "services" => $booking['session_type']
+                    ];
+                }
+                $allBookings[] =[
+                    "room_id" => $room_id,
+                    "room_name" => $room_name,
+                    "total_beds" => $total_beds,
+                    "services" => $services
+                 ];
             }
-            $allBookings[] =[
-                "room_id" => $room_id,
-                "room_name" => $room_name,
-                "total_rooms" => $total_rooms,
-                "services" => $services
-             ];
         }
         
         return $this->returnSuccess(__($this->successMsg['booking.overview']), $allBookings);
@@ -735,7 +741,7 @@ class WaitingListController extends BaseController {
         $voucherModel       = new Voucher();
         $voucherShopModel   = new VoucherShop();
         
-        $vouchers = $voucherModel->getVoucherUsedeQuery()
+        $vouchers = $voucherModel->getVoucherQuery()
                 ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->paginate(10, ['*'], 'page', $pageNumber);
@@ -790,8 +796,7 @@ class WaitingListController extends BaseController {
         $packShopModel = new PackShop();
         
         $packs = $packModel
-                ->select(DB::RAW($packShopModel::getTableName() . '.*,' .$packModel::getTableName() . '.*,' . 
-                        'UNIX_TIMESTAMP(' . $packModel::getTableName() . '.expired_date) * 1000 as expired_date'))
+                ->select(DB::RAW($packShopModel::getTableName() . '.*,' .$packModel::getTableName() . '.*' ))
                 ->join($packShopModel::getTableName(), $packShopModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->where($packShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($packModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
@@ -804,10 +809,15 @@ class WaitingListController extends BaseController {
     }
     public function searchPacks(Request $request) {
         
-        if ($request->filter) {
-            $packs = $this->searchUsedPacks($request);
-        } else {
+        $filter = !empty($request->filter) ? $request->filter : Pack::ACTIVE;
+        
+        $packs = collect();
+        
+        if ($filter == Pack::ACTIVE) {
             $packs = $this->searchActivePacks($request);
+        } 
+        if($filter == Pack::USED) {
+            $packs = $this->searchUsedPacks($request);
         }
         if (count($packs) > 0) {
             return $this->returnSuccess(__($this->successMsg['data.found']), $packs);
@@ -844,8 +854,7 @@ class WaitingListController extends BaseController {
         $voucherShopModel   = new VoucherShop();
         
         $vouchers = $voucherModel
-                ->select(DB::RAW($voucherShopModel::getTableName() . '.*,' .$voucherModel::getTableName() . '.*,' 
-                        . 'UNIX_TIMESTAMP(' . $voucherModel::getTableName() . '.expired_date) * 1000 as expired_date'))
+                ->select(DB::RAW($voucherShopModel::getTableName() . '.*,' .$voucherModel::getTableName() . '.*'))
                 ->join($voucherShopModel::getTableName(), $voucherShopModel::getTableName() . '.voucher_id', '=', $voucherModel::getTableName() . '.id')
                 ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
@@ -859,10 +868,15 @@ class WaitingListController extends BaseController {
     
     public function searchVouchers(Request $request) {
 
-        if ($request->filter) {
-            $vouchers = $this->searchUsedVoucher($request);
-        } else {
+        $filter = !empty($request->filter) ? $request->filter : Voucher::ACTIVE;
+        
+        $vouchers = collect();
+        
+        if ($filter == Voucher::ACTIVE) {
             $vouchers = $this->searchActiveVoucher($request);
+        } 
+        if($filter == Voucher::USED) {
+            $vouchers = $this->searchUsedVoucher($request);
         }
         if (count($vouchers) > 0) {
             return $this->returnSuccess(__($this->successMsg['data.found']), $vouchers);

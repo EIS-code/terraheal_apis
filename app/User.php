@@ -137,13 +137,13 @@ class User extends BaseModel implements Authenticatable
         }
 
         return Validator::make($data, [
-            'name'                 => ['string', 'max:255'],
+            'name'                 => ['required', 'string', 'max:255'],
             'surname'              => ['string', 'max:255'],
             'dob'                  => ['string'],
             'country_id'           => ['integer', 'exists:' . Country::getTableName() . ',id'],
             'city_id'              => ['integer', 'exists:' . City::getTableName() . ',id'],
-            'gender'               => ['in:m,f'],
-            'email'                => array_merge(['string', 'email', 'max:255'], $emailValidator),
+            'gender'               => ['required', 'in:m,f'],
+            'email'                => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
             'tel_number_code'      => ['string', 'max:20'],
             'tel_number'           => ['string', 'max:50'],
             'emergency_tel_number_code' => ['string', 'max:20'],

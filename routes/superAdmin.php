@@ -36,6 +36,10 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->post('sharePack', 'SuperAdminController@sharePack');
     $router->post('purchasePack', 'SuperAdminController@purchasePack');
     
+    //service    
+    $router->post('service/add', 'SuperAdminController@addService');
+    $router->get('massages/get', 'SuperAdminController@getMassages');
+    $router->get('therapies/get', 'SuperAdminController@getTherapies');
     
     $router->group(['prefix' => 'dashboard'], function () use($router) {
 
@@ -60,7 +64,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('constants/add', 'Center\CenterController@addConstants');
         $router->post('featuredImages/delete', 'Center\CenterController@deleteFeaturedImages');
         $router->post('galleryImages/delete', 'Center\CenterController@deleteGalleryImages');
-        $router->get('users/get', 'Center\CenterController@getUsers');
+        $router->post('users/get', 'Center\CenterController@getUsers');
     });
     
     $router->group(['prefix' => 'therapists'], function () use($router) {

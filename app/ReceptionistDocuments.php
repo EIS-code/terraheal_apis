@@ -14,6 +14,8 @@ class ReceptionistDocuments extends BaseModel
         'is_expired',
         'expire_date'
     ];
+    
+    protected $hidden = ['updated_at'];
 
     public $fileSystem = 'public';
     public $directory  = 'receptionist\document\\';
@@ -22,10 +24,10 @@ class ReceptionistDocuments extends BaseModel
     {
         return Validator::make($data, [
             'document_name'         => ['required','string'],           
-            'receptionist_id' => ['required', 'integer'],
-            'file_name'    => ['mimes:' . $mimes],
+            'receptionist_id'       => ['required', 'integer', 'exists:' . Receptionist::getTableName() . ',id'],
+            'file_name'             => ['required','mimes:' . $mimes],
         ], [
-            'file_name' => 'Please select proper file. The file must be a file of type: ' . $mimes . '.'
+            'file_name'             => 'Please select proper file. The file must be a file of type: ' . $mimes . '.'
         ]);
     }
     
@@ -48,6 +50,15 @@ class ReceptionistDocuments extends BaseModel
     }
     
     public function getExpireDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
+    public function getCreatedAtAttribute($value)
     {
         if (empty($value)) {
             return $value;

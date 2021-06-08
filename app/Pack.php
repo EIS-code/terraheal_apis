@@ -11,6 +11,7 @@ class Pack extends BaseModel
 {
     protected $fillable = [
         'name',
+        'sub_title',
         'number',
         'image',
         'total_price',
@@ -19,6 +20,9 @@ class Pack extends BaseModel
         'receptionist_id',
         'is_personalized'
     ];
+    
+    const ACTIVE = '0';
+    const USED = '1';
     
     public $fileSystem = 'public';
     public $profilePhotoPath = 'pack\images\\';
@@ -46,7 +50,8 @@ class Pack extends BaseModel
     
     public function getImageAttribute($value)
     {
-        $default = asset('images/pack/pack.png');
+        
+        $default = asset('storage/pack/images/pack.png');
 
         // For set default image.
         if (empty($value)) {
@@ -68,12 +73,11 @@ class Pack extends BaseModel
         $packShopModel = new PackShop();
         $packUsersModel = new UserPack();
         $userModel = new User();
-
-        $query = $packUsersModel
+        
+        $query = $packModel
                 ->select(DB::RAW($packUsersModel::getTableName() . '.*,' . $packShopModel::getTableName() . '.*,' .
-                                $packModel::getTableName() . '.*,' . 'UNIX_TIMESTAMP(' . $packModel::getTableName() . '.expired_date) * 1000 as expired_date,' .
-                                'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
-                ->join($packModel::getTableName(), $packModel::getTableName() . '.id', '=', $packUsersModel::getTableName() . '.pack_id')
+                                $packModel::getTableName() . '.*,' . 'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
+                ->join($packUsersModel::getTableName(), $packUsersModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->join($packShopModel::getTableName(), $packShopModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->leftJoin($userModel::getTableName(), $userModel::getTableName() . '.id', '=', $packUsersModel::getTableName() . '.users_id');
         return $query;

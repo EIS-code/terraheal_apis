@@ -223,7 +223,7 @@ class Booking extends BaseModel
                             'CONCAT_WS(" ",' . $therapistModel::getTableName() . '.name,' . $therapistModel::getTableName() . '.surname) as therapistName, ' . 
                             $roomModel::getTableName().'.id as room_id,'.
                             $roomModel::getTableName().'.name as roomName,'.
-                            $roomModel::getTableName().'.total_rooms as totalRooms,'.
+                            $roomModel::getTableName().'.total_beds as totalBeds,'.
                             $massageModel::getTableName() . '.name as massage_name,' . 
                             $therapiesModel::getTableName() . '.name as therapy_name,' . 
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date,' . 
@@ -358,6 +358,9 @@ class Booking extends BaseModel
         }
         if(isset($dateFilter)) {
             $now = Carbon::now();
+            if ($dateFilter == self::YESTERDAY) {
+                $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::yesterday()->format('Y-m-d'));
+            }
             if ($dateFilter == self::TOMORROW) {
                 $data->where($bookingInfoModel::getTableName() . '.massage_date', Carbon::tomorrow()->format('Y-m-d'));
             }
