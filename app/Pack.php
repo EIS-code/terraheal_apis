@@ -73,12 +73,11 @@ class Pack extends BaseModel
         $packShopModel = new PackShop();
         $packUsersModel = new UserPack();
         $userModel = new User();
-
-        $query = $packUsersModel
+        
+        $query = $packModel
                 ->select(DB::RAW($packUsersModel::getTableName() . '.*,' . $packShopModel::getTableName() . '.*,' .
-                                $packModel::getTableName() . '.*,' . 'UNIX_TIMESTAMP(' . $packModel::getTableName() . '.expired_date) * 1000 as expired_date,' .
-                                'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
-                ->join($packModel::getTableName(), $packModel::getTableName() . '.id', '=', $packUsersModel::getTableName() . '.pack_id')
+                                $packModel::getTableName() . '.*,' . 'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
+                ->join($packUsersModel::getTableName(), $packUsersModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->join($packShopModel::getTableName(), $packShopModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->leftJoin($userModel::getTableName(), $userModel::getTableName() . '.id', '=', $packUsersModel::getTableName() . '.users_id');
         return $query;
