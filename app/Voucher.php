@@ -16,6 +16,9 @@ class Voucher extends BaseModel
         'expired_date'
     ];
 
+    const ACTIVE = '0';
+    const USED = '1';
+    
     public $fileSystem = 'public';
     public $profilePhotoPath = 'voucher\images\\';
 
@@ -40,7 +43,7 @@ class Voucher extends BaseModel
     
     public function getImageAttribute($value)
     {
-        $default = asset('images/voucher/voucher.png');
+        $default = asset('storage/voucher/images/voucher.png');
 
         // For set default image.
         if (empty($value)) {
@@ -64,7 +67,7 @@ class Voucher extends BaseModel
         $userModel = new User();
 
         $query = $voucherUsersModel
-                ->select(DB::RAW($voucherUsersModel::getTableName() . '.*,' . $voucherShopModel::getTableName() . '.*,' .
+                ->select(DB::RAW($voucherUsersModel::getTableName() . '.*,'  . 'UNIX_TIMESTAMP(' . $voucherUsersModel::getTableName() . '.purchase_date) * 1000 as purchase_date,'  . $voucherShopModel::getTableName() . '.*,' .
                                 $voucherModel::getTableName() . '.*,' . 'UNIX_TIMESTAMP(' . $voucherModel::getTableName() . '.expired_date) * 1000 as expired_date,' .
                                 'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
                 ->join($voucherModel::getTableName(), $voucherModel::getTableName() . '.id', '=', $voucherUsersModel::getTableName() . '.voucher_id')

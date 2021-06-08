@@ -9,7 +9,7 @@ class Room extends BaseModel
     protected $fillable = [
         'name',
         'shop_id',
-        'total_rooms'
+        'total_beds'
     ];
 
     public function validator(array $data)

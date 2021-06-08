@@ -93,20 +93,11 @@ class TherapistController extends BaseController {
             $dateRange = CarbonPeriod::create($startDate, $endDate);
             $start_time = date('H:i:s',$request->start_time);
             $end_time = date('H:i:s',$request->end_time);
-            $working = $request->is_working; 
-            if($working == TherapistWorkingSchedule::WORKING) {
-                $absent = TherapistWorkingSchedule::NOT_ABSENT;
-            } else {
-                $absent = TherapistWorkingSchedule::ABSENT;
-            }
             
             foreach ($dateRange as $key => $value) {
 
                 $scheduleData = $data[] = [
                     'date' => $value->format('Y-m-d'),
-                    'is_working' => $working,
-                    'is_absent' => $absent,
-                    'absent_reason' => $request->absent_reason ? $request->absent_reason : NULL,
                     'therapist_id' => $request->therapist_id
                 ];
                 $schedule = TherapistWorkingSchedule::create($scheduleData);
@@ -159,8 +150,8 @@ class TherapistController extends BaseController {
         $date = !empty($request->date) ? Carbon::createFromTimestampMs($request->date) : Carbon::now();
         $scheduleData = TherapistWorkingSchedule::with('therapistBreakTime','therapistWorkingScheduleTime')->where('therapist_id',$request->therapist_id)
                 ->whereMonth('date',$date->month)->get();
-        $presentDays = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->count();
-        $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_absent' => TherapistWorkingSchedule::ABSENT])->get()->count();
+        $presentDays = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->count();
+        $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->count();
         
         if(count($scheduleData) > 0) {
             
@@ -209,8 +200,8 @@ class TherapistController extends BaseController {
         $date  = Carbon::createFromTimestampMs($request->month_date);
         $date  = strtotime($date) > 0 ? $date : Carbon::now();
         
-        $totalPresent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->count();
-        $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_absent' => TherapistWorkingSchedule::ABSENT])->get()->count();
+        $totalPresent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->count();
+        $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->count();
         
         $booking_type = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
         $request->request->add(['type' => $booking_type, 'therapist_id' => $request->therapist_id, 'month' => $date]);

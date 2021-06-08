@@ -16,7 +16,9 @@ class ReceptionistController extends BaseController {
 
     public $successMsg = [
         
+        'receptionist.not.found' => 'Receptionist not found.',
         'receptionist.create' => 'Receptionist created successfully',
+        'receptionist.update' => 'Receptionist data updated successfully',
         'receptionist.document' => 'Receptionist document uploaded successfully',
         'receptionist.data' => 'Receptionist found successfully',
         'receptionist.statistics' => 'Receptionist statistics data found successfully',
@@ -55,6 +57,44 @@ class ReceptionistController extends BaseController {
         
         return $this->returnSuccess(__($this->successMsg['receptionist.create']),$receptionist);
     }
+    public function updateReceptionist(Request $request) {
+        
+        $model = new Receptionist();
+        $receptionist = $model->where('id', $request->receptionist_id)->first();
+        if(empty($receptionist)) {
+            return $this->returnSuccess(__($this->successMsg['receptionist.not.found']));
+        }
+        
+        $data = $request->all();
+        $checks = $model->validator($data, $receptionist->id, true);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        /* For profile Image */
+        if ($request->hasFile('photo')) {
+            $checkImage = $model->validatePhoto($data);
+            if ($checkImage->fails()) {
+                unset($data['photo']);
+
+                return $this->returnError($checkImage->errors()->first(), NULL, true);
+            }
+            $fileName = time().'.' . $data['photo']->getClientOriginalExtension();
+            $storeFile = $data['photo']->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
+
+            if ($storeFile) {
+                $data['photo'] = $fileName;
+            }
+        }
+        if(!empty($data['dob'])) {
+            $date = Carbon::createFromTimestampMs($data['dob']);
+            $data['dob'] = $date->format('Y-m-d');
+        } else {
+            unset($data['dob']);
+        }
+        $receptionist->update($data);
+        
+        return $this->returnSuccess(__($this->successMsg['receptionist.update']),$receptionist);
+    }
 
     public function addDocument(Request $request) {
         
@@ -66,7 +106,9 @@ class ReceptionistController extends BaseController {
         }
         
         $data = $request->all();
-        $data['expire_date'] = Carbon::createFromTimestampMs($data['expire_date']);
+        if(!empty($data['expire_date'])){
+            $data['expire_date'] = Carbon::createFromTimestampMs($data['expire_date']);
+        }
         
         $checks = $model->validator($data);
         if ($checks->fails()) {
@@ -97,7 +139,7 @@ class ReceptionistController extends BaseController {
         } else {
             $receptionistId = $request->receptionist_id;
         }
-        $receptionist = Receptionist::with('country','city','shop:id,name','documents')->where('id',$receptionistId)->get();
+        $receptionist = Receptionist::with('country','city','shop:id,name','documents')->where('id',$receptionistId)->first();
         
         if($receptionist->count() > 0) {
             return $this->returnSuccess(__($this->successMsg['receptionist.data']),$receptionist);

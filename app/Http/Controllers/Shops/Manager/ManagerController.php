@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use DB;
 use Carbon\Carbon;
 use App\TherapistWorkingSchedule;
-use App\TherapistShift;
 use App\Manager;
 use Illuminate\Support\Facades\Hash;
 use App\TherapistNews;
@@ -37,36 +36,26 @@ class ManagerController extends BaseController {
 
             $data = $request->all();
             $scheduleModel = new TherapistWorkingSchedule();
-            $shiftModel = new TherapistShift();
             $date = Carbon::createFromTimestampMs($data['date']);
             
             foreach ($data['shifts'] as $key => $shift) {
                 foreach ($shift['therapists'] as $key => $therapist) {
-                    
                     $scheduleData = [
                         'date' => $date->format('Y-m-d'),
                         'therapist_id' => $therapist['therapist_id'],
+                        'shift_id' => $shift['shift_id'],
+                        'is_working' => TherapistWorkingSchedule::WORKING,
+                        'shop_id' => $data['shop_id'],
                     ];
                     $checks = $scheduleModel->validator($scheduleData);
                     if ($checks->fails()) {
                         return $this->returnError($checks->errors()->first(), NULL, true);
                     }
-                    $schedule = $scheduleModel->updateOrCreate($scheduleData, $scheduleData);
-                    $shiftData = [
-                        'shift_id' => $shift['shift_id'],
-                        'is_working' => TherapistShift::WORKING,
-                        'is_absent' => TherapistShift::NOT_ABSENT,
-                        'schedule_id' => $schedule->id
-                    ];
-                    $checks = $shiftModel->validator($shiftData);
-                    if ($checks->fails()) {
-                        return $this->returnError($checks->errors()->first(), NULL, true);
-                    }
-                    $shiftModel->updateOrCreate($shiftData, $shiftData);
+                    $schedules[] = $scheduleModel->updateOrCreate($scheduleData, $scheduleData);
                 }
             }
             DB::commit();
-            return $this->returnSuccess(__($this->successMsg['therapist.availability']));
+            return $this->returnSuccess(__($this->successMsg['therapist.availability']), $schedules);
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;

@@ -38,8 +38,8 @@ class ShopHour extends BaseModel
     {
         return Validator::make($data, [
             'day_name'            => ['nullable', 'in:' . implode(",", array_keys($this->shopDays))],
-            'open_time'           => ['nullable', 'date_format:H:i'],
-            'close_time'          => ['nullable', 'date_format:H:i'],
+            'open_time'           => ['nullable', 'date_format:H:i:s'],
+            'close_time'          => ['nullable', 'date_format:H:i:s'],
             'shop_id'             => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id']
         ]);
     }

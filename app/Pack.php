@@ -11,6 +11,7 @@ class Pack extends BaseModel
 {
     protected $fillable = [
         'name',
+        'sub_title',
         'number',
         'image',
         'total_price',
@@ -19,6 +20,9 @@ class Pack extends BaseModel
         'receptionist_id',
         'is_personalized'
     ];
+    
+    const ACTIVE = '0';
+    const USED = '1';
     
     public $fileSystem = 'public';
     public $profilePhotoPath = 'pack\images\\';
@@ -46,7 +50,8 @@ class Pack extends BaseModel
     
     public function getImageAttribute($value)
     {
-        $default = asset('images/pack/pack.png');
+        
+        $default = asset('storage/pack/images/pack.png');
 
         // For set default image.
         if (empty($value)) {

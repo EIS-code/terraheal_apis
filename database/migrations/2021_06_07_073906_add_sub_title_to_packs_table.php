@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddTotalRoomsToRoomsTable extends Migration
+class AddSubTitleToPacksTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class AddTotalRoomsToRoomsTable extends Migration
      */
     public function up()
     {
-        Schema::table('rooms', function (Blueprint $table) {
-            $table->mediumInteger('total_beds')->nullable()->after('shop_id');
+        Schema::table('packs', function (Blueprint $table) {
+            $table->string('sub_title')->nullable()->after('name');
         });
     }
 
@@ -25,8 +25,8 @@ class AddTotalRoomsToRoomsTable extends Migration
      */
     public function down()
     {
-        Schema::table('rooms', function (Blueprint $table) {
-            $table->dropColumn('total_beds');
+        Schema::table('packs', function (Blueprint $table) {
+            $table->dropColumn('sub_title');
         });
     }
 }

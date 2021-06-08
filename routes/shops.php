@@ -112,6 +112,7 @@ $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($r
 $router->group(['prefix' => 'staffs', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/add', 'Staffs\StaffsController@createStaff');
+    $router->post('/update', 'Staffs\StaffsController@updateStaff');
     $router->post('/list', 'Staffs\StaffsController@staffList');
 });
 
@@ -134,6 +135,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
 $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/createReceptionist', 'Receptionist\ReceptionistController@createReceptionist');
+    $router->post('/update', 'Receptionist\ReceptionistController@updateReceptionist');
     $router->post('/addDocument', 'Receptionist\ReceptionistController@addDocument');
     $router->post('/getReceptionist', 'Receptionist\ReceptionistController@getReceptionist');
     $router->post('/getStatistics', 'Receptionist\ReceptionistController@getStatistics');

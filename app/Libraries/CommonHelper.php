@@ -56,7 +56,7 @@ class CommonHelper {
     public static function uploadImage($data ,$storagePath, $fileSystem, $centerId) {
         
         $name = $data->getClientOriginalExtension();
-        $fileName = time() . '_' . $centerId . '.' . $name;
+        $fileName = mt_rand(). time() . '_' . $centerId . '.' . $name;
         $storeFile = $data->storeAs($storagePath, $fileName, $fileSystem);
 
         if ($storeFile) {
