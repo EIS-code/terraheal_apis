@@ -156,15 +156,22 @@ class CenterController extends BaseController {
     public function getUsers(Request $request) {
         
         $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
+        $shopId = $request->shop_id;
         $appUsers = DB::table('booking_massages')
                 ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->join('users', 'users.id', '=', 'bookings.user_id')
                 ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
-                ->where('bookings.book_platform', (string) Booking::BOOKING_PLATFORM_APP)
-                ->where('users.shop_id', $request->shop_id);
-        $guestUsers = User::where('is_guest', (string) User::IS_GUEST)->where('shop_id', $request->shop_id);
-        $registeredUsers = User::where('is_guest', (string) User::IS_NOT_GUEST)->where('shop_id', $request->shop_id);
+                ->where('bookings.book_platform', (string) Booking::BOOKING_PLATFORM_APP);
+                
+        $guestUsers = User::where('is_guest', (string) User::IS_GUEST);
+        $registeredUsers = User::where('is_guest', (string) User::IS_NOT_GUEST);
+        
+        if(!empty($shopId)) {
+            $appUsers->where('users.shop_id', $shopId);
+            $guestUsers->where('shop_id', $shopId);
+            $registeredUsers->where('shop_id', $shopId);
+        }
         
         if(!empty($dateFilter)) {
             

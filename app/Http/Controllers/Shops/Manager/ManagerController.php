@@ -27,6 +27,7 @@ class ManagerController extends BaseController {
         'therapist.availability' => 'Therapist availability added successfully !',
         'news' => 'News data found successfully !',
         'news.details' => 'News details found successfully !',
+        'new.therapist' => 'New therapist created successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -184,5 +185,19 @@ class ManagerController extends BaseController {
         ];
         
         return $this->returnSuccess(__($this->successMsg['news.details']), $newsData);
+    }
+    
+    public function newTherapist(Request $request) {
+        
+        $model = new Therapist();
+        $data = $request->all();
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        $data['password'] = Hash::make($data['password']);
+        $therapist = $model->create($data);
+        
+        return $this->returnSuccess(__($this->successMsg['new.therapist']), $therapist);
     }
 }

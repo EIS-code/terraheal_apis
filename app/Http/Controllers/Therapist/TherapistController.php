@@ -117,8 +117,7 @@ class TherapistController extends BaseController
         'success.email.sent' => 'Email sent successfully !',        
         'therapist.freeslot' => 'Therapist freeslot added successfully !',
         'all.therapist.shifts' => 'All therapist shifts found successfully !',
-        'news.read' => 'News read successfully !',
-        'new.therapist' => 'New therapist created successfully !',
+        'news.read' => 'News read successfully !',        
         'exchange.list' => 'Therapist exchange shifts list found successfully !',
         'shift.approve' => 'Shift approve successfully !',
         'shift.reject' => 'Shift reject successfully !',
@@ -1141,21 +1140,7 @@ class TherapistController extends BaseController
         
         $read = $model->updateOrCreate($request->all(), $request->all());
         return $this->returns('news.read', collect($read));
-    }
-    
-    public function newTherapist(Request $request) {
-        
-        $model = new Therapist();
-        $data = $request->all();
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
-        }
-        $data['password'] = Hash::make($data['password']);
-        $therapist = $model->create($data);
-        
-        return $this->returns('new.therapist', $therapist);
-    }
+    }        
 
     public function getList(Request $request) {
 
