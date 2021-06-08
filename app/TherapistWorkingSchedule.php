@@ -61,6 +61,11 @@ class TherapistWorkingSchedule extends BaseModel
         return $this->hasOne('App\Therapist', 'id', 'therapist_id');
     }
     
+    public function shop() {
+        
+        return $this->hasOne('App\Shop', 'id', 'shop_id');
+    }
+    
     public function shifts() {
         
         return $this->hasOne('App\ShopShift', 'id', 'shift_id');
@@ -115,7 +120,7 @@ class TherapistWorkingSchedule extends BaseModel
         $date  = Carbon::createFromTimestampMs($date);
         $date  = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
 
-        $data = TherapistWorkingSchedule::with('therapist', 'shifts')->where(['date' => $date, 'therapist_id' => $id, 
+        $data = TherapistWorkingSchedule::with('therapist', 'shifts', 'shop')->where(['date' => $date, 'therapist_id' => $id, 
             'is_exchange' => TherapistWorkingSchedule::NOT_EXCHANGE, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->groupBy('shop_id');
 
         $availability = [];
@@ -128,6 +133,7 @@ class TherapistWorkingSchedule extends BaseModel
                 foreach ($value as $key => $shift) {
                      $therapist_shifts[] = [
                         'shop_id' => $shift->shop_id,
+                        'shop_name' => $shift->shop->name,
                         'date' => $shift->date,
                         'shift_id' => $shift->shift_id,
                         'from' => $shift->shifts->from,
