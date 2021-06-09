@@ -726,7 +726,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $diff = $start_time->diff($end_time)->format("%h:%i");
                 $time = explode(':', $diff);
                 if ($time[0] == 0) {
-                    $available = strtotime($time[1]) * 1000;
+                    $available = 'In ' . $time[1] . ' min';
                 } else {
                     $available = strtotime($diff) * 1000;
                 }
