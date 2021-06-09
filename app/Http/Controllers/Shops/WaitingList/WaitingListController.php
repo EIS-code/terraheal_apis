@@ -641,6 +641,10 @@ class WaitingListController extends BaseController {
         $model = new Therapist();
         $start = $model->serviceStart($request);
 
+        if (!empty($start['isError']) && !empty($start['message'])) {
+            return $this->returnError($start['message'], NULL, true);
+        }
+        
         return $this->returnSuccess(__($this->successMsg['booking.start']), $start);
     }
     
@@ -648,6 +652,10 @@ class WaitingListController extends BaseController {
     {
         $model = new Therapist();
         $end = $model->serviceEnd($request);
+        
+        if (!empty($end['isError']) && !empty($end['message'])) {
+            return $this->returnError($end['message'], NULL, true);
+        }
         
         return $this->returnSuccess(__($this->successMsg['booking.end']), $end);
     }

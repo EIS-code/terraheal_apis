@@ -793,6 +793,9 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         // Check already exists.
         $find = BookingMassageStart::where('booking_massage_id', $bookingMassageId)->first();
+        if (!empty($find) && !empty($find->end_time)) {
+            return ['isError' => true, 'message' => __('Given booking massage already ended.')];
+        }
         if (!empty($find)) {
             return ['isError' => true, 'message' => __('Given booking massage already started.')];
         }
