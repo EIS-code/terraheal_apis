@@ -724,12 +724,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $start_time = new Carbon($current);
                 $end_time = new Carbon($date->format('H:i:s'));
                 $diff = $start_time->diff($end_time)->format("%h:%i");
-                $time = explode(':', $diff);
-                if ($time[0] == 0) {
-                    $available = 'In ' . $time[1] . ' min';
-                } else {
-                    $available = strtotime($diff) * 1000;
-                }
+                $available = strtotime($diff) * 1000;
             }
 
             $default = asset('images/therapists/therapist.png');
