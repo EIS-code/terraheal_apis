@@ -28,6 +28,8 @@ use App\Constant;
 use Illuminate\Support\Facades\Storage;
 use App\User;
 use App\TherapistUserRating;
+use App\ShopService;
+use App\ShopKm;
 
 class CenterController extends BaseController {
 
@@ -47,6 +49,7 @@ class CenterController extends BaseController {
         'center.constant.add' => 'Center constant details added successfully.',
         'image' => 'Image deleted successfully.',
         'center.users' => 'Users data found successfully.',
+        'center.services.add' => 'Center services added successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
@@ -654,4 +657,78 @@ class CenterController extends BaseController {
         
         return $this->returnSuccess(__($this->successMsg['center.therapists.details']), array_values($therapists));
     }
+    
+    public function addServices(Request $request) {
+
+        DB::beginTransaction();
+        try {
+
+            $serviceModel = new ShopService();
+            $kmsModel = new ShopKm();
+            $shopId = $request->shop_id;
+
+            $centerServices = [];
+            if (!empty($request->center_services)) {
+                foreach ($request->center_services as $key => $value) {
+                    $data = [
+                        'service_id' => $value,
+                        'shop_id' => $shopId,
+                        'allow_at' => ShopService::CENTER
+                    ];
+                    $checks = $serviceModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+
+                    $centerServices[] = $serviceModel->updateOrCreate($data, $data);
+                }
+            }
+
+            $homeServices = [];
+            if (!empty($request->home_services)) {
+                foreach ($request->home_services as $key => $value) {
+                    $data = [
+                        'service_id' => $value,
+                        'shop_id' => $shopId,
+                        'allow_at' => ShopService::HOME_HOTEL
+                    ];
+                    $checks = $serviceModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+
+                    $homeServices[] = $serviceModel->updateOrCreate($data, $data);
+                }
+            }
+
+            $kms = [];
+            $prices = $request->prices;
+            if (!empty($prices)) {
+                foreach ($request->kms as $key => $value) {
+                    $data = [
+                        'shop_id' => $shopId,
+                        'kms' => $value,
+                        'price' => $prices[$key]
+                    ];
+                    $checks = $kmsModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+
+                    $kms[] = $kmsModel->updateOrCreate($data, $data);
+                }
+            }
+
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['center.services.add']), ['center_services' => $centerServices,
+                        'home_services' => $homeServices, 'kms' => $kms]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+
 }
