@@ -724,12 +724,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $start_time = new Carbon($current);
                 $end_time = new Carbon($date->format('H:i:s'));
                 $diff = $start_time->diff($end_time)->format("%h:%i");
-                $time = explode(':', $diff);
-                if ($time[0] == 0) {
-                    $available = 'In ' . $time[1] . ' min';
-                } else {
-                    $available = strtotime($diff) * 1000;
-                }
+                $available = strtotime($diff) * 1000;
             }
 
             $default = asset('images/therapists/therapist.png');
@@ -798,6 +793,9 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         // Check already exists.
         $find = BookingMassageStart::where('booking_massage_id', $bookingMassageId)->first();
+        if (!empty($find) && !empty($find->end_time)) {
+            return ['isError' => true, 'message' => __('Given booking massage already ended.')];
+        }
         if (!empty($find)) {
             return ['isError' => true, 'message' => __('Given booking massage already started.')];
         }

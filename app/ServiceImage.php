@@ -35,6 +35,14 @@ class ServiceImage extends BaseModel
         ]);
     }
     
+    public function validateFeaturedImage($request)
+    {
+        return Validator::make($request, [
+            'featured_image' => 'mimes:jpeg,png,jpg',
+        ], [
+            'featured_image' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        ]);
+    }
     
     public function getImageAttribute($value)
     {

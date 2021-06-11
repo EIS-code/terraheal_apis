@@ -28,6 +28,8 @@ use App\Constant;
 use Illuminate\Support\Facades\Storage;
 use App\User;
 use App\TherapistUserRating;
+use App\ShopService;
+use App\ShopKm;
 
 class CenterController extends BaseController {
 
@@ -47,6 +49,7 @@ class CenterController extends BaseController {
         'center.constant.add' => 'Center constant details added successfully.',
         'image' => 'Image deleted successfully.',
         'center.users' => 'Users data found successfully.',
+        'center.services.add' => 'Center services added successfully.',
     ];
     public $errorMsg = [
         'center.not.found' => 'Center not found.',
@@ -154,13 +157,58 @@ class CenterController extends BaseController {
     
     public function getUsers() {
         
+        $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
+        $shopId = $request->shop_id;
+
         $appUsers = DB::table('booking_massages')
                 ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
                 ->where('bookings.book_platform', (string) Booking::BOOKING_PLATFORM_APP)
                 ->get()
-                ->groupBy('bookings.user_id')->count();
+                ->where('bookings.book_platform', (string) Booking::BOOKING_PLATFORM_APP);
+                
+        $guestUsers = User::where('is_guest', (string) User::IS_GUEST);
+        $registeredUsers = User::where('is_guest', (string) User::IS_NOT_GUEST);
+        
+        if(!empty($shopId)) {
+            $appUsers->where('users.shop_id', $shopId);
+            $guestUsers->where('shop_id', $shopId);
+            $registeredUsers->where('shop_id', $shopId);
+        }
+        
+        if(!empty($dateFilter)) {
+            
+            $now = Carbon::now();
+            if ($dateFilter == Booking::YESTERDAY) {
+                $appUsers->whereDate('users.created_at', Carbon::yesterday()->format('Y-m-d'));
+                $guestUsers->whereDate('created_at', Carbon::yesterday()->format('Y-m-d'));
+                $registeredUsers->whereDate('created_at', Carbon::yesterday()->format('Y-m-d'));
+            }
+            if ($dateFilter == Booking::TODAY) {
+                $appUsers->whereDate('users.created_at', $now->format('Y-m-d'));
+                $guestUsers->whereDate('created_at', $now->format('Y-m-d'));
+                $registeredUsers->whereDate('created_at', $now->format('Y-m-d'));
+            }
+            if ($dateFilter == Booking::THIS_WEEK) {
+                $weekStartDate = $now->startOfWeek()->format('Y-m-d');
+                $weekEndDate = $now->endOfWeek()->format('Y-m-d');
+
+                $appUsers->whereDate('users.created_at', '>=', $weekStartDate)->whereDate('users.created_at', '<=', $weekEndDate);
+                $guestUsers->whereDate('created_at', '>=', $weekStartDate)->whereDate('created_at', '<=', $weekEndDate);
+                $registeredUsers->whereDate('created_at', '>=', $weekStartDate)->whereDate('created_at', '<=', $weekEndDate);
+            }
+            if ($dateFilter == Booking::THIS_MONTH) {
+                $appUsers->whereMonth('users.created_at', $now->month)
+                     ->whereYear('users.created_at', $now->year);
+                $guestUsers->whereMonth('created_at', $now->month)
+                     ->whereYear('created_at', $now->year);
+                $registeredUsers->whereMonth('created_at', $now->month)
+                     ->whereYear('created_at', $now->year);
+            }
+        }
+        
+        $appUsers = $appUsers->get()->groupBy('bookings.user_id')->count();
         $guestUsers = User::where('is_guest', (string) User::IS_GUEST)->get()->count();
         $registeredUsers = User::where('is_guest', (string) User::IS_NOT_GUEST)->get()->count();
         return $this->returnSuccess(__($this->successMsg['center.users']), ['appUsers' => $appUsers, 'guestUsers' => $guestUsers, 'registeredUsers' => $registeredUsers]);
@@ -609,4 +657,78 @@ class CenterController extends BaseController {
         
         return $this->returnSuccess(__($this->successMsg['center.therapists.details']), $therapists);
     }
+    
+    public function addServices(Request $request) {
+
+        DB::beginTransaction();
+        try {
+
+            $serviceModel = new ShopService();
+            $kmsModel = new ShopKm();
+            $shopId = $request->shop_id;
+
+            $centerServices = [];
+            if (!empty($request->center_services)) {
+                foreach ($request->center_services as $key => $value) {
+                    $data = [
+                        'service_id' => $value,
+                        'shop_id' => $shopId,
+                        'allow_at' => ShopService::CENTER
+                    ];
+                    $checks = $serviceModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+
+                    $centerServices[] = $serviceModel->updateOrCreate($data, $data);
+                }
+            }
+
+            $homeServices = [];
+            if (!empty($request->home_services)) {
+                foreach ($request->home_services as $key => $value) {
+                    $data = [
+                        'service_id' => $value,
+                        'shop_id' => $shopId,
+                        'allow_at' => ShopService::HOME_HOTEL
+                    ];
+                    $checks = $serviceModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+
+                    $homeServices[] = $serviceModel->updateOrCreate($data, $data);
+                }
+            }
+
+            $kms = [];
+            $prices = $request->prices;
+            if (!empty($prices)) {
+                foreach ($request->kms as $key => $value) {
+                    $data = [
+                        'shop_id' => $shopId,
+                        'kms' => $value,
+                        'price' => $prices[$key]
+                    ];
+                    $checks = $kmsModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+
+                    $kms[] = $kmsModel->updateOrCreate($data, $data);
+                }
+            }
+
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['center.services.add']), ['center_services' => $centerServices,
+                        'home_services' => $homeServices, 'kms' => $kms]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+
 }

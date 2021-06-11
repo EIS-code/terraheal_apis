@@ -64,6 +64,11 @@ class TherapistWorkingSchedule extends BaseModel
         return $this->hasOne('App\Therapist', 'id', 'therapist_id');
     }
     
+    public function shop() {
+        
+        return $this->hasOne('App\Shop', 'id', 'shop_id');
+    }
+    
     public function shifts() {
         
         return $this->hasOne('App\ShopShift', 'id', 'shift_id');
@@ -152,6 +157,7 @@ class TherapistWorkingSchedule extends BaseModel
                     ];
                 }
 
+
                 $data[$row->shop_id]['shifts'][] = [
                     'shift_id' => $row->shift_id,
                     'from'     => strtotime($row->from) * 1000,
@@ -172,6 +178,7 @@ class TherapistWorkingSchedule extends BaseModel
                 foreach ($value as $key => $shift) {
                      $therapist_shifts[] = [
                         'shop_id' => $shift->shop_id,
+                        'shop_name' => $shift->shop->name,
                         'date' => $shift->date,
                         'shift_id' => $shift->shift_id,
                         'from' => $shift->shifts->from,

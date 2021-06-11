@@ -46,6 +46,7 @@ use App\TherapistEmailOtp;
 use App\TherapistShop;
 use App\TherapistFreeSlot;
 use App\TherapistNews;
+use App\ShopShift;
 
 class TherapistController extends BaseController
 {
@@ -117,8 +118,7 @@ class TherapistController extends BaseController
         'success.email.sent' => 'Email sent successfully !',        
         'therapist.freeslot' => 'Therapist freeslot added successfully !',
         'all.therapist.shifts' => 'All therapist shifts found successfully !',
-        'news.read' => 'News read successfully !',
-        'new.therapist' => 'New therapist created successfully !',
+        'news.read' => 'News read successfully !',        
         'exchange.list' => 'Therapist exchange shifts list found successfully !',
         'shift.approve' => 'Shift approve successfully !',
         'shift.reject' => 'Shift reject successfully !',
@@ -1083,47 +1083,51 @@ class TherapistController extends BaseController
     
     public function getTherapistShifts(Request $request) {
 
+        $therapist = new Therapist();
+        $default = asset('images/therapists/therapist.png');
         $now = Carbon::now();
         $date = Carbon::createFromTimestampMs($request->date);
         $date = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
-        $search_val = $request->search_val;
         
         $data = DB::table('therapists')
                 ->leftJoin('therapist_working_schedules', 'therapists.id', '=', 'therapist_working_schedules.therapist_id')
                 ->leftJoin('shop_shifts', 'shop_shifts.id', '=', 'therapist_working_schedules.shift_id')
-                ->select('therapists.id', 'therapists.name', 'therapists.surname', 'therapists.email',
+                ->select('therapists.id', 'therapists.name', 'therapists.surname', 'therapists.email', 'therapists.profile_photo',
                         'therapist_working_schedules.*', 'shop_shifts.from', 'shop_shifts.to')
-                ->where(['therapist_working_schedules.date' => $date, 'therapist_working_schedules.is_working' => TherapistWorkingSchedule::WORKING]);
-        
-        if(!empty($search_val)) {
-            $data->where(function($query) use ($search_val) {
-                $query->where('therapists.name', 'like', $search_val . '%')
-                        ->orWhere('therapists.surname', 'like', $search_val . '%')
-                        ->orWhere('therapists.email', $search_val);
-            });
-        }
-        
-        $data = $data->get()->groupBy(['therapist_id', 'shop_id']);
+                ->where(['therapist_working_schedules.date' => $date, 
+                    'therapist_working_schedules.is_working' => TherapistWorkingSchedule::WORKING,
+                    'therapist_working_schedules.shop_id' => $request->shop_id])->get()->groupBy('therapist_id');
         
         $shiftData = [];
         if (!empty($data)) {
-            foreach ($data as $key => $value) {
-                foreach ($value as $key => $shifts) {
-                    $availability['therapist_id'] = $shifts[0]->therapist_id;
-                    $availability['name'] = $shifts[0]->name;
-                    $availability['surname'] = $shifts[0]->surname;
-                    $availability['date'] = strtotime($shifts[0]->date) * 1000;
-                    foreach ($shifts as $key => $shift) {
-                        $therapist_shifts[] = [
-                            'shop_id' => $shift->shop_id,
-                            'shift_id' => $shift->shift_id,
-                            'from' => strtotime($shift->from) * 1000,
-                            'to' => strtotime($shift->to) * 1000
-                        ];
-                    }
-                    $availability['shifts'][] = $therapist_shifts;
-                    unset($therapist_shifts);
+            foreach ($data as $key => $shifts) {
+
+                $profile_photo = $shifts[0]->profile_photo;
+                if (empty($profile_photo)) {
+                    $profile_photo = $default;
                 }
+                $profilePhotoPath = (str_ireplace("\\", "/", $therapist->profilePhotoPath));
+                if (Storage::disk($therapist->fileSystem)->exists($profilePhotoPath . $profile_photo)) {
+                    $profile_photo = Storage::disk($therapist->fileSystem)->url($profilePhotoPath . $profile_photo);
+                } else {
+                    $profile_photo = $default;
+                }
+                
+                $availability['therapist_id'] = $shifts[0]->therapist_id;
+                $availability['name'] = $shifts[0]->name;
+                $availability['surname'] = $shifts[0]->surname;
+                $availability['profile_photo'] = $profile_photo;
+                $availability['date'] = strtotime($shifts[0]->date) * 1000;
+                foreach ($shifts as $key => $shift) {
+                    $therapist_shifts[] = [
+                        'shop_id' => $shift->shop_id,
+                        'shift_id' => $shift->shift_id,
+                        'from' => strtotime($shift->from) * 1000,
+                        'to' => strtotime($shift->to) * 1000,
+                    ];
+                }
+                $availability['shifts'] = $therapist_shifts;
+                unset($therapist_shifts);
                 array_push($shiftData, $availability);
                 unset($availability);
             }
@@ -1141,21 +1145,7 @@ class TherapistController extends BaseController
         
         $read = $model->updateOrCreate($request->all(), $request->all());
         return $this->returns('news.read', collect($read));
-    }
-    
-    public function newTherapist(Request $request) {
-        
-        $model = new Therapist();
-        $data = $request->all();
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
-        }
-        $data['password'] = Hash::make($data['password']);
-        $therapist = $model->create($data);
-        
-        return $this->returns('new.therapist', $therapist);
-    }
+    }        
 
     public function getList(Request $request) {
 
