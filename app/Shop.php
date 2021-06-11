@@ -9,9 +9,11 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use App\BookingInfo;
 use App\UserPack;
+use App\TherapistWorkingSchedule;
 use Illuminate\Http\Request;
 use DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class Shop extends BaseModel implements CanResetPasswordContract
 {
@@ -42,10 +44,14 @@ class Shop extends BaseModel implements CanResetPasswordContract
         'province_id',
         'country_id',
         'currency_id',
-        'pin_code'
+        'pin_code',
+        'featured_image'
     ];
 
     protected $hidden = ['shop_password','remember_token', 'created_at', 'updated_at'];
+
+    public $fileSystem = 'public';
+    public $featuredImagePath = 'shop\featured\\';
 
     const IS_ADMIN = '0';
     const MASSAGES = '0';
@@ -112,7 +118,25 @@ class Shop extends BaseModel implements CanResetPasswordContract
             'pin_code'    => ['nullable', 'string', 'max:255']
         ]);
     }
-   
+
+    public function getFeaturedImageAttribute($value)
+    {
+        $default = asset('images/shop/default.png');
+
+        // For set default image.
+        if (empty($value)) {
+            return $default;
+        }
+
+        $featuredImagePath = (str_ireplace("\\", "/", $this->featuredImagePath));
+
+        if (Storage::disk($this->fileSystem)->exists($featuredImagePath . $value)) {
+            return Storage::disk($this->fileSystem)->url($featuredImagePath . $value);
+        }
+
+        return $default;
+    }
+
     public function massages()
     {
         return $this->hasMany('App\Massage', 'shop_id', 'id');
@@ -182,7 +206,12 @@ class Shop extends BaseModel implements CanResetPasswordContract
     {
         return $this->hasMany('App\ApiKeyShop', 'shop_id', 'id');
     }
-    
+
+    public function therapistWorkingSchedules($isExchange = TherapistWorkingSchedule::NOT_EXCHANGE, $isWorking = TherapistWorkingSchedule::WORKING)
+    {
+        return $this->hasMany('App\TherapistWorkingSchedule', 'shop_id', 'id')->where('is_exchange', $isExchange)->where('is_working', $isWorking);
+    }
+
     public function sendPasswordResetNotification($token)
     {
         $classPasswordNotification = new ResetPasswordNotification($token);
