@@ -10,9 +10,6 @@ use App\SessionType;
 use App\Booking;
 use App\BookingInfo;
 use App\BookingMassage;
-use App\Massage;
-use App\MassagePrice;
-use App\MassageTiming;
 use App\MassagePreferenceOption;
 use App\TherapistLanguage;
 use App\TherapistDocument;
@@ -32,7 +29,6 @@ use App\TherapistSuspendCollaboration;
 use App\TherapistExchange;
 use App\Receptionist;
 use App\TherapistWorkingScheduleBreak;
-use App\Therapy;
 use DB;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -47,6 +43,7 @@ use App\TherapistShop;
 use App\TherapistFreeSlot;
 use App\TherapistNews;
 use App\ShopShift;
+use App\Libraries\CommonHelper;
 
 class TherapistController extends BaseController
 {
@@ -236,10 +233,10 @@ class TherapistController extends BaseController
                                 $returnData[$increments]['therapist_id']         = $bookingInfo->therapist_id;
                                 $returnData[$increments]['user_name']            = $bookingInfo->userPeople->name;
                                 $returnData[$increments]['therapist_name']       = $bookingInfo->therapist->fullName;
-                                $returnData[$increments]['massage_name']         = !empty($bookingMassage->massageTiming) ? $bookingMassage->massageTiming->massage->name : NULL;
-                                $returnData[$increments]['therapy_name']         = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy->name : NULL;
-                                $returnData[$increments]['massage_id']           = !empty($bookingMassage->massageTiming) ? $bookingMassage->massageTiming->massage_id : NULL;
-                                $returnData[$increments]['therapy_id']           = !empty($bookingMassage->therapyTiming) ? $bookingMassage->therapyTiming->therapy_id : NULL;
+                                $returnData[$increments]['service_pricing_id']   = $bookingInfo->service_pricing_id;
+                                $returnData[$increments]['service_english_name'] = !empty($bookingMassage->servicePrices->service) ? $bookingMassage->servicePrices->service->english_name : NULL;
+                                $returnData[$increments]['service_portugese_name'] = !empty($bookingMassage->servicePrices->service) ? $bookingMassage->servicePrices->service->portugese_name : NULL;
+                                $returnData[$increments]['service_id']           = !empty($bookingMassage->servicePrices) ? $bookingMassage->servicePrices->service_id : NULL;
                                 $returnData[$increments]['is_done']              = $bookingInfo->is_done;
                                 $returnData[$increments]['service_status']       = $bookingMassage->getServiceStatus();
                                 $returnData[$increments]['booking_massage_id']   = $bookingMassage->id;
@@ -589,21 +586,11 @@ class TherapistController extends BaseController
 
     public function getAllServices(Request $request)
     {
-        if ($request->service == Shop::MASSAGES) {
-            $services = Massage::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
-        } 
-        if ($request->service == Shop::THERAPIES) {
-            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
-        }
-
-        if (!empty($request->search_val)) {
-            $services = $services->where('name', 'like', $request->search_val . '%');
-        }
-
-        $services =  $services->get();
+        $request->request->add(['type' => $request->service, 'isGetAll' => true]);
+        $services = CommonHelper::getAllService($request);
 
         if (count($services) > 0) {
-            return $this->returns('services.found.successfully', $services);
+            return $this->returns('services.found.successfully', collect($services));
         } else {
             return $this->returns('no.data.found');
         }

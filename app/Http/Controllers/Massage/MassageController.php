@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Massage;
 
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
-use App\Massage;
 use App\Shop;
 use App\City;
 use App\MassagePreference;
@@ -13,6 +12,8 @@ use App\MassagePreferenceOption;
 use App\SessionType;
 use DB;
 use Carbon\Carbon;
+use App\Libraries\CommonHelper;
+use App\Service;
 
 class MassageController extends BaseController
 {
@@ -53,15 +54,9 @@ class MassageController extends BaseController
 
     public function get(Request $request, int $limit = 10)
     {
-        $model  = new Massage();
-        $data   = $request->all();
-        $query  = (!empty($data['q'])) ? $data['q'] : NULL;
-        $limit  = (!is_numeric($limit)) ? 10 : $limit;
         $shopId = (!empty($data['shop_id'])) ? (int)$data['shop_id'] : NULL;
-
-        $getMassages = $model->where("name", "LIKE", "%{$query}%")->with(['timing' => function($qry) {
-            $qry->with('pricing');
-        }])->limit($limit)->get();
+        $request->request->add(['type' => Service::MASSAGE, 'isGetAll' => true]);
+        $getMassages = CommonHelper::getAllService($request);
 
         // Get shop details.
         $massageCenters = [];

@@ -24,7 +24,6 @@ class BookingInfo extends BaseModel
         'booking_currency_id',
         'shop_currency_id',
         'therapist_id',
-        'massage_prices_id',
         'user_people_id',
         'room_id',
         'booking_id'
@@ -199,33 +198,31 @@ class BookingInfo extends BaseModel
         $month          = empty($month) ? $currentMonth : new Carbon($month / 1000);
         $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
         $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
-
         $return = [];
 
         $data   = self::select('massage_date', 'massage_time', 'id as booking_info_id', 'id')
                       ->has('therapistWhereShop')
                       ->has('bookingMassages')
                       ->with(['bookingMassages' => function($query) {
-                          $query->select('booking_info_id', 'massage_timing_id')
-                                ->with('massageTiming');
+                          $query->select('booking_info_id', 'service_pricing_id')
+                                ->with('servicePrices');
                       }])
                       ->where('therapist_id', $therapistId)
                       ->whereBetween('massage_date', [$startDate, $endDate])
                       ->get();
-
         if (!empty($data) && !$data->isEmpty()) {
             foreach ($data as $record) {
                 if (!empty($record->bookingMassages) && !$record->bookingMassages->isEmpty()) {
                     foreach ($record->bookingMassages as $bookingMassage) {
-                        if (empty($bookingMassage->massageTiming)) {
+                        if (empty($bookingMassage->servicePrices)) {
                             continue;
                         }
-
+                        $timing = ServiceTiming::where('id', $bookingMassage->servicePrices->service_timing_id)->first();
                         $return[] = [
                             'massage_date'      => $record->massage_date,
                             'massage_time'      => $record->massage_time,
                             'booking_info_id'   => $record->booking_info_id,
-                            'time'              => (int)$bookingMassage->massageTiming->time
+                            'time'              => (int)$timing->time
                         ];
                     }
                 }
@@ -242,10 +239,12 @@ class BookingInfo extends BaseModel
         $model->setMysqlStrictFalse();
 
         $data = $model::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
+                              ->join(ServicePricing::getTableName(), ServicePricing::getTableName().'.id', BookingMassage::getTableName().'.service_pricing_id')
+                              ->join(Service::getTableName(), Service::getTableName().'.id', ServicePricing::getTableName().'.service_id')
                               ->where('therapist_id', $therapistId)->where('is_cancelled', (string)self::IS_CANCELLED_NOPE)
-                              ->whereNotNull(BookingMassage::getTableName() . '.massage_timing_id')
-                              ->whereNull(BookingMassage::getTableName() . '.therapy_timing_id')
-                              ->groupBy(BookingMassage::getTableName() . '.massage_timing_id')
+                              ->whereNotNull(BookingMassage::getTableName() . '.service_pricing_id')
+                              ->where(Service::getTableName().'.service_type', Service::MASSAGE)
+                              ->groupBy(BookingMassage::getTableName() . '.service_pricing_id')
                               ->get()
                               ->count();
 
@@ -261,10 +260,12 @@ class BookingInfo extends BaseModel
         $model->setMysqlStrictFalse();
 
         $data = $model::join(self::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', self::getTableName() . '.id')
+                              ->join(ServicePricing::getTableName(), ServicePricing::getTableName().'.id', BookingMassage::getTableName().'.service_pricing_id')
+                              ->join(Service::getTableName(), Service::getTableName().'.id', ServicePricing::getTableName().'.service_id')
                               ->where('therapist_id', $therapistId)->where('is_cancelled', (string)self::IS_CANCELLED_NOPE)
-                              ->whereNotNull(BookingMassage::getTableName() . '.therapy_timing_id')
-                              ->whereNull(BookingMassage::getTableName() . '.massage_timing_id')
-                              ->groupBy(BookingMassage::getTableName() . '.therapy_timing_id')
+                              ->whereNotNull(BookingMassage::getTableName() . '.service_pricing_id')
+                              ->where(Service::getTableName().'.service_type', Service::THERAPY)
+                              ->groupBy(BookingMassage::getTableName() . '.service_pricing_id')
                               ->get()
                               ->count();
 

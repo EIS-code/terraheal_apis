@@ -3,20 +3,18 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
-use App\Massage;
-use App\Therapist;
 
-class TherapistSelectedMassage extends BaseModel
+class TherapistSelectedService extends BaseModel
 {
     protected $fillable = [
-        'massage_id',
+        'service_id',
         'therapist_id'
     ];
 
     public function validator(array $data)
     {
         return Validator::make($data, [
-            'massage_id'   => ['required', 'integer', 'exists:' . Massage::getTableName() . ',id'],
+            'service_id'   => ['required', 'integer', 'exists:' . Service::getTableName() . ',id'],
             'therapist_id' => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
         ]);
     }
@@ -24,14 +22,14 @@ class TherapistSelectedMassage extends BaseModel
     public function validators(array $data)
     {
         return Validator::make($data, [
-            '*.massage_id'   => ['required', 'integer', 'exists:' . Massage::getTableName() . ',id'],
+            '*.service_id'   => ['required', 'integer', 'exists:' . Service::getTableName() . ',id'],
             '*.therapist_id' => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
         ]);
     }
 
-    public function massage()
+    public function service()
     {
-        return $this->hasOne('App\Massage', 'id', 'massage_id');
+        return $this->hasOne('App\Service', 'id', 'service_id');
     }
     
 }

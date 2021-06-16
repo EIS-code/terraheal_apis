@@ -4,14 +4,13 @@ namespace App\Http\Controllers\SuperAdmin\Dashboard;
 
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
-use App\Therapy;
-use App\Massage;
 use App\Therapist;
 use App\Shop;
 use App\User;
 use App\Booking;
 use App\BookingInfo;
 use DB;
+use App\Service;
 
 class DashboardController extends BaseController {
 
@@ -24,8 +23,8 @@ class DashboardController extends BaseController {
 
     public function getDetails() {
 
-        $massages = Massage::all()->count();
-        $therapies = Therapy::all()->count();
+        $massages = Service::where('service_type', Service::MASSAGE)->get()->count();
+        $therapies = Service::where('service_type', Service::THERAPY)->get()->count();
         $shops = Shop::all()->count();
         $therapists = Therapist::all()->count();
         $clients = User::all()->count();

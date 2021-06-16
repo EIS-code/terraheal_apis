@@ -15,8 +15,8 @@ class ServiceImage extends BaseModel
     
     protected $hidden = ['created_at', 'updated_at'];
     
-    const IS_FEATURED = '0';
-    const IS_NOT_FEATURED = '1';
+    const IS_FEATURED = '1';
+    const IS_NOT_FEATURED = '0';
 
     public static $images = [
         self::IS_FEATURED => 'Featured image',

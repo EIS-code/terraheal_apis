@@ -4,8 +4,6 @@ namespace App;
 
 use Illuminate\Support\Facades\Validator;
 use App\User;
-use App\Massage;
-use App\Therapy;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserFavoriteService extends BaseModel
@@ -29,7 +27,7 @@ class UserFavoriteService extends BaseModel
     public function validator(array $data)
     {
         return Validator::make($data, [
-            'service_id' => ['required', 'integer'],
+            'service_id' => ['required', 'integer', 'exists:' . Service::getTableName() . ',id'],
             'type'       => ['in:' . implode(",", array_keys($this->types))],
             'user_id'    => ['required', 'exists:' . User::getTableName() . ',id']
         ]);
@@ -37,37 +35,35 @@ class UserFavoriteService extends BaseModel
 
     public function services()
     {
-        if ($this->type == self::TYPE_THERAPY) {
-            return $this->hasOne('App\Therapy', 'id', 'service_id');
-        }
-
-        return $this->hasOne('App\Massage', 'id', 'service_id');
+        return $this->hasOne('App\Service', 'id', 'service_id');
+    }
+    
+    public function user()
+    {
+        return $this->hasOne('App\User', 'id', 'user_id');
     }
 
     public static function mergeResponse($collection)
     {
         $collection->map(function($record) {
             if (!empty($record->services)) {
-                $record->shop_id        = $record->services->shop_id;
-                $record->service_name   = $record->services->name;
-                $record->service_image  = $record->services->image;
-                $record->service_icon   = $record->services->icon;
+                $icon = ServiceImage::where(['service_id' => $record->services->id, 'is_featured' => ServiceImage::IS_FEATURED])->first();
+                $record->shop_id        = $record->user->shop_id;
+                $record->service_english_name   = $record->services->english_name;
+                $record->service_portugese_name  = $record->services->portugese_name;
+                $record->service_icon   = $icon->image;
 
                 unset($record->services);
+                unset($record->user);
             }
         });
 
         return $collection;
     }
 
-    public function checkServiceIdExists(int $id, $type = self::TYPE_MASSAGE):Bool
+    public function checkServiceIdExists(int $id)
     {
-        if ($type == self::TYPE_THERAPY) {
-            $record = Therapy::find($id);
-        } else {
-            $record = Massage::find($id);
-        }
-
+        $record = Service::find($id);
         return (!empty($record));
     }
 }

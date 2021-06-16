@@ -66,11 +66,12 @@ class EventsController extends BaseController {
         
         $bookingData = DB::table('booking_massages')
                 ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
-                ->join('massage_timings', 'massage_timings.id', '=', 'booking_massages.massage_timing_id')
-                ->join('massages', 'massages.id', '=', 'massage_timings.massage_id')
+                ->join('service_pricings', 'service_pricings.id', '=', 'booking_massages.service_pricing_id')
+                ->join('service_timings', 'service_timings.id', '=', 'service_pricings.service_timing_id')
+                ->join('services', 'services.id', '=', 'service_pricings.service_id')
                 ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
-                ->select('booking_massages.id AS bookingMassageId','massages.name AS massageName', 'massage_timings.time AS massageDuration',
-                        'booking_infos.massage_date AS massageDate','booking_infos.massage_time AS massageTime')
+                ->select('booking_massages.id AS bookingMassageId','services.english_name AS english_name', 'services.portugese_name AS portugese_name',
+                        'service_timings.time AS massageDuration', 'booking_infos.massage_date AS massageDate','booking_infos.massage_time AS massageTime')
                 ->where('bookings.booking_type' , $type)
                 ->whereMonth('booking_infos.massage_date', $month)
                 ->get();

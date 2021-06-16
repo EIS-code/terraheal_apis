@@ -222,25 +222,11 @@ class SuperAdminController extends BaseController {
             }
             $pack = $model->create($data);
             $packServiceModel = new PackService();
-            if(!empty($data['massage_id'])) {
-                foreach ($data['massage_id'] as $key => $value) {
+            if(!empty($data['service_id'])) {
+                foreach ($data['service_id'] as $key => $value) {
                     $service = [
-                        'massage_id' => $value,
-                        'massage_timing_id' => $data['massage_timing_id'][$key],
-                        'pack_id' => $pack->id
-                    ];
-                    $checks = $packServiceModel->validator($service);
-                    if ($checks->fails()) {
-                        return $this->returnError($checks->errors()->first(), NULL, true);
-                    }
-                    $packServiceModel->create($service);
-                }
-            }
-            if(!empty($data['therapy_id'])) {
-                foreach ($data['therapy_id'] as $key => $value) {
-                    $service = [
-                        'therapy_id' => $value,
-                        'therapy_timing_id' => $data['therapy_timing_id'][$key],
+                        'service_id' => $value,
+                        'service_timing_id' => $data['service_timing_id'][$key],
                         'pack_id' => $pack->id
                     ];
                     $checks = $packServiceModel->validator($service);

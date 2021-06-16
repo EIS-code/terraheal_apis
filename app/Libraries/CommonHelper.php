@@ -2,38 +2,56 @@
 
 namespace App\Libraries;
 
-use App\Therapy;
-use App\Massage;
-use App\Shop;
+use App\ShopService;
+use App\ServiceTiming;
+use App\ServicePricing;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CommonHelper {
 
     public static function getAllService($request)
     {
         $pageNumber = isset($request->page_number) ? $request->page_number : 1;
-        $type       = (in_array($request->type, [Shop::MASSAGES, Shop::THERAPIES])) ? $request->type : Shop::MASSAGES;
-
-        if ($type == Shop::MASSAGES) {
-            $services = Massage::with('timing', 'pricing')
-                               ->select('id','name','image','icon','shop_id')
-                               ->where('shop_id', $request->get('shop_id'));
-        } else {
-            $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->get('shop_id'));
+        $services =  ShopService::with('service')->where('shop_id', $request->get('shop_id'))
+                    ->whereHas('service', function($q) use($request) {
+                        $q->where(function($query) use ($request) {
+                            if (!empty($request->search_val)) {
+                                $query->where("english_name", "LIKE", "%{$request->search_val}%")
+                                ->orWhere("portugese_name", "LIKE", "%{$request->search_val}%");
+                            }
+                        });
+                        $q->where('service_type', (string)$request->type);
+                    })->get();
+        $allServices = [];
+        foreach ($services as $key => $massage) {
+            $pricingData = [];
+            $service = [
+                'id' => $massage->service_id,
+                'english_name' => $massage->service->english_name,
+                'portugese_name' => $massage->service->portugese_name,
+                'short_description' => $massage->service->short_description,
+                'priority' => $massage->service->priority,
+                'expenses' => $massage->service->expenses,
+                'service_type' => $massage->service->service_type,
+            ];
+            $timings = ServiceTiming::where('service_id', $massage->service_id)->get();
+            foreach ($timings as $i => $timing) {
+                $pricing = ServicePricing::where(['service_id' => $massage->service_id, 'service_timing_id' => $timing->id])->first();
+                array_push($pricingData, $pricing);
+            }
+            $service['timing'] = $timings->toArray();
+            $service['pricing'] = $pricingData;
+            array_push($allServices, $service);
+            unset($service);
+            unset($pricingData);
         }
-
-        if (!empty($request->q)) {
-            $query      = $request->q;
-
-            $services   = $services->where("name", "LIKE", "%{$query}%");
-        }
-
         if (!empty($request->isGetAll)) {
-            $services = $services->get();
+            return $allServices;
         } else {
-            $services = $services->paginate(18, ['*'], 'page', $pageNumber);
+            $allServices = collect($allServices);
+            $paginate = new LengthAwarePaginator($allServices, count($allServices), 18, 1, []);
+            return $paginate;
         }
-
-        return $services;
     }
 
     public static function calculateHours($data)

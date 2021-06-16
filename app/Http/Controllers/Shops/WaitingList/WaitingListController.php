@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\Booking;
 use App\BookingMassage;
-use App\Massage;
-use App\Therapist;
 use App\UserPeople;
 use App\Shop;
 use DB;
@@ -18,12 +16,14 @@ use App\TherapistWorkingSchedule;
 use App\Pack;
 use App\BookingInfo;
 use App\Room;
-use App\MassageTiming;
-use App\TherapiesTimings;
 use App\TherapistUserRating;
 use App\Voucher;
 use App\PackShop;
 use App\VoucherShop;
+use App\Libraries\CommonHelper;
+use App\Service;
+use App\ServicePricing;
+use App\ServiceTiming;
 
 class WaitingListController extends BaseController {
 
@@ -154,37 +154,13 @@ class WaitingListController extends BaseController {
             return $this->returnError(__($this->successMsg['not.found']));
         }
         $newBooking = [];
-        
-        // 0 = for massage, 1 = for therapy
-        if($request->service_type == 0)
-        {
-            $massages = Massage::with(['timing' => function ($query) use ($request) {
-                    $query->where('id', $request->service_timing_id);
-                }])->with(['pricing' => function ($query) use ($request) {
-                    $query->where('massage_timing_id', $request->service_timing_id);
-                }])->where(['shop_id' => $request->shop_id, 'id' => $request->service_id])->first();
+        $pricing = ServicePricing::where(['service_timing_id' => $request->service_timing_id, 'service_id' => $request->service_id])->first();
             
-            $newBooking['massage_timing_id'] = $massages->timing[0]->id;
-            $newBooking['massage_prices_id'] = $massages->pricing[0]->id;
-            $newBooking['price'] = $massages->pricing[0]->price;
-            $newBooking['cost'] = $massages->pricing[0]->cost;
-            $newBooking['origional_price'] = $massages->pricing[0]->price;
-            $newBooking['origional_cost'] = $massages->pricing[0]->cost;        
-        } else {
-            $therapy = Therapy::with(['timing' => function ($query) use ($request) {
-                    $query->where('id', $request->service_timing_id);
-                }])->with(['pricing' => function ($query) use ($request) {
-                    $query->where('therapy_timing_id', $request->service_timing_id);
-                }])->where(['shop_id' => $request->shop_id, 'id' => $request->service_id])->first();
-                
-            $newBooking['therapy_timing_id'] = $therapy->timing[0]->id;
-            $newBooking['therapy_prices_id'] = $therapy->pricing[0]->id;
-            $newBooking['price'] = $therapy->pricing[0]->price;
-            $newBooking['cost'] = $therapy->pricing[0]->cost;
-            $newBooking['origional_price'] = $therapy->pricing[0]->price;
-            $newBooking['origional_cost'] = $therapy->pricing[0]->cost;
-        }
-                                
+        $newBooking['service_pricing_id'] = $pricing->id;
+        $newBooking['price'] = $pricing->price;
+        $newBooking['cost'] = $pricing->cost;
+        $newBooking['origional_price'] = $pricing->price;
+        $newBooking['origional_cost'] = $pricing->cost;
         $newBooking['exchange_rate'] = $bookingMassage->exchange_rate;
         $newBooking['notes_of_injuries'] = $bookingMassage->notes_of_injuries;
         $newBooking['booking_info_id'] = $bookingMassage->booking_info_id;
@@ -218,60 +194,52 @@ class WaitingListController extends BaseController {
     public function printBookingDetails(Request $request) {
         
         $bookingModel = new Booking();
-        $printDetails = $bookingModel->getGlobalQuery($request);
+        $printDetails = $bookingModel->getGlobalQuery($request)->first();
         
         if(empty($printDetails)) {
             return $this->returnError(__($this->successMsg['not.found']));
         }
-        $services =[];
-        $total_cost = 0;
-        foreach ($printDetails as $key => $printDetail) {
             
-            $total_cost += $printDetail->cost;
-            $services[] = [
-                    "massage_name" => $printDetail['massage_name'],
-                    "massage_date" => $printDetail['massage_date'],
-                    "massage_start_time" => $printDetail['massage_start_time'],
-                    "massage_end_time" => $printDetail['massage_end_time'],
-                    "massage_duration" => $printDetail['massage_duration'],
-                    "massage_day_name" => $printDetail['massage_day_name'],
-                    "therapy_name" => $printDetail['therapy_name'],
-                    "theropy_end_time" => $printDetail['theropy_end_time'],
-                    "theropy_duration" => $printDetail['theropy_duration'],
-                    "cost" => $printDetail['cost'],
-                    "gender_preference" => $printDetail['gender_preference'],
-                    "pressure_preference" => $printDetail['pressure_preference'],
-                    "focus_area" => $printDetail['focus_area'],
-                    "genderPreference" => $printDetail['genderPreference'],
-                    "notes" => $printDetail['notes'],
-                    "injuries" => $printDetail['injuries']
-            ];
-        }
+        $services = [
+                "service_english_name" => $printDetails['service_english_name'],
+                "service_portugese_name" => $printDetails['service_portugese_name'],
+                "massage_date" => $printDetails['massage_date'],
+                "massage_start_time" => $printDetails['massage_start_time'],
+                "massage_end_time" => $printDetails['massage_end_time'],
+                "massage_duration" => $printDetails['massage_duration'],
+                "massage_day_name" => $printDetails['massage_day_name'],
+                "cost" => $printDetails['cost'],
+                "gender_preference" => $printDetails['gender_preference'],
+                "pressure_preference" => $printDetails['pressure_preference'],
+                "focus_area" => $printDetails['focus_area'],
+                "genderPreference" => $printDetails['genderPreference'],
+                "notes" => $printDetails['notes'],
+                "injuries" => $printDetails['injuries']
+        ];
         $bookingDetails = [
-            "booking_id" => $printDetails[0]['booking_id'],
-            "book_platform" => $printDetails[0]['book_platform'],
-            "is_confirm" => $printDetails[0]['is_confirm'],
-            "is_done" => $printDetails[0]['is_done'],
-            "is_cancelled" => $printDetails[0]['is_cancelled'],
-            "cancel_type" => $printDetails[0]['cancel_type'],
-            "cancelled_reason" => $printDetails[0]['cancelled_reason'],
-            "booking_type" => $printDetails[0]['booking_type_value'],
-            "client_id" => $printDetails[0]['client_id'],
-            "client_name" => $printDetails[0]['client_name'],
-            "client_gender" => $printDetails[0]['client_gender'],
-            "client_age" => $printDetails[0]['client_age'],
-            "sessionId" => $printDetails[0]['sessionId'],
-            "session_type" => $printDetails[0]['session_type'],
-            "shop_id" => $printDetails[0]['shop_id'],
-            "shop_name" => $printDetails[0]['shop_name'],
-            "shop_address" => $printDetails[0]['shop_address'],
-            "therapist_id" => $printDetails[0]['therapist_id'],
-            "therapistName" => $printDetails[0]['therapistName'],
-            "room_id" => $printDetails[0]['room_id'],
-            "roomName" => $printDetails[0]['roomName'],
-            "table_futon_quantity" => $printDetails[0]['table_futon_quantity'],
-            "booking_services" => $services,
-            "total_cost" => $total_cost
+            "booking_id" => $printDetails['booking_id'],
+            "book_platform" => $printDetails['book_platform'],
+            "is_confirm" => $printDetails['is_confirm'],
+            "is_done" => $printDetails['is_done'],
+            "is_cancelled" => $printDetails['is_cancelled'],
+            "cancel_type" => $printDetails['cancel_type'],
+            "cancelled_reason" => $printDetails['cancelled_reason'],
+            "booking_type" => $printDetails['booking_type_value'],
+            "client_id" => $printDetails['client_id'],
+            "client_name" => $printDetails['client_name'],
+            "client_gender" => $printDetails['client_gender'],
+            "client_age" => $printDetails['client_age'],
+            "sessionId" => $printDetails['sessionId'],
+            "session_type" => $printDetails['session_type'],
+            "shop_id" => $printDetails['shop_id'],
+            "shop_name" => $printDetails['shop_name'],
+            "shop_address" => $printDetails['shop_address'],
+            "therapist_id" => $printDetails['therapist_id'],
+            "therapistName" => $printDetails['therapistName'],
+            "room_id" => $printDetails['room_id'],
+            "roomName" => $printDetails['roomName'],
+            "table_futon_quantity" => $printDetails['table_futon_quantity'],
+            "booking_services" => $services
 
         ];
         return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
@@ -279,11 +247,9 @@ class WaitingListController extends BaseController {
     
     public function getStartEndTime($booking) {
 
-        if (!empty($booking->massage_timing_id) && is_null($booking->therapy_timing_id)) {
-            $endtime = MassageTiming::find($booking->massage_timing_id);
-        }
-        if (!empty($booking->therapy_timing_id) && is_null($booking->massage_timing_id)) {
-            $endtime = TherapiesTimings::find($booking->therapy_timing_id);
+        if (!empty($booking->service_pricing_id)) {
+            $pricing = ServicePricing::where('id', $booking->service_pricing_id)->first();
+            $endtime = ServiceTiming::where('id', $pricing->service_timing_id)->first();
         }
 
         $startTime = Carbon::createFromTimestampMs($booking->bookingInfo->massage_time);
@@ -353,7 +319,7 @@ class WaitingListController extends BaseController {
         try {
             $shopModel = new Shop();
             $bookingModel = new Booking();
-            
+
             $date = !empty($request->booking_date_time) ? Carbon::createFromTimestampMs($request->booking_date_time) : null;
             $bookingData = [
                 'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
@@ -375,37 +341,23 @@ class WaitingListController extends BaseController {
             if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
                 return $this->returnError($bookingInfo['message'], NULL, true);
             }
-            
-            if(!empty($request->pack_id)) {
-                
+
+            if (!empty($request->pack_id)) {
+
                 $pack = Pack::with('services')->where('id', $request->pack_id)->first();
                 if (empty($pack)) {
                     return ['isError' => true, 'message' => 'Pack not found'];
                 }
                 foreach ($pack->services as $key => $service) {
-                    $isMassage = !empty($service->massage_id) && empty($service->therapy_id) ? true : false;
-                    $service = $shopModel->addBookingMassages($service, $bookingInfo, $request, NULL, $isMassage);
+                    $service = $shopModel->addBookingMassages($service, $bookingInfo, $request, NULL);
                     if (!empty($service['isError']) && !empty($service['message'])) {
                         return $this->returnError($service['message'], NULL, true);
                     }
                 }
             } else {
-                $isMassage = false;
-                if(count($request->massages) > 0)
-                {
-                    $isMassage = true;
-                    foreach ($request->massages as $key => $massage) {
-                        $service = $shopModel->addBookingMassages($massage, $bookingInfo, $request, NULL, $isMassage);
-                        if (!empty($service['isError']) && !empty($service['message'])) {
-                            return $this->returnError($service['message'], NULL, true);
-                        }
-                    }
-                }
-                if(count($request->therapies) > 0)
-                {
-                    $isMassage = false;
-                    foreach ($request->therapies as $key => $therapy) {
-                        $service = $shopModel->addBookingMassages($therapy, $bookingInfo, $request, NULL, $isMassage);
+                if (count($request->services) > 0) {
+                    foreach ($request->services as $key => $value) {
+                        $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, NULL);
                         if (!empty($service['isError']) && !empty($service['message'])) {
                             return $this->returnError($service['message'], NULL, true);
                         }
@@ -429,24 +381,15 @@ class WaitingListController extends BaseController {
 
                         $newUser['therapist_id'] = $user['therapist_id'];
                         $newUser['notes_of_injuries'] = $user['notes_of_injuries'];
-                        
+
                         $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $newUser, NULL);
                         if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
                             return $this->returnError($bookingInfo['message'], NULL, true);
                         }
-                        
-                        if (count($user['massages']) > 0) {
-                            $isMassage = true;
-                            foreach ($user['massages'] as $key => $massage) {
-                                $service = $shopModel->addBookingMassages($massage, $bookingInfo, $request, $user, $isMassage);
-                                if (!empty($service['isError']) && !empty($service['message'])) {
-                                    return $this->returnError($service['message'], NULL, true);
-                                }
-                            }
-                        } else {
-                            $isMassage = false;
-                            foreach ($user['therapies'] as $key => $therapy) {
-                                $service = $shopModel->addBookingMassages($therapy, $bookingInfo, $request, $user, $isMassage);
+
+                        if (count($user['services']) > 0) {
+                            foreach ($user['services'] as $key => $value) {
+                                $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, $user);
                                 if (!empty($service['isError']) && !empty($service['message'])) {
                                     return $this->returnError($service['message'], NULL, true);
                                 }
@@ -457,7 +400,6 @@ class WaitingListController extends BaseController {
             }
             DB::commit();
             return $this->returnSuccess(__($this->successMsg['new.booking']));
-            
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;
@@ -466,7 +408,7 @@ class WaitingListController extends BaseController {
             throw $e;
         }
     }
-    
+
     public function bookingOverview(Request $request) {
         
         $date  = Carbon::createFromTimestampMs($request->date);
@@ -486,15 +428,13 @@ class WaitingListController extends BaseController {
                 $services[] = [
                     "service_day_name" => $booking['massage_day_name'],
                     "massage_date" => $booking['massage_date'],
-                    "massage_name" => $booking['massage_name'],
+                    "service_english_name" => $booking['service_english_name'],
+                    "service_portugese_name" => $booking['service_portugese_name'],
                     "massage_start_time" => $booking['massage_start_time'],
                     "massage_end_time" => $booking['massage_end_time'],
                     "massage_duration" => $booking['massage_duration'],
-                    "therapy_name" => $booking['therapy_name'],
-                    "therapy_end_time" => $booking['theropy_end_time'],
-                    "therapy_duration" => $booking['theropy_duration'],
-                    "session_type" => $booking['sessionId'],
-                    "services" => $booking['session_type']
+                    "session_Id" => $booking['sessionId'],
+                    "session_type" => $booking['session_type']
                 ];
             }
             $allBookings[] =[
@@ -527,15 +467,13 @@ class WaitingListController extends BaseController {
                     $services[] = [
                         "service_day_name" => $booking['massage_day_name'],
                         "massage_date" => $booking['massage_date'],
-                        "massage_name" => $booking['massage_name'],
+                        "service_english_name" => $booking['service_english_name'],
+                        "service_portugese_name" => $booking['service_portugese_name'],
                         "massage_start_time" => $booking['massage_start_time'],
                         "massage_end_time" => $booking['massage_end_time'],
                         "massage_duration" => $booking['massage_duration'],
-                        "therapy_name" => $booking['therapy_name'],
-                        "therapy_end_time" => $booking['theropy_end_time'],
-                        "therapy_duration" => $booking['theropy_duration'],
-                        "session_type" => $booking['sessionId'],
-                        "services" => $booking['session_type']
+                        "session_id" => $booking['sessionId'],
+                        "session_type" => $booking['session_type']
                     ];
                 }
                 $allBookings[] =[
@@ -552,15 +490,15 @@ class WaitingListController extends BaseController {
     
     public function getAllMassages(Request $request)
     {
-        $massages = Massage::with('timing','pricing')->where('shop_id',$request->shop_id)->get();
-        
+        $request->request->add(['type' => Service::MASSAGE, 'isGetAll' => true]);
+        $massages = CommonHelper::getAllService($request);
         return $this->returnSuccess(__($this->successMsg['massages']), $massages);
     }
     
     public function getAllTherapies(Request $request)
     {
-        $therapies = Therapy::with('timing','pricing')->where('shop_id',$request->shop_id)->get();
-        
+        $request->request->add(['type' => Service::THERAPY, 'isGetAll' => true]);
+        $therapies = CommonHelper::getAllService($request);
         return $this->returnSuccess(__($this->successMsg['therapies']), $therapies);        
     }
     

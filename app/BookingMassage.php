@@ -20,16 +20,13 @@ class BookingMassage extends BaseModel
         'origional_cost',
         'exchange_rate',
         'notes_of_injuries',
-        'massage_timing_id',
-        'massage_prices_id',
         'booking_info_id',
         'pressure_preference',
         'gender_preference',
         'focus_area_preference',
         'room_id',
         'therapy_id',
-        'therapy_timing_id',
-        'therapy_prices_id',
+        'service_pricing_id',
         'is_confirm'
     ];
     
@@ -48,11 +45,8 @@ class BookingMassage extends BaseModel
             'origional_price'                        => ['required', 'between:0,99.99'],
             'origional_cost'                         => ['required', 'between:0,99.99'],
             'exchange_rate'                          => ['required', 'between:0,99.99'],
-            'massage_timing_id'                      => ['nullable', 'integer', 'exists:' . MassageTiming::getTableName() . ',id'],
-            'therapy_timing_id '                     => ['nullable', 'integer', 'exists:' . TherapiesTimings::getTableName() . ',id'],
-            'massage_prices_id'                      => ['nullable', 'integer', 'exists:' . MassagePrice::getTableName() . ',id'],
-            'therapy_prices_id'                      => ['nullable', 'integer', 'exists:' . TherapiesPrices::getTableName() . ',id'],
-            'notes_of_injuries'                      => ['max:255'],
+            'service_pricing_id'                     => ['nullable', 'integer', 'exists:' . ServicePricing::getTableName() . ',id'],
+            'notes_of_injuries'                      => ['nullable', 'string', 'max:255'],
             'booking_info_id'                        => ['required', 'integer', 'exists:' . BookingInfo::getTableName() . ',id'],
             'pressure_preference'                    => $pressurePreference,
             'gender_preference'                      => $genderPreference,
@@ -63,19 +57,9 @@ class BookingMassage extends BaseModel
         return $validator;
     }
 
-    public function massagePrices()
+    public function servicePrices()
     {
-        return $this->hasOne('App\MassagePrice', 'id', 'massage_prices_id');
-    }
-
-    public function massageTiming()
-    {
-        return $this->hasOne('App\MassageTiming', 'id', 'massage_timing_id');
-    }
-
-    public function therapyTiming()
-    {
-        return $this->hasOne('App\TherapiesTimings', 'id', 'therapy_timing_id');
+        return $this->hasOne('App\ServicePricing', 'id', 'service_pricing_id');
     }
 
     public function bookingInfo()
@@ -88,8 +72,9 @@ class BookingMassage extends BaseModel
         $data = self::find($id);
         $time = NULL;
 
-        if (!empty($data)) {
-            $time = $data->massageTiming->time;
+        if (!empty($data) && !is_null($data->servicePrices)) {
+            $time = ServiceTiming::where('id', $data->servicePrices->service_timing_id)->first();
+            $time = $time->time;
         }
 
         return $time;

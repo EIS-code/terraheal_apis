@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class TherapistSelectedTherapiesTable extends Migration
+class CreateTherapistSelectedServicesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,12 @@ class TherapistSelectedTherapiesTable extends Migration
      */
     public function up()
     {
-        Schema::create('therapist_selected_therapies', function (Blueprint $table) {
+        Schema::create('therapist_selected_services', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('therapy_id')->unsigned();
-            $table->foreign('therapy_id')->references('id')->on('massages')->onDelete('cascade');
             $table->bigInteger('therapist_id')->unsigned();
             $table->foreign('therapist_id')->references('id')->on('therapists')->onDelete('cascade');
+            $table->bigInteger('service_id')->unsigned();
+            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -30,6 +30,6 @@ class TherapistSelectedTherapiesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('therapist_selected_therapies');
+        Schema::dropIfExists('therapist_selected_services');
     }
 }

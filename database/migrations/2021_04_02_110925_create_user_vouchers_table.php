@@ -17,14 +17,6 @@ class CreateUserVouchersTable extends Migration
             $table->id();
             $table->bigInteger('user_voucher_price_id')->unsigned();
             $table->foreign('user_voucher_price_id')->references('id')->on('user_voucher_prices')->onDelete('cascade');
-            $table->bigInteger('massage_id')->unsigned()->nullable();
-            $table->foreign('massage_id')->references('id')->on('massages')->onDelete('cascade');
-            $table->bigInteger('massage_timing_id')->unsigned()->nullable();
-            $table->foreign('massage_timing_id')->references('id')->on('massage_timings')->onDelete('cascade');
-            $table->bigInteger('therapy_id')->unsigned()->nullable();
-            $table->foreign('therapy_id')->references('id')->on('therapies')->onDelete('cascade');
-            $table->bigInteger('therapy_timing_id')->unsigned()->nullable();
-            $table->foreign('therapy_timing_id')->references('id')->on('therapies_timings')->onDelete('cascade');
             $table->bigInteger('therapist_id')->unsigned()->nullable();
             $table->foreign('therapist_id')->references('id')->on('therapists')->onDelete('cascade');
             $table->timestamps();

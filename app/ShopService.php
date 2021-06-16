@@ -28,5 +28,10 @@ class ShopService extends BaseModel
             'allow_at'         => ['required', 'integer', 'in:' . implode(",", array_keys(self::$allowAt))],
         ]);
     }
+    
+    public function service()
+    {
+        return $this->hasOne('App\Service', 'id', 'service_id');
+    }
 
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class TherapiesTable extends Migration
+class AddCostToServicePricingsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,8 @@ class TherapiesTable extends Migration
      */
     public function up()
     {
-        Schema::create('therapies', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('image');
-            $table->timestamps();
+        Schema::table('service_pricings', function (Blueprint $table) {
+            $table->float('cost')->after('price');
         });
     }
 
@@ -28,6 +25,8 @@ class TherapiesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('therapies');
+        Schema::table('service_pricings', function (Blueprint $table) {
+            $table->dropColumn('cost');
+        });
     }
 }
