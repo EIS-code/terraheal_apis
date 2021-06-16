@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use App\BookingInfo;
 use App\UserPack;
+use App\TherapistWorkingSchedule;
 use Illuminate\Http\Request;
 use DB;
 use Carbon\Carbon;
@@ -178,7 +179,12 @@ class Shop extends BaseModel implements CanResetPasswordContract
     {
         return $this->hasMany('App\ApiKeyShop', 'shop_id', 'id');
     }
-    
+
+    public function therapistWorkingSchedules($isExchange = TherapistWorkingSchedule::NOT_EXCHANGE, $isWorking = TherapistWorkingSchedule::WORKING)
+    {
+        return $this->hasMany('App\TherapistWorkingSchedule', 'shop_id', 'id')->where('is_exchange', $isExchange)->where('is_working', $isWorking);
+    }
+
     public function sendPasswordResetNotification($token)
     {
         $classPasswordNotification = new ResetPasswordNotification($token);
