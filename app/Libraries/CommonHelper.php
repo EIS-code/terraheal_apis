@@ -3,9 +3,11 @@
 namespace App\Libraries;
 
 use App\ShopService;
+use App\ServiceImage;
 use App\ServiceTiming;
 use App\ServicePricing;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 class CommonHelper {
 
@@ -25,14 +27,17 @@ class CommonHelper {
         $allServices = [];
         foreach ($services as $key => $massage) {
             $pricingData = [];
+            $image = ServiceImage::where(['service_id' => $massage->service_id, 'is_featured' => ServiceImage::IS_FEATURED])->first();
             $service = [
                 'id' => $massage->service_id,
+                'name' => $massage->service->english_name,
                 'english_name' => $massage->service->english_name,
                 'portugese_name' => $massage->service->portugese_name,
                 'short_description' => $massage->service->short_description,
                 'priority' => $massage->service->priority,
                 'expenses' => $massage->service->expenses,
                 'service_type' => $massage->service->service_type,
+                'image' => !empty($image) ? $image->image : NULL
             ];
             $timings = ServiceTiming::where('service_id', $massage->service_id)->get();
             foreach ($timings as $i => $timing) {
