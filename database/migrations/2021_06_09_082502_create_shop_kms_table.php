@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddShopidToTherapiesTable extends Migration
+class CreateShopKmsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,13 @@ class AddShopidToTherapiesTable extends Migration
      */
     public function up()
     {
-        Schema::table('therapies', function (Blueprint $table) {
+        Schema::create('shop_kms', function (Blueprint $table) {
+            $table->id();
+            $table->string('kms');
+            $table->float('price');
             $table->bigInteger('shop_id')->unsigned();
-            $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade')->after('image');
+            $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
@@ -26,9 +30,6 @@ class AddShopidToTherapiesTable extends Migration
      */
     public function down()
     {
-        Schema::table('therapies', function (Blueprint $table) {
-            $table->dropForeign('shop_id');
-            $table->dropColumn('shop_id');
-        });
+        Schema::dropIfExists('shop_kms');
     }
 }

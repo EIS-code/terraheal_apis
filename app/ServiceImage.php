@@ -15,8 +15,8 @@ class ServiceImage extends BaseModel
     
     protected $hidden = ['created_at', 'updated_at'];
     
-    const IS_FEATURED = '0';
-    const IS_NOT_FEATURED = '1';
+    const IS_FEATURED = '1';
+    const IS_NOT_FEATURED = '0';
 
     public static $images = [
         self::IS_FEATURED => 'Featured image',
@@ -35,6 +35,14 @@ class ServiceImage extends BaseModel
         ]);
     }
     
+    public function validateFeaturedImage($request)
+    {
+        return Validator::make($request, [
+            'featured_image' => 'mimes:jpeg,png,jpg',
+        ], [
+            'featured_image' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        ]);
+    }
     
     public function getImageAttribute($value)
     {

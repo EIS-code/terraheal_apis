@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class MassagesTable extends Migration
+class CreateShopServicesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,13 @@ class MassagesTable extends Migration
      */
     public function up()
     {
-        Schema::create('massages', function (Blueprint $table) {
+        Schema::create('shop_services', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description');
-            $table->string('image');
-            $table->string('icon')->nullable();
+            $table->bigInteger('service_id')->unsigned();
+            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
             $table->bigInteger('shop_id')->unsigned();
             $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
+            $table->enum('allow_at', [1, 2])->comment('1: In Massage Center, 2: Home / Hotel Visit.');
             $table->timestamps();
         });
     }
@@ -32,6 +31,6 @@ class MassagesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('massages');
+        Schema::dropIfExists('shop_services');
     }
 }

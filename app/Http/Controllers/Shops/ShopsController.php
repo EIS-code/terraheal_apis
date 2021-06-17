@@ -72,6 +72,7 @@ class ShopsController extends BaseController {
 
     public function getAllServices(Request $request) {
         
+        $request->request->add(['isGetAll' => true]);
         $services = CommonHelper::getAllService($request);
         
         if (!empty($services)) {

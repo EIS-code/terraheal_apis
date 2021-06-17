@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddTherapyidToBookingMassageTable extends Migration
+class AddServiceIdToBookingMassagesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,9 +14,8 @@ class AddTherapyidToBookingMassageTable extends Migration
     public function up()
     {
         Schema::table('booking_massages', function (Blueprint $table) {
-            $table->bigInteger('therapy_id')->nullable()->unsigned();
-            $table->foreign('therapy_id')->nullable()->references('id')->on('therapies')->onDelete('cascade');
-
+            $table->bigInteger('service_pricing_id')->unsigned()->after('focus_area_preference')->nullable();
+            $table->foreign('service_pricing_id')->references('id')->on('service_pricings')->onDelete('cascade');
         });
     }
 
@@ -28,8 +27,8 @@ class AddTherapyidToBookingMassageTable extends Migration
     public function down()
     {
         Schema::table('booking_massages', function (Blueprint $table) {
-            $table->dropForeign('therapy_id');
-            $table->dropColumn('therapy_id');
+            $table->dropForeign(['service_pricing_id']);
+            $table->dropColumn(['service_pricing_id']);
         });
     }
 }

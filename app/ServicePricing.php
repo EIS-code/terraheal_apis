@@ -9,7 +9,8 @@ class ServicePricing extends BaseModel
     protected $fillable = [
         'service_id',
         'service_timing_id',
-        'price'
+        'price',
+        'cost'
     ];
 
     protected $hidden = ['created_at', 'updated_at'];
@@ -19,7 +20,8 @@ class ServicePricing extends BaseModel
         return Validator::make($data, [
             'service_id'            => ['required', 'integer', 'exists:' . Service::getTableName() . ',id'],
             'service_timing_id'     => ['required', 'integer', 'exists:' . ServiceTiming::getTableName() . ',id'],
-            'price'                 => ['required']
+            'price'                 => ['required'],
+            'cost'                  => ['required']
         ]);
     }
 

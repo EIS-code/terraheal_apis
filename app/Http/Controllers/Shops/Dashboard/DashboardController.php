@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Shops\Dashboard;
 
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
-use App\Therapy;
-use App\Massage;
 use App\Review;
 use App\BookingInfo;
 use Carbon\Carbon;
@@ -14,20 +12,28 @@ use App\User;
 use App\Booking;
 use App\Voucher;
 use App\Pack;
+use App\Service;
+use App\ShopService;
+use App\ServicePricing;
 
 class DashboardController extends BaseController {
 
      public $successMsg = [
-        
          'data.found' => 'Data found successfully.',
          'sales.data.found' => 'Sales data found successfully.',
          'customer.data.found' => 'Customers data found successfully.',
-         
     ];
      
     public function getDetails(Request $request) {
-        $massages = Massage::where('shop_id', $request->get('shop_id'))->get()->count();
-        $therapies = Therapy::where('shop_id', $request->get('shop_id'))->get()->count();
+        
+        $massages = ShopService::with('service')->where('shop_id', $request->get('shop_id'))
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::MASSAGE);
+                        })->get()->count();
+        $therapies = ShopService::with('service')->where('shop_id', $request->get('shop_id'))
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::THERAPY);
+                        })->get()->count();
         $reviews = Review::with('user')->where('is_delete', Review::IS_DELETE)
                         ->whereHas('user', function($q) use($request) {
                             $q->where('shop_id', '=', $request->get('shop_id'));
@@ -118,25 +124,25 @@ class DashboardController extends BaseController {
         return $upcomingBookings;
     }
     
-    public function topMassages(Request $request, $massages, $todayDate, $agoDate) {
+    public function topServices(Request $request, $services, $todayDate, $agoDate) {
         
-        $massageTimings = [];
-        foreach ($massages as $index => $massage) {
-            foreach ($massage->timing as $index => $timing) {
-                $massageTiming = [
-                    'timing_id' => $timing->id,
-                    'massage_name' => $massage->name,
-                    'time' => $timing->time,
-                    'massage_id' => $timing->massage_id
+        $servicePricings = [];
+        foreach ($services as $index => $service) {
+            $pricings = ServicePricing::where('service_id' , $service->service_id)->get();
+            foreach ($pricings as $index => $pricing) {
+                $servicePricing = [
+                    'pricing_id' => $pricing->id,
+                    'english_name' => $service->service->english_name,
+                    'portugese_name' => $service->service->portugese_name,
+                    'service_id' => $service->service_id
                 ];
-                array_push($massageTimings, $massageTiming);
+                array_push($servicePricings, $servicePricing);
             }
         }
-        
         $filter = $request->filter_type ? $request->filter_type : 0;
-        $allMassages = [];
-        foreach ($massageTimings as $key => $value) {
-            $bookingMassages = BookingMassage::with('bookingInfo')->where('massage_timing_id', $value['timing_id'])
+        $allServices = [];
+        foreach ($servicePricings as $key => $value) {
+            $bookingMassages = BookingMassage::with('bookingInfo')->where('service_pricing_id', $value['pricing_id'])
                             ->whereHas('bookingInfo', function($q) use($agoDate, $todayDate, $filter) {
                                 if ($filter == 0) {
                                     $q->whereBetween('massage_date', array($agoDate, $todayDate));
@@ -144,74 +150,27 @@ class DashboardController extends BaseController {
                                     $q->whereMonth('massage_date', Carbon::now()->subMonth()->month);
                                 }
                             })->count();
-            array_push($allMassages, ['total' => $bookingMassages, 'massage_name' => $value['massage_name'], 'massage_id' => $value['massage_id']]);
+            array_push($allServices, ['total' => $bookingMassages, 'english_name' => $value['english_name'], 
+                'portugese_name' => $value['portugese_name'],'service_id' => $value['service_id']]);
         }
-        $allMassages = collect($allMassages)->groupBy('massage_id');
-        
-        $topMassages = [];
-        foreach ($allMassages as $key => $value) {
+        $allServices = collect($allServices)->groupBy('service_id');
+        $topServices = [];
+        foreach ($allServices as $key => $value) {
             $total = 0;
-            foreach ($value as $key => $massage) {
-                $total += $massage['total'];
+            foreach ($value as $key => $service) {
+                $total += $service['total'];
             }
             $data = [
                 'total' => $total,
-                'massage_name' => $value[0]['massage_name'], 
-                'massage_id' => $value[0]['massage_id']
+                'english_name' => $value[0]['english_name'], 
+                'portugese_name' => $value[0]['portugese_name'], 
+                'service_id' => $value[0]['service_id']
             ];
-            array_push($topMassages, $data);
+            array_push($topServices, $data);
         }
         
-        rsort($topMassages);
-        return $topMassages;
-    }
-    
-    public function topTherapies(Request $request, $therapies, $todayDate, $agoDate) {
-        
-        $filter = $request->filter_type ? $request->filter_type : 0;
-        $therapyTimings = [];
-        foreach ($therapies as $index => $therapy) {
-            foreach ($therapy->timing as $index => $timing) {
-                $therapyTiming = [
-                    'timing_id' => $timing->id,
-                    'therapy_name' => $therapy->name,
-                    'time' => $timing->time,
-                    'therapy_id' => $timing->therapy_id
-                ];
-                array_push($therapyTimings, $therapyTiming);
-            }
-        }
-        
-        $allTherapies = [];
-        foreach ($therapyTimings as $key => $value) {
-            $bookingMassages = BookingMassage::with('bookingInfo')->where('therapy_timing_id', $value['timing_id'])
-                            ->whereHas('bookingInfo', function($q) use($agoDate, $todayDate, $filter) {
-                                if ($filter == 0) {
-                                    $q->whereBetween('massage_date', array($agoDate, $todayDate));
-                                } else {
-                                    $q->whereMonth('massage_date', Carbon::now()->subMonth()->month);
-                                }
-                            })->count();
-            array_push($allTherapies, ['total' => $bookingMassages, 'therapy_name' => $value['therapy_name'], 'therapy_id' => $value['therapy_id']]);
-        }
-        $allTherapies = collect($allTherapies)->groupBy('therapy_id');
-        
-        $topTherapies = [];
-        foreach ($allTherapies as $key => $value) {
-            $total = 0;
-            foreach ($value as $key => $therapy) {
-                $total += $therapy['total'];
-            }
-            $data = [
-                'total' => $total,
-                'therapy_name' => $value[0]['therapy_name'], 
-                'therapy_id' => $value[0]['therapy_id']
-            ];
-            array_push($topTherapies, $data);
-        }
-
-        rsort($topTherapies);
-        return $topTherapies;
+        rsort($topServices);
+        return $topServices;
     }
 
     public function salesInfo(Request $request) {
@@ -229,13 +188,19 @@ class DashboardController extends BaseController {
         
         $todayBookings = $this->bookings($request, $todayDate, Booking::BOOKING_TODAY);
         
-        $massages = Massage::with('timing')->where('shop_id', $request->get('shop_id'))->get();
-        
-        $therapies = Therapy::with('timing')->where('shop_id', $request->get('shop_id'))->get();
+        $massages = ShopService::with('service')->where('shop_id', $request->get('shop_id'))
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::MASSAGE);
+                        })->get();
+                        
+        $therapies = ShopService::with('service')->where('shop_id', $request->get('shop_id'))
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::THERAPY);
+                        })->get();
 
-        $topMassages = $this->topMassages($request, $massages, $todayDate, $agoDate);
+        $topMassages = $this->topServices($request, $massages, $todayDate, $agoDate);
         
-        $topTherapies = $this->topTherapies($request, $therapies, $todayDate, $agoDate);
+        $topTherapies = $this->topServices($request, $therapies, $todayDate, $agoDate);
         
         return $this->returnSuccess(__($this->successMsg['sales.data.found']), ['allBookings' => $allBookings, 'cancelBooking' => $cancelBookings, 'pendingBooking' => $pendingBookings,
             'totalMassages' => $massages->count(), 'totalTherapies' => $therapies->count(), 'futureBookings' => $futureBookings,

@@ -13,7 +13,7 @@ use App\TherapistWorkingSchedule;
 use Illuminate\Http\Request;
 use DB;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
+use App\ServicePricing;
 
 class Shop extends BaseModel implements CanResetPasswordContract
 {
@@ -44,14 +44,10 @@ class Shop extends BaseModel implements CanResetPasswordContract
         'province_id',
         'country_id',
         'currency_id',
-        'pin_code',
-        'featured_image'
+        'pin_code'
     ];
 
     protected $hidden = ['shop_password','remember_token', 'created_at', 'updated_at'];
-
-    public $fileSystem = 'public';
-    public $featuredImagePath = 'shop\featured\\';
 
     const IS_ADMIN = '0';
     const MASSAGES = '0';
@@ -118,35 +114,12 @@ class Shop extends BaseModel implements CanResetPasswordContract
             'pin_code'    => ['nullable', 'string', 'max:255']
         ]);
     }
-
-    public function getFeaturedImageAttribute($value)
+   
+    public function services()
     {
-        $default = asset('images/shop/default.png');
-
-        // For set default image.
-        if (empty($value)) {
-            return $default;
-        }
-
-        $featuredImagePath = (str_ireplace("\\", "/", $this->featuredImagePath));
-
-        if (Storage::disk($this->fileSystem)->exists($featuredImagePath . $value)) {
-            return Storage::disk($this->fileSystem)->url($featuredImagePath . $value);
-        }
-
-        return $default;
+        return $this->hasMany('App\ShopService', 'shop_id', 'id');
     }
-
-    public function massages()
-    {
-        return $this->hasMany('App\Massage', 'shop_id', 'id');
-    }
-
-    public function therapies()
-    {
-        return $this->hasMany('App\Therapy', 'shop_id', 'id');
-    }
-
+    
     public function bookings()
     {
         return $this->hasMany('App\Booking', 'shop_id', 'id');
@@ -256,20 +229,15 @@ class Shop extends BaseModel implements CanResetPasswordContract
         return $bookingInfo;
     }
     
-    public function addBookingMassages($service, $bookingInfo, $request, $user, $isMassage) {
+    public function addBookingMassages($service, $bookingInfo, $request, $user) {
         
         $bookingMassageModel = new BookingMassage();     
-        if($isMassage)
-        {
-            $servicePrice = MassagePrice::where('massage_timing_id',$service['massage_timing_id'])->first();
-        } else {
-            $servicePrice = TherapiesPrices::where('therapy_timing_id',$service['therapy_timing_id'])->first();
-        }
+        $servicePrice = ServicePricing::where('service_timing_id',$service['service_timing_id'])->first();
         if(empty($servicePrice)) {
                 return ['isError' => true, 'message' => 'Service price not found'];
         }
-        $injuries = isset($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
         
+        $injuries = isset($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
         $bookingMassageData = [
             "price" => $servicePrice->price,
             "cost" => $servicePrice->cost,
@@ -277,10 +245,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "origional_cost"  => $servicePrice->cost,
             "exchange_rate" => isset($service['exchange_rate']) ? $service['exchange_rate'] : 0.00,
             "notes_of_injuries" => isset($injuries) ? $injuries : NULL,
-            "massage_timing_id" => $isMassage ? $service['massage_timing_id'] : NULL,
-            "massage_prices_id" => $isMassage ? $servicePrice->id  : NULL,
-            "therapy_timing_id" => $isMassage ? NULL : $service['therapy_timing_id'],
-            "therapy_prices_id" => $isMassage ? NULL : $servicePrice->id,
+            "service_pricing_id" => $servicePrice->id,
             "booking_info_id" => $bookingInfo->id,
             "pressure_preference" => isset($user) ? $user['pressure_preference'] : $request->pressure_preference,
             "gender_preference" => isset($user) ? $user['gender_preference'] : (!empty($request->gender_preference) ? $request->gender_preference : NULL),
@@ -295,11 +260,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
 
     public function totalServices()
     {
-        $totalMassages  = $this->massages->count();
-
-        $totalTherapies = $this->therapies->count();
-
-        return $totalMassages + $totalTherapies;
+        return $this->services->count();
     }
 
     public function getTotalServicesAttribute()
@@ -309,52 +270,42 @@ class Shop extends BaseModel implements CanResetPasswordContract
     
     public function getMassages(Request $request) {
         
-         $services = Massage::with('timing', 'pricing')->select('id', 'name', 'image', 'icon', 'shop_id')
-                        ->where('shop_id', $request->shop_id)->get();
+         $services = ShopService::with('service')->where('shop_id', $request->get('shop_id'))
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::MASSAGE);
+                        })->get()->groupBy('service_id');
          return $services;
     }
     
     public function getTherapies(Request $request) {
         
-         $services = Therapy::with('timing', 'pricing')->where('shop_id', $request->shop_id)->get();
+         $services = ShopService::with('service')->where('shop_id', $request->get('shop_id'))
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::THERAPY);
+                        })->get()->groupBy('service_id');
          return $services;
     }
     
     public function getTopItems(Request $request) {
 
-        $massageModel = new Massage();
-        $therapyModel = new Therapy();
+        $serviceModel = new ShopService();
 
-        $service = $request->service ? $request->service : Booking::MASSAGES;
-        if ($service == Booking::MASSAGES) {
-            $massageModel->setMysqlStrictFalse();
-            $getTopMassages = $massageModel->select(Massage::getTableName() . ".id", Massage::getTableName() . ".name", Massage::getTableName() . ".icon", BookingMassage::getTableName() . '.price', Massage::getTableName() . ".shop_id", DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
-                    ->leftJoin(MassagePrice::getTableName(), Massage::getTableName() . '.id', '=', MassagePrice::getTableName() . '.massage_id')
-                    ->leftJoin(BookingMassage::getTableName(), MassagePrice::getTableName() . '.id', '=', BookingMassage::getTableName() . '.massage_prices_id')
-                    ->whereNotNull(BookingMassage::getTableName() . '.id');
-            if (!empty($request->shop_id)) {
-                $getTopMassages->where(Massage::getTableName() . ".shop_id", $request->shop_id);
-            }
-            $getTopMassages = $getTopMassages->groupBy(Massage::getTableName() . '.id')
-                    ->orderBy('totalEarning', 'DESC')
-                    ->get();
-            $massageModel->setMysqlStrictTrue();
-            return $getTopMassages;
+        $service = $request->service ? $request->service : Service::MASSAGE;
+        $serviceModel->setMysqlStrictFalse();
+        $getTopServices = $serviceModel->select(Service::getTableName() . ".id", Service::getTableName() . ".english_name", Service::getTableName() . ".portugese_name",
+                BookingMassage::getTableName() . '.price', ShopService::getTableName() . ".shop_id", DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
+                ->join(Service::getTableName(), Service::getTableName() . '.id', '=', ShopService::getTableName() . '.service_id')
+                ->leftJoin(ServicePricing::getTableName(), Service::getTableName() . '.id', '=', ServicePricing::getTableName() . '.service_id')
+                ->leftJoin(BookingMassage::getTableName(), ServicePricing::getTableName() . '.id', '=', BookingMassage::getTableName() . '.service_pricing_id')
+                ->whereNotNull(BookingMassage::getTableName() . '.id')
+                ->where(Service::getTableName() . '.service_type', (string)$service);
+        if (!empty($request->shop_id)) {
+            $getTopServices->where(ShopService::getTableName() . ".shop_id", $request->shop_id);
         }
-        if ($service == Booking::THERAPIES) {
-            $therapyModel->setMysqlStrictFalse();
-            $getTopTherapies = $therapyModel->select(Therapy::getTableName() . ".id", Therapy::getTableName() . ".name", Therapy::getTableName() . ".image", BookingMassage::getTableName() . '.price', Therapy::getTableName() . ".shop_id", DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
-                    ->leftJoin(TherapiesPrices::getTableName(), Therapy::getTableName() . '.id', '=', TherapiesPrices::getTableName() . '.therapy_id')
-                    ->leftJoin(BookingMassage::getTableName(), TherapiesPrices::getTableName() . '.id', '=', BookingMassage::getTableName() . '.therapy_timing_id')
-                    ->whereNotNull(BookingMassage::getTableName() . '.id');
-            if (!empty($request->shop_id)) {
-                $getTopTherapies->where(Therapy::getTableName() . ".shop_id", $request->shop_id);
-            }
-            $getTopTherapies = $getTopTherapies->groupBy(Therapy::getTableName() . '.id')
-                    ->orderBy('totalEarning', 'DESC')
-                    ->get();
-            $therapyModel->setMysqlStrictTrue();
-            return $getTopTherapies;
-        }
+        $getTopServices = $getTopServices->groupBy(ShopService::getTableName() . '.service_id')
+                ->orderBy('totalEarning', 'DESC')
+                ->get();
+        $serviceModel->setMysqlStrictTrue();
+        return $getTopServices;
     }
 }

@@ -168,6 +168,5 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     $router->post('/getCities', 'TherapistController@getCities');
     $router->post('/searchClients', 'TherapistController@searchClients');
     $router->get('/complaintsSuggestion', 'TherapistController@getComplaintsSuggestion');
-    $router->get('/getSessionTypes', 'TherapistController@getSessionTypes');
-    $router->post('/new', 'TherapistController@newTherapist');
+    $router->get('/getSessionTypes', 'TherapistController@getSessionTypes');    
 });

@@ -22,6 +22,7 @@ use App\ServiceTiming;
 use App\ServicePricing;
 use App\ServiceRequirement;
 use App\ServiceImage;
+use Illuminate\Http\UploadedFile;
 
 class SuperAdminController extends BaseController {
 
@@ -221,25 +222,11 @@ class SuperAdminController extends BaseController {
             }
             $pack = $model->create($data);
             $packServiceModel = new PackService();
-            if(!empty($data['massage_id'])) {
-                foreach ($data['massage_id'] as $key => $value) {
+            if(!empty($data['service_id'])) {
+                foreach ($data['service_id'] as $key => $value) {
                     $service = [
-                        'massage_id' => $value,
-                        'massage_timing_id' => $data['massage_timing_id'][$key],
-                        'pack_id' => $pack->id
-                    ];
-                    $checks = $packServiceModel->validator($service);
-                    if ($checks->fails()) {
-                        return $this->returnError($checks->errors()->first(), NULL, true);
-                    }
-                    $packServiceModel->create($service);
-                }
-            }
-            if(!empty($data['therapy_id'])) {
-                foreach ($data['therapy_id'] as $key => $value) {
-                    $service = [
-                        'therapy_id' => $value,
-                        'therapy_timing_id' => $data['therapy_timing_id'][$key],
+                        'service_id' => $value,
+                        'service_timing_id' => $data['service_timing_id'][$key],
                         'pack_id' => $pack->id
                     ];
                     $checks = $packServiceModel->validator($service);
@@ -537,7 +524,8 @@ class SuperAdminController extends BaseController {
             $pricingData = [
                 'service_id' => $service->id,
                 'service_timing_id' => $timing->id,
-                'price' => $data['pricings'][$key]
+                'price' => $data['pricings'][$key],
+                'cost' => $data['cost'][$key]
             ];
             $check = $pricingModel->validator($pricingData);
             if ($check->fails()) {
@@ -548,7 +536,8 @@ class SuperAdminController extends BaseController {
                 'time' => $value,
                 'service_id' => $service->id,
                 'service_timing_id' => $timing->id,
-                'price' => $data['pricings'][$key]
+                'price' => $data['pricings'][$key],
+                'cost' => $data['cost'][$key]
             ];
         }
         
@@ -583,7 +572,7 @@ class SuperAdminController extends BaseController {
             if ($request->hasfile($key)) {
                 foreach ($request->file($key) as $file) {
                     
-                    $allowedfileExtension=['pdf','jpg','png','jpeg'];
+                    $allowedfileExtension=['jpg','png','jpeg'];
                     $name = $file->getClientOriginalExtension();
                     $fileName = mt_rand(). time() . '_' . $service->id . '.' . $name;
                     $check=in_array($name,$allowedfileExtension);
@@ -611,6 +600,40 @@ class SuperAdminController extends BaseController {
         return $imgData;
     }
     
+    public function addFeatureImage(Request $request, $service) {
+
+        $data = $request->all();
+        $imageModel = new ServiceImage();
+        $imgData = [];
+
+        if (!empty($data['featured_image']) && $data['featured_image'] instanceof UploadedFile) {
+            $checkImage = $imageModel->validateFeaturedImage($data);
+
+            if ($checkImage->fails()) {
+                unset($data['featured_image']);
+                return ['isError' => true, 'message' => $checkImage->errors()->first()];
+            }
+
+            $extension = $data['featured_image']->getClientOriginalExtension();
+            $extension = empty($extension) ? $data['featured_image']->extension() : $extension;
+            $fileName = mt_rand() . time() . '_' . $service->id . '.' . $extension;
+            $storeFile = $data['featured_image']->storeAs($imageModel->directory, $fileName, $imageModel->fileSystem);
+
+            if ($storeFile) {
+                $image['image'] = $fileName;
+                $image['service_id'] = $service->id;
+                $image['is_featured'] = ServiceImage::IS_FEATURED;
+                $check = $imageModel->validator($image);
+                if ($check->fails()) {
+                    return ['error' => $check->errors()->first(), 'data' => NULL];
+                }
+                $imageModel->create($image);
+                $imgData[] = $image;
+            }
+        }
+        return $imgData;
+    }
+
     public function addService(Request $request) {
         
         DB::beginTransaction();
@@ -642,8 +665,8 @@ class SuperAdminController extends BaseController {
             if (!empty($requirements['error'])) {
                 return ['isError' => true, 'message' => $requirements['error']];
             }
-            
-            $featuredImages = $this->addImages($request, $service, 'featured_images', ServiceImage::IS_FEATURED);
+                                    
+            $featuredImages = $this->addFeatureImage($request, $service);
             if (!empty($featuredImages['error'])) {
                 return ['isError' => true, 'message' => $featuredImages['error']];
             }
@@ -668,12 +691,18 @@ class SuperAdminController extends BaseController {
     public function getMassages() {
         
         $massages = Service::with('timings', 'pricings', 'images', 'requirement')->where('service_type', Service::MASSAGE)->get();
+        foreach ($massages as $key => $massage) {
+            $massage->name = $massage->english_name;
+        }
         return $this->returnSuccess(__($this->successMsg['massages']), $massages);
     }
     
     public function getTherapies() {
         
-        $massages = Service::with('timings', 'pricings', 'images', 'requirement')->where('service_type', Service::THERAPY)->get();
-        return $this->returnSuccess(__($this->successMsg['therapies']), $massages);
+        $therapies = Service::with('timings', 'pricings', 'images', 'requirement')->where('service_type', Service::THERAPY)->get();
+        foreach ($therapies as $key => $therapy) {
+            $therapy->name = $therapy->english_name;
+        }
+        return $this->returnSuccess(__($this->successMsg['therapies']), $therapies);
     }
 }

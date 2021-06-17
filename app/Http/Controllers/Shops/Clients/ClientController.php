@@ -21,6 +21,8 @@ use App\BookingMassage;
 use Carbon\Carbon;
 use App\Pack;
 use App\Voucher;
+use App\Service;
+use App\ServicePricing;
 
 class ClientController extends BaseController {
 
@@ -46,20 +48,22 @@ class ClientController extends BaseController {
         $bookingModel = new Booking();
         $bookingInfoModel = new BookingInfo();
         $bookingMassageModel = new BookingMassage();
-        
+        $serviceModel = new Service();
+        $servicePriceModel = new ServicePricing();
+                
         $userModel->setMysqlStrictFalse();
         
         $clients = $userModel->select(DB::RAW($userModel::getTableName() .'.*', $bookingModel::getTableName().'.id',
                 $bookingModel::getTableName().'.booking_type', $bookingModel::getTableName().'.user_id',
-                $bookingInfoModel::getTableName().'.id', $bookingMassageModel::getTableName().'.massage_timing_id',
-                $bookingMassageModel::getTableName().'.massage_prices_id', $bookingMassageModel::getTableName().'.booking_info_id',
-                $bookingMassageModel::getTableName().'.therapy_timing_id',$bookingMassageModel::getTableName().'.therapy_prices_id'))                
+                $bookingInfoModel::getTableName().'.id', $bookingMassageModel::getTableName().'.service_pricing_id',
+                $bookingMassageModel::getTableName().'.booking_info_id'))                
                 ->leftJoin($bookingModel::getTableName(), $bookingModel::getTableName().'.user_id', '=', $userModel::getTableName().'.id')
                 ->leftJoin($bookingInfoModel::getTableName(), $bookingInfoModel::getTableName().'.booking_id', '=', $bookingModel::getTableName().'.id')
                 ->leftJoin($bookingMassageModel::getTableName(), $bookingMassageModel::getTableName().'.booking_info_id', '=', $bookingInfoModel::getTableName().'.id')
+                ->leftJoin($servicePriceModel::getTableName(), $servicePriceModel::getTableName().'.id', '=', $bookingMassageModel::getTableName().'.service_pricing_id')
+                ->leftJoin($serviceModel::getTableName(), $serviceModel::getTableName().'.id', '=', $servicePriceModel::getTableName().'.service_id')
                 ->where(['users.shop_id' => $request->shop_id, 'users.is_removed' => User::$notRemoved]);
                         
-        
         $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
         $search_val = $request->search_val;
         
@@ -97,11 +101,9 @@ class ClientController extends BaseController {
         if(!empty($request->booking_type)) {
             // 1 for massages , 2 for therapies
             if($request->booking_type == 1){
-                $clients->whereNotNull($bookingMassageModel::getTableName().'.massage_prices_id')->whereNotNull($bookingMassageModel::getTableName().'.massage_timing_id')
-                        ->where($bookingMassageModel::getTableName().'.therapy_timing_id',NULL)->where($bookingMassageModel::getTableName().'.therapy_prices_id',NULL);
+                $clients->where($serviceModel::getTableName() . '.service_type', Service::MASSAGE);                
             } else {
-                $clients->whereNotNull($bookingMassageModel::getTableName().'.therapy_timing_id')->whereNotNull($bookingMassageModel::getTableName().'.therapy_prices_id')
-                        ->where($bookingMassageModel::getTableName().'.massage_prices_id',NULL)->where($bookingMassageModel::getTableName().'.massage_timing_id',NULL);
+                $clients->where($serviceModel::getTableName() . '.service_type', Service::THERAPY);
             }
         }
         

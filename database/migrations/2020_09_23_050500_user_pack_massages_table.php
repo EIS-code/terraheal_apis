@@ -18,8 +18,6 @@ class UserPackMassagesTable extends Migration
             $table->float('cost');
             $table->float('retail');
             $table->enum('is_removed', ['0', '1'])->default('0')->comment('0: Nope, 1: Yes');
-            $table->bigInteger('massage_prices_id')->unsigned();
-            $table->foreign('massage_prices_id')->references('id')->on('massage_prices')->onDelete('cascade');
             $table->bigInteger('user_pack_id')->unsigned();
             $table->foreign('user_pack_id')->references('id')->on('user_packs')->onDelete('cascade');
             $table->timestamps();

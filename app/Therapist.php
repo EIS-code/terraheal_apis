@@ -9,7 +9,6 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
-use App\Massage;
 use App\BookingInfo;
 use App\BookingMassage;
 use Illuminate\Http\UploadedFile;
@@ -153,14 +152,9 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         ]);
     }
 
-    public function selectedMassages()
+    public function selectedService()
     {
-        return $this->hasMany('App\TherapistSelectedMassage', 'therapist_id', 'id');
-    }
-
-    public function selectedTherapies()
-    {
-        return $this->hasMany('App\TherapistSelectedTherapy', 'therapist_id', 'id');
+        return $this->hasMany('App\TherapistSelectedService', 'therapist_id', 'id');
     }
 
     public function bookingInfos()
@@ -248,8 +242,10 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             $bookingInfo = new BookingInfo();
 
             $data->map(function($record, $key) use($bookingInfo, $request) {
-                $record->selected_services  = $record->selectedServices();
-
+                $massages = $record->selectedServices(Service::MASSAGE);
+                $therapies = $record->selectedServices(Service::THERAPY);
+                
+                $record->selected_services  = collect(['massages' => $massages, 'therapies' => $therapies]);
                 $record->total_massages     = $bookingInfo->getMassageCountByTherapist($record->id);
                 $record->total_therapies    = $bookingInfo->getTherapyCountByTherapist($record->id);
             });
@@ -260,47 +256,28 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         return $data;
     }
 
-    public function selectedServices()
+    public function selectedServices($type)
     {
-        $selectedMassages  = TherapistSelectedMassage::select(TherapistSelectedMassage::getTableName() . '.id', 'massage_id', Massage::getTableName() . '.name as massage_name', Massage::getTableName() . '.image')->join(Massage::getTableName(), TherapistSelectedMassage::getTableName() . '.massage_id', '=', Massage::getTableName() . '.id')->where('therapist_id', $this->id)->get();
-
-        if (!empty($selectedMassages) && !$selectedMassages->isEmpty()) {
-            $model = new Massage();
-
-            $selectedMassages->map(function($record) use($model) {
-                if (!empty($record->image)) {
-                    $imagePath = (str_ireplace("\\", "/", $model->imagePath));
-
-                    $record->image = Storage::disk($model->fileSystem)->url($imagePath . $record->image);
-                }
-            });
+        $selectedServices = TherapistSelectedService::with('service')->where('therapist_id', $this->id)
+                    ->whereHas('service', function($q) use($type){
+                            $q->where('service_type', $type);
+                        })->get();
+        $allservices = [];
+        if (!empty($selectedServices) && !$selectedServices->isEmpty()) {
+            $model = new ServiceImage();
+            foreach ($selectedServices as $key => $record) {
+                $image = $model->where(['service_id' => $record->service_id, 'is_featured' => ServiceImage::IS_FEATURED])->first();
+                $data = [
+                    'id' => $record->id,
+                    'service_id' => $record->service_id,
+                    'service_english_name' => $record->service->english_name,
+                    'service_portugese_name' => $record->service->portugese_name,
+                    'image' => !empty($image) ? $image->image : NULL
+                ];
+                array_push($allservices, $data);
+            }
         }
-
-        $selectedTherapies = TherapistSelectedTherapy::select(TherapistSelectedTherapy::getTableName() . '.id', 'therapy_id', Therapy::getTableName() . '.name as therapy_name', Therapy::getTableName() . '.image')->join(Therapy::getTableName(), TherapistSelectedTherapy::getTableName() . '.therapy_id', '=', Therapy::getTableName() . '.id')->where('therapist_id', $this->id)->get();
-
-        if (!empty($selectedTherapies) && !$selectedTherapies->isEmpty()) {
-            $model = new Therapy();
-
-            $selectedTherapies->map(function($record) use($model) {
-                if (!empty($record->image)) {
-                    $imagePath = (str_ireplace("\\", "/", $model->imagePath));
-
-                    $record->image = Storage::disk($model->fileSystem)->url($imagePath . $record->image);
-                }
-            });
-        }
-
-        return collect(['massages' => $selectedMassages, 'therapies' => $selectedTherapies]);
-    }
-
-    public function getMassageCountAttribute()
-    {
-        return $this->selectedMassages()->count();
-    }
-
-    public function getTherapyCountAttribute()
-    {
-        return $this->selectedTherapies()->count();
+        return $allservices;
     }
 
     public static function updateProfile(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -308,7 +285,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $model                          = new self();
         $modelTherapistLanguage         = new TherapistLanguage();
         $modelTherapistDocument         = new TherapistDocument();
-        $modelTherapistSelectedMassage  = new TherapistSelectedMassage();
+        $modelTherapistSelectedServices = new TherapistSelectedService();
 
         $data   = $request->all();
         $id     = !empty($data['id']) ? (int)$data['id'] : false;
@@ -540,12 +517,12 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         if (!empty($data['my_services']['massages'])) {
             foreach ((array)$data['my_services']['massages'] as $massageId) {
                 $massageData[] = [
-                    'massage_id'    => $massageId,
+                    'service_id'    => $massageId,
                     'therapist_id'  => $id
                 ];
             }
 
-            $checks = $modelTherapistSelectedMassage->validators($massageData);
+            $checks = $modelTherapistSelectedServices->validators($massageData);
             if ($checks->fails()) {
                 return ['isError' => true, 'message' => $checks->errors()->first()];
             }
@@ -618,7 +595,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         if (!empty($massageData)) {
             foreach ($massageData as $massage) {
-                $modelTherapistSelectedMassage::updateOrCreate(['massage_id' => $massage['massage_id'], 'therapist_id' => $massage['therapist_id']], $massage);
+                $modelTherapistSelectedServices::updateOrCreate(['service_id' => $massage['service_id'], 'therapist_id' => $massage['therapist_id']], $massage);
             }
         }
 
@@ -724,12 +701,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $start_time = new Carbon($current);
                 $end_time = new Carbon($date->format('H:i:s'));
                 $diff = $start_time->diff($end_time)->format("%h:%i");
-                $time = explode(':', $diff);
-                if ($time[0] == 0) {
-                    $available = 'In ' . $time[1] . ' min';
-                } else {
-                    $available = strtotime($diff) * 1000;
-                }
+                $available = strtotime($diff) * 1000;
             }
 
             $default = asset('images/therapists/therapist.png');
@@ -798,6 +770,9 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         // Check already exists.
         $find = BookingMassageStart::where('booking_massage_id', $bookingMassageId)->first();
+        if (!empty($find) && !empty($find->end_time)) {
+            return ['isError' => true, 'message' => __('Given booking massage already ended.')];
+        }
         if (!empty($find)) {
             return ['isError' => true, 'message' => __('Given booking massage already started.')];
         }

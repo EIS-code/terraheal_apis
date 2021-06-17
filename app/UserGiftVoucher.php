@@ -4,7 +4,6 @@ namespace App;
 
 use Illuminate\Support\Facades\Validator;
 use App\User;
-use App\Massage;
 use App\UserGiftVoucherThemeDesign;
 
 class UserGiftVoucher extends BaseModel
@@ -29,7 +28,7 @@ class UserGiftVoucher extends BaseModel
         'preference_email_date',
         'amount',
         'user_id',
-        'massage_id',
+        'service_id',
         'design_id',
         'unique_id',
         'is_pack',
@@ -53,7 +52,7 @@ class UserGiftVoucher extends BaseModel
             'preference_email_date'      => ['required', 'date', 'date_format:Y-m-d'],
             'amount'                     => ['required', 'between:0,99.99'],
             'user_id'                    => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
-            'massage_id'                 => ['required', 'integer', 'exists:' . Massage::getTableName() . ',id'],
+            'service_id'                 => ['required', 'integer', 'exists:' . Service::getTableName() . ',id'],
             'design_id'                  => ['required', 'integer', 'exists:' . UserGiftVoucherThemeDesign::getTableName() . ',id'],
             'unique_id'                  => ['required', 'unique:' . self::getTableName() . ',unique_id'],
             'is_pack'                    => ['integer', 'in:0,1'],
