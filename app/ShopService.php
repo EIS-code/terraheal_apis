@@ -14,10 +14,12 @@ class ShopService extends BaseModel
     
     const CENTER = '1';
     const HOME_HOTEL = '2';
+    const BOTH = '3';
 
     public static $allowAt = [
         self::CENTER => 'In massage center',
-        self::HOME_HOTEL => 'Home / Hotel visit'
+        self::HOME_HOTEL => 'Home / Hotel visit',
+        self::BOTH => 'Both'
     ];
     
     public function validator(array $data)
