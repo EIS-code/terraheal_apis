@@ -155,7 +155,7 @@ class CenterController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['center.booking.details']), ['homeVisit' => $homeVisit, 'centerVisit' => $centerVisit]);
     }
     
-    public function getUsers() {
+    public function getUsers(Request $request) {
         
         $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
         $shopId = $request->shop_id;
@@ -163,9 +163,8 @@ class CenterController extends BaseController {
         $appUsers = DB::table('booking_massages')
                 ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                ->join('users', 'users.id', '=', 'bookings.user_id')
                 ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
-                ->where('bookings.book_platform', (string) Booking::BOOKING_PLATFORM_APP)
-                ->get()
                 ->where('bookings.book_platform', (string) Booking::BOOKING_PLATFORM_APP);
                 
         $guestUsers = User::where('is_guest', (string) User::IS_GUEST);
