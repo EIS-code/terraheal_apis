@@ -11,6 +11,7 @@ use App\Booking;
 use App\BookingInfo;
 use DB;
 use App\Service;
+use App\ShopService;
 
 class DashboardController extends BaseController {
 
@@ -60,7 +61,19 @@ class DashboardController extends BaseController {
 
     public function getCenters() {
 
-        $centers = Shop::with('timetable')->withCount('massages', 'therapies')->get();
+        $centers = Shop::with('timetable')->get();
+        foreach ($centers as $key => $center) {
+            $massages = ShopService::with('service')->where('shop_id', $center->id)
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::MASSAGE);
+                        })->count();
+            $center->total_massages = $massages;
+            $therapies = ShopService::with('service')->where('shop_id', $center->id)
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::THERAPY);
+                        })->count();
+            $center->total_therapies = $therapies;
+        }
         return $this->returnSuccess(__($this->successMsg['centers']), $centers);
     }
 
