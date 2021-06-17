@@ -691,12 +691,18 @@ class SuperAdminController extends BaseController {
     public function getMassages() {
         
         $massages = Service::with('timings', 'pricings', 'images', 'requirement')->where('service_type', Service::MASSAGE)->get();
+        foreach ($massages as $key => $massage) {
+            $massage->name = $massage->english_name;
+        }
         return $this->returnSuccess(__($this->successMsg['massages']), $massages);
     }
     
     public function getTherapies() {
         
-        $massages = Service::with('timings', 'pricings', 'images', 'requirement')->where('service_type', Service::THERAPY)->get();
-        return $this->returnSuccess(__($this->successMsg['therapies']), $massages);
+        $therapies = Service::with('timings', 'pricings', 'images', 'requirement')->where('service_type', Service::THERAPY)->get();
+        foreach ($therapies as $key => $therapy) {
+            $therapy->name = $therapy->english_name;
+        }
+        return $this->returnSuccess(__($this->successMsg['therapies']), $therapies);
     }
 }
