@@ -9,7 +9,7 @@ use App\User;
 use App\BookingInfo;
 use App\BookingMassage;
 use App\Booking;
-use App\MassagePrice;
+use App\ServicePricing;
 use App\UserSetting;
 use App\UserEmailOtp;
 use App\UserAddress;
@@ -32,6 +32,7 @@ use Carbon\Carbon;
 use App\Libraries\CurrencyHelper;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use App\ServiceImage;
 
 class UserController extends BaseController
 {
@@ -291,31 +292,13 @@ class UserController extends BaseController
         $modelBookingInfo       = new BookingInfo();
         $modelBookingMassage    = new BookingMassage();
         $modelBooking           = new Booking();
-        $modelMassagePrice      = new MassagePrice();
+        $modelServicePrice      = new ServicePricing();
         $now                    = Carbon::now();
 
         DB::beginTransaction();
 
         try {
             $data = $this->buildPack($data);
-
-            $validator = $modelBooking->validator($data);
-            if ($validator->fails()) {
-                return $this->returns($validator->errors()->first(), NULL, true);
-            }
-
-            $bookingType = $data['booking_type'];
-
-            $bookingInfos = $data['booking_info'];
-            $validator    = $modelBookingInfo->validator($bookingInfos);
-            if ($validator->fails()) {
-                return $this->returns($validator->errors()->first(), NULL, true);
-            }
-
-            $validator = $modelBookingMassage->validator($bookingInfos, true, $bookingType);
-            if ($validator->fails()) {
-                return $this->returns($validator->errors()->first(), NULL, true);
-            }
 
             if (isset($data['booking_type'])) {
                 $data['booking_type'] = (string)$data['booking_type'];
@@ -331,6 +314,11 @@ class UserController extends BaseController
             $modelBooking->user_id           = $data['user_id'];
             $modelBooking->shop_id           = $data['shop_id'];
 
+            $validator = $modelBooking->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+            
             $modelBooking->fill($data);
             $modelBooking->save();
 
@@ -365,7 +353,11 @@ class UserController extends BaseController
                     'user_people_id'        => $infos['user_people_id'],
                     'created_at'            => $now
                 ];
-
+                
+                $validator    = $modelBookingInfo->validator($bookingInfos[$index]);
+                if ($validator->fails()) {
+                    return $this->returns($validator->errors()->first(), NULL, true);
+                }
                 $modelBookingInfo->fill($bookingInfos[$index]);
                 $modelBookingInfo->save();
 
@@ -374,8 +366,8 @@ class UserController extends BaseController
                 }
 
                 foreach ($infos['massage_info'] as $indexBookingMassage => $massageInfo) {
-                    $getMassagePrice = $modelMassagePrice->find($massageInfo['massage_prices_id']);
-
+                    $getMassagePrice = $modelServicePrice->find($massageInfo['service_pricing_id']);
+                    
                     $bookingMassages[$indexBookingMassage] = [
                         'price'                 => $this->currencyHelper->convert($getMassagePrice->price, $exchangeRate, $bookingCurrencyId),
                         'cost'                  => $this->currencyHelper->convert($getMassagePrice->cost, $exchangeRate, $bookingCurrencyId),
@@ -386,12 +378,15 @@ class UserController extends BaseController
                         'pressure_preference'   => $massageInfo['pressure_preference'],
                         'gender_preference'     => $massageInfo['gender_preference'],
                         'focus_area_preference' => $massageInfo['focus_area_preference'],
-                        'massage_timing_id'     => $getMassagePrice->massage_timing_id,
-                        'massage_prices_id'     => $massageInfo['massage_prices_id'],
+                        'service_pricing_id'     => $massageInfo['service_pricing_id'],
                         'booking_info_id'       => $bookingInfoId,
                         'room_id'               => $infos['room_id'],
                         'created_at'            => $now
                     ];
+                    $validator = $modelBookingMassage->validator($bookingMassages[$indexBookingMassage]);
+                    if ($validator->fails()) {
+                        return $this->returns($validator->errors()->first(), NULL, true);
+                    }
                 }
 
                 $modelBookingMassage->insert($bookingMassages);
@@ -422,7 +417,7 @@ class UserController extends BaseController
                     "gender_preference"     => 5,
                     "focus_area_preference" => 31,
                     "notes_of_injuries"     => "No any injury.",
-                    "massage_prices_id"     => 1
+                    "service_pricing_id"     => 1
                 ]
             ];
         }
@@ -984,8 +979,7 @@ class UserController extends BaseController
             if (!empty($bookings) && !$bookings->isEmpty()) {
                 foreach ($bookings as $key => $booking) {
                     if (!empty($booking->shop)) {
-                        $booking->shop->total_services = $booking->shop->massages->count();
-
+                        $booking->shop->total_services = !is_null($booking->shop->services) ? $booking->shop->services->count() : 0;
                         $response[] = $booking->shop;
                     }
                 }
@@ -1242,14 +1236,15 @@ class UserController extends BaseController
 
             if (!empty($getMassages) && !$getMassages->isEmpty()) {
                 $getMassages->map(function($getMassage) use(&$return) {
-                    if (!empty($getMassage->massagePrice) && !empty($getMassage->massagePrice->massage) && !empty($getMassage->massagePrice->timing)) {
-                        $massage = $getMassage->massagePrice->massage;
-                        $timing  = $getMassage->massagePrice->timing;
-
+                    
+                    $pricing = ServicePricing::with('service','timing')->where('id', $getMassage->service_price_id)->first();
+                    if (!empty($pricing->service) &&  !empty($pricing->timing)) {
+                        $image = ServiceImage::where(['service_id' => $pricing->service->id, 'is_featured' => ServiceImage::IS_FEATURED])->first();
                         $return[] = [
-                            'name'  => $massage->name,
-                            'time'  => $timing->time,
-                            'image' => $massage->image
+                            'service_english_name'  => $pricing->service->english_name,
+                            'service_portugese_name'  => $pricing->service->portugese_name,
+                            'time'  => $pricing->timing->time,
+                            'image' => $image->image
                         ];
                     }
                 });
@@ -1518,7 +1513,7 @@ class UserController extends BaseController
             return $this->returns($validator->errors()->first(), NULL, true);
         }
 
-        if ($model->checkServiceIdExists($serviceId, $type)) {
+        if ($model->checkServiceIdExists($serviceId)) {
             $create = $model->updateOrCreate($data);
 
             if ($create) {
@@ -1560,7 +1555,7 @@ class UserController extends BaseController
         $userId = (int)$request->get('user_id', false);
 
         if (!empty($userId)) {
-            $records = $model->where('user_id', $userId)->get();
+            $records = $model->with('services', 'user')->where('user_id', $userId)->get();
 
             if (!empty($records) && !$records->isEmpty()) {
                 $records = $model::mergeResponse($records);

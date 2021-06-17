@@ -16,7 +16,7 @@ class TherapistController extends BaseController
 
     public function getTherapists()
     {
-        $therapists = Therapist::with('selectedMassages', 'selectedTherapies')->get();
+        $therapists = Therapist::with('selectedService')->get();
 
         foreach ($therapists as $key => $therapist) {
 

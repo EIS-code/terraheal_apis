@@ -4,14 +4,14 @@ namespace App\Http\Controllers\SuperAdmin\Dashboard;
 
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
-use App\Therapy;
-use App\Massage;
 use App\Therapist;
 use App\Shop;
 use App\User;
 use App\Booking;
 use App\BookingInfo;
 use DB;
+use App\Service;
+use App\ShopService;
 
 class DashboardController extends BaseController {
 
@@ -24,8 +24,8 @@ class DashboardController extends BaseController {
 
     public function getDetails() {
 
-        $massages = Massage::all()->count();
-        $therapies = Therapy::all()->count();
+        $massages = Service::where('service_type', Service::MASSAGE)->get()->count();
+        $therapies = Service::where('service_type', Service::THERAPY)->get()->count();
         $shops = Shop::all()->count();
         $therapists = Therapist::all()->count();
         $clients = User::all()->count();
@@ -61,7 +61,19 @@ class DashboardController extends BaseController {
 
     public function getCenters() {
 
-        $centers = Shop::with('timetable')->withCount('massages', 'therapies')->get();
+        $centers = Shop::with('timetable')->get();
+        foreach ($centers as $key => $center) {
+            $massages = ShopService::with('service')->where('shop_id', $center->id)
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::MASSAGE);
+                        })->count();
+            $center->total_massages = $massages;
+            $therapies = ShopService::with('service')->where('shop_id', $center->id)
+                    ->whereHas('service', function($q) {
+                            $q->where('service_type', Service::THERAPY);
+                        })->count();
+            $center->total_therapies = $therapies;
+        }
         return $this->returnSuccess(__($this->successMsg['centers']), $centers);
     }
 

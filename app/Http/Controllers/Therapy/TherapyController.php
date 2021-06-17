@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Therapy;
 
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
-use App\Therapy;
 use App\TherapyQuestionnaire;
 use App\TherapyQuestionnaireAnswer;
-use App\Shop;
 use Carbon\Carbon;
 use DB;
+use App\Service;
 use App\Libraries\CommonHelper;
 
 class TherapyController extends BaseController
@@ -135,27 +134,14 @@ class TherapyController extends BaseController
         return $this->returns('success.therapy.questionnaire.answers.created', collect([]));
     }
 
-    public function getTherapies(Request $request, int $limit = 10)
+    public function getTherapies(Request $request)
     {
-        /*$request->merge(['type' => Shop::THERAPIES]);
-        $request->merge(['isGetAll' => true]);
+        $request->request->add(['type' => Service::THERAPY, 'isGetAll' => true]);
+        $getTherapies = CommonHelper::getAllService($request);
 
-        $therapies = CommonHelper::getAllService($request);*/
-
-        $model  = new Therapy();
-        $data   = $request->all();
-        $query  = (!empty($data['q'])) ? $data['q'] : NULL;
-        $limit  = (!is_numeric($limit)) ? 10 : $limit;
-        $shopId = (!empty($data['shop_id'])) ? (int)$data['shop_id'] : NULL;
-
-        $getTherapies = $model->where("name", "LIKE", "%{$query}%")->with(['timing' => function($qry) {
-            $qry->with('pricing');
-        }])->limit($limit)->get();
-
-        if (!empty($getTherapies) && !$getTherapies->isEmpty()) {
-            return $this->returns('success.therapy.found', $getTherapies);
+        if (!empty($getTherapies)) {
+            return $this->returns('success.therapy.found', collect($getTherapies));
         }
-
         return $this->returns('success.therapy.not.found', collect([]));
     }
 }
