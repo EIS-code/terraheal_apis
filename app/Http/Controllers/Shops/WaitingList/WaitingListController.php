@@ -10,7 +10,7 @@ use App\UserPeople;
 use App\Shop;
 use DB;
 use Carbon\Carbon;
-use App\Therapy;
+use App\Therapist;
 use App\User;
 use App\TherapistWorkingSchedule;
 use App\Pack;
