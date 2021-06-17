@@ -524,7 +524,8 @@ class SuperAdminController extends BaseController {
             $pricingData = [
                 'service_id' => $service->id,
                 'service_timing_id' => $timing->id,
-                'price' => $data['pricings'][$key]
+                'price' => $data['pricings'][$key],
+                'cost' => $data['cost'][$key]
             ];
             $check = $pricingModel->validator($pricingData);
             if ($check->fails()) {
@@ -535,7 +536,8 @@ class SuperAdminController extends BaseController {
                 'time' => $value,
                 'service_id' => $service->id,
                 'service_timing_id' => $timing->id,
-                'price' => $data['pricings'][$key]
+                'price' => $data['pricings'][$key],
+                'cost' => $data['cost'][$key]
             ];
         }
         

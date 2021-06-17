@@ -21,7 +21,7 @@ class ServicePricing extends BaseModel
             'service_id'            => ['required', 'integer', 'exists:' . Service::getTableName() . ',id'],
             'service_timing_id'     => ['required', 'integer', 'exists:' . ServiceTiming::getTableName() . ',id'],
             'price'                 => ['required'],
-            'cost'                 => ['required']
+            'cost'                  => ['required']
         ]);
     }
 
