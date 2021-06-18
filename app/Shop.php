@@ -232,7 +232,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
     public function addBookingMassages($service, $bookingInfo, $request, $user) {
         
         $bookingMassageModel = new BookingMassage();     
-        $servicePrice = ServicePricing::where('service_timing_id',$service['service_timing_id'])->first();
+        $servicePrice = ServicePricing::where(['service_timing_id' => $service['service_timing_id'], 'service_id' => $service['service_id']])->first();
         if(empty($servicePrice)) {
                 return ['isError' => true, 'message' => 'Service price not found'];
         }
