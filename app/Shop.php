@@ -255,7 +255,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
         if ($checks->fails()) {
             return ['isError' => true, 'message' => $checks->errors()->first()];
         }
-        return BookingMassage::updateOrCreate($bookingMassageData, $bookingMassageData);
+        return BookingMassage::updateOrCreate(["service_pricing_id" => $servicePrice->id,"booking_info_id" => $bookingInfo->id], $bookingMassageData);
     }
 
     public function totalServices()
