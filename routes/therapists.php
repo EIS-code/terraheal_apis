@@ -161,6 +161,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     });
     
     $router->post('get', 'TherapistController@getOthers');
+    $router->post('/observation/add', 'TherapistController@addObservation');
     $router->post('/getServices', 'TherapistController@getAllServices');
     $router->post('/getTherapists', 'TherapistController@getTherapists');
     $router->get('/getLanguages', 'TherapistController@getLanguages');

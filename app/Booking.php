@@ -236,6 +236,7 @@ class Booking extends BaseModel
                             $userModel::getTableName() . '.qr_code_path, ' . 
                             $userGenderPreferenceModel::getTableName().'.name as genderPreference,' . 
                             $bookingMassageModel::getTableName().'.service_pricing_id,' . 
+                            $bookingMassageModel::getTableName().'.observation,' . 
                             $bookingMassageModel::getTableName() . '.is_confirm, ' . 
                             $bookingInfoModel::getTableName().'.is_done,' . 
                             $bookingInfoModel::getTableName().'.is_cancelled,' . 

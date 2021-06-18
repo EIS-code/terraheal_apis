@@ -60,6 +60,7 @@ class TherapistController extends BaseController
         'somethingWrong' => "Something went wrong.",
         'no.schedule.found' => "No schedule found.",
         'no.document.found' => "No document found.",
+        'no.booking.found' => "No booking found.",
         'error.otp' => 'Please provide OTP properly.',
         'error.otp.wrong' => 'OTP seems wrong.',
         'error.otp.already.verified' => 'OTP already verified.',
@@ -118,6 +119,7 @@ class TherapistController extends BaseController
         'exchange.list' => 'Therapist exchange shifts list found successfully !',
         'shift.approve' => 'Shift approve successfully !',
         'shift.reject' => 'Shift reject successfully !',
+        'observation.add' => 'Observation added successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1218,5 +1220,16 @@ class TherapistController extends BaseController
         $shift->update(['status' => TherapistExchange::REJECT]);
         
         return $this->returnSuccess(__($this->successMsg['shift.reject']), $shift);
+    }
+    
+    public function addObservation(Request $request) {
+        
+        $booking = BookingMassage::find($request->booking_massage_id);
+        if(empty($booking)) {
+            return $this->returnError($this->errorMsg['no.booking.found']);
+        }
+        
+        $booking->update(['observation' => $request->observation]);
+        return $this->returnSuccess(__($this->successMsg['observation.add']), $booking);
     }
 }
