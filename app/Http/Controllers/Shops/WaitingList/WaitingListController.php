@@ -862,7 +862,6 @@ class WaitingListController extends BaseController {
                 }
             }
             if (!empty($request->users)) {
-                $userModel = new UserPeople();
                 foreach ($request->users as $key => $user) {
                     $bookingInfo = BookingInfo::where(['booking_id' => $booking->id ,'user_people_id' => $user['id']])->first();
                     $data = [
