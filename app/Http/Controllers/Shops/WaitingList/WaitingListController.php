@@ -41,6 +41,7 @@ class WaitingListController extends BaseController {
         'assign.room' => 'Assign room successfully',
         'assign.therapist' => 'Assign therapist successfully',
         'new.booking' => 'New booking added successfully',
+        'edit.booking' => 'Booking updated successfully',
         'booking.overview' => 'Bookings found successfully',
         'massages' => 'Massages found successfully',
         'therapies' => 'Therapies found successfully',
@@ -828,6 +829,71 @@ class WaitingListController extends BaseController {
             return $this->returnSuccess(__($this->successMsg['data.found']), $vouchers);
         } else {
             return $this->returnSuccess(__($this->successMsg['not.found']), null);
+        }
+    }
+    
+    public function editBooking(Request $request) {
+
+        DB::beginTransaction();
+        try {
+            $shopModel = new Shop();
+            $booking = Booking::find($request->booking_id);
+            $booking->update(['special_notes' => $request->note]);
+            $bookingInfoModel = new BookingInfo();
+            $bookingInfo = BookingInfo::where('booking_id', $booking->id)->whereNull('user_people_id')->first();
+            $data = [
+                'booking_currency_id' => $bookingInfo->booking_currency_id,
+                'shop_currency_id' => $bookingInfo->shop_currency_id,
+                'booking_id' => $booking->id,
+                'therapist_id' => $request->therapist_id
+            ];
+            $checks = $bookingInfoModel->validator($data);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            $bookingInfo->update(['therapist_id' => $request->therapist_id]);
+            
+            if (count($request->services) > 0) {
+                foreach ($request->services as $key => $value) {
+                    $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, NULL);
+                    if (!empty($service['isError']) && !empty($service['message'])) {
+                        return $this->returnError($service['message'], NULL, true);
+                    }
+                }
+            }
+            if (!empty($request->users)) {
+                $userModel = new UserPeople();
+                foreach ($request->users as $key => $user) {
+                    $bookingInfo = BookingInfo::where(['booking_id' => $booking->id ,'user_people_id' => $user['id']])->first();
+                    $data = [
+                        'booking_currency_id' => $bookingInfo->booking_currency_id,
+                        'shop_currency_id' => $bookingInfo->shop_currency_id,
+                        'booking_id' => $booking->id,
+                        'therapist_id' => $user['therapist_id']
+                    ];
+                    $checks = $bookingInfoModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $bookingInfo->update(['therapist_id' => $user['therapist_id']]);
+                    if (count($user['services']) > 0) {
+                        foreach ($user['services'] as $key => $value) {
+                            $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, $user);
+                            if (!empty($service['isError']) && !empty($service['message'])) {
+                                return $this->returnError($service['message'], NULL, true);
+                            }
+                        }
+                    }
+                }
+            }
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['edit.booking']));
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
         }
     }
 }
