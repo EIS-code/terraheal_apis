@@ -217,8 +217,7 @@ class Booking extends BaseModel
                             $roomModel::getTableName().'.id as room_id,'.
                             $roomModel::getTableName().'.name as roomName,'.
                             $roomModel::getTableName().'.total_beds as totalBeds,'.
-                            $serviceModel::getTableName() . '.english_name as service_english_name,' . 
-                            $serviceModel::getTableName() . '.portugese_name as service_portugese_name,' . 
+                            $serviceModel::getTableName() . '.english_name as service_name,' . 
                             $serviceModel::getTableName() . '.service_type as service_type,' . 
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date,' . 
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
