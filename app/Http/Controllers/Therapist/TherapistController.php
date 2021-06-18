@@ -13,7 +13,6 @@ use App\BookingMassage;
 use App\MassagePreferenceOption;
 use App\TherapistLanguage;
 use App\TherapistDocument;
-use App\TherapistSelectedMassage;
 use App\Language;
 use App\Country;
 use App\City;
