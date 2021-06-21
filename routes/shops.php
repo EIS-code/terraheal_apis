@@ -119,6 +119,22 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     
     $router->post('/signIn', 'Manager\ManagerController@signIn');
     $router->post('/availability/add', 'Manager\ManagerController@addAvailabilities');
+    $router->post('/dashboard/info/get', 'Manager\ManagerController@getInfo');
+    $router->post('/therapists/get', 'Manager\ManagerController@getTherapists');
+    $router->post('/massages/get', 'Manager\ManagerController@getMassages');
+    $router->post('/therapies/get', 'Manager\ManagerController@getTherapies');
+    $router->post('/bookings/get', 'Manager\ManagerController@getBookings');
+    $router->post('/update/profile', 'Manager\ManagerController@updateProfile');
+    
+    $router->group(['prefix' => 'verify'], function () use($router) {
+        $router->post('/mobile', 'Manager\ManagerController@verifyMobile');
+        $router->post('/email', 'Manager\ManagerController@verifyEmail');
+    });
+    
+    $router->group(['prefix' => 'compare'], function () use($router) {
+        $router->post('/otp/email', 'Manager\ManagerController@compareOtpEmail');
+        $router->post('/otp/mobile', 'Manager\ManagerController@compareOtpSms');
+    });
     
     $router->group(['prefix' => 'news'], function () use($router) {
     
@@ -128,7 +144,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/get', 'Manager\ManagerController@getNews');
         $router->post('/details/get', 'Manager\ManagerController@newsDetails');
     });
-
+    
 });
 
 $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {

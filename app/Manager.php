@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class Manager extends BaseModel
 {
@@ -17,32 +18,91 @@ class Manager extends BaseModel
         'city_id',
         'province_id',
         'country_id',
+        'dob',
+        'gender',
+        'nif',
+        'tel_number',
+        'emergency_tel_number',
+        'id_passport',
+        'is_email_verified',
+        'is_mobile_verified',
+        'news'
     ];
 
     protected $table = 'manager';
     protected $hidden = ['password', 'remember_token', 'created_at', 'updated_at'];
 
-
+    const IS_NOT_VERIFIED = '0';
+    const IS_VERIFIED = '1';
+    
+    public $fileSystem = 'public';
+    public $profilePhotoPath = 'manager\profile\\';
+    
     public function validator(array $data, $id = false, $isUpdate = false)
     {
-        $user = NULL;
         if ($isUpdate === true && !empty($id)) {
-            $emailValidator      = ['unique:manager,email,' . $id];
+            $emailValidator      = ['string', 'email', 'max:255', 'unique:superadmins,email,' . $id];
         } else {
-            $emailValidator      = ['unique:manager'];
+            $emailValidator      = ['required', 'string', 'email', 'max:255', 'unique:superadmins'];
+        }
+        
+        return Validator::make($data, [
+            'name'                    => ['nullable', 'string', 'max:255'],
+            'surname'                 => ['nullable', 'string', 'max:255'],
+            'email'                   => $emailValidator,
+            'address'                 => ['nullable', 'string', 'max:255'],
+            'image'                   => ['nullable', 'string'],
+            'gender'                  => ['nullable', 'string'],
+            'dob'                     => ['nullable', 'string'],
+            'nif'                     => ['nullable', 'string'],
+            'id_passport'             => ['nullable', 'string'],
+            'tel_number'              => ['nullable', 'string', 'max:50'],
+            'emergency_tel_number'    => ['nullable', 'string', 'max:50'],
+            'shop_id'                 => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
+            'province_id'             => ['nullable', 'integer', 'exists:' . Province::getTableName() . ',id'],
+            'country_id'              => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
+            'city_id'                 => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']
+        ]);
+    }
+    
+    public function validatePhoto($request)
+    {
+        return Validator::make($request, [
+            'image' => 'mimes:jpeg,png,jpg',
+        ], [
+            'image' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        ]);
+    }
+    
+    public function getImageAttribute($value)
+    {
+
+        // For set default image.
+        if (empty($value)) {
+            return $value;
         }
 
-        return Validator::make($data, [
-            'name'                => ['nullable', 'string', 'max:255'],
-            'surname'             => ['nullable', 'string', 'max:255'],
-            'address'             => ['nullable', 'string', 'max:255'],
-            'email'               => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
-            'password'            => ['required', 'string', 'max:255'],
-            'shop_id'            => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
-            'city_id'             => ['nullable'],
-            'province_id'         => ['nullable'],
-            'country_id'          => ['nullable'],
-            'currency_id'         => ['nullable'],
-        ]);
-    }   
+        $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
+
+        if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value)) {
+            return Storage::disk($this->fileSystem)->url($profilePhotoPath . $value);
+        }
+
+        return $value;
+    }
+    
+    public function country()
+    {
+        return $this->hasOne('App\Country', 'id', 'country_id');
+    }
+
+    public function province()
+    {
+        return $this->hasOne('App\Province', 'id', 'province_id');
+    }
+    
+    public function city()
+    {
+        return $this->hasOne('App\City', 'id', 'city_id');
+    }
 }

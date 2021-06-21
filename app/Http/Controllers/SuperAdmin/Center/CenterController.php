@@ -101,10 +101,7 @@ class CenterController extends BaseController {
         if (empty($shop)) {
             return $this->returnError($this->errorMsg['center.not.found']);
         } 
-        $massages = $shopModel->getMassages($request)->count();
-        $therapies = $shopModel->getTherapies($request)->count();
-        $therapists = Therapist::where('shop_id', $request->shop_id)->get()->count();
-        $clients = User::with('shop:id,name','city:id,name','country:id,name')->where('shop_id', $request->shop_id)->get()->count();
+        $data = $shopModel->dashboardInfo($request);
         
 //        $homeBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_HHV, 'shop_id' => $request->shop_id])->get()->count();
 //        $centerBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_IMC, 'shop_id' => $request->shop_id])->get()->count();
@@ -120,39 +117,14 @@ class CenterController extends BaseController {
 //        $managers = Manager::where('shop_id', $request->shop_id)->get()->count();
 //        $staff = $therapists + $receptionists + $managers;
 
-        return $this->returnSuccess(__($this->successMsg['center.details']), ['massages' => $massages, 'therapies' => $therapies, 'therapists' => $therapists,'clients' => $clients, 'shop' => $shop]);
+        return $this->returnSuccess(__($this->successMsg['center.details']), $data);
     }
     
     public function getCenterBookings(Request $request) {
         
-        $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
-        $booking = DB::table('booking_massages')
-                ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
-                ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
-                ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*');
-        
-        $now = Carbon::now();
-        if ($dateFilter == Booking::TODAY) {
-            $booking->where('booking_infos.massage_date', Carbon::today()->format('Y-m-d'));
-        }
-        if ($dateFilter == Booking::YESTERDAY) {
-            $booking->where('booking_infos.massage_date', $now->subDays(1));
-        }
-        if ($dateFilter == Booking::THIS_WEEK) {
-            $weekStartDate = $now->startOfWeek()->format('Y-m-d');
-            $weekEndDate = $now->endOfWeek()->format('Y-m-d');
-
-            $booking->whereBetween('booking_infos.massage_date', [$weekStartDate, $weekEndDate]);
-        }
-        if ($dateFilter == Booking::THIS_MONTH) {
-            $booking->whereMonth('booking_infos.massage_date', $now->month);
-        }
-        $center = clone $booking;
-        
-        $homeVisit = $booking->where('bookings.booking_type' , Booking::BOOKING_TYPE_HHV)->get()->count();
-        $centerVisit = $center->where('bookings.booking_type' , Booking::BOOKING_TYPE_IMC)->get()->count();
-        
-        return $this->returnSuccess(__($this->successMsg['center.booking.details']), ['homeVisit' => $homeVisit, 'centerVisit' => $centerVisit]);
+        $shopModel = new Shop();
+        $bookings = $shopModel->getBookings($request);      
+        return $this->returnSuccess(__($this->successMsg['center.booking.details']), $bookings);
     }
     
     public function getUsers(Request $request) {
@@ -637,22 +609,8 @@ class CenterController extends BaseController {
     
     public function getTherapists(Request $request) {
         
-        $therapists = Therapist::withCount('selectedService')->where('shop_id', $request->shop_id)->get();
-        
-        foreach ($therapists as $key => $therapist) {
-
-            $ratings = TherapistUserRating::where(['model_id' => $therapist->id, 'model' => 'App\Therapist'])->get();
-
-            $cnt = $rates = $avg = 0;
-            if ($ratings->count() > 0) {
-                foreach ($ratings as $i => $rating) {
-                    $rates += $rating->rating;
-                    $cnt++;
-                }
-                $avg = $rates / $cnt;
-            }
-            $therapist['average'] = number_format($avg, 2);
-        }
+        $shopModel = new Shop();
+        $therapists = $shopModel->getTherapists($request);
         
         return $this->returnSuccess(__($this->successMsg['center.therapists.details']), $therapists);
     }
