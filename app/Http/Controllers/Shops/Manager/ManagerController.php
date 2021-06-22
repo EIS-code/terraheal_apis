@@ -128,90 +128,65 @@ class ManagerController extends BaseController {
     
     public function getNews(Request $request) {
 
-        $data = TherapistNews::with('therapists:id', 'news')
-                ->whereHas('news', function($q) use($request) {
-            $q->where('manager_id', $request->manager_id);
-        });
+        $data = News::with('therapistsNews')->where('manager_id', $request->manager_id);
         $filter = !empty($request->filter) ? $request->filter : News::TODAY;
         $now = Carbon::now();
-        
+
         if ($filter == News::TODAY) {
-            $data->whereHas('news', function($q) use($now) {
-                $q->whereDate('created_at', $now->format('Y-m-d'));
-            });
+            $data->whereDate('created_at', $now->format('Y-m-d'));
         }
         if ($filter == News::YESTERDAY) {
-            $data->whereHas('news', function($q) use($now) {
-                $q->whereDate('created_at', $now->subDays(1));
-            });
+            $data->whereDate('created_at', $now->subDays(1));
         }
         if ($filter == News::THIS_WEEK) {
             $weekStartDate = $now->startOfWeek()->format('Y-m-d');
             $weekEndDate = $now->endOfWeek()->format('Y-m-d');
-            $data->whereHas('news', function($q) use($weekStartDate, $weekEndDate){
-                $q->whereDate('created_at', '>=', $weekEndDate)->whereDate('created_at', '<=', $weekStartDate);
-            });
+            $data->whereDate('created_at', '>=', $weekEndDate)->whereDate('created_at', '<=', $weekStartDate);
         }
         if ($filter == News::CURRENT_MONTH) {
-            $data->whereHas('news', function($q) use($now) {
-                $q->whereMonth('created_at', $now->month);
-            });
+            $data->whereMonth('created_at', $now->month);
         }
         if ($filter == News::LAST_7_DAYS) {
             $agoDate = $now->subDays(7)->format('Y-m-d');
             $todayDate = $now->format('Y-m-d');
-            $data->whereHas('news', function($q) use($todayDate, $agoDate){
-                $q->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
-            });
+            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
         }
         if ($filter == News::LAST_14_DAYS) {
             $agoDate = $now->subDays(14)->format('Y-m-d');
             $todayDate = $now->format('Y-m-d');
-            $data->whereHas('news', function($q) use($todayDate, $agoDate){
-                $q->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
-            });
+            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
         }
         if ($filter == News::LAST_30_DAYS) {
             $agoDate = $now->subDays(30)->format('Y-m-d');
             $todayDate = $now->format('Y-m-d');
-            $data->whereHas('news', function($q) use($todayDate, $agoDate){
-                $q->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
-            });
+            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
         }
         if ($filter == News::CUSTOM) {
             $date = $date = Carbon::createFromTimestampMs($request->date);
-            $data->whereHas('news', function($q) use($date) {
-                $q->whereDate('created_at', $date);
-            });
+            $data->whereDate('created_at', $date);
         }
-        $data = $data->get()->groupBy('news_id');
+        $data = $data->get();
         $allTherapist = Therapist::where('shop_id', $request->shop_id)->get()->count();
 
         $allNews = [];
         if (!empty($data)) {
             foreach ($data as $key => $news) {
 
-                $value = $news[0]['news'];
                 $newsData = [
-                    'id' => $value['id'],
-                    'title' => $value['title'],
-                    'sub_title' => $value['sub_title'],
-                    'description' => $value['description'],
-                    'manager_id' => $value['manager_id'],
-                    'created_at' => strtotime($value['created_at']) * 1000,
+                    'id' => $news['id'],
+                    'title' => $news['title'],
+                    'sub_title' => $news['sub_title'],
+                    'description' => $news['description'],
+                    'manager_id' => $news['manager_id'],
+                    'created_at' => strtotime($news['created_at']) * 1000,
                 ];
-                $cnt = 0;
-                foreach ($news as $key => $value) {
-                    $cnt++;
-                }
-                $newsData['read'] = $cnt;
-                $newsData['unread'] = $allTherapist - $cnt;
+                $newsData['read'] = $news['therapistsNews']->count();
+                $newsData['unread'] = $allTherapist - $newsData['read'];
 
                 array_push($allNews, $newsData);
                 unset($newsData);
             }
         }
-
         return $this->returnSuccess(__($this->successMsg['news']), $allNews);
     }
 
