@@ -37,7 +37,7 @@ class ManagerController extends BaseController {
     ];
     
     public $successMsg = [
-        'login' => "Manager found successfully !",
+        'login' => "Login successfully !",
         'therapist.availability' => 'Therapist availability added successfully !',
         'news' => 'News data found successfully !',
         'news.details' => 'News details found successfully !',
