@@ -124,7 +124,8 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->post('/massages/get', 'Manager\ManagerController@getMassages');
     $router->post('/therapies/get', 'Manager\ManagerController@getTherapies');
     $router->post('/bookings/get', 'Manager\ManagerController@getBookings');
-    $router->post('/update/profile', 'Manager\ManagerController@updateProfile');
+    $router->post('/profile/update', 'Manager\ManagerController@updateProfile');
+    $router->post('/profile/get', 'Manager\ManagerController@getProfile');
     
     $router->group(['prefix' => 'verify'], function () use($router) {
         $router->post('/mobile', 'Manager\ManagerController@verifyMobile');

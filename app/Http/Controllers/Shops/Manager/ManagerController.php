@@ -24,7 +24,7 @@ class ManagerController extends BaseController {
     public $errorMsg = [
         'loginEmail' => "Please provide email.",
         'loginPass' => "Please provide password.",
-        'loginBoth' => "Shop email or password seems wrong.",
+        'loginBoth' => "Manager email or password seems wrong.",
         'news.not.found' => "News not found.",
         'center.not.found' => "Shop not found.",
         'error.otp' => 'Please provide OTP properly.',
@@ -52,6 +52,7 @@ class ManagerController extends BaseController {
         'success.sms.sent' => 'SMS sent successfully !',
         'success.email.sent' => 'Email sent successfully !',
         'edit.profile' => 'Profile updated successfully!',
+        'get.profile' => 'Manager profile found successfully!',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -477,5 +478,14 @@ class ManagerController extends BaseController {
         $manager->update($data);
         $manager = $managerModel->with('country', 'city', 'province')->find($data['manager_id']);
         return $this->returnSuccess(__($this->successMsg['edit.profile']), $manager);
+    }
+    
+    public function getProfile(Request $request) {
+        
+        $manager = Manager::with('country', 'province', 'city')->find($request->manager_id);
+        if(empty($manager)) {
+            return $this->returnError($this->errorMsg['manager.not.found']);
+        }
+        return $this->returnSuccess(__($this->successMsg['get.profile']), $manager);
     }
 }
