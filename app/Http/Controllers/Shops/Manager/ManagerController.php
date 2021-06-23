@@ -114,7 +114,7 @@ class ManagerController extends BaseController {
 
         if (!empty($email) && !empty($password)) {
 
-            $manager = Manager::where(['email' => $email, 'is_email_verified' => Manager::IS_VERIFIED])->first();
+            $manager = Manager::with('country', 'province', 'city')->where(['email' => $email, 'is_email_verified' => Manager::IS_VERIFIED])->first();
             
             if (!empty($manager) && Hash::check($password, $manager->password)) {
                 return $this->returnSuccess(__($this->successMsg['login']), $manager);
@@ -476,7 +476,7 @@ class ManagerController extends BaseController {
         }
         
         $manager->update($data);
-        $manager = $managerModel->with('country', 'city', 'province')->find($data['manager_id']);
+        $manager = $managerModel->with('country', 'province', 'city')->find($data['manager_id']);
         return $this->returnSuccess(__($this->successMsg['edit.profile']), $manager);
     }
     
