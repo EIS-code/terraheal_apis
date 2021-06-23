@@ -182,7 +182,7 @@ class ManagerController extends BaseController {
                     'created_at' => strtotime($news['created_at']) * 1000,
                 ];
                 $newsData['read'] = $news['therapistsNews']->count();
-                $newsData['unread'] = $allTherapist - $newsData['read'];
+                $newsData['unread'] = $newsData['read'] == $allTherapist ? 0 : $allTherapist - $newsData['read'];
 
                 array_push($allNews, $newsData);
                 unset($newsData);
