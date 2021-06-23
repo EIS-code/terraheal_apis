@@ -82,17 +82,15 @@ class LocationController extends BaseController
         $modelProvince  = new Province();
         $modelCity      = new City();
         $data           = $request->all();
-
+        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
+        
         $provinceId = (!empty($data['province_id'])) ? $data['province_id'] : NULL;
         $countryId  = (!empty($data['country_id'])) ? $data['country_id'] : NULL;
         $returnData = NULL;
 
         if (!empty($provinceId)) {
-            $getData = $modelProvince->where('id', $provinceId)->with('city')->first();
-
-            if (!empty($getData->city)) {
-                $returnData = $getData->city;
-            }
+            $returnData = $modelCity->where('province_id', $provinceId)->paginate(10, ['*'], 'page', $pageNumber);
+            
         } elseif (!empty($countryId)) {
             $modelCity->setMysqlStrictFalse();
 
@@ -100,7 +98,7 @@ class LocationController extends BaseController
                                     ->join($modelProvince::getTableName(), $modelCity::getTableName() . '.province_id', '=', $modelProvince::getTableName() . '.id')
                                     ->join($modelCountry::getTableName(), $modelProvince::getTableName() . '.country_id', '=', $modelCountry::getTableName() . '.id')
                                     ->where($modelCountry::getTableName() . '.id', $countryId)
-                                    ->get();
+                                    ->paginate(10, ['*'], 'page', $pageNumber);
 
             $modelCity->setMysqlStrictTrue();
         }
