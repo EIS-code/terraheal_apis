@@ -68,7 +68,7 @@ class ManagerEmailOtp extends BaseModel
                 'is_verified' => (isset($data['is_verified'])) ? $data['is_verified'] : $getOtpInfo->is_verified
             ];
 
-            $update     = $this->where(['therapist_id' => $id, 'email' => $getOtpInfo->email])->update($updateData);
+            $update     = $this->where(['manager_id' => $id, 'email' => $getOtpInfo->email])->update($updateData);
         } catch (Exception $e) {
             DB::rollBack();
         }
