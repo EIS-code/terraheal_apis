@@ -137,7 +137,7 @@ class TherapistController extends BaseController
 
         if (!empty($email) && !empty($password)) {
             $getTherapist = $model->where(['email' => $email, 'is_freelancer' => (string)$isFreelancer, 'active_app' => Therapist::IS_ACTIVE])->first();
-
+            dd($getTherapist);
             if (!empty($getTherapist) && Hash::check($password, $getTherapist->password)) {
                 $getTherapist = $getTherapist->first();
 
