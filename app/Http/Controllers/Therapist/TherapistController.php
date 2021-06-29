@@ -869,12 +869,25 @@ class TherapistController extends BaseController
         $id = $request->get('id', false);
 
         if ($id) {
-            $date           = new Carbon($request->get('date', NULL) / 1000);
-            $minutes        = $request->get('minutes', 0);
-            $breakFor       = $request->get('break_for', TherapistWorkingScheduleBreak::OTHER);
-            $breakReason    = $request->get('break_reason', NULL);
+            $date      = new Carbon($request->get('date', NULL) / 1000);
+            $from      = new Carbon($request->get('from', NULL) / 1000);
+            $to        = new Carbon($request->get('to', NULL) / 1000);
+            
+            $scheduleData = [
+                'date' => $date,       
+                'therapist_id' => $id,
+                'shift_id' => $request->shift_id,
+                'shop_id' => $request->shop_id,
+                'is_working' => TherapistWorkingSchedule::WORKING,
+                'is_exchange' => TherapistWorkingSchedule::NOT_EXCHANGE
+            ];
+            
+            $schedule = TherapistWorkingSchedule::where($scheduleData)->first();
+            if(empty($schedule)) {
+                return $this->returnError(__($this->errorMsg['no.schedule.found']));
+            }
 
-            $save           = TherapistWorkingScheduleBreak::takeBreaks($id, $date->format('Y-m-d'), $minutes, $breakFor, $breakReason);
+            $save = TherapistWorkingScheduleBreak::takeBreaks($from->format('H:i'), $to->format('H:i'), $schedule);
 
             if (!empty($save['isError']) && !empty($save['msg'])) {
                 return $this->returns($save['msg'], NULL, true);
