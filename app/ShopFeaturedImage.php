@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Shop;
 
-class ShopFeaturedImage extends Model
+class ShopFeaturedImage extends BaseModel
 {
     protected $fillable = [
         'image',

@@ -128,12 +128,15 @@ class TherapistWorkingSchedule extends BaseModel
         $date  = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
         $data  = [];
         $model = new Shop();
+        $imageModel = new ShopFeaturedImage();
 
         /*$data = TherapistWorkingSchedule::with('therapist', 'shifts')->where(['date' => $date, 'therapist_id' => $id, 
             'is_exchange' => TherapistWorkingSchedule::NOT_EXCHANGE, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->groupBy('shop_id');*/
 
-        $getShops = $model::select($model::getTableName() . '.name as shop_name', $model::getTableName() . '.featured_image', TherapistWorkingSchedule::getTableName() . '.*', ShopShift::getTableName() . '.from', ShopShift::getTableName() . '.to')
+        $getShops = $model::select($model::getTableName() . '.name as shop_name', $model::getTableName() . '.featured_image', TherapistWorkingSchedule::getTableName() . '.*',
+                    ShopShift::getTableName() . '.from', ShopShift::getTableName() . '.to', ShopFeaturedImage::getTableName().'.image')
                         ->join(TherapistWorkingSchedule::getTableName(), $model::getTableName() . '.id', '=', TherapistWorkingSchedule::getTableName() . '.shop_id')
+                        ->leftJoin(ShopFeaturedImage::getTableName(), $model::getTableName() . '.id', '=', ShopFeaturedImage::getTableName() . '.shop_id')
                         ->leftJoin(ShopShift::getTableName(), function($leftJoin) use($model) {
                             $leftJoin->on(TherapistWorkingSchedule::getTableName() . '.shift_id', '=', ShopShift::getTableName() . '.id')
                                      ->where($model::getTableName() . '.id', '=', DB::raw(ShopShift::getTableName() . '.shop_id'));
@@ -152,7 +155,7 @@ class TherapistWorkingSchedule extends BaseModel
                     $data[$row->shop_id] = [
                         'shop_id'        => $row->shop_id,
                         'shop_name'      => $row->shop_name,
-                        'featured_image' => $model->getFeaturedImageAttribute($row->featured_image),
+                        'featured_image' => $imageModel->getImageAttribute($row->image),
                         'shift_date'     => strtotime($row->date) * 1000
                     ];
                 }
