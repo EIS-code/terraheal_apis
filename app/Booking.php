@@ -177,6 +177,8 @@ class Booking extends BaseModel
         $month              = $request->get('month');
         $service            = $request->get('service');
         $dateFilter         = $request->get('date_filter');
+        $sessionId          = $request->get('session_id');
+        $serviceId          = $request->get('service_id');
 
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
@@ -288,6 +290,8 @@ class Booking extends BaseModel
             $data->where($this::getTableName() . '.id', $bookingId);
         }
         if ($date) {
+            $date = Carbon::createFromTimestampMs($date)->format('Y-m-d');
+            
             $data->where($bookingInfoModel::getTableName() . '.massage_date', $date);
         }
         if ($month) {
@@ -298,7 +302,13 @@ class Booking extends BaseModel
             $data->where($this::getTableName() . '.user_id', '=', $userId);
         }
         if ($bookingMassageId) {
-            $data->where($bookingMassageModel::getTableName() . '.id', '=', $bookingMassageId);
+            $data->where($bookingMassageModel::getTableName() . '.id', $bookingMassageId);
+        }
+        if ($sessionId) {
+            $data->where($this::getTableName() . '.session_id', $sessionId);
+        }
+        if ($serviceId) {
+            $data->where($serviceModel::getTableName() . '.id', $serviceId);
         }
 
         if (isset($service)) {

@@ -258,9 +258,7 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
-
-        $data = $this->filter($data);
+        $data = $bookingModel->getGlobalQuery($request);
 
         return $this->returns('booking.today.found.successfully', $data);
     }
@@ -269,23 +267,21 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
-
-        $data = $this->filter($data);
+        $data = $bookingModel->getGlobalQuery($request);
 
         return $this->returns('booking.future.found.successfully', $data);
     }
 
-    public function getPastBooking(Request $request)
-    {
-        $bookingModel = new Booking();
-
-        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
-
-        $data = $this->filter($data);
-
-        return $this->returns('booking.past.found.successfully', $data);
-    }
+//    public function getPastBooking(Request $request)
+//    {
+//        $bookingModel = new Booking();
+//
+//        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
+//
+//        $data = $this->filter($data);
+//
+//        return $this->returns('booking.past.found.successfully', $data);
+//    }
 
     public function getPendingBooking(Request $request)
     {

@@ -60,7 +60,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->post('/all', 'TherapistController@getBookings');
         $router->post('/list/today', 'TherapistController@getTodayBooking');
         $router->post('/list/future', 'TherapistController@getFutureBooking');
-        $router->post('/list/past', 'TherapistController@getPastBooking');
+        $router->post('/list/past', 'TherapistController@getPastBookings');
         $router->post('/list/pending', 'TherapistController@getPendingBooking');
         $router->post('/list/upcoming', 'TherapistController@getUpcomingBooking');
         $router->post('/list/pasts', 'TherapistController@getPastBookings');
