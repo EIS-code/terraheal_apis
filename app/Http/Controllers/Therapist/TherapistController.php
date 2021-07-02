@@ -258,6 +258,8 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_TODAY]]);
+
         $data = $bookingModel->getGlobalQuery($request);
 
         return $this->returns('booking.today.found.successfully', $data);
@@ -266,6 +268,8 @@ class TherapistController extends BaseController
     public function getFutureBooking(Request $request)
     {
         $bookingModel = new Booking();
+
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_FUTURE]]);
 
         $data = $bookingModel->getGlobalQuery($request);
 
