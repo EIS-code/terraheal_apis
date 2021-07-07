@@ -124,6 +124,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->post('/massages/get', 'Manager\ManagerController@getMassages');
     $router->post('/therapies/get', 'Manager\ManagerController@getTherapies');
     $router->post('/bookings/get', 'Manager\ManagerController@getBookings');
+    $router->post('/users/get', 'Manager\ManagerController@getUsers');
     $router->post('/profile/update', 'Manager\ManagerController@updateProfile');
     $router->post('/profile/get', 'Manager\ManagerController@getProfile');
     
