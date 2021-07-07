@@ -53,6 +53,7 @@ class ManagerController extends BaseController {
         'success.email.sent' => 'Email sent successfully !',
         'edit.profile' => 'Profile updated successfully!',
         'get.profile' => 'Manager profile found successfully!',
+        'users.get' => 'Users found successfully!',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -487,5 +488,58 @@ class ManagerController extends BaseController {
             return $this->returnError($this->errorMsg['manager.not.found']);
         }
         return $this->returnSuccess(__($this->successMsg['get.profile']), $manager);
+    }
+    
+    public function getUsers(Request $request) {
+        
+        $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
+        $shopId = $request->shop_id;
+
+        $appUsers = DB::table('booking_massages')
+                ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                ->join('users', 'users.id', '=', 'bookings.user_id')
+                ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*')
+                ->where('bookings.book_platform', (string) Booking::BOOKING_PLATFORM_APP)
+                ->where('users.shop_id', $shopId);
+                
+        $guestUsers = User::where(['is_guest' => (string) User::IS_GUEST, 'shop_id' => $shopId]);
+        $registeredUsers = User::where(['is_guest' => (string) User::IS_NOT_GUEST, 'shop_id' => $shopId]);
+        
+        if(!empty($dateFilter)) {
+            
+            $now = Carbon::now();
+            if ($dateFilter == Booking::YESTERDAY) {
+                $appUsers->whereDate('users.created_at', Carbon::yesterday()->format('Y-m-d'));
+                $guestUsers->whereDate('created_at', Carbon::yesterday()->format('Y-m-d'));
+                $registeredUsers->whereDate('created_at', Carbon::yesterday()->format('Y-m-d'));
+            }
+            if ($dateFilter == Booking::TODAY) {
+                $appUsers->whereDate('users.created_at', $now->format('Y-m-d'));
+                $guestUsers->whereDate('created_at', $now->format('Y-m-d'));
+                $registeredUsers->whereDate('created_at', $now->format('Y-m-d'));
+            }
+            if ($dateFilter == Booking::THIS_WEEK) {
+                $weekStartDate = $now->startOfWeek()->format('Y-m-d');
+                $weekEndDate = $now->endOfWeek()->format('Y-m-d');
+
+                $appUsers->whereDate('users.created_at', '>=', $weekStartDate)->whereDate('users.created_at', '<=', $weekEndDate);
+                $guestUsers->whereDate('created_at', '>=', $weekStartDate)->whereDate('created_at', '<=', $weekEndDate);
+                $registeredUsers->whereDate('created_at', '>=', $weekStartDate)->whereDate('created_at', '<=', $weekEndDate);
+            }
+            if ($dateFilter == Booking::THIS_MONTH) {
+                $appUsers->whereMonth('users.created_at', $now->month)
+                     ->whereYear('users.created_at', $now->year);
+                $guestUsers->whereMonth('created_at', $now->month)
+                     ->whereYear('created_at', $now->year);
+                $registeredUsers->whereMonth('created_at', $now->month)
+                     ->whereYear('created_at', $now->year);
+            }
+        }
+        
+        $appUsers = $appUsers->get()->groupBy('bookings.user_id')->count();
+        $guestUsers = User::where('is_guest', (string) User::IS_GUEST)->get()->count();
+        $registeredUsers = User::where('is_guest', (string) User::IS_NOT_GUEST)->get()->count();
+        return $this->returnSuccess(__($this->successMsg['users.get']), ['appUsers' => $appUsers, 'guestUsers' => $guestUsers, 'registeredUsers' => $registeredUsers]);
     }
 }
