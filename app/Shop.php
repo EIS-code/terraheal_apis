@@ -354,10 +354,9 @@ class Shop extends BaseModel implements CanResetPasswordContract
     public function getBookings(Request $request) {
         
         $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
-        $booking = DB::table('booking_massages')
-                ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
-                ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
-                ->select('booking_massages.*', 'booking_infos.*', 'booking_infos.*');
+        $booking = DB::table('bookings')
+                ->join('booking_infos', 'booking_infos.id', '=', 'bookings.id')
+                ->select('booking_infos.*', 'booking_infos.*');
         
         $now = Carbon::now();
         if ($dateFilter == Booking::TODAY) {
