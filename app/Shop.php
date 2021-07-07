@@ -363,6 +363,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             $booking->where('booking_infos.massage_date', Carbon::today()->format('Y-m-d'));
         }
         if ($dateFilter == Booking::YESTERDAY) {
+            dd($now->subDays(1));
             $booking->where('booking_infos.massage_date', $now->subDays(1));
         }
         if ($dateFilter == Booking::THIS_WEEK) {
