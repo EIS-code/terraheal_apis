@@ -150,17 +150,17 @@ class ManagerController extends BaseController {
         if ($filter == News::LAST_7_DAYS) {
             $agoDate = $now->subDays(7)->format('Y-m-d');
             $todayDate = $now->format('Y-m-d');
-            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
         }
         if ($filter == News::LAST_14_DAYS) {
             $agoDate = $now->subDays(14)->format('Y-m-d');
             $todayDate = $now->format('Y-m-d');
-            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
         }
         if ($filter == News::LAST_30_DAYS) {
             $agoDate = $now->subDays(30)->format('Y-m-d');
             $todayDate = $now->format('Y-m-d');
-            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
         }
         if ($filter == News::CUSTOM) {
             $date = $date = Carbon::createFromTimestampMs($request->date);
