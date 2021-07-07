@@ -142,7 +142,7 @@ class ManagerController extends BaseController {
         if ($filter == News::THIS_WEEK) {
             $weekStartDate = $now->startOfWeek()->format('Y-m-d');
             $weekEndDate = $now->endOfWeek()->format('Y-m-d');
-            $data->whereDate('created_at', '>=', $weekEndDate)->whereDate('created_at', '<=', $weekStartDate);
+            $data->whereDate('created_at', '<=', $weekEndDate)->whereDate('created_at', '>=', $weekStartDate);
         }
         if ($filter == News::CURRENT_MONTH) {
             $data->whereMonth('created_at', $now->month);
