@@ -43,6 +43,8 @@ use App\TherapistFreeSlot;
 use App\TherapistNews;
 use App\ShopShift;
 use App\Libraries\CommonHelper;
+use App\Manager;
+use App\News;
 
 class TherapistController extends BaseController
 {
@@ -120,6 +122,7 @@ class TherapistController extends BaseController
         'shift.approve' => 'Shift approve successfully !',
         'shift.reject' => 'Shift reject successfully !',
         'observation.add' => 'Observation added successfully !',
+        'news.get' => 'News found successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1243,5 +1246,36 @@ class TherapistController extends BaseController
         
         $booking->update(['observation' => $request->observation]);
         return $this->returnSuccess(__($this->successMsg['observation.add']), $booking);
+    }
+    
+    public function getNews(Request $request) {
+        
+        $manager = Manager::where('shop_id', $request->shop_id)->first();
+        
+        $data = News::where('manager_id', $manager->id)->get();
+        $readNews = TherapistNews::where('therapist_id', $request->id)->pluck('news_id')->toArray();
+        
+        $allNews = [];
+        if (!empty($data)) {
+            foreach ($data as $key => $news) {
+
+                $newsData = [
+                    'id' => $news['id'],
+                    'title' => $news['title'],
+                    'sub_title' => $news['sub_title'],
+                    'description' => $news['description'],
+                    'created_at' => strtotime($news['created_at']) * 1000              
+                ];
+                if(in_array($news['id'], $readNews))
+                {
+                    $newsData['is_read'] = true;
+                } else {
+                    $newsData['is_read'] = false;
+                }
+                array_push($allNews, $newsData);
+                unset($newsData);
+            }
+        }
+        return $this->returnSuccess(__($this->successMsg['news.get']), $allNews);
     }
 }

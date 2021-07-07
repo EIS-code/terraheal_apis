@@ -157,6 +157,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     });
     
     $router->group(['prefix' => 'news'], function () use($router) {
+        $router->post('/get', 'TherapistController@getNews');
         $router->post('/read', 'TherapistController@readNews');
     });
     
