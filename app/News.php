@@ -14,13 +14,13 @@ class News extends BaseModel
     ];
     
     const TODAY = '0';
-    const CURRENT_MONTH = '1';
-    const LAST_7_DAYS = '2';
-    const LAST_14_DAYS = '3';
-    const LAST_30_DAYS = '4';
-    const CUSTOM = '5';
-    const YESTERDAY = '6';
-    const THIS_WEEK = '7';
+    const YESTERDAY = '1';
+    const THIS_WEEK = '2';
+    const CURRENT_MONTH = '3';
+    const LAST_7_DAYS = '4';
+    const LAST_14_DAYS = '5';
+    const LAST_30_DAYS = '6';
+    const CUSTOM = '7';
 
     public function validator(array $data)
     {
