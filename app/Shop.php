@@ -355,16 +355,15 @@ class Shop extends BaseModel implements CanResetPasswordContract
         
         $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
         $booking = DB::table('bookings')
-                ->join('booking_infos', 'booking_infos.id', '=', 'bookings.id')
-                ->select('booking_infos.*', 'booking_infos.*');
+                ->join('booking_infos', 'booking_infos.booking_id', '=', 'bookings.id')
+                ->select('booking_infos.*', 'bookings.*');
         
         $now = Carbon::now();
         if ($dateFilter == Booking::TODAY) {
-            $booking->where('booking_infos.massage_date', Carbon::today()->format('Y-m-d'));
+            $booking->where('booking_infos.massage_date', $now->format('Y-m-d'));
         }
         if ($dateFilter == Booking::YESTERDAY) {
-            dd($now->subDays(1));
-            $booking->where('booking_infos.massage_date', $now->subDays(1));
+            $booking->where('booking_infos.massage_date', $now->subDays(1)->format('Y-m-d'));
         }
         if ($dateFilter == Booking::THIS_WEEK) {
             $weekStartDate = $now->startOfWeek()->format('Y-m-d');
