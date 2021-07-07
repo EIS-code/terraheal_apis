@@ -18,6 +18,8 @@ use App\Shop;
 use App\Service;
 use App\Libraries\CommonHelper;
 use App\ManagerEmailOtp;
+use App\Booking;
+use App\User;
 
 class ManagerController extends BaseController {
 
