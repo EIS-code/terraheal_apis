@@ -82,26 +82,29 @@ class LocationController extends BaseController
         $modelProvince  = new Province();
         $modelCity      = new City();
         $data           = $request->all();
-        $pageNumber = !empty($request->page_number) ? $request->page_number : 1;
         
-        $provinceId = (!empty($data['province_id'])) ? $data['province_id'] : NULL;
-        $countryId  = (!empty($data['country_id'])) ? $data['country_id'] : NULL;
+        $countryId  = $request->get('country_id', false);
+        $provinceId    = $request->get('province_id', false);
+        $search     = $request->has('search') ? $request->search : '';
+        $pageNumber = $request->has('page_number') ? $request->page_number : 1;
         $returnData = NULL;
 
-        if (!empty($provinceId)) {
-            $returnData = $modelCity->where('province_id', $provinceId)->paginate(10, ['*'], 'page', $pageNumber);
-            
-        } elseif (!empty($countryId)) {
+        if(!empty($provinceId)) {
+            $returnData = $modelCity->where('province_id', $provinceId);
+        } else if(!empty($countryId)) {
             $modelCity->setMysqlStrictFalse();
 
-            $returnData = $modelCity->select($modelCity::getTableName() . '.*', $modelCountry::getTableName() . '.id AS country_id')
-                                    ->join($modelProvince::getTableName(), $modelCity::getTableName() . '.province_id', '=', $modelProvince::getTableName() . '.id')
-                                    ->join($modelCountry::getTableName(), $modelProvince::getTableName() . '.country_id', '=', $modelCountry::getTableName() . '.id')
-                                    ->where($modelCountry::getTableName() . '.id', $countryId)
-                                    ->paginate(10, ['*'], 'page', $pageNumber);
-
+            $returnData = $modelCity->with('province')->whereHas('province', function($q) use ($countryId) {
+                $q->where('country_id', $countryId);
+            });
             $modelCity->setMysqlStrictTrue();
         }
+
+        if (!empty($search)) {
+            $returnData = $returnData->where('name', 'LIKE', $search . '%');
+        }
+
+        $returnData = $returnData->paginate(10, ['*'], 'page', $pageNumber);
 
         if (!empty($returnData) && !$returnData->isEmpty()) {
             return $this->returns('success.city.get', $returnData);
