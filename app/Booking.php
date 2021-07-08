@@ -423,7 +423,6 @@ class Booking extends BaseModel
             // $data->put('total_massages', $bookingInfoModel->getMassageCountByTherapist($therapistId));
             // $data->put('total_therapies', $bookingInfoModel->getTherapyCountByTherapist($therapistId));
         }
-
         return $data;
     }
 
