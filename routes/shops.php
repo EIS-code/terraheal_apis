@@ -68,6 +68,7 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/getActiveVouchers', 'WaitingList\WaitingListController@getActiveVouchers');
     $router->post('/getUsedVouchers', 'WaitingList\WaitingListController@getUsedVouchers');
     $router->post('/searchPacks', 'WaitingList\WaitingListController@searchPacks');
+    $router->post('/searchVouchers', 'WaitingList\WaitingListController@searchVouchers');
     $router->post('/edit/booking', 'WaitingList\WaitingListController@editBooking');
 });
 
