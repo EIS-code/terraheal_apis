@@ -15,6 +15,7 @@ class AddMassageDateTimeToBookingMassagesTable extends Migration
     {
         Schema::table('booking_massages', function (Blueprint $table) {
             $table->timestamp('massage_date_time')->after('id')->nullable();
+            
         });
     }
 
