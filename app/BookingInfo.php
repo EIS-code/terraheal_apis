@@ -204,7 +204,7 @@ class BookingInfo extends BaseModel
                       ->has('therapistWhereShop')
                       ->has('bookingMassages')
                       ->with(['bookingMassages' => function($query) {
-                          $query->select('booking_info_id', 'service_pricing_id')
+                          $query->select('massage_date_time', 'booking_info_id', 'service_pricing_id')
                                 ->with('servicePrices');
                       }])
                       ->where('therapist_id', $therapistId)
@@ -220,6 +220,7 @@ class BookingInfo extends BaseModel
                         $timing = ServiceTiming::where('id', $bookingMassage->servicePrices->service_timing_id)->first();
                         $return[] = [
                             'massage_date'      => $record->massage_date,
+                            'massage_date_time' => $bookingMassage->massage_date_time,
                             'massage_time'      => $record->massage_time,
                             'booking_info_id'   => $record->booking_info_id,
                             'time'              => (int)$timing->time
