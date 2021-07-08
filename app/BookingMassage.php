@@ -64,6 +64,15 @@ class BookingMassage extends BaseModel
         return $this->hasOne('App\ServicePricing', 'id', 'service_pricing_id');
     }
 
+    public function getMassageDateTimeAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function bookingInfo()
     {
         return $this->belongsTo('App\BookingInfo');
