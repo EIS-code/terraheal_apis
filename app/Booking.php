@@ -33,6 +33,8 @@ class Booking extends BaseModel
         'book_platform'
     ];
 
+    protected $hidden = ['is_removed', 'updated_at', 'deleted_at'];
+    
     const BOOKING_TYPE_IMC = '1';
     const BOOKING_TYPE_HHV = '2';
     const BOOKING_ONGOING = '0';
@@ -90,6 +92,15 @@ class Booking extends BaseModel
         return $validator;
     }
 
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function getBookingDateTimeAttribute($value)
     {
         if (empty($value)) {
