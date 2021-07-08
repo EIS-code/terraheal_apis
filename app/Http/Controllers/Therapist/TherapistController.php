@@ -155,7 +155,7 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $data = $bookingModel->getGlobalQuery($request)->first();
+        $data = $bookingModel->getGlobalQuery($request);
 
         if (!empty($data)) {
             return $this->returnSuccess(__($this->successMsg['booking.details.found.successfully']), $data);
