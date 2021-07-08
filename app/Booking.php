@@ -228,12 +228,14 @@ class Booking extends BaseModel
                             'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as massage_day_name, ' . 
                             'CONCAT(' . $serviceTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' . 
                             $servicePriceModel::getTableName().'.price,'.
+                            $servicePriceModel::getTableName().'.cost,'.
                             'gender.name as gender_preference, ' . 
                             'pressure.name as pressure_preference, ' . 
                             $this::getTableName() . '.special_notes as notes, ' .
                             $bookingMassageModel::getTableName() . '.notes_of_injuries as injuries, ' . 
                             'focus_area.name as focus_area, ' . 
                             $this::getTableName() . '.table_futon_quantity, ' . 
+                            $this::getTableName() . '.created_at, ' . 
                             $userModel::getTableName() . '.qr_code_path, ' . 
                             $userGenderPreferenceModel::getTableName().'.name as genderPreference,' . 
                             $bookingMassageModel::getTableName().'.service_pricing_id,' . 
@@ -389,7 +391,7 @@ class Booking extends BaseModel
 
                 $bookingType = $record->getAttributes()['booking_type'];
 
-                unset($record->booking_type);
+//                unset($record->booking_type);
 
                 $record->booking_type_value = $bookingType;
 
