@@ -218,7 +218,7 @@ class Booking extends BaseModel
                             $userPeopleModel::getTableName() . '.age as client_age, ' . 
                             $bookingInfoModel::getTableName() . '.user_people_id, '.
                             $userPeopleModel::getTableName() . '.name as user_people_name, '. 
-                            $this::getTableName().'.session_id as sessionId,'.
+                            $this::getTableName().'.session_id as session_id,'.
                             $sessionTypeModel::getTableName() . '.type as session_type, ' .
                             $this::getTableName() . '.booking_type, ' . 
                             $this::getTableName() . '.book_platform, ' .
