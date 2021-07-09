@@ -15,6 +15,7 @@ use DB;
 use Carbon\Carbon;
 use App\ServicePricing;
 use App\Booking;
+use Illuminate\Support\Facades\Storage;
 
 class Shop extends BaseModel implements CanResetPasswordContract
 {
