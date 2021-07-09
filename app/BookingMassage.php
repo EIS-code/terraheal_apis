@@ -14,6 +14,7 @@ class BookingMassage extends BaseModel
     use SoftDeletes;
     
     protected $fillable = [
+        'massage_date_time',
         'price',
         'cost',
         'origional_price',
@@ -27,7 +28,8 @@ class BookingMassage extends BaseModel
         'room_id',
         'therapy_id',
         'service_pricing_id',
-        'is_confirm'
+        'is_confirm',
+        'observation'
     ];
     
     const IS_CONFIRM = '1';
@@ -62,6 +64,15 @@ class BookingMassage extends BaseModel
         return $this->hasOne('App\ServicePricing', 'id', 'service_pricing_id');
     }
 
+    public function getMassageDateTimeAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function bookingInfo()
     {
         return $this->belongsTo('App\BookingInfo');

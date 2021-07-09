@@ -69,7 +69,7 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/getUsedVouchers', 'WaitingList\WaitingListController@getUsedVouchers');
     $router->post('/searchPacks', 'WaitingList\WaitingListController@searchPacks');
     $router->post('/searchVouchers', 'WaitingList\WaitingListController@searchVouchers');
-    
+    $router->post('/edit/booking', 'WaitingList\WaitingListController@editBooking');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {
@@ -120,6 +120,24 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     
     $router->post('/signIn', 'Manager\ManagerController@signIn');
     $router->post('/availability/add', 'Manager\ManagerController@addAvailabilities');
+    $router->post('/dashboard/info/get', 'Manager\ManagerController@getInfo');
+    $router->post('/therapists/get', 'Manager\ManagerController@getTherapists');
+    $router->post('/massages/get', 'Manager\ManagerController@getMassages');
+    $router->post('/therapies/get', 'Manager\ManagerController@getTherapies');
+    $router->post('/bookings/get', 'Manager\ManagerController@getBookings');
+    $router->post('/users/get', 'Manager\ManagerController@getUsers');
+    $router->post('/profile/update', 'Manager\ManagerController@updateProfile');
+    $router->post('/profile/get', 'Manager\ManagerController@getProfile');
+    
+    $router->group(['prefix' => 'verify'], function () use($router) {
+        $router->post('/mobile', 'Manager\ManagerController@verifyMobile');
+        $router->post('/email', 'Manager\ManagerController@verifyEmail');
+    });
+    
+    $router->group(['prefix' => 'compare'], function () use($router) {
+        $router->post('/otp/email', 'Manager\ManagerController@compareOtpEmail');
+        $router->post('/otp/mobile', 'Manager\ManagerController@compareOtpSms');
+    });
     
     $router->group(['prefix' => 'news'], function () use($router) {
     
@@ -129,7 +147,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/get', 'Manager\ManagerController@getNews');
         $router->post('/details/get', 'Manager\ManagerController@newsDetails');
     });
-
+    
 });
 
 $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {

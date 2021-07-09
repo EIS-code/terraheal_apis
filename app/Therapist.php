@@ -270,6 +270,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $data = [
                     'id' => $record->id,
                     'service_id' => $record->service_id,
+                    'name' => $record->service->english_name,
                     'service_english_name' => $record->service->english_name,
                     'service_portugese_name' => $record->service->portugese_name,
                     'image' => !empty($image) ? $image->image : NULL

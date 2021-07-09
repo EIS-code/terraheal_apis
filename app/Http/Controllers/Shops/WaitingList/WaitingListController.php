@@ -41,6 +41,7 @@ class WaitingListController extends BaseController {
         'assign.room' => 'Assign room successfully',
         'assign.therapist' => 'Assign therapist successfully',
         'new.booking' => 'New booking added successfully',
+        'edit.booking' => 'Booking updated successfully',
         'booking.overview' => 'Bookings found successfully',
         'massages' => 'Massages found successfully',
         'therapies' => 'Therapies found successfully',
@@ -194,52 +195,44 @@ class WaitingListController extends BaseController {
     public function printBookingDetails(Request $request) {
         
         $bookingModel = new Booking();
-        $printDetails = $bookingModel->getGlobalQuery($request)->first();
+        $printDetails = $bookingModel->getGlobalQuery($request);
+        $booking = $printDetails->first();
+//        dd($printDetails);
         
         if(empty($printDetails)) {
             return $this->returnError(__($this->successMsg['not.found']));
         }
-            
-        $services = [
-                "service_english_name" => $printDetails['service_english_name'],
-                "service_portugese_name" => $printDetails['service_portugese_name'],
-                "massage_date" => $printDetails['massage_date'],
-                "massage_start_time" => $printDetails['massage_start_time'],
-                "massage_end_time" => $printDetails['massage_end_time'],
-                "massage_duration" => $printDetails['massage_duration'],
-                "massage_day_name" => $printDetails['massage_day_name'],
-                "cost" => $printDetails['cost'],
-                "gender_preference" => $printDetails['gender_preference'],
-                "pressure_preference" => $printDetails['pressure_preference'],
-                "focus_area" => $printDetails['focus_area'],
-                "genderPreference" => $printDetails['genderPreference'],
-                "notes" => $printDetails['notes'],
-                "injuries" => $printDetails['injuries']
+        
+        $services[]= [
+            "name" => $booking['client_name'],
+            "service_name" => $booking['service_name'],
+            "massage_duration" => $booking['massage_duration'],
+            "cost" => $booking['cost'],
         ];
+            
+        $sum = 0;
+        foreach ($printDetails as $key => $printDetail) {
+         
+            $services[] = [
+               "name" => $printDetail['user_people_name'],
+               "service_name" => $printDetail['service_name'],
+               "massage_duration" => $printDetail['massage_duration'],
+               "cost" => $printDetail['cost'],
+            ];
+            $sum += $printDetail['cost'];
+        }
         $bookingDetails = [
-            "booking_id" => $printDetails['booking_id'],
-            "book_platform" => $printDetails['book_platform'],
-            "is_confirm" => $printDetails['is_confirm'],
-            "is_done" => $printDetails['is_done'],
-            "is_cancelled" => $printDetails['is_cancelled'],
-            "cancel_type" => $printDetails['cancel_type'],
-            "cancelled_reason" => $printDetails['cancelled_reason'],
-            "booking_type" => $printDetails['booking_type_value'],
-            "client_id" => $printDetails['client_id'],
-            "client_name" => $printDetails['client_name'],
-            "client_gender" => $printDetails['client_gender'],
-            "client_age" => $printDetails['client_age'],
-            "sessionId" => $printDetails['sessionId'],
-            "session_type" => $printDetails['session_type'],
-            "shop_id" => $printDetails['shop_id'],
-            "shop_name" => $printDetails['shop_name'],
-            "shop_address" => $printDetails['shop_address'],
-            "therapist_id" => $printDetails['therapist_id'],
-            "therapistName" => $printDetails['therapistName'],
-            "room_id" => $printDetails['room_id'],
-            "roomName" => $printDetails['roomName'],
-            "table_futon_quantity" => $printDetails['table_futon_quantity'],
-            "booking_services" => $services
+            "booking_id" => $booking['booking_id'],
+            "book_platform" => $booking['book_platform'],
+            "notes" => $booking['notes'],
+            "date_time" => strtotime($booking['created_at'])*1000,
+            "booking_type" => $booking['booking_type'],
+            "session_type" => $booking['session_type'],
+            "shop_id" => $booking['shop_id'],
+            "shop_name" => $booking['shop_name'],
+            "shop_address" => $booking['shop_address'],
+            "booking_services" => $services,
+            "total" => $sum,
 
         ];
         return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
@@ -828,6 +821,70 @@ class WaitingListController extends BaseController {
             return $this->returnSuccess(__($this->successMsg['data.found']), $vouchers);
         } else {
             return $this->returnSuccess(__($this->successMsg['not.found']), null);
+        }
+    }
+    
+    public function editBooking(Request $request) {
+
+        DB::beginTransaction();
+        try {
+            $shopModel = new Shop();
+            $booking = Booking::find($request->booking_id);
+            $booking->update(['special_notes' => $request->note]);
+            $bookingInfoModel = new BookingInfo();
+            $bookingInfo = BookingInfo::where('booking_id', $booking->id)->whereNull('user_people_id')->first();
+            $data = [
+                'booking_currency_id' => $bookingInfo->booking_currency_id,
+                'shop_currency_id' => $bookingInfo->shop_currency_id,
+                'booking_id' => $booking->id,
+                'therapist_id' => $request->therapist_id
+            ];
+            $checks = $bookingInfoModel->validator($data);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            $bookingInfo->update(['therapist_id' => $request->therapist_id]);
+            
+            if (count($request->services) > 0) {
+                foreach ($request->services as $key => $value) {
+                    $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, NULL);
+                    if (!empty($service['isError']) && !empty($service['message'])) {
+                        return $this->returnError($service['message'], NULL, true);
+                    }
+                }
+            }
+            if (!empty($request->users)) {
+                foreach ($request->users as $key => $user) {
+                    $bookingInfo = BookingInfo::where(['booking_id' => $booking->id ,'user_people_id' => $user['id']])->first();
+                    $data = [
+                        'booking_currency_id' => $bookingInfo->booking_currency_id,
+                        'shop_currency_id' => $bookingInfo->shop_currency_id,
+                        'booking_id' => $booking->id,
+                        'therapist_id' => $user['therapist_id']
+                    ];
+                    $checks = $bookingInfoModel->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $bookingInfo->update(['therapist_id' => $user['therapist_id']]);
+                    if (count($user['services']) > 0) {
+                        foreach ($user['services'] as $key => $value) {
+                            $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, $user);
+                            if (!empty($service['isError']) && !empty($service['message'])) {
+                                return $this->returnError($service['message'], NULL, true);
+                            }
+                        }
+                    }
+                }
+            }
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['edit.booking']));
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
         }
     }
 }

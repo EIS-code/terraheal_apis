@@ -33,6 +33,8 @@ class Booking extends BaseModel
         'book_platform'
     ];
 
+    protected $hidden = ['is_removed', 'updated_at', 'deleted_at'];
+    
     const BOOKING_TYPE_IMC = '1';
     const BOOKING_TYPE_HHV = '2';
     const BOOKING_ONGOING = '0';
@@ -90,6 +92,15 @@ class Booking extends BaseModel
         return $validator;
     }
 
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function getBookingDateTimeAttribute($value)
     {
         if (empty($value)) {
@@ -177,6 +188,8 @@ class Booking extends BaseModel
         $month              = $request->get('month');
         $service            = $request->get('service');
         $dateFilter         = $request->get('date_filter');
+        $sessionId          = $request->get('session_id');
+        $serviceId          = $request->get('service_id');
 
         $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
@@ -205,7 +218,7 @@ class Booking extends BaseModel
                             $userPeopleModel::getTableName() . '.age as client_age, ' . 
                             $bookingInfoModel::getTableName() . '.user_people_id, '.
                             $userPeopleModel::getTableName() . '.name as user_people_name, '. 
-                            $this::getTableName().'.session_id as sessionId,'.
+                            $this::getTableName().'.session_id as session_id,'.
                             $sessionTypeModel::getTableName() . '.type as session_type, ' .
                             $this::getTableName() . '.booking_type, ' . 
                             $this::getTableName() . '.book_platform, ' .
@@ -217,25 +230,28 @@ class Booking extends BaseModel
                             $roomModel::getTableName().'.id as room_id,'.
                             $roomModel::getTableName().'.name as roomName,'.
                             $roomModel::getTableName().'.total_beds as totalBeds,'.
-                            $serviceModel::getTableName() . '.english_name as service_english_name,' . 
-                            $serviceModel::getTableName() . '.portugese_name as service_portugese_name,' . 
+                            $serviceModel::getTableName() . '.english_name as service_name,' . 
                             $serviceModel::getTableName() . '.service_type as service_type,' . 
-                            $bookingInfoModel::getTableName() . '.massage_date as massage_date,' . 
+                            $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
+                            $bookingMassageModel::getTableName() . '.massage_date_time) * 1000 as massage_date_time,'.
                             $bookingInfoModel::getTableName() . '.massage_date as massage_date, UNIX_TIMESTAMP(' . 
                             $bookingInfoModel::getTableName() . '.massage_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . 
                             'DATE_ADD(' . $bookingInfoModel::getTableName() . '.massage_time, INTERVAL ' . $serviceTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, ' . 
                             'DATE_FORMAT(' . $bookingInfoModel::getTableName() . '.massage_date, "%a") as massage_day_name, ' . 
                             'CONCAT(' . $serviceTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' . 
                             $servicePriceModel::getTableName().'.price,'.
+                            $servicePriceModel::getTableName().'.cost,'.
                             'gender.name as gender_preference, ' . 
                             'pressure.name as pressure_preference, ' . 
                             $this::getTableName() . '.special_notes as notes, ' .
                             $bookingMassageModel::getTableName() . '.notes_of_injuries as injuries, ' . 
                             'focus_area.name as focus_area, ' . 
                             $this::getTableName() . '.table_futon_quantity, ' . 
+                            $this::getTableName() . '.created_at, ' . 
                             $userModel::getTableName() . '.qr_code_path, ' . 
                             $userGenderPreferenceModel::getTableName().'.name as genderPreference,' . 
                             $bookingMassageModel::getTableName().'.service_pricing_id,' . 
+                            $bookingMassageModel::getTableName().'.observation,' . 
                             $bookingMassageModel::getTableName() . '.is_confirm, ' . 
                             $bookingInfoModel::getTableName().'.is_done,' . 
                             $bookingInfoModel::getTableName().'.is_cancelled,' . 
@@ -288,6 +304,8 @@ class Booking extends BaseModel
             $data->where($this::getTableName() . '.id', $bookingId);
         }
         if ($date) {
+            $date = Carbon::createFromTimestampMs($date)->format('Y-m-d');
+            
             $data->where($bookingInfoModel::getTableName() . '.massage_date', $date);
         }
         if ($month) {
@@ -298,7 +316,13 @@ class Booking extends BaseModel
             $data->where($this::getTableName() . '.user_id', '=', $userId);
         }
         if ($bookingMassageId) {
-            $data->where($bookingMassageModel::getTableName() . '.id', '=', $bookingMassageId);
+            $data->where($bookingMassageModel::getTableName() . '.id', $bookingMassageId);
+        }
+        if ($sessionId) {
+            $data->where($this::getTableName() . '.session_id', $sessionId);
+        }
+        if ($serviceId) {
+            $data->where($serviceModel::getTableName() . '.id', $serviceId);
         }
 
         if (isset($service)) {
@@ -379,7 +403,7 @@ class Booking extends BaseModel
 
                 $bookingType = $record->getAttributes()['booking_type'];
 
-                unset($record->booking_type);
+//                unset($record->booking_type);
 
                 $record->booking_type_value = $bookingType;
 
@@ -399,7 +423,6 @@ class Booking extends BaseModel
             // $data->put('total_massages', $bookingInfoModel->getMassageCountByTherapist($therapistId));
             // $data->put('total_therapies', $bookingInfoModel->getTherapyCountByTherapist($therapistId));
         }
-
         return $data;
     }
 

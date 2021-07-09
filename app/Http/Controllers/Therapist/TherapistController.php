@@ -13,7 +13,6 @@ use App\BookingMassage;
 use App\MassagePreferenceOption;
 use App\TherapistLanguage;
 use App\TherapistDocument;
-use App\TherapistSelectedMassage;
 use App\Language;
 use App\Country;
 use App\City;
@@ -44,6 +43,8 @@ use App\TherapistFreeSlot;
 use App\TherapistNews;
 use App\ShopShift;
 use App\Libraries\CommonHelper;
+use App\Manager;
+use App\News;
 
 class TherapistController extends BaseController
 {
@@ -61,6 +62,7 @@ class TherapistController extends BaseController
         'somethingWrong' => "Something went wrong.",
         'no.schedule.found' => "No schedule found.",
         'no.document.found' => "No document found.",
+        'no.booking.found' => "No booking found.",
         'error.otp' => 'Please provide OTP properly.',
         'error.otp.wrong' => 'OTP seems wrong.',
         'error.otp.already.verified' => 'OTP already verified.',
@@ -119,6 +121,8 @@ class TherapistController extends BaseController
         'exchange.list' => 'Therapist exchange shifts list found successfully !',
         'shift.approve' => 'Shift approve successfully !',
         'shift.reject' => 'Shift reject successfully !',
+        'observation.add' => 'Observation added successfully !',
+        'news.get' => 'News found successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -136,9 +140,7 @@ class TherapistController extends BaseController
 
         if (!empty($email) && !empty($password)) {
             $getTherapist = $model->where(['email' => $email, 'is_freelancer' => (string)$isFreelancer, 'active_app' => Therapist::IS_ACTIVE])->first();
-
             if (!empty($getTherapist) && Hash::check($password, $getTherapist->password)) {
-                $getTherapist = $getTherapist->first();
 
                 return $this->returnSuccess(__($this->successMsg['login']), $getTherapist);
             } else {
@@ -153,7 +155,7 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $data = $bookingModel->getGlobalQuery($request)->first();
+        $data = $bookingModel->getGlobalQuery($request);
 
         if (!empty($data)) {
             return $this->returnSuccess(__($this->successMsg['booking.details.found.successfully']), $data);
@@ -234,6 +236,7 @@ class TherapistController extends BaseController
                                 $returnData[$increments]['user_name']            = $bookingInfo->userPeople->name;
                                 $returnData[$increments]['therapist_name']       = $bookingInfo->therapist->fullName;
                                 $returnData[$increments]['service_pricing_id']   = $bookingInfo->service_pricing_id;
+                                $returnData[$increments]['service_name'] = !empty($bookingMassage->servicePrices->service) ? $bookingMassage->servicePrices->service->english_name : NULL;
                                 $returnData[$increments]['service_english_name'] = !empty($bookingMassage->servicePrices->service) ? $bookingMassage->servicePrices->service->english_name : NULL;
                                 $returnData[$increments]['service_portugese_name'] = !empty($bookingMassage->servicePrices->service) ? $bookingMassage->servicePrices->service->portugese_name : NULL;
                                 $returnData[$increments]['service_id']           = !empty($bookingMassage->servicePrices) ? $bookingMassage->servicePrices->service_id : NULL;
@@ -258,9 +261,9 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_TODAY]]);
 
-        $data = $this->filter($data);
+        $data = $bookingModel->getGlobalQuery($request);
 
         return $this->returns('booking.today.found.successfully', $data);
     }
@@ -269,23 +272,23 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_FUTURE]]);
 
-        $data = $this->filter($data);
+        $data = $bookingModel->getGlobalQuery($request);
 
         return $this->returns('booking.future.found.successfully', $data);
     }
 
-    public function getPastBooking(Request $request)
-    {
-        $bookingModel = new Booking();
-
-        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
-
-        $data = $this->filter($data);
-
-        return $this->returns('booking.past.found.successfully', $data);
-    }
+//    public function getPastBooking(Request $request)
+//    {
+//        $bookingModel = new Booking();
+//
+//        $data = $bookingModel->with('bookingInfoWithFilters')->filterDatas()->get();
+//
+//        $data = $this->filter($data);
+//
+//        return $this->returns('booking.past.found.successfully', $data);
+//    }
 
     public function getPendingBooking(Request $request)
     {
@@ -470,7 +473,7 @@ class TherapistController extends BaseController
 
         $data = TherapistWorkingSchedule::getScheduleByMonth($id, $date->format('Y-m-d'));
 
-        return $this->returns('my.working.schedules.successfully', $data);
+        return $this->returns('my.working.schedules.successfully', collect($data));
     }
 
     public function getGlobalResponse(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request, $returnResponse = true)
@@ -870,12 +873,25 @@ class TherapistController extends BaseController
         $id = $request->get('id', false);
 
         if ($id) {
-            $date           = new Carbon($request->get('date', NULL) / 1000);
-            $minutes        = $request->get('minutes', 0);
-            $breakFor       = $request->get('break_for', TherapistWorkingScheduleBreak::OTHER);
-            $breakReason    = $request->get('break_reason', NULL);
+            $date      = new Carbon($request->get('date', NULL) / 1000);
+            $from      = new Carbon($request->get('from', NULL) / 1000);
+            $to        = new Carbon($request->get('to', NULL) / 1000);
+            
+            $scheduleData = [
+                'date' => $date,       
+                'therapist_id' => $id,
+                'shift_id' => $request->shift_id,
+                'shop_id' => $request->shop_id,
+                'is_working' => TherapistWorkingSchedule::WORKING,
+                'is_exchange' => TherapistWorkingSchedule::NOT_EXCHANGE
+            ];
+            
+            $schedule = TherapistWorkingSchedule::where($scheduleData)->first();
+            if(empty($schedule)) {
+                return $this->returnError(__($this->errorMsg['no.schedule.found']));
+            }
 
-            $save           = TherapistWorkingScheduleBreak::takeBreaks($id, $date->format('Y-m-d'), $minutes, $breakFor, $breakReason);
+            $save = TherapistWorkingScheduleBreak::takeBreaks($from->format('H:i'), $to->format('H:i'), $schedule);
 
             if (!empty($save['isError']) && !empty($save['msg'])) {
                 return $this->returns($save['msg'], NULL, true);
@@ -1219,5 +1235,47 @@ class TherapistController extends BaseController
         $shift->update(['status' => TherapistExchange::REJECT]);
         
         return $this->returnSuccess(__($this->successMsg['shift.reject']), $shift);
+    }
+    
+    public function addObservation(Request $request) {
+        
+        $booking = BookingMassage::find($request->booking_massage_id);
+        if(empty($booking)) {
+            return $this->returnError($this->errorMsg['no.booking.found']);
+        }
+        
+        $booking->update(['observation' => $request->observation]);
+        return $this->returnSuccess(__($this->successMsg['observation.add']), $booking);
+    }
+    
+    public function getNews(Request $request) {
+        
+        $manager = Manager::where('shop_id', $request->shop_id)->first();
+        
+        $data = News::where('manager_id', $manager->id)->get();
+        $readNews = TherapistNews::where('therapist_id', $request->id)->pluck('news_id')->toArray();
+        
+        $allNews = [];
+        if (!empty($data)) {
+            foreach ($data as $key => $news) {
+
+                $newsData = [
+                    'id' => $news['id'],
+                    'title' => $news['title'],
+                    'sub_title' => $news['sub_title'],
+                    'description' => $news['description'],
+                    'created_at' => strtotime($news['created_at']) * 1000              
+                ];
+                if(in_array($news['id'], $readNews))
+                {
+                    $newsData['is_read'] = true;
+                } else {
+                    $newsData['is_read'] = false;
+                }
+                array_push($allNews, $newsData);
+                unset($newsData);
+            }
+        }
+        return $this->returnSuccess(__($this->successMsg['news.get']), $allNews);
     }
 }

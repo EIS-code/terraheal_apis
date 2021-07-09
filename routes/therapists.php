@@ -60,7 +60,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         $router->post('/all', 'TherapistController@getBookings');
         $router->post('/list/today', 'TherapistController@getTodayBooking');
         $router->post('/list/future', 'TherapistController@getFutureBooking');
-        $router->post('/list/past', 'TherapistController@getPastBooking');
+        $router->post('/list/past', 'TherapistController@getPastBookings');
         $router->post('/list/pending', 'TherapistController@getPendingBooking');
         $router->post('/list/upcoming', 'TherapistController@getUpcomingBooking');
         $router->post('/list/pasts', 'TherapistController@getPastBookings');
@@ -157,10 +157,12 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     });
     
     $router->group(['prefix' => 'news'], function () use($router) {
+        $router->post('/get', 'TherapistController@getNews');
         $router->post('/read', 'TherapistController@readNews');
     });
     
     $router->post('get', 'TherapistController@getOthers');
+    $router->post('/observation/add', 'TherapistController@addObservation');
     $router->post('/getServices', 'TherapistController@getAllServices');
     $router->post('/getTherapists', 'TherapistController@getTherapists');
     $router->get('/getLanguages', 'TherapistController@getLanguages');
