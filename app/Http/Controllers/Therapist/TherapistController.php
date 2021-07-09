@@ -473,7 +473,7 @@ class TherapistController extends BaseController
 
         $data = TherapistWorkingSchedule::getScheduleByMonth($id, $date->format('Y-m-d'));
 
-        return $this->returns('my.working.schedules.successfully', $data);
+        return $this->returns('my.working.schedules.successfully', collect($data));
     }
 
     public function getGlobalResponse(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request, $returnResponse = true)

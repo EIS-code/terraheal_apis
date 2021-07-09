@@ -50,6 +50,9 @@ class Shop extends BaseModel implements CanResetPasswordContract
 
     protected $hidden = ['shop_password','remember_token', 'created_at', 'updated_at'];
 
+    public $fileSystem  = 'public';
+    public $storageFolderName = 'shop\\featured\\';
+    
     const IS_ADMIN = '0';
     const MASSAGES = '0';
     const THERAPIES = '1';
@@ -116,6 +119,31 @@ class Shop extends BaseModel implements CanResetPasswordContract
         ]);
     }
    
+    public function validateImages($request)
+    {
+        return Validator::make($request, [
+            'featured_image' => 'mimes:jpeg,png,jpg',
+        ], [
+            'featured_image' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        ]);
+    }
+    
+    public function getImageAttribute($value)
+    {
+        $default = '';
+
+        if (empty($value)) {
+            return $default;
+        }
+
+        $storageFolderNameRegistration = (str_ireplace("\\", "/", $this->storageFolderName));
+        if (Storage::disk($this->fileSystem)->exists($storageFolderNameRegistration . $value)) {
+            return Storage::disk($this->fileSystem)->url($storageFolderNameRegistration . $value);
+        }
+
+        return $default;
+    }
+    
     public function services()
     {
         return $this->hasMany('App\ShopService', 'shop_id', 'id');

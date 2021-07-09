@@ -59,6 +59,11 @@ class TherapistWorkingSchedule extends BaseModel
         return strtotime($value) * 1000;
     }
     
+    public function therapistBreakTime()
+    {
+        return $this->hasMany('App\TherapistWorkingScheduleBreak', 'schedule_id', 'id');
+    }
+    
     public function therapist() {
         
         return $this->hasOne('App\Therapist', 'id', 'therapist_id');
@@ -116,9 +121,19 @@ class TherapistWorkingSchedule extends BaseModel
         $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
         $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
 
-        $data = self::whereBetween('date', [$startDate, $endDate])->where('therapist_id', $id)->get();
+        $data = self::whereBetween('date', [$startDate, $endDate])->where(['therapist_id' => $id, 'is_exchange' => self::NOT_EXCHANGE])->get()->groupBy('date');
 
-        return $data;
+        $schedule = [];
+        foreach ($data as $key => $dates) {
+            
+            $date = $dates->first();
+            $schedule[] = [
+                'date' => $date->date,
+                'is_working' => $date->is_working
+            ];
+            
+        }
+        return $schedule;
     }
 
     public static function getAvailabilities(int $id, $date)
@@ -128,72 +143,40 @@ class TherapistWorkingSchedule extends BaseModel
         $date  = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
         $data  = [];
         $model = new Shop();
-        $imageModel = new ShopFeaturedImage();
 
-        /*$data = TherapistWorkingSchedule::with('therapist', 'shifts')->where(['date' => $date, 'therapist_id' => $id, 
-            'is_exchange' => TherapistWorkingSchedule::NOT_EXCHANGE, 'is_working' => TherapistWorkingSchedule::WORKING])->get()->groupBy('shop_id');*/
-
-        $getShops = $model::select($model::getTableName() . '.name as shop_name', $model::getTableName() . '.featured_image', TherapistWorkingSchedule::getTableName() . '.*',
-                    ShopShift::getTableName() . '.from', ShopShift::getTableName() . '.to', ShopFeaturedImage::getTableName().'.image')
-                        ->join(TherapistWorkingSchedule::getTableName(), $model::getTableName() . '.id', '=', TherapistWorkingSchedule::getTableName() . '.shop_id')
-                        ->leftJoin(ShopFeaturedImage::getTableName(), $model::getTableName() . '.id', '=', ShopFeaturedImage::getTableName() . '.shop_id')
-                        ->leftJoin(ShopShift::getTableName(), function($leftJoin) use($model) {
-                            $leftJoin->on(TherapistWorkingSchedule::getTableName() . '.shift_id', '=', ShopShift::getTableName() . '.id')
-                                     ->where($model::getTableName() . '.id', '=', DB::raw(ShopShift::getTableName() . '.shop_id'));
-                        })
-                        ->whereDate('date', $date)
-                        ->where('is_exchange', TherapistWorkingSchedule::NOT_EXCHANGE)
-                        ->where('is_working', TherapistWorkingSchedule::WORKING)
-                        ->where('therapist_id', $id)
-                        ->whereNotNull(ShopShift::getTableName() . '.from')
-                        ->whereNotNull(ShopShift::getTableName() . '.to')
-                        ->get();
-
+        $getShops = DB::table('therapist_working_schedules')
+                ->join('shops', 'shops.id', '=', 'therapist_working_schedules.shop_id')
+                ->join('shop_shifts', 'shop_shifts.id', '=', 'therapist_working_schedules.shift_id')
+                ->select('shops.id', 'shops.name', 'shops.featured_image', 'therapist_working_schedules.*', 'shop_shifts.from', 'shop_shifts.to')
+                ->where(['therapist_working_schedules.date' => $date,
+                    'therapist_working_schedules.is_working' => TherapistWorkingSchedule::WORKING,
+                    'therapist_working_schedules.is_exchange' => TherapistWorkingSchedule::NOT_EXCHANGE])
+                ->get()->groupBy('shop_id');
+                        
+        $availability = $data = [];
         if (!empty($getShops) && !$getShops->isEmpty()) {
-            foreach ($getShops as $row) {
-                if (empty($data[$row->shop_id])) {
-                    $data[$row->shop_id] = [
-                        'shop_id'        => $row->shop_id,
-                        'shop_name'      => $row->shop_name,
-                        'featured_image' => $imageModel->getImageAttribute($row->image),
-                        'shift_date'     => strtotime($row->date) * 1000
+            foreach ($getShops as $shops) {
+                $row = $shops->first();
+                $data = [
+                    'shop_id'        => $row->shop_id,
+                    'shop_name'      => $row->name,
+                    'featured_image' => $model->getImageAttribute($row->featured_image),
+                ];
+                foreach ($shops as $shop) {
+                    $shifts[] = [
+                        'shift_id' => $shop->shift_id,
+                        'from'     => strtotime($shop->from) * 1000,
+                        'to'       => strtotime($shop->to) * 1000
                     ];
                 }
-
-
-                $data[$row->shop_id]['shifts'][] = [
-                    'shift_id' => $row->shift_id,
-                    'from'     => strtotime($row->from) * 1000,
-                    'to'       => strtotime($row->to) * 1000
-                ];
+                $data['shifts'] = $shifts;
+                array_push($availability, $data);
+                unset($shifts);
+                unset($data);
             }
-
-            $data = reset($data);
         }
 
-        /*$availability = [];
-        if ($data->count()) {
-            
-            foreach ($data as $key => $value) {
-                $availability['therapist_id'] = $id;
-                $availability['name'] = $value[0]->therapist->name;
-                $availability['surname'] = $value[0]->therapist->surname;
-                foreach ($value as $key => $shift) {
-                     $therapist_shifts[] = [
-                        'shop_id' => $shift->shop_id,
-                        'shop_name' => $shift->shop->name,
-                        'date' => $shift->date,
-                        'shift_id' => $shift->shift_id,
-                        'from' => $shift->shifts->from,
-                        'to' => $shift->shifts->to
-                    ];
-                }
-                $availability['shifts'][] = $therapist_shifts;
-                unset($therapist_shifts);
-            }
-        }*/
-
-        return collect($data);
+        return collect($availability);
     }
 
     public static function getMissingDays(int $id, $month)
