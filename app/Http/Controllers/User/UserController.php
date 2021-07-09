@@ -117,7 +117,8 @@ class UserController extends BaseController
         'success.user.favorite.created' => 'User favorite created successfully !',
         'success.user.favorite.removed' => 'User favorite removed successfully !',
         'success.user.favorite.found' => 'User favorite found successfully !',
-        'success.user.favorite.not.found' => 'User favorite not found !'
+        'success.user.favorite.not.found' => 'User favorite not found !',
+        'success.user.qr.not.found' => 'User QR code not found !'
     ];
 
     public function __construct()
@@ -1407,7 +1408,7 @@ class UserController extends BaseController
         return response()->json([
             'code' => $code,
             'msg'  => $message,
-            'data' => $isChecked
+            'data' => true // $isChecked
         ]);
     }
 
@@ -1565,5 +1566,19 @@ class UserController extends BaseController
         }
 
         return $this->returns('success.user.favorite.not.found', collect([]));
+    }
+
+    public function getQRTemp()
+    {
+        $modal = new User();
+
+        $user  = $modal->find(2);
+
+        if (!empty($user)) {
+
+            echo "<img src='" . $user->qr_code_path . "' />";exit;
+        }
+
+        return $this->returns('success.user.qr.not.found', collect([]));
     }
 }

@@ -124,4 +124,6 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/save', 'UserController@saveFavorite');
         $router->post('/remove', 'UserController@removeFavorite');
     });
+
+    $router->get('qr/temp/get', 'UserController@getQRTemp');
 });
