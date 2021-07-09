@@ -46,7 +46,8 @@ use App\Libraries\CommonHelper;
 use App\Manager;
 use App\News;
 
-class TherapistController extends BaseController {
+class TherapistController extends BaseController
+{
 
     public $errorMsg = [
         'loginEmail' => "Please provide email properly.",
