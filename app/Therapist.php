@@ -688,45 +688,55 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                         'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo')
                 ->where('therapists.shop_id', $request->shop_id);
         }
-        $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id')->toArray();
+        $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id');
 
         $allTherapists = [];
-        foreach ($therapists as $key => $value) {
+        
+        if(count($therapists) > 0) {
+            
+            foreach ($therapists as $key => $value) {
 
-            $current = Carbon::now()->format('H:i');
-            $date = Carbon::parse($value[0]->massage_date_time);
+                if(!empty($value->first())) {
+                    
+                    $row = $value->first();
+                    $current = Carbon::now()->format('H:i');
+                    $date = Carbon::parse($row->massage_date_time);
 
-            if ($current >= $date->format('H:i')) {
-                $available = NULL;
-            } else {
-                $start_time = new Carbon($current);
-                $end_time = new Carbon($date->format('H:i:s'));
-                $diff = $start_time->diff($end_time)->format("%h:%i");
-                $available = strtotime($diff) * 1000;
+                    if ($current >= $date->format('H:i')) {
+                        $available = NULL;
+                    } else {
+                        $start_time = new Carbon($current);
+                        $end_time = new Carbon($date->format('H:i:s'));
+                        $diff = $start_time->diff($end_time)->format("%h:%i");
+                        $available = strtotime($diff) * 1000;
+                    }
+
+                    $default = asset('images/therapists/therapist.png');
+
+                     // For set default image.
+                     if (empty($row->profile_photo)) {
+                         $profile_photo = $default;
+                     }
+                     $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
+                     if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $row->profile_photo)) {
+                         $profile_photo = Storage::disk($this->fileSystem)->url($profilePhotoPath . $row->profile_photo);
+                     } else {
+                         $profile_photo = $default;
+                     }
+
+                    $data = [
+                        'therapistId' => $row->therapist_id,
+                        'therapistName' => $row->therapistName,
+                        'therapistPhoto' => $profile_photo,
+                        'massageDate' => strtotime($row->massage_date_time) * 1000,
+                        'massageStartTime' => strtotime($row->massage_date_time) * 1000,
+                        'available' => $available
+                    ];
+                    array_push($allTherapists, $data);
+                } else {
+                    return $allTherapists;
+                }
             }
-
-            $default = asset('images/therapists/therapist.png');
-
-             // For set default image.
-             if (empty($value[0]->profile_photo)) {
-                 $profile_photo = $default;
-             }
-             $profilePhotoPath = (str_ireplace("\\", "/", $this->profilePhotoPath));
-             if (Storage::disk($this->fileSystem)->exists($profilePhotoPath . $value[0]->profile_photo)) {
-                 $profile_photo = Storage::disk($this->fileSystem)->url($profilePhotoPath . $value[0]->profile_photo);
-             } else {
-                 $profile_photo = $default;
-             }
-
-            $data = [
-                'therapistId' => $value[0]->therapist_id,
-                'therapistName' => $value[0]->therapistName,
-                'therapistPhoto' => $profile_photo,
-                'massageDate' => strtotime($value[0]->massage_date_time) * 1000,
-                'massageStartTime' => strtotime($value[0]->massage_date_time) * 1000,
-                'available' => $available
-            ];
-            array_push($allTherapists, $data);
         }
 
         return $allTherapists;
