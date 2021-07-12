@@ -87,6 +87,7 @@ class LocationController extends BaseController
         $provinceId    = $request->get('province_id', false);
         $search     = $request->has('search') ? $request->search : '';
         $pageNumber = $request->has('page_number') ? $request->page_number : 1;
+        $isPaginate = ($request->has('is_paginate') && $request->get('is_paginate') == '0') ? false : true;
         $returnData = NULL;
 
         if(!empty($provinceId)) {
@@ -104,7 +105,11 @@ class LocationController extends BaseController
             $returnData = $returnData->where('name', 'LIKE', $search . '%');
         }
 
-        $returnData = $returnData->paginate(10, ['*'], 'page', $pageNumber);
+        if ($isPaginate) {
+            $returnData = $returnData->paginate(10, ['*'], 'page', $pageNumber);
+        } else {
+            $returnData = $returnData->get();
+        }
 
         if (!empty($returnData) && !$returnData->isEmpty()) {
             return $this->returns('success.city.get', $returnData);
