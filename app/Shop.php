@@ -238,15 +238,12 @@ class Shop extends BaseModel implements CanResetPasswordContract
         if(empty($shop)) {
             return ['isError' => true, 'message' => 'Shop not found'];
         }
-        $date = Carbon::createFromTimestampMs($infoData->booking_date_time);
         $bookingInfoData = [
             'location' => $shop->address,
             'booking_currency_id' => $shop->currency_id,
             'shop_currency_id' => $shop->currency_id,
             'booking_id' => $newBooking->id,
-            'imc_type' => BookingInfo::IMC_TYPE_ASAP,
-            'massage_date' => $date->format('Y-m-d'),
-            'massage_time' => $date,
+            'imc_type' => BookingInfo::IMC_TYPE_ASAP,            
             'user_people_id' => isset($newUser) ? $newUser->id : NULL,
             'therapist_id' => isset($pack) ? $pack->therapist_id : $therapist_id
         ];
@@ -268,7 +265,9 @@ class Shop extends BaseModel implements CanResetPasswordContract
         }
         
         $injuries = isset($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
+        $date = Carbon::createFromTimestampMs($request->booking_date_time);
         $bookingMassageData = [
+            "massage_date_time" => $date->format('Y-m-d'),
             "price" => $servicePrice->price,
             "cost" => $servicePrice->cost,
             "origional_price" => $servicePrice->price,
@@ -385,28 +384,29 @@ class Shop extends BaseModel implements CanResetPasswordContract
         $dateFilter = !empty($request->date_filter) ? $request->date_filter : Booking::TODAY;
         $booking = DB::table('bookings')
                 ->join('booking_infos', 'booking_infos.booking_id', '=', 'bookings.id')
+                ->join('booking_massages', 'booking_massages.booking_info_id', '=', 'booking_infos.id')
                 ->select('booking_infos.*', 'bookings.*');
         
         $now = Carbon::now();
         if ($dateFilter == Booking::TODAY) {
-            $booking->where('booking_infos.massage_date', $now->format('Y-m-d'));
+            $booking->where('booking_massages.massage_date_time', $now->format('Y-m-d'));
         }
         if ($dateFilter == Booking::YESTERDAY) {
-            $booking->where('booking_infos.massage_date', $now->subDays(1)->format('Y-m-d'));
+            $booking->where('booking_massages.massage_date_time', $now->subDays(1)->format('Y-m-d'));
         }
         if ($dateFilter == Booking::THIS_WEEK) {
             $weekStartDate = $now->startOfWeek()->format('Y-m-d');
             $weekEndDate = $now->endOfWeek()->format('Y-m-d');
 
-            $booking->whereBetween('booking_infos.massage_date', [$weekStartDate, $weekEndDate]);
+            $booking->whereBetween('booking_massages.massage_date_time', [$weekStartDate, $weekEndDate]);
         }
         if ($dateFilter == Booking::THIS_MONTH) {
-            $booking->whereMonth('booking_infos.massage_date', $now->month);
+            $booking->whereMonth('booking_massages.massage_date_time', $now->month);
         }
         $center = clone $booking;
         
-        $homeVisit = $booking->where('bookings.booking_type' , Booking::BOOKING_TYPE_HHV)->get()->count();
-        $centerVisit = $center->where('bookings.booking_type' , Booking::BOOKING_TYPE_IMC)->get()->count();
+        $homeVisit = $booking->where('bookings.booking_type' , Booking::BOOKING_TYPE_HHV)->groupBy('bookings.id')->get()->count();
+        $centerVisit = $center->where('bookings.booking_type' , Booking::BOOKING_TYPE_IMC)->groupBy('bookings.id')->get()->count();
         
         return ['homeVisit' => $homeVisit, 'centerVisit' => $centerVisit];
     }

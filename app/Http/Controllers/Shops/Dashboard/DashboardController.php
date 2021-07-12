@@ -71,42 +71,42 @@ class DashboardController extends BaseController {
     
     public function bookings(Request $request, $todayDate, $when) {
     
-        $futureCenterBookings = BookingInfo::with('booking')
+        $futureCenterBookings = BookingInfo::with('booking', 'bookingMassages')
                         ->whereHas('booking', function($q) use($request) {
                             $q->where('shop_id', '=', $request->get('shop_id'))
                             ->where('booking_type', Booking::BOOKING_TYPE_IMC);
                         });
         if($when == Booking::BOOKING_TODAY) {
-            $futureCenterBookings = $futureCenterBookings->where('massage_date', '=', $todayDate)->get();
+            $futureCenterBookings = $futureCenterBookings->where('massage_date_time', '=', $todayDate)->get();
         }
         if($when == Booking::BOOKING_FUTURE) {
-            $futureCenterBookings = $futureCenterBookings->where('massage_date', '>=', $todayDate)->get();
+            $futureCenterBookings = $futureCenterBookings->where('massage_date_time', '>=', $todayDate)->get();
         }
                         
         $centerBookings = [];
         foreach ($futureCenterBookings as $index => $bookingInfo) {
-            $date = Carbon::createFromTimestampMs($bookingInfo->massage_date)->format('Y-m-d');
+            $date = Carbon::createFromTimestampMs($bookingInfo->massage_date_time)->format('Y-m-d');
             $centerBookings[$index] = [
                 'booking_type' => Booking::BOOKING_TYPE_IMC,
                 'booking_date' => strtotime($date) * 1000
             ];
         }
-        $futureHomeBookings = BookingInfo::with('booking')
+        $futureHomeBookings = BookingInfo::with('booking', 'bookingMassages')
                         ->whereHas('booking', function($q) use($request) {
                             $q->where('shop_id', '=', $request->get('shop_id'))
                             ->where('booking_type', Booking::BOOKING_TYPE_HHV);
                         });
                         
         if($when == Booking::BOOKING_TODAY) {
-            $futureHomeBookings = $futureHomeBookings->where('massage_date', '=', $todayDate)->get();
+            $futureHomeBookings = $futureHomeBookings->where('massage_date_time', '=', $todayDate)->get();
         }
         if($when == Booking::BOOKING_FUTURE) {
-            $futureHomeBookings = $futureHomeBookings->where('massage_date', '>=', $todayDate)->get();
+            $futureHomeBookings = $futureHomeBookings->where('massage_date_time', '>=', $todayDate)->get();
         }
                         
         $homeBookings = [];
         foreach ($futureHomeBookings as $index => $bookingInfo) {
-            $date = Carbon::createFromTimestampMs($bookingInfo->massage_date)->format('Y-m-d');
+            $date = Carbon::createFromTimestampMs($bookingInfo->massage_date_time)->format('Y-m-d');
             $homeBookings[$index] = [
                 'booking_type' => Booking::BOOKING_TYPE_HHV,
                 'booking_date' => strtotime($date) * 1000
@@ -145,9 +145,9 @@ class DashboardController extends BaseController {
             $bookingMassages = BookingMassage::with('bookingInfo')->where('service_pricing_id', $value['pricing_id'])
                             ->whereHas('bookingInfo', function($q) use($agoDate, $todayDate, $filter) {
                                 if ($filter == 0) {
-                                    $q->whereBetween('massage_date', array($agoDate, $todayDate));
+                                    $q->whereBetween('massage_date_time', array($agoDate, $todayDate));
                                 } else {
-                                    $q->whereMonth('massage_date', Carbon::now()->subMonth()->month);
+                                    $q->whereMonth('massage_date_time', Carbon::now()->subMonth()->month);
                                 }
                             })->count();
             array_push($allServices, ['total' => $bookingMassages, 'english_name' => $value['english_name'], 

@@ -71,9 +71,9 @@ class EventsController extends BaseController {
                 ->join('services', 'services.id', '=', 'service_pricings.service_id')
                 ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->select('booking_massages.id AS bookingMassageId','services.english_name AS english_name', 'services.portugese_name AS portugese_name',
-                        'service_timings.time AS massageDuration', 'booking_infos.massage_date AS massageDate','booking_infos.massage_time AS massageTime')
+                        'service_timings.time AS massageDuration', 'booking_massages.massage_date_time')
                 ->where('bookings.booking_type' , $type)
-                ->whereMonth('booking_infos.massage_date', $month)
+                ->whereMonth('booking_massages.massage_date_time', $month)
                 ->get();
         $eventsData = ShopsEvents::whereMonth('event_date',$month)->get();
         

@@ -170,7 +170,7 @@ class ClientController extends BaseController {
 
             $totalAppointments = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
             $lastVisit = $totalAppointments->first();
-            $lastVisit = !empty($lastVisit) ? Carbon::createFromTimestampMs($lastVisit[0]['massage_date']) : null;
+            $lastVisit = !empty($lastVisit) ? Carbon::createFromTimestampMs($lastVisit[0]['massage_date_time']) : null;
 
             $recipient = UserPeople::where('user_id',$userId)->get()->count();
             $addresses = UserAddress::where('user_id',$userId)->get()->count();

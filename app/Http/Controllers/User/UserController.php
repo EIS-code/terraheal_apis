@@ -326,8 +326,7 @@ class UserController extends BaseController
             $bookingId         = $modelBooking->id;
             $userId            = $data['user_id'];
             $shopId            = $data['shop_id'];
-            $massageDate       = Carbon::createFromTimestampMs($data['booking_date_time'])->toDate();
-            $massageTime       = Carbon::createFromTimestampMs($data['booking_date_time'])->toDateTime();
+            $massageDateTime   = Carbon::createFromTimestampMs($data['booking_date_time'])->toDate();
             $bookingInfos      = [];
             $shopCurrencyId    = $this->currencyHelper->getDefaultShopCurrency($shopId, true);
             $shopCurrency      = $this->currencyHelper->getCodeFromId($shopCurrencyId);
@@ -344,8 +343,6 @@ class UserController extends BaseController
 
                 $bookingInfos[$index] = [
                     'location'              => $infos['location'],
-                    'massage_date'          => $massageDate,
-                    'massage_time'          => $massageTime,
                     'imc_type'              => $infos['imc_type'],
                     'booking_currency_id'   => $bookingCurrencyId,
                     'shop_currency_id'      => $shopCurrencyId,
@@ -370,6 +367,7 @@ class UserController extends BaseController
                     $getMassagePrice = $modelServicePrice->find($massageInfo['service_pricing_id']);
                     
                     $bookingMassages[$indexBookingMassage] = [
+                        'massage_date_time'     => $massageDateTime,
                         'price'                 => $this->currencyHelper->convert($getMassagePrice->price, $exchangeRate, $bookingCurrencyId),
                         'cost'                  => $this->currencyHelper->convert($getMassagePrice->cost, $exchangeRate, $bookingCurrencyId),
                         'origional_price'       => $getMassagePrice->price,

@@ -676,15 +676,15 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 ->leftJoin('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->join('therapists', 'therapists.id', '=', 'booking_infos.therapist_id')
-                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_infos.massage_time as massageStartTime', 'booking_infos.massage_date as massageDate', 
+                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_massages.massage_date_time as massageDate', 
                         'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo')
-                ->where('bookings.shop_id', $request->shop_id)->where('booking_infos.massage_date', Carbon::now()->format('Y-m-d'));
+                ->where('bookings.shop_id', $request->shop_id)->whereDate('booking_massages.massage_date_time', Carbon::now()->format('Y-m-d'));
         } else {
             $therapists = DB::table('therapists')
                 ->leftJoin('booking_infos', 'booking_infos.therapist_id', '=', 'therapists.id')
                 ->leftJoin('booking_massages', 'booking_massages.booking_info_id', '=', 'booking_infos.id')
                 ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
-                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_infos.massage_time as massageStartTime', 'booking_infos.massage_date as massageDate', 
+                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_massages.massage_date_time as massageDate', 
                         'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo')
                 ->where('therapists.shop_id', $request->shop_id);
         }

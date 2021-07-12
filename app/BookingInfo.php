@@ -14,8 +14,6 @@ class BookingInfo extends BaseModel
 {
     protected $fillable = [
         'location',
-        'massage_date',
-        'massage_time',
         'is_cancelled',
         'cancel_type',
         'cancelled_reason',
@@ -73,8 +71,6 @@ class BookingInfo extends BaseModel
         return Validator::make($data, [
             'user_people_id'       => ['nullable', 'integer', 'exists:' . UserPeople::getTableName() . ',id'],
             'location'             => ['nullable', 'max:255'],
-            'massage_date'         => ['nullable'],
-            'massage_time'         => ['nullable'],
             'is_cancelled'         => ['in:' . implode(",", array_keys(self::$isCancelled))],
             'cancelled_reason'     => ['mas:255'],
             'imc_type'             => ['nullable', 'in:1,2'],
@@ -161,14 +157,14 @@ class BookingInfo extends BaseModel
 
         switch ($type) {
             case 'future':
-                $query->whereDate('massage_date', '>=', $now);
+                $query->whereDate('massage_date_time', '>=', $now);
                 break;
             case 'past':
-                $query->whereDate('massage_date', '<', $now);
+                $query->whereDate('massage_date_time', '<', $now);
                 break;
             case 'today':
             default:
-                $query->whereDate('massage_date', '=', $now);
+                $query->whereDate('massage_date_time', '=', $now);
                 break;
         }
 
@@ -177,14 +173,14 @@ class BookingInfo extends BaseModel
         if (!empty($massageDate)) {
             switch ($type) {
                 case 'future':
-                    $query->whereDate('massage_date', '>=', $massageDate);
+                    $query->whereDate('massage_date_time', '>=', $massageDate);
                     break;
                 case 'past':
-                    $query->whereDate('massage_date', '<=', $massageDate);
+                    $query->whereDate('massage_date_time', '<=', $massageDate);
                     break;
                 case 'today':
                 default:
-                    $query->whereDate('massage_date', '=', $massageDate);
+                    $query->whereDate('massage_date_time', '=', $massageDate);
                     break;
             }
         }
@@ -200,7 +196,7 @@ class BookingInfo extends BaseModel
         $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
         $return = [];
 
-        $data   = self::select('massage_date', 'massage_time', 'id as booking_info_id', 'id')
+        $data   = self::select('id as booking_info_id', 'id')
                       ->has('therapistWhereShop')
                       ->has('bookingMassages')
                       ->with(['bookingMassages' => function($query) {
@@ -208,7 +204,7 @@ class BookingInfo extends BaseModel
                                 ->with('servicePrices');
                       }])
                       ->where('therapist_id', $therapistId)
-                      ->whereBetween('massage_date', [$startDate, $endDate])
+                      ->whereBetween('massage_date_time', [$startDate, $endDate])
                       ->get();
         if (!empty($data) && !$data->isEmpty()) {
             foreach ($data as $record) {
@@ -219,9 +215,7 @@ class BookingInfo extends BaseModel
                         }
                         $timing = ServiceTiming::where('id', $bookingMassage->servicePrices->service_timing_id)->first();
                         $return[] = [
-                            'massage_date'      => $record->massage_date,
                             'massage_date_time' => $bookingMassage->massage_date_time,
-                            'massage_time'      => $record->massage_time,
                             'booking_info_id'   => $record->booking_info_id,
                             'time'              => (int)$timing->time
                         ];

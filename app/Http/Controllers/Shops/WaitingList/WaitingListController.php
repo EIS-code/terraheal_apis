@@ -157,6 +157,7 @@ class WaitingListController extends BaseController {
         $newBooking = [];
         $pricing = ServicePricing::where(['service_timing_id' => $request->service_timing_id, 'service_id' => $request->service_id])->first();
             
+        $newBooking['massage_date_time'] = $bookingMassage->massage_date_time;
         $newBooking['service_pricing_id'] = $pricing->id;
         $newBooking['price'] = $pricing->price;
         $newBooking['cost'] = $pricing->cost;
@@ -266,11 +267,11 @@ class WaitingListController extends BaseController {
         }
         
         $current_times = $this->getStartEndTime($bookingMassage);
-        $date  = Carbon::createFromTimestampMs($bookingMassage->bookingInfo->massage_date);
+        $date  = Carbon::createFromTimestampMs($bookingMassage->massage_date_time);
         
         $bookings = BookingMassage::with('bookingInfo')->where('room_id',$request->room_id)
                         ->whereHas('bookingInfo', function($q) use($bookingMassage, $date) {
-                            $q->where('massage_date',$date)->where('id', '!=', $bookingMassage->bookingInfo->id);
+                            $q->where('massage_date_time',$date)->where('id', '!=', $bookingMassage->bookingInfo->id);
                         })->get();
         if(!empty($bookings)) {
             foreach ($bookings as $key => $booking) {
@@ -420,7 +421,7 @@ class WaitingListController extends BaseController {
             foreach ($bookings as $key => $booking) {
                 $services[] = [
                     "service_day_name" => $booking['massage_day_name'],
-                    "massage_date" => $booking['massage_date'],
+                    "massage_date_time" => $booking['massage_date_time'],
                     "service_english_name" => $booking['service_english_name'],
                     "service_portugese_name" => $booking['service_portugese_name'],
                     "massage_start_time" => $booking['massage_start_time'],
@@ -459,7 +460,7 @@ class WaitingListController extends BaseController {
                 foreach ($bookings as $key => $booking) {
                     $services[] = [
                         "service_day_name" => $booking['massage_day_name'],
-                        "massage_date" => $booking['massage_date'],
+                        "massage_date_time" => $booking['massage_date_time'],
                         "service_english_name" => $booking['service_english_name'],
                         "service_portugese_name" => $booking['service_portugese_name'],
                         "massage_start_time" => $booking['massage_start_time'],

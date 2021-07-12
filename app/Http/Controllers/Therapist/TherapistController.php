@@ -229,8 +229,7 @@ class TherapistController extends BaseController
                                 $returnData[$increments]['user_id']              = $data->user_id;
                                 $returnData[$increments]['shop_id']              = $data->shop_id;
                                 $returnData[$increments]['booking_info_id']      = $bookingInfo->booking_info_id;
-                                $returnData[$increments]['massage_date']         = $bookingInfo->massage_date;
-                                $returnData[$increments]['massage_time']         = $bookingInfo->massage_time;
+                                $returnData[$increments]['massage_date_time']    = $bookingMassage->massage_date_time;
                                 $returnData[$increments]['user_people_id']       = $bookingInfo->user_people_id;
                                 $returnData[$increments]['therapist_id']         = $bookingInfo->therapist_id;
                                 $returnData[$increments]['user_name']            = $bookingInfo->userPeople->name;
@@ -401,26 +400,26 @@ class TherapistController extends BaseController
 
         if (!empty($totalDaysInMonth)) {
             // Get data between two dates (whole month).
-            $getData = $modelBookingInfo::whereBetween('massage_date', [$firstDayOfCurrentMonth, $lastDayOfCurrentMonth])->get();
+            $getData = BookingMassage::with('bookingInfo')->whereBetween('massage_date_time', [$firstDayOfCurrentMonth, $lastDayOfCurrentMonth])->get();
 
             foreach ($totalDaysInMonth as $date) {
                 if (!empty($getData) && !$getData->isEmpty()) {
                     $date   = strtotime($date->format('Y-m-d')) * 1000;
                     $isDone = [];
 
-                    foreach ($getData as $bookingInfo) {
-                        if ($bookingInfo->massage_date === $date) {
-                            $isDone[] = $bookingInfo;
+                    foreach ($getData as $bookingMassage) {
+                        if ($bookingMassage->massage_date_time === $date) {
+                            $isDone[] = $bookingMassage;
                         }
                     }
 
                     if (!empty($isDone)) {
                         foreach ($isDone as $done) {
-                            if ($done->is_done == $modelBookingInfo::IS_NOT_DONE) {
+                            if ($done->bookingInfo->is_done == $modelBookingInfo::IS_NOT_DONE) {
                                 $return[$date] = [
-                                    'booking_id'        => $done->booking_id,
-                                    'booking_info_id'   => $done->id,
-                                    'massage_date'      => $done->massage_date,
+                                    'booking_id'        => $done->bookingInfo->booking_id,
+                                    'booking_info_id'   => $done->bookingInfo->id,
+                                    'massage_date_time' => $done->massage_date_time,
                                     'status'            => false,
                                     'date'              => $date
                                 ];
@@ -428,9 +427,9 @@ class TherapistController extends BaseController
                                 break;
                             } else {
                                 $return[$date] = [
-                                    'booking_id'        => $done->booking_id,
-                                    'booking_info_id'   => $done->id,
-                                    'massage_date'      => $done->massage_date,
+                                    'booking_id'        => $done->bookingInfo->booking_id,
+                                    'booking_info_id'   => $done->bookingInfo->id,
+                                    'massage_date_time' => $done->massage_date_time,
                                     'status'            => true,
                                     'date'              => $date
                                 ];
@@ -440,7 +439,7 @@ class TherapistController extends BaseController
                         $return[$date] = [
                             'booking_id'        => NULL,
                             'booking_info_id'   => NULL,
-                            'massage_date'      => NULL,
+                            'massage_date_time' => NULL,
                             'status'            => false,
                             'date'              => $date
                         ];
@@ -452,7 +451,7 @@ class TherapistController extends BaseController
                         $return[$date] = [
                             'booking_id'        => NULL,
                             'booking_info_id'   => NULL,
-                            'massage_date'      => NULL,
+                            'massage_date_time' => NULL,
                             'status'            => true,
                             'date'              => $date
                         ];
