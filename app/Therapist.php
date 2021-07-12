@@ -684,7 +684,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 ->leftJoin('booking_infos', 'booking_infos.therapist_id', '=', 'therapists.id')
                 ->leftJoin('booking_massages', 'booking_massages.booking_info_id', '=', 'booking_infos.id')
                 ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
-                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_massages.massage_date_time as massageDate', 
+                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_massages.massage_date_time', 
                         'therapists.id as therapist_id', DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo')
                 ->where('therapists.shop_id', $request->shop_id);
         }
@@ -694,7 +694,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         foreach ($therapists as $key => $value) {
 
             $current = Carbon::now()->format('H:i');
-            $date = Carbon::parse($value[0]->massageStartTime);
+            $date = Carbon::parse($value[0]->massage_date_time);
 
             if ($current >= $date->format('H:i')) {
                 $available = NULL;
@@ -722,8 +722,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 'therapistId' => $value[0]->therapist_id,
                 'therapistName' => $value[0]->therapistName,
                 'therapistPhoto' => $profile_photo,
-                'massageDate' => strtotime($value[0]->massageDate) * 1000,
-                'massageStartTime' => strtotime($value[0]->massageStartTime) * 1000,
+                'massageDate' => strtotime($value[0]->massage_date_time) * 1000,
+                'massageStartTime' => strtotime($value[0]->massage_date_time) * 1000,
                 'available' => $available
             ];
             array_push($allTherapists, $data);
