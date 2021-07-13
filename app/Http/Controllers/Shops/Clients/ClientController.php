@@ -118,8 +118,8 @@ class ClientController extends BaseController {
         foreach ($ratings as $key => $value) {
             $model = $value->model;
             if($model == "App\Shop") {
-                $user = Shop::where('id',$value->model_id)->select('id','name','is_admin')->first();
-                $designation = $user->is_admin == Shop::IS_ADMIN ? 'Admin' : 'Manager';
+                $user = Shop::where('id',$value->model_id)->select('id','name')->first();
+                $designation = 'Admin';
             } else {
                 $user = Therapist::where('id',$value->model_id)->select('id','name')->first();
                 $designation = 'Therapist';
@@ -159,18 +159,14 @@ class ClientController extends BaseController {
         
         $userId = $request->user_id;
         $client = User::with('shop:id,name','city:id,name','country:id,name')
-                ->where('id', $userId);
-        if(!empty($client)) {
-            $client->where('shop_id', $request->shop_id);
-        }
-        $client = $client->first();
+                ->where('id', $userId)->where('shop_id', $request->shop_id)->first();
         
         if($client) {
             $bookingModel = new Booking();
 
             $totalAppointments = $bookingModel->getGlobalQuery($request)->groupBy('booking_id');
             $lastVisit = $totalAppointments->first();
-            $lastVisit = !empty($lastVisit) ? Carbon::createFromTimestampMs($lastVisit[0]['massage_date_time']) : null;
+            $lastVisit = !empty($lastVisit) ? $lastVisit[0]['massage_date'] : null;
 
             $recipient = UserPeople::where('user_id',$userId)->get()->count();
             $addresses = UserAddress::where('user_id',$userId)->get()->count();

@@ -184,6 +184,15 @@ class User extends BaseModel implements Authenticatable
         ]);
     }
 
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function shop()
     {
         return $this->hasOne('App\Shop', 'id', 'shop_id');
