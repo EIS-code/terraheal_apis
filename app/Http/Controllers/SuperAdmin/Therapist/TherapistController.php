@@ -16,7 +16,8 @@ class TherapistController extends BaseController
     public $successMsg = [
         'no.data.found' => "Data not found !",
         'therapist.details' => "Therapists found successfully !",
-        'therapist.get.details' => "Therapist details found successfully !"
+        'therapist.get.details' => "Therapist details found successfully !",
+        'therapist.get.ratings' => "Therapist ratings found successfully !"
     ];
 
     public function getTherapists() {
@@ -74,7 +75,7 @@ class TherapistController extends BaseController
                     'rate' => (float) number_format($avg / $cnt, 2)
                 ];
             }
-            return $this->returnSuccess(__($this->successMsg['no.data.found']), $ratingData);
+            return $this->returnSuccess(__($this->successMsg['therapist.get.ratings']), $ratingData);
             
         } else {
             return $this->returnSuccess(__($this->successMsg['no.data.found']));
