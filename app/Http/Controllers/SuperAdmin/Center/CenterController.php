@@ -100,22 +100,23 @@ class CenterController extends BaseController {
         $shop = Shop::find($request->shop_id);
         if (empty($shop)) {
             return $this->returnError($this->errorMsg['center.not.found']);
-        } 
+        }
         $data = $shopModel->dashboardInfo($request);
         
-//        $homeBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_HHV, 'shop_id' => $request->shop_id])->get()->count();
-//        $centerBooking = Booking::where(['booking_type' => Booking::BOOKING_TYPE_IMC, 'shop_id' => $request->shop_id])->get()->count();
-//        $vouchers = $this->getSoldVoucher($request)->count();
-//        $packs = $this->getSoldPacks($request)->count();
-//        $totalBookings = Booking::where('shop_id', $request->shop_id)->get()->count();
-//        $cancelledBookings = DB::table('bookings')
-//                ->join('booking_infos', 'booking_infos.booking_id', '=', 'bookings.id')
-//                ->where('booking_infos.is_cancelled', (string) BookingInfo::IS_CANCELLED)->get()->count();
-//        $earning = $this->getEarning($request);
-//        $topItems = $shopModel->getTopItems($request);
-//        $receptionists = Receptionist::where('shop_id', $request->shop_id)->get()->count();
-//        $managers = Manager::where('shop_id', $request->shop_id)->get()->count();
-//        $staff = $therapists + $receptionists + $managers;
+        $data['homeBooking'] = Booking::where(['booking_type' => Booking::BOOKING_TYPE_HHV, 'shop_id' => $request->shop_id])->get()->count();
+        $data['centerBooking'] = Booking::where(['booking_type' => Booking::BOOKING_TYPE_IMC, 'shop_id' => $request->shop_id])->get()->count();
+        $data['vouchers'] = $this->getSoldVoucher($request)->count();
+        $data['packs'] = $this->getSoldPacks($request)->count();
+        $data['totalBookings'] = Booking::where('shop_id', $request->shop_id)->get()->count();
+        $data['cancelledBookings'] = DB::table('bookings')
+                ->join('booking_infos', 'booking_infos.booking_id', '=', 'bookings.id')
+                ->where('booking_infos.is_cancelled', (string) BookingInfo::IS_CANCELLED)->get()->count();
+        $data['earning'] = $this->getEarning($request);
+        $data['topItems'] = $shopModel->getTopItems($request);
+        $therapists = Therapist::where('shop_id', $request->shop_id)->get()->count();
+        $receptionists = Receptionist::where('shop_id', $request->shop_id)->get()->count();
+        $managers = Manager::where('shop_id', $request->shop_id)->get()->count();
+        $data['staff'] = $therapists + $receptionists + $managers;
 
         return $this->returnSuccess(__($this->successMsg['center.details']), $data);
     }
