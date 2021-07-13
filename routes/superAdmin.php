@@ -79,6 +79,11 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('details/get', 'Dashboard\DashboardController@getSidebarDetails');
     });
     
+    $router->group(['prefix' => 'clients'], function () use($router) {
+
+        $router->get('get', 'Client\ClientController@getAllClients');
+    });
+    
     $router->group(['prefix' => 'verify'], function () use($router) {
         $router->post('/mobile', 'SuperAdminController@verifyMobile');
         $router->post('/email', 'SuperAdminController@verifyEmail');
