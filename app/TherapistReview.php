@@ -33,6 +33,11 @@ class TherapistReview extends BaseModel
         ]);
     }
 
+    public function question()
+    {
+        return $this->hasOne('App\TherapistReviewQuestion', 'id', 'question_id');
+    }
+    
     public static function ratingSwitchCaseSql()
     {
         $sql = NULL;

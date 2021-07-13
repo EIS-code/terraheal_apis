@@ -72,6 +72,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
 
         $router->get('get', 'Therapist\TherapistController@getTherapists');
         $router->post('profile/get', 'Therapist\TherapistController@getInfo');
+        $router->post('ratings/get', 'Therapist\TherapistController@getRatings');
     });
     
     $router->group(['prefix' => 'sidebar'], function () use($router) {

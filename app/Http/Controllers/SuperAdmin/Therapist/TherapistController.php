@@ -8,17 +8,18 @@ use App\Therapist;
 use App\TherapistUserRating;
 use Carbon\Carbon;
 use App\TherapistWorkingSchedule;
+use App\TherapistReview;
 
 class TherapistController extends BaseController
 {   
 
     public $successMsg = [
+        'no.data.found' => "Data not found !",
         'therapist.details' => "Therapists found successfully !",
         'therapist.get.details' => "Therapist details found successfully !"
     ];
 
-    public function getTherapists()
-    {
+    public function getTherapists() {
         $therapists = Therapist::with('selectedService')->get();
 
         foreach ($therapists as $key => $therapist) {
@@ -50,5 +51,33 @@ class TherapistController extends BaseController
         $data['availability'] = TherapistWorkingSchedule::getScheduleByMonth($id, $date->format('Y-m-d'));
 
         return $this->returnSuccess(__($this->successMsg['therapist.get.details']), $data);
+    }
+    
+    public function getRatings(Request $request) {
+        
+        $ratings = TherapistReview::with('question')->where(['therapist_id' => $request->therapist_id])
+                ->get()->groupBy('question_id');
+        
+        $ratingData = [];
+        if(!empty($ratings)) {
+            foreach ($ratings as $key => $rate) {
+             
+                $first = $rate->first();
+                $avg = $cnt = 0;
+                foreach ($rate as $key => $value) {
+                    $avg += $value->rating;
+                    $cnt++;
+                }
+                $ratingData[] = [
+                    'question_id' => $first->question_id,
+                    'question' => $first->question->question,
+                    'rate' => (float) number_format($avg / $cnt, 2)
+                ];
+            }
+            return $this->returnSuccess(__($this->successMsg['no.data.found']), $ratingData);
+            
+        } else {
+            return $this->returnSuccess(__($this->successMsg['no.data.found']));
+        }
     }
 }
