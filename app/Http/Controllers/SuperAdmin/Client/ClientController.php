@@ -29,6 +29,9 @@ class ClientController extends BaseController
     public function getInfo(Request $request) {
         
         $client = User::find($request->client_id);
+        if(empty($client)) {
+            return $this->returnSuccess(__($this->successMsg['no.data.found']));
+        }
         $ratings = TherapistUserRating::where('user_id', $request->client_id)->get()->groupBy('type');
         
         $cnt = $rates = $avg = 0;
