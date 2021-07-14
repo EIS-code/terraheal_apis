@@ -83,6 +83,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->group(['prefix' => 'clients'], function () use($router) {
 
         $router->get('get', 'Client\ClientController@getAllClients');
+        $router->post('details/get', 'Client\ClientController@getInfo');
     });
     
     $router->group(['prefix' => 'verify'], function () use($router) {
