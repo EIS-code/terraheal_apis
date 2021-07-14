@@ -274,10 +274,12 @@ class Booking extends BaseModel
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as gender', $bookingMassageModel::getTableName() . '.gender_preference', '=', 'gender.id')
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as pressure', $bookingMassageModel::getTableName() . '.pressure_preference', '=', 'pressure.id')
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as focus_area', $bookingMassageModel::getTableName() . '.focus_area_preference', '=', 'focus_area.id')
-                ->leftJoin($bookingMassageStartModel::getTableName(), $bookingMassageModel::getTableName() . '.id', '=', $bookingMassageStartModel::getTableName() . '.booking_massage_id')
-                ->where($this::getTableName() . '.shop_id', (int)$shopId)
+                ->leftJoin($bookingMassageStartModel::getTableName(), $bookingMassageModel::getTableName() . '.id', '=', $bookingMassageStartModel::getTableName() . '.booking_massage_id')                
                 ->whereNull($bookingMassageModel::getTableName().'.deleted_at');
 
+        if(!empty($shopId)) {
+            $data->where($this::getTableName() . '.shop_id', (int)$shopId);
+        }
         if (!empty($therapistId)) {
             $data->where($bookingInfoModel::getTableName() . '.therapist_id', (int) $therapistId);
         }
@@ -352,7 +354,8 @@ class Booking extends BaseModel
                         ->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_NOT_CANCELLED);
             }
             if (in_array(self::BOOKING_CANCELLED, $bookingsFilter)) {
-                $data->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_CANCELLED);
+                $data->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_CANCELLED)
+                        ->where($bookingInfoModel::getTableName() . '.is_done', (string)BookingInfo::IS_NOT_DONE);
             }
             if (in_array(self::BOOKING_PAST, $bookingsFilter)) {
                 $data->where($bookingMassageModel::getTableName() . '.massage_date_time', '<=', Carbon::now()->format('Y-m-d'));

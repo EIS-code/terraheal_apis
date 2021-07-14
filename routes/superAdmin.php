@@ -84,6 +84,10 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
 
         $router->get('get', 'Client\ClientController@getAllClients');
         $router->post('details/get', 'Client\ClientController@getInfo');
+        $router->post('future/bookings/get', 'Client\ClientController@getFutureBookings');
+        $router->post('past/bookings/get', 'Client\ClientController@getPastBookings');
+        $router->post('cancelled/bookings/get', 'Client\ClientController@getCancelledBookings');
+        $router->post('pending/bookings/get', 'Client\ClientController@getPendingBookings');
     });
     
     $router->group(['prefix' => 'verify'], function () use($router) {
