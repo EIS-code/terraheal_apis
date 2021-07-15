@@ -21,6 +21,7 @@ class ClientController extends BaseController
         'cancelled.bookings.get' => "Cancelled bookings found successfully !",
         'pending.bookings.get' => "Pending bookings found successfully !",
         'therapists.get' => "Client therapists found successfully !",
+        'therapist.details' => "Client therapist details found successfully !",
     ];
 
     public function getAllClients() {
@@ -117,5 +118,26 @@ class ClientController extends BaseController
             ];
         }
         return $this->returnSuccess(__($this->successMsg['therapists.get']), $therapists);
+    }
+    
+    public function getTherapistDetails(Request $request) {
+        $therapist = Therapist::find($request->therapist_id);
+
+        if(empty($therapist)) {
+            return $this->returnError(__($this->successMsg['no.data.found']));
+        }
+        $ratings = TherapistUserRating::where(['model_id' => $therapist->id, 'model' => 'App\Therapist'])->get();
+
+        $cnt = $rates = $avg = 0;
+        if ($ratings->count() > 0) {
+            foreach ($ratings as $i => $rating) {
+                $rates += $rating->rating;
+                $cnt++;
+            }
+            $avg = $rates / $cnt;
+        }
+        $therapist['average'] = number_format($avg, 2);
+        
+        return $this->returnSuccess(__($this->successMsg['therapist.details']), $therapist);
     }
 }
