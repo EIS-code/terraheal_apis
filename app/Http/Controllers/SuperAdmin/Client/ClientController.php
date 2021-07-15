@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\User;
 use App\TherapistUserRating;
 use App\Booking;
+use App\Therapist;
 
 class ClientController extends BaseController
 {   
@@ -19,6 +20,7 @@ class ClientController extends BaseController
         'past.bookings.get' => "Past bookings found successfully !",
         'cancelled.bookings.get' => "Cancelled bookings found successfully !",
         'pending.bookings.get' => "Pending bookings found successfully !",
+        'therapists.get' => "Client therapists found successfully !",
     ];
 
     public function getAllClients() {
@@ -92,5 +94,28 @@ class ClientController extends BaseController
         $pendingBookings = $bookingModel->getGlobalQuery($request);
         
         return $this->returnSuccess(__($this->successMsg['pending.bookings.get']), $pendingBookings->toArray());
+    }
+    
+    public function getPhoto($id) {
+        
+        $therapist = Therapist::find($id);
+        return $therapist->profile_photo;
+    }
+    
+    public function getTherapists(Request $request) {
+        
+        $bookingModel = new Booking();
+        $bookings = $bookingModel->getGlobalQuery($request)->groupBy('therapist_id');
+        
+        $therapists = [];
+        foreach ($bookings as $key => $booking) {
+            $first = $booking->first();
+            $therapists[] = [
+                'therapist_id' => $first->therapist_id,
+                'therapist_name' => $first->therapistName,
+                'profile_photo' => $this->getPhoto($first->therapist_id),
+            ];
+        }
+        return $this->returnSuccess(__($this->successMsg['therapists.get']), $therapists);
     }
 }
