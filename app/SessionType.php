@@ -15,6 +15,12 @@ class SessionType extends BaseModel
 		'is_removed'
     ];
 
+    const SINGLE = '4';
+    const COUPLE = '2';
+    const GROUP = '3';
+    const COUPLE_WITH_THERAPIST = '5';
+    const COUPLE_BACK_TO_BACK = '6';
+    
     public static $bookingTypes = ['0', '1'];
 
     public $fileSystem = 'public';

@@ -232,7 +232,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
                 return ['isError' => true, 'message' => 'Pack not found'];
             }
         }
-        $therapist_id = isset($newUser) ? $newUser->therapist_id : $infoData->therapist_id;
+        $therapist_id = isset($newUser) ? $newUser['therapist_id'] : $infoData->therapist_id;
         
         $shop = Shop::find($infoData->shop_id);
         if(empty($shop)) {
@@ -244,7 +244,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             'shop_currency_id' => $shop->currency_id,
             'booking_id' => $newBooking->id,
             'imc_type' => BookingInfo::IMC_TYPE_ASAP,            
-            'user_people_id' => isset($newUser) ? $newUser->id : NULL,
+            'user_people_id' => NULL,
             'therapist_id' => isset($pack) ? $pack->therapist_id : $therapist_id
         ];
         $bookingInfoModel = new BookingInfo();
@@ -276,7 +276,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "notes_of_injuries" => isset($injuries) ? $injuries : NULL,
             "service_pricing_id" => $servicePrice->id,
             "booking_info_id" => $bookingInfo->id,
-            "pressure_preference" => isset($user) ? $user['pressure_preference'] : $request->pressure_preference,
+            "pressure_preference" => isset($user) ? $user['pressure_preference'] : NULL,
             "gender_preference" => isset($user) ? $user['gender_preference'] : (!empty($request->gender_preference) ? $request->gender_preference : NULL),
             "focus_area_preference" => isset($user) ? $user['focus_area_preference'] : $request->focus_area_preference
         ];
