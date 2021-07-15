@@ -200,47 +200,13 @@ class WaitingListController extends BaseController {
     
     public function printBookingDetails(Request $request) {
         
-        $bookingModel = new Booking();
-        $printDetails = $bookingModel->getGlobalQuery($request);
-        $booking = $printDetails->first();
-//        dd($printDetails);
+        $shopModel = new Shop();
+        $bookingDetails = $shopModel->printBooking($request);
         
-        if(empty($printDetails)) {
-            return $this->returnError(__($this->successMsg['not.found']));
+        if (!empty($bookingDetails['isError']) && !empty($bookingDetails['message'])) {
+            return $this->returns($bookingDetails['message'], NULL, true);
         }
         
-        $services[]= [
-            "name" => $booking['client_name'],
-            "service_name" => $booking['service_name'],
-            "massage_duration" => $booking['massage_duration'],
-            "cost" => $booking['cost'],
-        ];
-            
-        $sum = 0;
-        foreach ($printDetails as $key => $printDetail) {
-         
-            $services[] = [
-               "name" => $printDetail['user_people_name'],
-               "service_name" => $printDetail['service_name'],
-               "massage_duration" => $printDetail['massage_duration'],
-               "cost" => $printDetail['cost'],
-            ];
-            $sum += $printDetail['cost'];
-        }
-        $bookingDetails = [
-            "booking_id" => $booking['booking_id'],
-            "book_platform" => $booking['book_platform'],
-            "notes" => $booking['notes'],
-            "date_time" => strtotime($booking['created_at'])*1000,
-            "booking_type" => $booking['booking_type'],
-            "session_type" => $booking['session_type'],
-            "shop_id" => $booking['shop_id'],
-            "shop_name" => $booking['shop_name'],
-            "shop_address" => $booking['shop_address'],
-            "booking_services" => $services,
-            "total" => $sum,
-
-        ];
         return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
     }
     

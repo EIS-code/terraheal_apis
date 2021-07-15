@@ -8,6 +8,7 @@ use App\User;
 use App\TherapistUserRating;
 use App\Booking;
 use App\Therapist;
+use App\Shop;
 
 class ClientController extends BaseController
 {   
@@ -22,6 +23,7 @@ class ClientController extends BaseController
         'pending.bookings.get' => "Pending bookings found successfully !",
         'therapists.get' => "Client therapists found successfully !",
         'therapist.details' => "Client therapist details found successfully !",
+        'print.booking' => "Booking details found successfully !",
     ];
 
     public function getAllClients() {
@@ -139,5 +141,17 @@ class ClientController extends BaseController
         $therapist['average'] = number_format($avg, 2);
         
         return $this->returnSuccess(__($this->successMsg['therapist.details']), $therapist);
+    }
+    
+    public function printBooking(Request $request) {
+        
+        $shopModel = new Shop();
+        $bookingDetails = $shopModel->printBooking($request);
+        
+        if (!empty($bookingDetails['isError']) && !empty($bookingDetails['message'])) {
+            return $this->returnError($bookingDetails['message'], NULL, true);
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
     }
 }
