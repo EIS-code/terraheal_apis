@@ -443,7 +443,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "booking_id" => $booking['booking_id'],
             "book_platform" => $booking['book_platform'],
             "notes" => $booking['notes'],
-            "date_time" => strtotime($booking['created_at'])*1000,
+            "date_time" => $booking['created_at'],
             "booking_type" => $booking['booking_type'],
             "session_type" => $booking['session_type'],
             "shop_id" => $booking['shop_id'],
