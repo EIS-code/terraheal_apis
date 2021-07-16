@@ -265,7 +265,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
         }
         
         $injuries = isset($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
-        $date = Carbon::createFromTimestampMs($request->booking_date_time);
+        $date = Carbon::createFromTimestampMs($user['booking_date_time']);
         $bookingMassageData = [
             "massage_date_time" => $date->format('Y-m-d'),
             "price" => $servicePrice->price,

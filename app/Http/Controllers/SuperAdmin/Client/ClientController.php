@@ -10,6 +10,7 @@ use App\Booking;
 use App\Therapist;
 use App\Shop;
 use App\UserAddress;
+use App\UserMassagePreferences;
 
 class ClientController extends BaseController
 {   
@@ -196,6 +197,10 @@ class ClientController extends BaseController
         }
         
         return $this->returnSuccess(__($this->successMsg['center.details.get']), $details);
+        
+    }
+    
+    public function getMassagePrefrence(Request $request) {
         
     }
 }
