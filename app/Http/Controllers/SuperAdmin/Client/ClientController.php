@@ -27,6 +27,7 @@ class ClientController extends BaseController
         'print.booking' => "Booking details found successfully !",
         'user.address' => "User address details found successfully !",
         'user.centers' => "User centers found successfully !",
+        'center.details.get' => "User center details found successfully !",
     ];
 
     public function getAllClients() {
@@ -170,6 +171,9 @@ class ClientController extends BaseController
         $bookingModel = new Booking();
         $centers = $bookingModel->getGlobalQuery($request)->groupBy('shop_id');
         
+        if(empty($centers)) {
+            return $this->returnError(__($this->successMsg['no.data.found']));
+        }
         $shops = [];
         foreach ($centers as $key => $center) {
             
@@ -181,5 +185,17 @@ class ClientController extends BaseController
         }
         
         return $this->returnSuccess(__($this->successMsg['user.centers']), $shops);
+    }
+    
+    public function getCenterDetails(Request $request) {
+        
+        $details = Shop::withCount('services')->with('centerHours')->find($request->shop_id);
+        
+        if(empty($details)) {
+            return $this->returnError(__($this->successMsg['no.data.found']));
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['center.details.get']), $details);
+        
     }
 }
