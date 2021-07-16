@@ -204,7 +204,7 @@ class WaitingListController extends BaseController {
         $bookingDetails = $shopModel->printBooking($request);
         
         if (!empty($bookingDetails['isError']) && !empty($bookingDetails['message'])) {
-            return $this->returns($bookingDetails['message'], NULL, true);
+            return $this->returnError($bookingDetails['message'], NULL, true);
         }
         
         return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
