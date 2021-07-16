@@ -9,6 +9,7 @@ use App\TherapistUserRating;
 use App\Booking;
 use App\Therapist;
 use App\Shop;
+use App\UserAddress;
 
 class ClientController extends BaseController
 {   
@@ -24,6 +25,7 @@ class ClientController extends BaseController
         'therapists.get' => "Client therapists found successfully !",
         'therapist.details' => "Client therapist details found successfully !",
         'print.booking' => "Booking details found successfully !",
+        'user.address' => "User address details found successfully !",
     ];
 
     public function getAllClients() {
@@ -153,5 +155,12 @@ class ClientController extends BaseController
         }
         
         return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
+    }
+    
+    public function getAddress(Request $request) {
+        
+        $address = UserAddress::where('user_id', $request->user_id)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['user.address']), $address);
     }
 }

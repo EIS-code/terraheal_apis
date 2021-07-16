@@ -91,6 +91,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('therapists/get', 'Client\ClientController@getTherapists');
         $router->post('therapists/details/get', 'Client\ClientController@getTherapistDetails');
         $router->post('print/booking', 'Client\ClientController@printBooking');
+        $router->post('address/get', 'Client\ClientController@getAddress');
     });
     
     $router->group(['prefix' => 'verify'], function () use($router) {
