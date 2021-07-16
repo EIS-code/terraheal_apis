@@ -26,6 +26,7 @@ class ClientController extends BaseController
         'therapist.details' => "Client therapist details found successfully !",
         'print.booking' => "Booking details found successfully !",
         'user.address' => "User address details found successfully !",
+        'user.centers' => "User centers found successfully !",
     ];
 
     public function getAllClients() {
@@ -162,5 +163,23 @@ class ClientController extends BaseController
         $address = UserAddress::where('user_id', $request->user_id)->get();
         
         return $this->returnSuccess(__($this->successMsg['user.address']), $address);
+    }
+    
+    public function getCenters(Request $request) {
+        
+        $bookingModel = new Booking();
+        $centers = $bookingModel->getGlobalQuery($request)->groupBy('shop_id');
+        
+        $shops = [];
+        foreach ($centers as $key => $center) {
+            
+            $first = $center->first();
+            $shops[] = [
+                'shop_id' => $first->shop_id,
+                'shop_name' => $first->shop_name
+            ];
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['user.centers']), $shops);
     }
 }
