@@ -397,7 +397,6 @@ class WaitingListController extends BaseController {
                     }
                 }
 
-                $date = !empty($request->booking_date_time) ? Carbon::createFromTimestampMs($request->booking_date_time) : null;
                 foreach ($request->users as $key => $user) {
                     if ($request->session_id == SessionType::COUPLE_WITH_THERAPIST) {
                         if (!isset($user['therapist_id'])) {
@@ -405,6 +404,7 @@ class WaitingListController extends BaseController {
                         }
                     }
 
+                    $date = !empty($user['booking_date_time']) ? Carbon::createFromTimestampMs($user['booking_date_time']) : Carbon::now();
                     $bookingData = [
                         'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
                         'special_notes' => $request->special_notes,
