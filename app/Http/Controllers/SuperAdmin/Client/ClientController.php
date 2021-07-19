@@ -14,6 +14,8 @@ use App\UserMassagePreferences;
 use App\Voucher;
 use App\UserVoucherPrice;
 use DB;
+use App\Pack;
+use App\UserPack;
 
 class ClientController extends BaseController
 {   
@@ -35,6 +37,8 @@ class ClientController extends BaseController
         'used.vouchers' => "User used vouchers found successfully !",
         'unused.vouchers' => "User unused vouchers found successfully !",
         'voucher.details' => "Voucher details found successfully !",
+        'packs' => "Packs found successfully !",
+        'pack.details' => "Pack details found successfully !",
     ];
 
     public function getAllClients() {
@@ -242,5 +246,28 @@ class ClientController extends BaseController
             return $this->returnError(__($this->successMsg['no.data.found']));
         }
         return $this->returnSuccess(__($this->successMsg['voucher.details']), $voucher);
+    }
+    
+    public function getPacks(Request $request) {
+        
+        $packModel = new Pack();
+        $packUsersModel = new UserPack();
+        
+        $packs = $packModel
+                ->select(DB::RAW($packUsersModel::getTableName() . '.*,' . $packModel::getTableName() . '.*'))
+                ->join($packUsersModel::getTableName(), $packUsersModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
+                ->where($packUsersModel::getTableName().'.users_id', $request->user_id)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['packs']), $packs);
+    }
+    
+    public function getPackDetails(Request $request) {
+        
+        $pack = Pack::find($request->pack_id);
+        
+        if(empty($pack)) {
+            return $this->returnError(__($this->successMsg['no.data.found']));
+        }
+        return $this->returnSuccess(__($this->successMsg['pack.details']), $pack);
     }
 }
