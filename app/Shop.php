@@ -232,7 +232,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
                 return ['isError' => true, 'message' => 'Pack not found'];
             }
         }
-        $therapist_id = isset($newUser) ? $newUser['therapist_id'] : $infoData->therapist_id;
+        $therapist_id = isset($newUser['therapist_id']) ? $newUser['therapist_id'] : NULL;
         
         $shop = Shop::find($infoData->shop_id);
         if(empty($shop)) {
@@ -243,7 +243,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             'booking_currency_id' => $shop->currency_id,
             'shop_currency_id' => $shop->currency_id,
             'booking_id' => $newBooking->id,
-            'imc_type' => BookingInfo::IMC_TYPE_ASAP,            
+            'imc_type' => BookingInfo::IMC_TYPE_ASAP,   
             'user_people_id' => NULL,
             'therapist_id' => isset($pack) ? $pack->therapist_id : $therapist_id
         ];
