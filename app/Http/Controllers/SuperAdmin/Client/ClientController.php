@@ -16,6 +16,7 @@ use App\UserVoucherPrice;
 use DB;
 use App\Pack;
 use App\UserPack;
+use App\TherapyQuestionnaire;
 
 class ClientController extends BaseController
 {   
@@ -40,6 +41,7 @@ class ClientController extends BaseController
         'packs' => "Packs found successfully !",
         'pack.details' => "Pack details found successfully !",
         'massage.prefences' => "User massage prefences found successfully !",
+        'therapy.questionnaries' => "Therapy questionnaries found successfully !",
     ];
 
     public function getAllClients() {
@@ -277,5 +279,12 @@ class ClientController extends BaseController
         $prefernces = UserMassagePreferences::with('massagePreference', 'massagePreferenceOption')->where('user_id', $request->user_id)->get();
         
         return $this->returnSuccess(__($this->successMsg['massage.prefences']), $prefernces);
+    }
+    
+    public function getQuestionnaries(Request $request) {
+        
+        $questionnaries = TherapyQuestionnaire::with('questionnaireAnswer')->get();
+        
+        return $this->returnSuccess(__($this->successMsg['therapy.questionnaries']), $questionnaries);
     }
 }
