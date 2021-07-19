@@ -94,6 +94,9 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('address/get', 'Client\ClientController@getAddress');
         $router->post('centers/get', 'Client\ClientController@getCenters');
         $router->post('center/details/get', 'Client\ClientController@getCenterDetails');
+        $router->post('used/vouchers/get', 'Client\ClientController@getUsedVouchers');
+        $router->post('unused/vouchers/get', 'Client\ClientController@getUnUsedVouchers');
+        $router->post('voucher/details/get', 'Client\ClientController@getVoucherDetails');
     });
     
     $router->group(['prefix' => 'verify'], function () use($router) {

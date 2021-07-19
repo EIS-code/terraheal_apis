@@ -11,6 +11,9 @@ use App\Therapist;
 use App\Shop;
 use App\UserAddress;
 use App\UserMassagePreferences;
+use App\Voucher;
+use App\UserVoucherPrice;
+use DB;
 
 class ClientController extends BaseController
 {   
@@ -29,6 +32,9 @@ class ClientController extends BaseController
         'user.address' => "User address details found successfully !",
         'user.centers' => "User centers found successfully !",
         'center.details.get' => "User center details found successfully !",
+        'used.vouchers' => "User used vouchers found successfully !",
+        'unused.vouchers' => "User unused vouchers found successfully !",
+        'voucher.details' => "Voucher details found successfully !",
     ];
 
     public function getAllClients() {
@@ -200,7 +206,41 @@ class ClientController extends BaseController
         
     }
     
-    public function getMassagePrefrence(Request $request) {
+    public function getUsedVouchers(Request $request) {
         
+        $voucherModel = new Voucher();
+        $voucherUsersModel = new UserVoucherPrice();
+
+        $vouchers = $voucherModel
+                ->select(DB::RAW($voucherUsersModel::getTableName() . '.*,'  . 'UNIX_TIMESTAMP(' . $voucherUsersModel::getTableName() . '.purchase_date) * 1000 as purchase_date,'. $voucherModel::getTableName() . '.*'))
+                ->join($voucherUsersModel::getTableName(), $voucherUsersModel::getTableName() . '.voucher_id', '=', $voucherModel::getTableName() . '.id')
+                ->where($voucherUsersModel::getTableName().'.user_id', $request->user_id)
+                ->where($voucherUsersModel::getTableName().'.used_value', '>', 0.00)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['used.vouchers']), $vouchers);
+    }
+    
+    public function getUnUsedVouchers(Request $request) {
+        
+        $voucherModel = new Voucher();
+        $voucherUsersModel = new UserVoucherPrice();
+
+        $vouchers = $voucherModel
+                ->select(DB::RAW($voucherUsersModel::getTableName() . '.*,'  . 'UNIX_TIMESTAMP(' . $voucherUsersModel::getTableName() . '.purchase_date) * 1000 as purchase_date,'. $voucherModel::getTableName() . '.*'))
+                ->join($voucherUsersModel::getTableName(), $voucherUsersModel::getTableName() . '.voucher_id', '=', $voucherModel::getTableName() . '.id')
+                ->where($voucherUsersModel::getTableName().'.user_id', $request->user_id)
+                ->where($voucherUsersModel::getTableName().'.used_value', 0.00)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['unused.vouchers']), $vouchers);
+    }
+    
+    public function getVoucherDetails(Request $request) {
+        
+        $voucher = Voucher::find($request->voucher_id);
+        
+        if(empty($voucher)) {
+            return $this->returnError(__($this->successMsg['no.data.found']));
+        }
+        return $this->returnSuccess(__($this->successMsg['voucher.details']), $voucher);
     }
 }
