@@ -39,6 +39,7 @@ class ClientController extends BaseController
         'voucher.details' => "Voucher details found successfully !",
         'packs' => "Packs found successfully !",
         'pack.details' => "Pack details found successfully !",
+        'massage.prefences' => "User massage prefences found successfully !",
     ];
 
     public function getAllClients() {
@@ -269,5 +270,12 @@ class ClientController extends BaseController
             return $this->returnError(__($this->successMsg['no.data.found']));
         }
         return $this->returnSuccess(__($this->successMsg['pack.details']), $pack);
+    }
+    
+    public function getMassagePreferences(Request $request) {
+        
+        $prefernces = UserMassagePreferences::with('massagePreference', 'massagePreferenceOption')->where('user_id', $request->user_id)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['massage.prefences']), $prefernces);
     }
 }
