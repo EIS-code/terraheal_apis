@@ -17,6 +17,7 @@ use DB;
 use App\Pack;
 use App\UserPack;
 use App\TherapyQuestionnaire;
+use App\UsersForgottenObjects;
 
 class ClientController extends BaseController
 {   
@@ -42,6 +43,7 @@ class ClientController extends BaseController
         'pack.details' => "Pack details found successfully !",
         'massage.prefences' => "User massage prefences found successfully !",
         'therapy.questionnaries' => "Therapy questionnaries found successfully !",
+        'forgot.objects' => "Forgot objects found successfully !",
     ];
 
     public function getAllClients() {
@@ -286,5 +288,12 @@ class ClientController extends BaseController
         $questionnaries = TherapyQuestionnaire::with('questionnaireAnswer')->get();
         
         return $this->returnSuccess(__($this->successMsg['therapy.questionnaries']), $questionnaries);
+    }
+    
+    public function getForgotObjects(Request $request) {
+        
+        $objects = UsersForgottenObjects::with('shops:id,name','rooms:id,name')->where('user_id',$request->user_id)->get();
+        
+        return $this->returnSuccess(__($this->successMsg['forgot.objects']), $objects);
     }
 }

@@ -101,6 +101,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('pack/details/get', 'Client\ClientController@getPackDetails');
         $router->post('massagePreference/get', 'Client\ClientController@getMassagePreferences');
         $router->post('questionnaries/get', 'Client\ClientController@getQuestionnaries');
+        $router->post('forgot/objects/get', 'Client\ClientController@getForgotObjects');
     });
     
     $router->group(['prefix' => 'verify'], function () use($router) {
