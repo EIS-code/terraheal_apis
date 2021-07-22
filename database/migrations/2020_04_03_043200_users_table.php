@@ -18,7 +18,7 @@ class UsersTable extends Migration
             $table->string('name');
             $table->string('surname');
             $table->string('dob')->nullable();
-            $table->enum('gender', ['m', 'f'])->comment('m: Male, f: Female');
+            $table->enum('gender', ['m', 'f'])->nullable()->comment('m: Male, f: Female');
             $table->string('email')->unique();
             $table->string('tel_number_code', 20)->nullable();
             $table->string('tel_number', 50)->nullable();

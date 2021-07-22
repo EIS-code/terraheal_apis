@@ -181,6 +181,10 @@ class UserController extends BaseController
         DB::beginTransaction();
 
         try {
+            if (empty($data['gender'])) {
+                unset($data['gender']);
+            }
+
             $validator = $model->validator($data);
             if ($validator->fails()) {
                 return $this->returns($validator->errors()->first(), NULL, true);
