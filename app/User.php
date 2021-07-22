@@ -142,7 +142,7 @@ class User extends BaseModel implements Authenticatable
             'dob'                  => ['string'],
             'country_id'           => ['integer', 'exists:' . Country::getTableName() . ',id'],
             'city_id'              => ['integer', 'exists:' . City::getTableName() . ',id'],
-            'gender'               => ['required', 'in:m,f'],
+            'gender'               => ['nullable', 'in:m,f'],
             'email'                => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
             'tel_number_code'      => ['string', 'max:20'],
             'tel_number'           => ['string', 'max:50'],
