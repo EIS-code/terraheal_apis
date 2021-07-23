@@ -50,7 +50,6 @@ class ServiceController extends BaseController
     public function get(Request $request, int $limit = 10)
     {
         $shopId = (!empty($data['shop_id'])) ? (int)$data['shop_id'] : NULL;
-        $request->request->add(['isGetAll' => true]);
         $getMassages = CommonHelper::getAllService($request);
 
         // Get shop details.
