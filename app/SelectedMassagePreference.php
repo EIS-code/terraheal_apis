@@ -30,7 +30,7 @@ class SelectedMassagePreference extends BaseModel
     public function validator(array $data)
     {
         return Validator::make($data, [
-            'value'        => ['required', 'string'],
+            'value'        => ['nullable', 'string'],
             'is_removed'   => ['integer', 'in:0,1'],
             'mp_option_id' => ['required', 'exists:' . MassagePreferenceOption::getTableName() . ',id'],
             'user_id'      => ['required', 'exists:' . User::getTableName() . ',id']
