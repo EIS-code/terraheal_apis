@@ -23,8 +23,7 @@ class CommonHelper {
                                 ->orWhere("portugese_name", "LIKE", "%{$request->search_val}%");
                             }
                         });
-                        if ($request->type == 
-                            use App\Service;::MASSAGE || $request->type == Service::THERAPY) {
+                        if ($request->type == Service::MASSAGE || $request->type == Service::THERAPY) {
                             $q->where('service_type', (string)$request->type);
                         }
                     })->get();
