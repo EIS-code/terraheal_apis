@@ -49,6 +49,7 @@ class UserFavoriteService extends BaseModel
             if (!empty($record->services)) {
                 $icon = ServiceImage::where(['service_id' => $record->services->id, 'is_featured' => ServiceImage::IS_FEATURED])->first();
                 $record->shop_id        = $record->user->shop_id;
+                $record->name   = $record->services->english_name;
                 $record->service_english_name   = $record->services->english_name;
                 $record->service_portugese_name  = $record->services->portugese_name;
                 $record->service_type   = $record->services->service_type;
