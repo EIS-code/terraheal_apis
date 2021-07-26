@@ -131,19 +131,21 @@ class User extends BaseModel implements Authenticatable
     {
         $user = NULL;
         if ($isUpdate === true && !empty($id)) {
-            $emailValidator = ['unique:users,email,' . $id];
+            $emailValidator = ['nullable', 'unique:users,email,' . $id];
+            $nameValidator  = ['nullable'];
         } else {
-            $emailValidator = ['unique:users'];
+            $emailValidator = ['required', 'unique:users'];
+            $nameValidator  = ['required'];
         }
 
         return Validator::make($data, [
-            'name'                 => ['required', 'string', 'max:255'],
+            'name'                 => array_merge(['string', 'max:255'], $nameValidator),
             'surname'              => ['string', 'max:255'],
             'dob'                  => ['string'],
             'country_id'           => ['integer', 'exists:' . Country::getTableName() . ',id'],
             'city_id'              => ['integer', 'exists:' . City::getTableName() . ',id'],
-            'gender'               => ['required', 'in:m,f'],
-            'email'                => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
+            'gender'               => ['nullable', 'in:m,f'],
+            'email'                => array_merge(['string', 'email', 'max:255'], $emailValidator),
             'tel_number_code'      => ['string', 'max:20'],
             'tel_number'           => ['string', 'max:50'],
             'emergency_tel_number_code' => ['string', 'max:20'],

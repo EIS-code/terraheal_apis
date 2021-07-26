@@ -6,6 +6,7 @@ use App\ShopService;
 use App\ServiceImage;
 use App\ServiceTiming;
 use App\ServicePricing;
+use App\Service;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,7 +23,9 @@ class CommonHelper {
                                 ->orWhere("portugese_name", "LIKE", "%{$request->search_val}%");
                             }
                         });
-                        $q->where('service_type', (string)$request->type);
+                        if ($request->type == Service::MASSAGE || $request->type == Service::THERAPY) {
+                            $q->where('service_type', (string)$request->type);
+                        }
                     })->get();
         $allServices = [];
         foreach ($services as $key => $massage) {

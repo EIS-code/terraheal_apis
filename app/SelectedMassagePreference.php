@@ -15,22 +15,30 @@ class SelectedMassagePreference extends BaseModel
         'user_id'
     ];
 
-    public $radioOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    public $radioOptions = [];
 
-    public $optionGroups = [
-        1 => [1, 2, 3, 4],
-        2 => [5, 6, 7, 8, 9],
-        3 => [10],
-        4 => [11],
-        5 => [12],
-        6 => [13],
-        7 => [14]
-    ];
+    public $optionGroups = [];
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $model = new MassagePreferenceOption();
+        $data  = $model->all();
+
+        if (!empty($data) && !$data->isEmpty()) {
+            foreach ($data as $row) {
+                $this->radioOptions[$row->id] = $row->id;
+
+                $this->optionGroups[$row->massage_preference_id][] = $row->id;
+            }
+        }
+    }
 
     public function validator(array $data)
     {
         return Validator::make($data, [
-            'value'        => ['required', 'string'],
+            'value'        => ['nullable', 'string'],
             'is_removed'   => ['integer', 'in:0,1'],
             'mp_option_id' => ['required', 'exists:' . MassagePreferenceOption::getTableName() . ',id'],
             'user_id'      => ['required', 'exists:' . User::getTableName() . ',id']
