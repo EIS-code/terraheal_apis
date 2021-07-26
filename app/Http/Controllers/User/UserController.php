@@ -1562,7 +1562,6 @@ class UserController extends BaseController
 
             if (!empty($records) && !$records->isEmpty()) {
                 $records = $model::mergeResponse($records);
-                dd($records);
 
                 return $this->returns('success.user.favorite.found', $records);
             }
