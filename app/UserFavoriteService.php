@@ -32,7 +32,7 @@ class UserFavoriteService extends BaseModel
             'user_id'    => ['required', 'exists:' . User::getTableName() . ',id']
         ]);
     }
-
+    
     public function services()
     {
         return $this->hasOne('App\Service', 'id', 'service_id');
@@ -51,7 +51,8 @@ class UserFavoriteService extends BaseModel
                 $record->shop_id        = $record->user->shop_id;
                 $record->service_english_name   = $record->services->english_name;
                 $record->service_portugese_name  = $record->services->portugese_name;
-                $record->service_icon   = $icon->image;
+                $record->service_type   = $record->services->service_type;
+                $record->service_icon   = isset($icon) ? $icon->image : NULL;
 
                 unset($record->services);
                 unset($record->user);
