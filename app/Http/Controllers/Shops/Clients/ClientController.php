@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Shops\Clients;
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\User;
-use App\UserPeople;
 use App\Booking;
 use App\UserAddress;
 use App\TherapyQuestionnaire;
@@ -168,7 +167,7 @@ class ClientController extends BaseController {
             $lastVisit = $totalAppointments->first();
             $lastVisit = !empty($lastVisit) ? $lastVisit[0]['massage_date'] : null;
 
-            $recipient = UserPeople::where('user_id',$userId)->get()->count();
+            $recipient = User::where('user_id',$userId)->get()->count();
             $addresses = UserAddress::where('user_id',$userId)->get()->count();
             $therapists = $bookingModel->getGlobalQuery($request)->groupBy('therapist_id')->count();
             $is_verified = false;
@@ -286,7 +285,7 @@ class ClientController extends BaseController {
     
     public function getRecipient(Request $request) {
         
-        $recipients = UserPeople::where('user_id',$request->client_id)->get();
+        $recipients = User::where('user_id',$request->client_id)->get();
         if ($recipients->count() == 0) {
             return $this->returnSuccess(__($this->successMsg['data.not.found']));
         }

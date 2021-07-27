@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Therapist;
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\Therapist;
-use App\UserPeople;
 use App\SessionType;
 use App\Booking;
 use App\BookingInfo;
@@ -213,7 +212,7 @@ class TherapistController extends BaseController
                     foreach ($data->bookingInfoWithFilters as $bookingInfo) {
                         if (!empty($bookingInfo->bookingMassages) && !$bookingInfo->bookingMassages->isEmpty()) {
                             foreach ($bookingInfo->bookingMassages as $bookingMassage) {
-                                if (empty($bookingInfo->userPeople)) {
+                                if (empty($bookingInfo->user)) {
                                     continue;
                                 }
 
@@ -232,7 +231,7 @@ class TherapistController extends BaseController
                                 $returnData[$increments]['massage_date_time']    = $bookingMassage->massage_date_time;
                                 $returnData[$increments]['user_people_id']       = $bookingInfo->user_people_id;
                                 $returnData[$increments]['therapist_id']         = $bookingInfo->therapist_id;
-                                $returnData[$increments]['user_name']            = $bookingInfo->userPeople->name;
+                                $returnData[$increments]['user_name']            = $bookingInfo->user->name;
                                 $returnData[$increments]['therapist_name']       = $bookingInfo->therapist->fullName;
                                 $returnData[$increments]['service_pricing_id']   = $bookingInfo->service_pricing_id;
                                 $returnData[$increments]['service_name'] = !empty($bookingMassage->servicePrices->service) ? $bookingMassage->servicePrices->service->english_name : NULL;

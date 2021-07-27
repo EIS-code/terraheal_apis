@@ -3,7 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
-use App\UserPeople;
+use App\User;
 use App\Therapist;
 use App\Room;
 use App\BookingMassage;
@@ -22,7 +22,7 @@ class BookingInfo extends BaseModel
         'booking_currency_id',
         'shop_currency_id',
         'therapist_id',
-        'user_people_id',
+        'user_id',
         'room_id',
         'booking_id'
     ];
@@ -69,7 +69,7 @@ class BookingInfo extends BaseModel
     public function validator(array $data)
     {
         return Validator::make($data, [
-            'user_people_id'       => ['nullable', 'integer', 'exists:' . UserPeople::getTableName() . ',id'],
+            'user_id'       => ['nullable', 'integer', 'exists:' . User::getTableName() . ',id'],
             'location'             => ['nullable', 'max:255'],
             'is_cancelled'         => ['in:' . implode(",", array_keys(self::$isCancelled))],
             'cancelled_reason'     => ['mas:255'],
@@ -141,9 +141,9 @@ class BookingInfo extends BaseModel
         return $this->hasOne('App\Therapist', 'id', 'therapist_id')->where('shop_id', (int)$shopId)->where('id', (int)$id);
     }
 
-    public function userPeople()
+    public function user()
     {
-        return $this->hasOne('App\UserPeople', 'id', 'user_people_id');
+        return $this->hasOne('App\User', 'id', 'user_id');
     }
 
     public function filterDatas(Builder $query, $type = 'today')

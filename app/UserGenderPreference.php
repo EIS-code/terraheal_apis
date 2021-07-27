@@ -24,7 +24,7 @@ class UserGenderPreference extends BaseModel
         $request = Request();
         $userId  = $request->get('user_id', false);
 
-        $query   = $this->hasOne('App\UserPeople', 'user_gender_preference_id', 'id')->where('is_removed', '=', self::$notRemoved)->where('user_id', '=', $userId);
+        $query   = $this->hasOne('App\User', 'user_gender_preference_id', 'id')->where('is_removed', '=', self::$notRemoved)->where('user_id', '=', $userId);
 
         return $query;
     }

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\Booking;
 use App\BookingMassage;
-use App\UserPeople;
 use App\Shop;
 use DB;
 use Carbon\Carbon;
@@ -329,7 +328,7 @@ class WaitingListController extends BaseController {
                     }
                 }
                 if (!empty($request->users)) {
-                    $userModel = new UserPeople();
+                    $userModel = new User();
                     foreach ($request->users as $key => $user) {
                         $user_people = [
                             'name' => $user['name'],
@@ -342,7 +341,7 @@ class WaitingListController extends BaseController {
                         if ($checks->fails()) {
                             return $this->returnError($checks->errors()->first(), NULL, true);
                         }
-                        $newUser = UserPeople::create($user_people);
+                        $newUser = User::create($user_people);
 
                         $newUser['therapist_id'] = $user['therapist_id'];
                         $newUser['notes_of_injuries'] = $user['notes_of_injuries'];

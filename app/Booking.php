@@ -8,7 +8,6 @@ use App\SessionType;
 use App\BookingInfo;
 use App\UserGenderPreference;
 use App\BookingMassage;
-use App\UserPeople;
 use App\BookingMassageStart;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
@@ -127,10 +126,10 @@ class Booking extends BaseModel
 
     public function bookingInfoWithFilters($type = 'today')
     {
-        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['id', 'booking_id', 'id as booking_info_id', 'user_people_id', 'therapist_id', 'is_done'])
+        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['id', 'booking_id', 'id as booking_info_id', 'user_id', 'therapist_id', 'is_done'])
                     ->where(function($query) use($type) {
                         $query->filterDatas();
-                    })->with(['userPeople' => function($query) {
+                    })->with(['user' => function($query) {
                         return $query->filterDatas();
                     }, 'therapist', 'bookingMassages' => function($query) {
                         $query->with(['servicePrices' => function($query1) {
@@ -191,7 +190,6 @@ class Booking extends BaseModel
         $sessionId          = $request->get('session_id');
         $serviceId          = $request->get('service_id');
 
-        $userPeopleModel                = new UserPeople();
         $bookingInfoModel               = new BookingInfo();
         $sessionTypeModel               = new SessionType();
         $serviceModel                   = new Service();
@@ -214,10 +212,9 @@ class Booking extends BaseModel
                             $bookingMassageModel::getTableName() . '.id as booking_massage_id, ' .
                             $this::getTableName() . '.user_id as client_id,'.
                             'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name, ' . 
-                            'CASE ' . $userPeopleModel::getTableName() . '.gender WHEN "m" THEN "' . $userPeopleModel->gender[$userPeopleModel::MALE] . '" WHEN "f" THEN "' . $userPeopleModel->gender[$userPeopleModel::FEMALE] . '" ELSE "" END as client_gender, ' . 
-                            $userPeopleModel::getTableName() . '.age as client_age, ' . 
-                            $bookingInfoModel::getTableName() . '.user_people_id, '.
-                            $userPeopleModel::getTableName() . '.name as user_people_name, '. 
+                            'CASE ' . $userModel::getTableName() . '.gender WHEN "m" THEN "' . $userModel->gender[$userModel::MALE] . '" WHEN "f" THEN "' . $userModel->gender[$userModel::FEMALE] . '" ELSE "" END as client_gender, ' . 
+                            $userModel::getTableName() . '.age as client_age, ' . 
+                            $bookingInfoModel::getTableName() . '.user_id, '.
                             $this::getTableName().'.session_id as session_id,'.
                             $sessionTypeModel::getTableName() . '.type as session_type, ' .
                             $this::getTableName() . '.booking_type, ' . 
@@ -264,7 +261,6 @@ class Booking extends BaseModel
                 ->join($shopModel::getTableName(), $this::getTableName() . '.shop_id', '=', $shopModel::getTableName() . '.id')
                 ->join($userModel::getTableName(), $this::getTableName() . '.user_id', '=', $userModel::getTableName() . '.id')
                 ->join($sessionTypeModel::getTableName(), $this::getTableName() . '.session_id', '=', $sessionTypeModel::getTableName() . '.id')
-                ->leftJoin($userPeopleModel::getTableName(), $bookingInfoModel::getTableName() . '.user_people_id', '=', $userPeopleModel::getTableName() . '.id')
                 ->leftJoin($roomModel::getTableName(),$bookingMassageModel::getTableName().'.room_id', '=', $roomModel::getTableName().'.id')
                 ->leftJoin($userGenderPreferenceModel::getTableName(),$bookingMassageModel::getTableName().'.gender_preference', '=', $userGenderPreferenceModel::getTableName().'.id')
                 ->leftJoin($therapistModel::getTableName(),$bookingInfoModel::getTableName().'.therapist_id', '=', $therapistModel::getTableName().'.id')
@@ -434,18 +430,21 @@ class Booking extends BaseModel
         $modelBookingMassage = new BookingMassage();
         $modelBookingInfo    = new BookingInfo();
         $modelShop           = new Shop();
-        $modelUserPeople     = new UserPeople();
+        $modelUser           = new User();
         $modelSessionType    = new SessionType();
         $modelService        = new Service();
         $modelServicePrice   = new ServicePricing();
         $modelServiceTiming  = new ServiceTiming();
 
-        $bookings = $this->select(DB::RAW(self::getTableName() . '.id, massage_date_time, massage_time, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, user_people_id, ' . $modelBookingInfo::getTableName() . '.id as bookingInfoId, ' . $modelUserPeople::getTableName() . '.name as user_people_name, ' . $modelUserPeople::getTableName() . '.age as user_people_age, ' . $modelUserPeople::getTableName() . '.gender as user_people_gender, ' . $modelUserPeople::getTableName() . '.photo as user_prople_photo'))
+        $bookings = $this->select(DB::RAW(self::getTableName() . '.id, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, ' 
+                        . $modelBookingInfo::getTableName() . '.id as bookingInfoId, ' . $modelBookingMassage::getTableName() . '.massage_date_time, ' . 
+                        $modelBookingInfo::getTableName() . '.user_id, '. $modelUser::getTableName() . '.name as user_name, ' . $modelUser::getTableName() . '.age as user_age, ' . $modelUser::getTableName() . '.gender as user_gender, ' . $modelUser::getTableName() . '.profile_photo as user_profile_photo'))
                          ->join($modelBookingInfo::getTableName(), self::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
-                         ->join($modelUserPeople::getTableName(), $modelBookingInfo::getTableName() . '.user_people_id', '=', $modelUserPeople::getTableName() . '.id')
+                         ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
+                         ->join($modelUser::getTableName(), $modelBookingInfo::getTableName() . '.user_id', '=', $modelUser::getTableName() . '.id')
                          ->leftJoin($modelShop::getTableName(), self::getTableName() . '.shop_id', '=', $modelShop::getTableName() . '.id')
                          ->leftJoin($modelSessionType::getTableName(), self::getTableName() . '.session_id', '=', $modelSessionType::getTableName() . '.id')
-                         ->where($modelBookingInfo::getTableName() . '.massage_date_time', ($isPast === true ? '<' : '>='), $now);
+                         ->where($modelBookingMassage::getTableName() . '.massage_date_time', ($isPast === true ? '<' : '>='), $now);
 
         if (!empty($userId) && is_numeric($userId)) {
             $bookings->where(self::getTableName() . '.user_id', $userId);
@@ -457,11 +456,11 @@ class Booking extends BaseModel
 
         if (!empty($bookings) && !$bookings->isEmpty()) {
 
-            $userPeopleIds  = $bookings->pluck('user_people_id');
+            $userPeopleIds  = $bookings->pluck('user_id');
             $userPeoples    = $massagePrices = $bookingMassages = $massages = [];
 
             if (!empty($userPeopleIds) && !$userPeopleIds->isEmpty()) {
-                $userPeoples = $modelUserPeople->select('id', 'name', 'age', 'gender')->whereIn('id', array_unique($userPeopleIds->toArray()))->get();
+                $userPeoples = $modelUser->select('id', 'name', 'age', 'gender')->whereIn('id', array_unique($userPeopleIds->toArray()))->get();
 
                 if (!empty($userPeoples) && !$userPeoples->isEmpty()) {
                     $userPeoples = $userPeoples->keyBy('id');
@@ -478,14 +477,14 @@ class Booking extends BaseModel
 
                 foreach ($datas as $index => $data) {
                     $bookingInfoId = $data->bookingInfoId;
-                    $userPeopleId  = $data->user_people_id;
+                    $userPeopleId  = $data->user_id;
 
                     $returnUserPeoples[$bookingId][$index] = [
                         'id'     => $userPeopleId,
-                        'name'   => $data->user_people_name,
-                        'age'    => $data->user_people_age,
-                        'gender' => $data->user_people_gender,
-                        'photo'  => $data->user_prople_photo
+                        'name'   => $data->user_name,
+                        'age'    => $data->user_age,
+                        'gender' => $data->user_gender,
+                        'photo'  => $data->user_photo
                     ];
 
                     $bookingMassages = $modelBookingMassage
@@ -514,7 +513,7 @@ class Booking extends BaseModel
                         'session_type'     => $data->session_type,
                         'massage_date_time'=> $data->massage_date_time,
                         'massage_time'     => $data->massage_time,
-                        'total_price'      => number_format($returnBookings[$bookingId]['total_price'], 2)
+                        'total_price'      => isset($returnBookings[$bookingId]['total_price']) ? number_format($returnBookings[$bookingId]['total_price'], 2) : 0.00
                     ];
                 }
 

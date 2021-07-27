@@ -30,7 +30,6 @@ class User extends BaseModel implements Authenticatable
         'name',
         'surname',
         'dob',
-        // 'country',
         'email',
         'tel_number_code',
         'tel_number',
@@ -54,6 +53,8 @@ class User extends BaseModel implements Authenticatable
         'country_id',
         'city_id',
         'shop_id',
+        'user_id',
+        'user_gender_preference_id',
         'referral_code',
         'password',
         'is_removed',
@@ -62,7 +63,8 @@ class User extends BaseModel implements Authenticatable
         'is_document_verified',
         'source',
         'client_note',
-        'gender'
+        'gender',
+        'age'
     ];
 
     /**
@@ -120,6 +122,13 @@ class User extends BaseModel implements Authenticatable
         self::BY_CHANCE => 'By chance'
     ];
 
+    const MALE   = 'm';
+    const FEMALE = 'f';
+    public $gender = [
+        self::MALE      => "Male",
+        self::FEMALE    => "Female"
+    ];
+    
     private static $qrCode = ['id' => false, 'dob' => NULL, 'email' => NULL, 'shop_id' => false, 'terraheal_flag' => true];
 
     public static function getTableName()
@@ -134,7 +143,7 @@ class User extends BaseModel implements Authenticatable
             $emailValidator = ['nullable', 'unique:users,email,' . $id];
             $nameValidator  = ['nullable'];
         } else {
-            $emailValidator = ['required', 'unique:users'];
+            $emailValidator = ['nullable', 'unique:users'];
             $nameValidator  = ['required'];
         }
 
@@ -157,7 +166,6 @@ class User extends BaseModel implements Authenticatable
             'id_passport_back'     => ['string', 'max:255'],
             'password'             => ['min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'],
             'shop_id'              => ['integer', 'exists:' . Shop::getTableName() . ',id'],
-            // 'shop_id'           => ['required', 'integer'],
             'avatar'               => ['max:255'],
             'avatar_original'      => ['max:255'],
             'device_token'         => ['max:255'],
@@ -177,6 +185,15 @@ class User extends BaseModel implements Authenticatable
         ]);
     }
 
+    public function validatePhoto($request)
+    {
+        return Validator::make($request->all(), [
+            'photo' => 'mimes:jpeg,png,jpg',
+        ], [
+            'photo' => __('Please select proper file. The file must be a file of type: jpeg, png, jpg.')
+        ]);
+    }
+    
     public function checkMimeTypes($request, $file, $mimes = 'jpeg,png,jpg,doc,docx,pdf')
     {
         return Validator::make($request->all(), [

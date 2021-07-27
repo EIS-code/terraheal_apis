@@ -6,14 +6,12 @@ use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\User;
-use App\BookingInfo;
-use App\BookingMassage;
 use App\Booking;
 use App\ServicePricing;
 use App\UserSetting;
 use App\UserEmailOtp;
 use App\UserAddress;
-use App\UserPeople;
+use App\Shop;
 use App\UserGenderPreference;
 use App\TherapistReview;
 use App\UserMenu;
@@ -33,6 +31,7 @@ use App\Libraries\CurrencyHelper;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use App\ServiceImage;
+use App\SessionType;
 
 class UserController extends BaseController
 {
@@ -292,117 +291,85 @@ class UserController extends BaseController
 
     public function bookingCreate(Request $request)
     {
-        $data                   = $request->all();
-        $model                  = new User();
-        $modelBookingInfo       = new BookingInfo();
-        $modelBookingMassage    = new BookingMassage();
-        $modelBooking           = new Booking();
-        $modelServicePrice      = new ServicePricing();
-        $now                    = Carbon::now();
+       DB::beginTransaction();
+        try {            
+            $shopModel = new Shop();
+            $bookingModel = new Booking();
 
-        DB::beginTransaction();
-
-        try {
-            $data = $this->buildPack($data);
-
-            if (isset($data['booking_type'])) {
-                $data['booking_type'] = (string)$data['booking_type'];
-            }
-            if (isset($data['bring_table_futon'])) {
-                $data['bring_table_futon'] = (string)$data['bring_table_futon'];
-            }
-
-            $data['booking_date_time']       = Carbon::createFromTimestampMs($data['booking_date_time'])->format('Y-m-d H:i:s');
-            $modelBooking->booking_type      = $data['booking_type'];
-            $modelBooking->special_notes     = (!empty($data['special_notes']) ? $data['special_notes'] : NULL);
-            $modelBooking->bring_table_futon = (isset($data['bring_table_futon']) ? (string)$data['bring_table_futon'] : $modelBooking::$defaultTableFutons);
-            $modelBooking->user_id           = $data['user_id'];
-            $modelBooking->shop_id           = $data['shop_id'];
-
-            $validator = $modelBooking->validator($data);
-            if ($validator->fails()) {
-                return $this->returns($validator->errors()->first(), NULL, true);
-            }
-            
-            $modelBooking->fill($data);
-            $modelBooking->save();
-
-            $bookingId         = $modelBooking->id;
-            $userId            = $data['user_id'];
-            $shopId            = $data['shop_id'];
-            $massageDateTime   = Carbon::createFromTimestampMs($data['booking_date_time'])->toDate();
-            $bookingInfos      = [];
-            $shopCurrencyId    = $this->currencyHelper->getDefaultShopCurrency($shopId, true);
-            $shopCurrency      = $this->currencyHelper->getCodeFromId($shopCurrencyId);
-            $bookingCurrencyId = (!empty($data['currency_id'])) ? $data['currency_id'] : $shopCurrencyId;
-            $bookingCurrency   = (!empty($bookingCurrencyId)) ? $this->currencyHelper->getCodeFromId($bookingCurrencyId) : NULL;
-            $bookingCurrency   = (empty($bookingCurrency)) ? $shopCurrency : $bookingCurrency;
-            $exchangeRate      = $this->currencyHelper->getRate($bookingCurrencyId);
-            $bookingMassages   = [];
-
-            foreach ((array)$data['booking_info'] as $index => $infos) {
-                if (empty($infos['massage_info'])) {
-                    continue;
+            if($request->session_id == SessionType::SINGLE) {
+                if(count($request->users) > 1) {
+                    return $this->returnError(__($this->successMsg['single.users']));
                 }
-
-                $bookingInfos[$index] = [
-                    'location'              => $infos['location'],
-                    'imc_type'              => $infos['imc_type'],
-                    'booking_currency_id'   => $bookingCurrencyId,
-                    'shop_currency_id'      => $shopCurrencyId,
-                    'therapist_id'          => $infos['therapist_id'],
-                    'booking_id'            => $bookingId,
-                    'user_people_id'        => $infos['user_people_id'],
-                    'created_at'            => $now
-                ];
-                
-                $validator    = $modelBookingInfo->validator($bookingInfos[$index]);
-                if ($validator->fails()) {
-                    return $this->returns($validator->errors()->first(), NULL, true);
+            }
+            if($request->session_id == (SessionType::COUPLE || SessionType::COUPLE_WITH_THERAPIST || SessionType::COUPLE_BACK_TO_BACK)) {
+                if(count($request->users) < 1) {
+                    return $this->returnError(__($this->successMsg['couple.users']));
                 }
-                $modelBookingInfo->fill($bookingInfos[$index]);
-                $modelBookingInfo->save();
-
-                if ($modelBookingInfo) {
-                    $bookingInfoId = $modelBookingInfo->id;
+            }
+            if($request->session_id == SessionType::GROUP) {
+                if(count($request->users) < 1) {
+                    return $this->returnError(__($this->successMsg['group.users']));
                 }
-
-                foreach ($infos['massage_info'] as $indexBookingMassage => $massageInfo) {
-                    $getMassagePrice = $modelServicePrice->find($massageInfo['service_pricing_id']);
-                    
-                    $bookingMassages[$indexBookingMassage] = [
-                        'massage_date_time'     => $massageDateTime,
-                        'price'                 => $this->currencyHelper->convert($getMassagePrice->price, $exchangeRate, $bookingCurrencyId),
-                        'cost'                  => $this->currencyHelper->convert($getMassagePrice->cost, $exchangeRate, $bookingCurrencyId),
-                        'origional_price'       => $getMassagePrice->price,
-                        'origional_cost'        => $getMassagePrice->cost,
-                        'exchange_rate'         => $exchangeRate,
-                        'notes_of_injuries'     => $massageInfo['notes_of_injuries'],
-                        'pressure_preference'   => $massageInfo['pressure_preference'],
-                        'gender_preference'     => $massageInfo['gender_preference'],
-                        'focus_area_preference' => $massageInfo['focus_area_preference'],
-                        'service_pricing_id'     => $massageInfo['service_pricing_id'],
-                        'booking_info_id'       => $bookingInfoId,
-                        'room_id'               => $infos['room_id'],
-                        'created_at'            => $now
-                    ];
-                    $validator = $modelBookingMassage->validator($bookingMassages[$indexBookingMassage]);
-                    if ($validator->fails()) {
-                        return $this->returns($validator->errors()->first(), NULL, true);
+            }
+            $date = !empty($request->booking_date_time) ? Carbon::createFromTimestampMs($request->booking_date_time) : null;
+            $bookingData = [
+                'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
+                'special_notes' => $request->special_notes,
+                'user_id' => $request->user_id,
+                'shop_id' => $request->shop_id,
+                'session_id' => $request->session_id,
+                'booking_date_time' => $date,
+                'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL
+            ];
+            $checks = $bookingModel->validator($bookingData);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            $newBooking = Booking::create($bookingData);
+            $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, NULL, NULL);
+            if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
+                return $this->returnError($bookingInfo['message'], NULL, true);
+            }
+            if (count($request->services) > 0) {
+                foreach ($request->services as $key => $value) {
+                    $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, NULL);
+                    if (!empty($service['isError']) && !empty($service['message'])) {
+                        return $this->returnError($service['message'], NULL, true);
                     }
                 }
-
-                $modelBookingMassage->insert($bookingMassages);
             }
-            
-        } catch(Exception $e) {
-            DB::rollBack();
+            if (!empty($request->users)) {
+                foreach ($request->users as $key => $user) {
+                    if ($request->session_id == SessionType::COUPLE_WITH_THERAPIST) {
+                        if (!isset($user['therapist_id'])) {
+                            return $this->returnError(__($this->successMsg['couple.therapist.users']));
+                        }
+                    }
+                    $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $user, NULL);
+                    if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
+                        return $this->returnError($bookingInfo['message'], NULL, true);
+                    }
+
+                    if (count($user['services']) > 0) {
+                        foreach ($user['services'] as $key => $value) {
+                            $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, $user);
+                            if (!empty($service['isError']) && !empty($service['message'])) {
+                                return $this->returnError($service['message'], NULL, true);
+                            }
+                        }
+                    }
+                }
+            }
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['success.booking.created']));
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
         }
-
-        DB::commit();
-
-        return $this->returns('success.booking.created', collect(['booking_id' => $bookingId]));
-    }
+}
 
     public function buildPack(array $data)
     {
@@ -781,7 +748,7 @@ class UserController extends BaseController
 
     public function getPeople(Request $request)
     {
-        $model      = new UserPeople();
+        $model      = new User();
         $id         = (int)$request->get('user_id', false);
 
         $userPeople = $model->where('user_id', $id)->where('is_removed', (string)$model::$notRemoved)->get();
@@ -813,7 +780,7 @@ class UserController extends BaseController
 
     public function createPeople(Request $request)
     {
-        $model = new UserPeople();
+        $model = new User();
         $data  = $request->all();
 
         DB::beginTransaction();
@@ -824,13 +791,13 @@ class UserController extends BaseController
                 return $this->returns($validator->errors()->first(), NULL, true);
             }
 
-            if (!empty($request->photo)) {
+            if (!empty($request->profile_photo)) {
                 $validate = $model->validatePhoto($request);
                 if ($validate->fails()) {
                     return $this->returns($validator->errors()->first(), NULL, true);
                 }
 
-                unset($data['photo']);
+                unset($data['profile_photo']);
             }
 
             $model->fill($data);
@@ -838,11 +805,11 @@ class UserController extends BaseController
 
             $userPeopleId = $model->id;
 
-            if (!empty($request->photo)) {
-                $fileName      = time() . '_' . $userPeopleId . '.' . $request->photo->getClientOriginalExtension();
-                $storeFile     = $request->photo->storeAs($model->photoPath, $fileName, $model->fileSystem);
+            if (!empty($request->profile_photo)) {
+                $fileName      = time() . '_' . $userPeopleId . '.' . $request->profile_photo->getClientOriginalExtension();
+                $storeFile     = $request->profile_photo->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
 
-                $model->update(['photo' => $fileName]);
+                $model->update(['profile_photo' => $fileName]);
             }
 
         } catch(Exception $e) {
@@ -856,7 +823,7 @@ class UserController extends BaseController
 
     public function updatePeople(Request $request)
     {
-        $model = new UserPeople();
+        $model = new User();
         $data  = $request->all();
         $id    = (int)$request->get('id', false);
 
@@ -881,22 +848,22 @@ class UserController extends BaseController
                 return $this->returns('error.proper.id', NULL, true);
             }
 
-            if (!empty($request->photo)) {
+            if (!empty($request->profile_photo)) {
                 $validate = $model->validatePhoto($request);
                 if ($validate->fails()) {
                     return $this->returns($validate->errors()->first(), NULL, true);
                 }
 
-                unset($data['photo']);
+                unset($data['profile_photo']);
             }
 
             $update = $model->where('id', $id)->update($data);
 
-            if ($update && !empty($request->photo)) {
-                $fileName      = time() . '_' . $id . '.' . $request->photo->getClientOriginalExtension();
-                $storeFile     = $request->photo->storeAs($model->photoPath, $fileName, $model->fileSystem);
+            if ($update && !empty($request->profile_photo)) {
+                $fileName      = time() . '_' . $id . '.' . $request->profile_photo->getClientOriginalExtension();
+                $storeFile     = $request->profile_photo->storeAs($model->profilePhotoPath, $fileName, $model->fileSystem);
 
-                $model->where('id', $id)->update(['photo' => $fileName]);
+                $model->where('id', $id)->update(['profile_photo' => $fileName]);
             }
 
         } catch (Exception $e) {
@@ -918,7 +885,7 @@ class UserController extends BaseController
 
     public function removePeople(Request $request)
     {
-        $model = new UserPeople();
+        $model = new User();
         $id    = (int)$request->get('id', false);
 
         if (!empty($id)) {
