@@ -75,10 +75,11 @@ class BaseModel extends Model
             // Default shop_id.
             $shopId = (int)request()->get('shop_id', false);
 
-            if (!empty($shopId) && in_array('shop_id', $tableFillables)) {
-                $where[$this::getTableName() . '.shop_id'] = $shopId;
+            if(is_null(request()->get('exclude_shop_id'))) {
+                if (!empty($shopId) && in_array('shop_id', $tableFillables)) {
+                    $where[$this::getTableName() . '.shop_id'] = $shopId;
+                }
             }
-
             if (in_array(self::$removedColumn, $tableFillables) && in_array(self::$removedColumn, $tableColumns)) {
                 return parent::newQuery()->where('is_removed', '=', self::$notRemoved)->where($where);
             } else {

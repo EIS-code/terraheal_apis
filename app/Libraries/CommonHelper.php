@@ -8,14 +8,27 @@ use App\ServiceTiming;
 use App\ServicePricing;
 use App\Service;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Storage;
+use App\Province;
+use App\Country;
+use App\Shop;
 
 class CommonHelper {
 
     public static function getAllService($request)
     {
         $pageNumber = isset($request->page_number) ? $request->page_number : 1;
-        $services =  ShopService::with('service')->where('shop_id', $request->get('shop_id'))
+        
+        if(isset($request->province_id)) {
+            $country = Province::find($request->province_id);
+            $shopId = Shop::where('country_id', $country->country_id)->pluck('id')->toArray();
+        }
+        else if(isset($request->country_id)) {
+            $country = Country::find($request->country_id);
+            $shopId = Shop::where('country_id', $country->id)->pluck('id')->toArray();
+        } else {
+            $shopId = array($request->shop_id);
+        }
+        $services =  ShopService::with('service')->whereIn('shop_id', $shopId)
                     ->whereHas('service', function($q) use($request) {
                         $q->where(function($query) use ($request) {
                             if (!empty($request->search_val)) {
@@ -26,9 +39,10 @@ class CommonHelper {
                         if ($request->type == Service::MASSAGE || $request->type == Service::THERAPY) {
                             $q->where('service_type', (string)$request->type);
                         }
-                    })->get();
+                    })->get()->groupBy('service_id');
         $allServices = [];
         foreach ($services as $key => $massage) {
+            $massage = $massage->first();
             $pricingData = [];
             $image = ServiceImage::where(['service_id' => $massage->service_id, 'is_featured' => ServiceImage::IS_FEATURED])->first();
             $service = [
