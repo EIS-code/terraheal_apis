@@ -994,6 +994,21 @@ class UserController extends BaseController
 
         return $this->returns('error.booking.not.found', NULL, true);
     }
+    
+    public function getPendingBooking(Request $request)
+    {
+        $userId = (int)$request->get('user_id', false);
+
+        $model  = new Booking();
+
+        $data   = $model->getWherePastFuture($userId, false, false, true);
+
+        if (!empty($data)) {
+            return $this->returns('success.booking.found', collect($data));
+        }
+
+        return $this->returns('error.booking.not.found', NULL, true);
+    }
 
     public function setTherapistReviews(Request $request)
     {

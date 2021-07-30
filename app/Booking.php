@@ -443,9 +443,21 @@ class Booking extends BaseModel
                          ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
                          ->join($modelUser::getTableName(), $modelBookingInfo::getTableName() . '.user_id', '=', $modelUser::getTableName() . '.id')
                          ->leftJoin($modelShop::getTableName(), self::getTableName() . '.shop_id', '=', $modelShop::getTableName() . '.id')
-                         ->leftJoin($modelSessionType::getTableName(), self::getTableName() . '.session_id', '=', $modelSessionType::getTableName() . '.id')
-                         ->where($modelBookingMassage::getTableName() . '.massage_date_time', ($isPast === true ? '<' : '>='), $now);
+                         ->leftJoin($modelSessionType::getTableName(), self::getTableName() . '.session_id', '=', $modelSessionType::getTableName() . '.id');
 
+        if($isPast) {
+            $bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', '<' , $now);
+        }
+        if($isUpcoming) {
+            $bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $now);
+        }
+        if($isPending) {
+            $bookings->where([$modelBookingMassage::getTableName() . '.is_confirm' => (string)BookingMassage::IS_NOT_CONFIRM,
+                              $modelBookingInfo::getTableName() . '.is_cancelled' => (string)BookingInfo::IS_NOT_CANCELLED]);
+        }
+        if($isPast) {
+            $bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', '<' , $now);
+        }
         if (!empty($userId) && is_numeric($userId)) {
             $bookings->where(self::getTableName() . '.user_id', $userId);
         }
