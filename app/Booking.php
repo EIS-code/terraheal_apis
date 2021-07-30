@@ -511,7 +511,7 @@ class Booking extends BaseModel
                         'shop_name'        => $data->shop_name,
                         'shop_description' => $data->shop_description,
                         'session_type'     => $data->session_type,
-                        'massage_date_time'=> $data->massage_date_time,
+                        'massage_date_time'=> strtotime($data->massage_date_time) * 1000,
                         'massage_time'     => $data->massage_time,
                         'total_price'      => isset($returnBookings[$bookingId]['total_price']) ? number_format($returnBookings[$bookingId]['total_price'], 2) : 0.00
                     ];
