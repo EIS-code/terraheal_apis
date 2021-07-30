@@ -452,6 +452,7 @@ class Booking extends BaseModel
 
         $bookings       = $bookings->get();
 
+        dd($bookings);
         $returnBookings = [];
 
         if (!empty($bookings) && !$bookings->isEmpty()) {
