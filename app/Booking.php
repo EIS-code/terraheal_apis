@@ -438,7 +438,7 @@ class Booking extends BaseModel
 
         $bookings = $this->select(DB::RAW(self::getTableName() . '.id, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, ' 
                         . $modelBookingInfo::getTableName() . '.id as bookingInfoId, ' . $modelBookingMassage::getTableName() . '.massage_date_time, ' . 
-                        $modelBookingInfo::getTableName() . '.user_id, '. $modelUser::getTableName() . '.name as user_name, ' . $modelUser::getTableName() . '.age as user_age, ' . $modelUser::getTableName() . '.gender as user_gender, ' . $modelUser::getTableName() . '.profile_photo as user_profile_photo'))
+                        $modelBookingInfo::getTableName() . '.user_id, '. $modelUser::getTableName() . '.name as user_name, ' . $modelUser::getTableName() . '.age as user_age, ' . $modelUser::getTableName() . '.dob, ' . $modelUser::getTableName() . '.gender as user_gender, ' . $modelUser::getTableName() . '.profile_photo as user_profile_photo'))
                          ->join($modelBookingInfo::getTableName(), self::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
                          ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
                          ->join($modelUser::getTableName(), $modelBookingInfo::getTableName() . '.user_id', '=', $modelUser::getTableName() . '.id')
@@ -494,7 +494,7 @@ class Booking extends BaseModel
                     $returnUserPeoples[$bookingId][$index] = [
                         'id'     => $userPeopleId,
                         'name'   => $data->user_name,
-                        'age'    => $data->user_age,
+                        'age'    => !empty($data->dob) ? Carbon::createFromTimestampMs($data->dob)->age : $data->user_age,
                         'gender' => $data->user_gender,
                         'photo'  => $data->user_photo
                     ];
