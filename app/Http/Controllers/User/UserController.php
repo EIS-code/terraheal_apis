@@ -751,7 +751,10 @@ class UserController extends BaseController
         $model      = new User();
         $id         = (int)$request->get('user_id', false);
 
-        $userPeople = $model->where('user_id', $id)->where('is_removed', (string)$model::$notRemoved)->get();
+        $userPeople = $model->where(function($query) use($id) {
+            $query->where('user_id', $id)
+                  ->orWhere('id', $id);
+        })->where('is_removed', (string)$model::$notRemoved)->get();
 
         // Get user gender preference.
         $userGenderPreference = UserGenderPreference::where('is_removed', UserGenderPreference::$notRemoved)->get();
