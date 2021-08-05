@@ -519,7 +519,7 @@ class Booking extends BaseModel
 
                     $returnBookings[$bookingId] = [
                         'id'               => $bookingId,
-                        'booking_type'     => $data->booking_type,
+                        'booking_type'     => $data->getAttributes()['booking_type'],
                         'shop_name'        => $data->shop_name,
                         'shop_description' => $data->shop_description,
                         'session_type'     => $data->session_type,
