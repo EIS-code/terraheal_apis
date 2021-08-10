@@ -180,6 +180,11 @@ class Shop extends BaseModel implements CanResetPasswordContract
         return $this->hasMany('App\ShopFeaturedImage', 'shop_id', 'id');
     }
     
+    public function featuredImage()
+    {
+        return $this->hasOne('App\ShopFeaturedImage', 'shop_id', 'id');
+    }
+    
     public function gallery()
     {
         return $this->hasMany('App\ShopGallary', 'shop_id', 'id');

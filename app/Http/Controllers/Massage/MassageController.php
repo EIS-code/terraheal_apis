@@ -98,7 +98,7 @@ class MassageController extends BaseController
         $query = $query->select(DB::raw($selectStatements))
                        ->leftJoin($cityTableName, $shopTableName . '.city_id', '=', $cityTableName . '.id')
                        ->whereRaw($whereStatements)
-                       ->with('centerHours')
+                       ->with('centerHours', 'featuredImage')
                        ->get();
 
         $returnData = [];
@@ -112,6 +112,7 @@ class MassageController extends BaseController
                 $returnData[$key]['longitude']        = $data->longitude;
                 $returnData[$key]['total_services']   = $data->totalServices;
                 $returnData[$key]['center_hours']     = $data->centerHours;
+                $returnData[$key]['shop_featured_image'] = (!empty($data->featuredImage) && !empty($data->featuredImage->image)) ? $data->featuredImage->image : NULL;
             });
         }
 
