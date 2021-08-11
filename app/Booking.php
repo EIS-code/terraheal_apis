@@ -201,6 +201,7 @@ class Booking extends BaseModel
         $therapistModel                 = new Therapist();
         $userGenderPreferenceModel      = new UserGenderPreference();
         $bookingMassageStartModel       = new BookingMassageStart();
+        $languageModel                  = new Language();
 
         $data = $this
                 ->select(
@@ -246,6 +247,8 @@ class Booking extends BaseModel
                             $bookingMassageModel::getTableName().'.service_pricing_id,' . 
                             $bookingMassageModel::getTableName().'.observation,' . 
                             $bookingMassageModel::getTableName() . '.is_confirm, ' . 
+                            $bookingMassageModel::getTableName() . '.language_id, ' . 
+                            $languageModel::getTableName() . '.name as preferred_language_name, ' . 
                             $bookingInfoModel::getTableName().'.is_done,' . 
                             $bookingInfoModel::getTableName().'.is_cancelled,' . 
                             $bookingInfoModel::getTableName().'.cancel_type,' . 
@@ -268,7 +271,8 @@ class Booking extends BaseModel
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as gender', $bookingMassageModel::getTableName() . '.gender_preference', '=', 'gender.id')
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as pressure', $bookingMassageModel::getTableName() . '.pressure_preference', '=', 'pressure.id')
                 ->leftJoin($massagePreferenceOptionModel::getTableName() . ' as focus_area', $bookingMassageModel::getTableName() . '.focus_area_preference', '=', 'focus_area.id')
-                ->leftJoin($bookingMassageStartModel::getTableName(), $bookingMassageModel::getTableName() . '.id', '=', $bookingMassageStartModel::getTableName() . '.booking_massage_id')                
+                ->leftJoin($bookingMassageStartModel::getTableName(), $bookingMassageModel::getTableName() . '.id', '=', $bookingMassageStartModel::getTableName() . '.booking_massage_id')
+                ->leftJoin($languageModel::getTableName(), $bookingMassageModel::getTableName() . '.language_id', '=', $languageModel::getTableName() . '.id')
                 ->whereNull($bookingMassageModel::getTableName().'.deleted_at');
 
         if (!empty($shopId)) {
