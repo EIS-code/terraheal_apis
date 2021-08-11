@@ -265,13 +265,19 @@ class Shop extends BaseModel implements CanResetPasswordContract
     public function addBookingMassages($service, $bookingInfo, $request, $user) {
         
         $bookingMassageModel = new BookingMassage();     
-        $servicePrice = ServicePricing::where(['service_timing_id' => $service['service_timing_id'], 'service_id' => $service['service_id']])->first();
+        $servicePrice = ServicePricing::where(['service_timing_id' => $service['service_timing_id']])->first();
         if(empty($servicePrice)) {
                 return ['isError' => true, 'message' => 'Service price not found'];
         }
         
-        $injuries = isset($user) ? $user['notes_of_injuries'] : $request->notes_of_injuries;
-        $date = isset($user['booking_date_time']) ? Carbon::createFromTimestampMs($user['booking_date_time']) : Carbon::createFromTimestampMs($request->booking_date_time);
+        $injuries = !empty($user['notes_of_injuries']) ? $user['notes_of_injuries'] : (!empty($request->notes_of_injuries) ? $request->notes_of_injuries : NULL);
+
+        $massageDate     = Carbon::createFromTimestampMs($request->massage_date)->format('Y-m-d');
+        $massageTime     = Carbon::createFromTimestampMs($request->massage_time)->format('H:i:s');
+        $massageDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $massageDate . ' ' . $massageTime);
+
+        $date = !empty($user['booking_date_time']) ? Carbon::createFromTimestampMs($user['booking_date_time']) : $massageDateTime;
+
         $bookingMassageData = [
             "massage_date_time" => $date,
             "price" => $servicePrice->price,
@@ -279,17 +285,20 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "origional_price" => $servicePrice->price,
             "origional_cost"  => $servicePrice->cost,
             "exchange_rate" => isset($service['exchange_rate']) ? $service['exchange_rate'] : 0.00,
-            "notes_of_injuries" => isset($injuries) ? $injuries : NULL,
+            "notes_of_injuries" => $injuries,
             "service_pricing_id" => $servicePrice->id,
             "booking_info_id" => $bookingInfo->id,
             "pressure_preference" => $service['pressure_preference'],
-            "gender_preference" => isset($user) ? $user['gender_preference'] : (!empty($request->gender_preference) ? $request->gender_preference : NULL),
-            "focus_area_preference" => $service['focus_area_preference']
+            "gender_preference" => !empty($user['gender_preference']) ? $user['gender_preference'] : (!empty($request->gender_preference) ? $request->gender_preference : NULL),
+            "focus_area_preference" => !empty($service['focus_area_preference']) ? $service['focus_area_preference'] : NULL
         ];
+
         $checks = $bookingMassageModel->validator($bookingMassageData);
+
         if ($checks->fails()) {
             return ['isError' => true, 'message' => $checks->errors()->first()];
         }
+
         return BookingMassage::updateOrCreate(["service_pricing_id" => $servicePrice->id,"booking_info_id" => $bookingInfo->id], $bookingMassageData);
     }
 

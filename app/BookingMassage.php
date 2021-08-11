@@ -49,7 +49,7 @@ class BookingMassage extends BaseModel
             'service_pricing_id'                     => ['nullable', 'integer', 'exists:' . ServicePricing::getTableName() . ',id'],
             'notes_of_injuries'                      => ['nullable', 'string', 'max:255'],
             'booking_info_id'                        => ['required', 'integer', 'exists:' . BookingInfo::getTableName() . ',id'],
-            'massage_date_time'                      => ['nullable'],
+            'massage_date_time'                      => ['required'],
             'pressure_preference'                    => $pressurePreference,
             'gender_preference'                      => $genderPreference,
             'focus_area_preference'                  => $focusAreaPreference,

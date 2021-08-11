@@ -27,7 +27,6 @@ class Booking extends BaseModel
         'copy_with_id',
         'user_id',
         'shop_id',
-        'booking_date_time',
         'pack_id',
         'book_platform'
     ];
@@ -84,8 +83,7 @@ class Booking extends BaseModel
             'pack_id'              => ['nullable', 'integer', 'exists:' . Pack::getTableName() . ',id'],
             'total_persons'        => ['required', 'integer'],
             'bring_table_futon'    => ['in:' . implode(",", self::$tableFutons)],
-            'table_futon_quantity' => ['integer'],
-            'booking_date_time'    => ['required']
+            'table_futon_quantity' => ['integer']
         ], $validatorExtended));
 
         return $validator;
@@ -273,50 +271,63 @@ class Booking extends BaseModel
                 ->leftJoin($bookingMassageStartModel::getTableName(), $bookingMassageModel::getTableName() . '.id', '=', $bookingMassageStartModel::getTableName() . '.booking_massage_id')                
                 ->whereNull($bookingMassageModel::getTableName().'.deleted_at');
 
-        if(!empty($shopId)) {
+        if (!empty($shopId)) {
             $data->where($this::getTableName() . '.shop_id', (int)$shopId);
         }
+
         if (!empty($therapistId)) {
             $data->where($bookingInfoModel::getTableName() . '.therapist_id', (int) $therapistId);
         }
+
         if (!empty($id)) {
             $data->where($bookingInfoModel::getTableName() . '.id', (int) $id);
         }
+
         if (!empty($bookingDate)) {
             $bookingDate = Carbon::createFromTimestampMs($bookingDate)->format('Y-m-d');
 
             $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', $bookingDate);
         }
+
         if (!empty($type)) {
             $data->where($this::getTableName() . '.booking_type', $type);
         }
+
         if ($therapist) {
             $data->where($bookingInfoModel::getTableName() . '.therapist_id', $therapist);
         }
+
         if ($roomId) {
             $data->where($bookingMassageModel::getTableName() . '.room_id', $roomId);
         }
+
         if ($bookingId) {
             $data->where($this::getTableName() . '.id', $bookingId);
         }
+
         if ($date) {
             $date = Carbon::createFromTimestampMs($date)->format('Y-m-d');
             
             $data->where($bookingMassageModel::getTableName() . '.massage_date_time', $date);
         }
+
         if ($month) {
             $data->whereMonth($bookingMassageModel::getTableName() . '.massage_date_time', '=', $month->month)
                  ->whereYear($bookingMassageModel::getTableName() . '.massage_date_time', '=', $month->year);
         }
-        if($userId) {
+
+        if ($userId) {
             $data->where($this::getTableName() . '.user_id', '=', $userId);
         }
+
         if ($bookingMassageId) {
             $data->where($bookingMassageModel::getTableName() . '.id', $bookingMassageId);
         }
+
         if ($sessionId) {
             $data->where($this::getTableName() . '.session_id', $sessionId);
         }
+
         if ($serviceId) {
             $data->where($serviceModel::getTableName() . '.id', $serviceId);
         }
@@ -335,45 +346,56 @@ class Booking extends BaseModel
                 $data->where([$bookingMassageModel::getTableName() . '.is_confirm' => (string)BookingMassage::IS_CONFIRM,
                     $bookingMassageModel::getTableName() . '.massage_date_time' => Carbon::now()->format('Y-m-d')]);
             }
+
             if (in_array(self::BOOKING_WAITING, $bookingsFilter)) {
                 $data->where([$bookingMassageModel::getTableName() . '.is_confirm' => (string)BookingMassage::IS_NOT_CONFIRM,
                               $bookingInfoModel::getTableName() . '.is_cancelled' => (string)BookingInfo::IS_NOT_CANCELLED]);
 
                 $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '>=', Carbon::now()->format('Y-m-d'));
             }
+
             if (in_array(self::BOOKING_FUTURE, $bookingsFilter)) {
                 $data->where($bookingMassageModel::getTableName() . '.massage_date_time', '>=', Carbon::now()->format('Y-m-d'))
                         ->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_NOT_CANCELLED);
             }
+
             if (in_array(self::BOOKING_COMPLETED, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.is_done', (string) BookingInfo::IS_DONE)
                         ->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_NOT_CANCELLED);
             }
+
             if (in_array(self::BOOKING_CANCELLED, $bookingsFilter)) {
                 $data->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_CANCELLED)
                         ->where($bookingInfoModel::getTableName() . '.is_done', (string)BookingInfo::IS_NOT_DONE);
             }
+
             if (in_array(self::BOOKING_PAST, $bookingsFilter)) {
                 $data->where($bookingMassageModel::getTableName() . '.massage_date_time', '<=', Carbon::now()->format('Y-m-d'));
             }
+
             if (in_array(self::BOOKING_TODAY, $bookingsFilter)) {
                 $data->where($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
             }
         }
-        if(isset($dateFilter)) {
+
+        if (isset($dateFilter)) {
             $now = Carbon::now();
+
             if ($dateFilter == self::YESTERDAY) {
                 $data->where($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::yesterday()->format('Y-m-d'));
             }
+
             if ($dateFilter == self::TOMORROW) {
                 $data->where($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::tomorrow()->format('Y-m-d'));
             }
+
             if ($dateFilter == self::THIS_WEEK) {
                 $weekStartDate = $now->startOfWeek()->format('Y-m-d');
                 $weekEndDate = $now->endOfWeek()->format('Y-m-d');
 
                 $data->whereBetween($bookingMassageModel::getTableName() . '.massage_date_time', [$weekStartDate, $weekEndDate]);
             }
+
             if ($dateFilter == self::THIS_MONTH) {
                 $data->whereMonth($bookingMassageModel::getTableName() . '.massage_date_time', $now->month)
                      ->whereYear($bookingMassageModel::getTableName() . '.massage_date_time', $now->year);
