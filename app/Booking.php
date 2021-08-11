@@ -52,8 +52,16 @@ class Booking extends BaseModel
     const THIS_MONTH = '3';
     const TOMORROW = '4';
 
+    const BRING_TABLE_FUTON_NONE = '0';
+    const BRING_TABLE_FUTON_TABLE = '1';
+    const BRING_TABLE_FUTON_TATAMI_FUTON = '2';
+
     public static $defaultTableFutons = ['0', '1', '2'];
-    public static $tableFutons = ['0', '1', '2'];
+    public static $tableFutons = [
+        self::BRING_TABLE_FUTON_NONE,
+        self::BRING_TABLE_FUTON_TABLE,
+        self::BRING_TABLE_FUTON_TATAMI_FUTON
+    ];
 
     public static $bookingTypes = [
         self::BOOKING_TYPE_IMC => 'In massage center',
@@ -254,7 +262,9 @@ class Booking extends BaseModel
                             $bookingInfoModel::getTableName().'.cancel_type,' . 
                             $bookingInfoModel::getTableName().'.cancelled_reason, ' . 
                             $bookingMassageStartModel::getTableName().'.start_time as actual_start_time, ' . 
-                            $bookingMassageStartModel::getTableName().'.end_time as actual_end_time'
+                            $bookingMassageStartModel::getTableName().'.end_time as actual_end_time, ' . 
+                            $this::getTableName().'.bring_table_futon, ' . 
+                            $this::getTableName().'.table_futon_quantity'
                         )
                 )
                 ->join($bookingInfoModel::getTableName(), $this::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')

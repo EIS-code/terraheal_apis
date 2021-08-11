@@ -321,7 +321,9 @@ class UserController extends BaseController
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
                 'session_id' => $request->session_id,
-                'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL
+                'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
+                'bring_table_futon' => !empty($request->bring_table_futon) ? (string)$request->bring_table_futon : $bookingModel::BRING_TABLE_FUTON_NONE,
+                'table_futon_quantity' => !empty($request->table_futon_quantity) ? (int)$request->table_futon_quantity : 0
             ];
 
             $checks = $bookingModel->validator($bookingData);
