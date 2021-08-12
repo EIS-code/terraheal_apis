@@ -498,7 +498,7 @@ class Booking extends BaseModel
             $bookings->where(self::getTableName() . '.user_id', $userId);
         }
 
-        $bookings       = $bookings->get();
+        $bookings       = $bookings->orderBy($modelBookingMassage::getTableName() . '.massage_date_time', 'DESC')->get();
 
         $returnBookings = [];
 
