@@ -16,9 +16,11 @@ class CreateEventsAndCorporateRequestsTable extends Migration
         Schema::create('events_and_corporate_requests', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('mobile_number');
-            $table->string('email');
-            $table->text('message');
+            $table->string('mobile_number')->nullable();
+            $table->string('email')->nullable();
+            $table->text('message')->nullable();
+            $table->bigInteger('user_id')->unsigned();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

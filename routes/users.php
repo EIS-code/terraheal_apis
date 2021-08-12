@@ -52,6 +52,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/list/past', 'UserController@getPastBooking');
         $router->post('/list/future', 'UserController@getFutureBooking');
         $router->post('/list/pending', 'UserController@getPendingBooking');
+        $router->post('/events/corporate/request/add', 'UserController@addEventsCorporateRequest');
     });
 
     $router->post('/get', 'UserController@getDetails');

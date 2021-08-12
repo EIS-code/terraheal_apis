@@ -32,6 +32,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use App\ServiceImage;
 use App\SessionType;
+use App\EventsAndCorporateRequest;
 
 class UserController extends BaseController
 {
@@ -123,7 +124,8 @@ class UserController extends BaseController
         'success.user.favorite.removed' => 'User favorite removed successfully !',
         'success.user.favorite.found' => 'User favorite found successfully !',
         'success.user.favorite.not.found' => 'User favorite not found !',
-        'success.user.qr.not.found' => 'User QR code not found !'
+        'success.user.qr.not.found' => 'User QR code not found !',
+        'success.booking.events.corporate.request.created' => 'Booking events and corporate request created successfully !'
     ];
 
     public function __construct()
@@ -1573,5 +1575,24 @@ class UserController extends BaseController
         }
 
         return $this->returns('success.user.qr.not.found', collect([]));
+    }
+
+    public function addEventsCorporateRequest(Request $request)
+    {
+        $modal = new EventsAndCorporateRequest();
+        $data  = $request->all();
+
+        $validator = $modal->validator($data);
+        if ($validator->fails()) {
+            return $this->returns($validator->errors()->first(), NULL, true);
+        }
+
+        $create = $modal->updateOrCreate($data);
+
+        if ($create) {
+            return $this->returns('success.booking.events.corporate.request.created', $create);
+        }
+
+        return $this->returns('error.something', NULL, true);
     }
 }
