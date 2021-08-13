@@ -32,6 +32,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use App\ServiceImage;
 use App\SessionType;
+use App\EventsAndCorporateRequest;
 use App\ServiceTiming;
 use App\BookingMassage;
 
@@ -65,6 +66,12 @@ class UserController extends BaseController
         'error.user.document.found' => 'Document not found.',
         'error.user.favorite.provide.serviceid' => 'Please provide proper service id.',
         'error.user.favorite.serviceid.not.found' => 'User favorite not found.',
+        'error.booking.select.therapist' => 'Therapist is mandatory for couple with therapist session.',
+        'error.single.users' => 'Please select only one user while you select single session.',
+        'error.couple.users' => 'Please select more than one user.',
+        'error.group.users' => 'Please select more than one user while you select group session.',
+        'error.booking.select.service' => 'Please select at least one service.',
+        'error.booking.select.user' => 'Please select at least one user.',
         'service.pricing.not.found' => 'Service pricing not found.',
         'error.booking.massage' => 'Booking massage not found.',
         'error.booking.massage.confirm' => 'Booking massage is confirm.'
@@ -126,6 +133,7 @@ class UserController extends BaseController
         'service.timings.found' => 'Service timings found !',
         'success.booking.massage.updated' => 'Booking massage updated successfully !',
         'success.booking.massage.deleted' => 'Booking massage deleted successfully !',
+        'success.booking.events.corporate.request.created' => 'Booking events and corporate request created successfully !'
     ];
 
     public function __construct()
@@ -299,85 +307,85 @@ class UserController extends BaseController
 
     public function bookingCreate(Request $request)
     {
-       DB::beginTransaction();
-        try {            
-            $shopModel = new Shop();
+        DB::beginTransaction();
+
+        try {
+            $shopModel    = new Shop();
             $bookingModel = new Booking();
 
-            if($request->session_id == SessionType::SINGLE) {
-                if(count($request->users) > 1) {
-                    return $this->returnError(__($this->successMsg['single.users']));
-                }
+            if ($request->session_id == SessionType::SINGLE && count($request->users) > 1) {
+                return $this->returns('error.single.users', NULL, true);
             }
-            if($request->session_id == (SessionType::COUPLE || SessionType::COUPLE_WITH_THERAPIST || SessionType::COUPLE_BACK_TO_BACK)) {
-                if(count($request->users) < 1) {
-                    return $this->returnError(__($this->successMsg['couple.users']));
-                }
+
+            if (($request->session_id == SessionType::COUPLE || $request->session_id == SessionType::COUPLE_WITH_THERAPIST || $request->session_id == SessionType::COUPLE_BACK_TO_BACK) && count($request->users) < 2) {
+                return $this->returns('error.couple.users', NULL, true);
             }
-            if($request->session_id == SessionType::GROUP) {
-                if(count($request->users) < 1) {
-                    return $this->returnError(__($this->successMsg['group.users']));
-                }
+
+            if ($request->session_id == SessionType::GROUP && count($request->users) < 2) {
+                return $this->returns('error.group.users', NULL, true);
             }
-            $date = !empty($request->booking_date_time) ? Carbon::createFromTimestampMs($request->booking_date_time) : null;
+
             $bookingData = [
                 'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
                 'special_notes' => $request->special_notes,
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
                 'session_id' => $request->session_id,
-                'booking_date_time' => $date,
-                'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL
+                'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
+                'bring_table_futon' => !empty($request->bring_table_futon) ? (string)$request->bring_table_futon : $bookingModel::BRING_TABLE_FUTON_NONE,
+                'table_futon_quantity' => !empty($request->table_futon_quantity) ? (int)$request->table_futon_quantity : 0
             ];
+
             $checks = $bookingModel->validator($bookingData);
             if ($checks->fails()) {
-                return $this->returnError($checks->errors()->first(), NULL, true);
+                return $this->returns($checks->errors()->first(), NULL, true);
             }
+
             $newBooking = Booking::create($bookingData);
-            $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, NULL, NULL);
-            if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
-                return $this->returnError($bookingInfo['message'], NULL, true);
-            }
-            if (count($request->services) > 0) {
-                foreach ($request->services as $key => $value) {
-                    $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, NULL);
-                    if (!empty($service['isError']) && !empty($service['message'])) {
-                        return $this->returnError($service['message'], NULL, true);
-                    }
-                }
-            }
+
+            $request->request->add(['booking_id' => $newBooking->id]);
+
             if (!empty($request->users)) {
                 foreach ($request->users as $key => $user) {
                     if ($request->session_id == SessionType::COUPLE_WITH_THERAPIST) {
                         if (!isset($user['therapist_id'])) {
-                            return $this->returnError(__($this->successMsg['couple.therapist.users']));
+                            return $this->returns('error.booking.select.therapist', NULL, true);
                         }
                     }
-                    $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $user, NULL);
-                    if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
-                        return $this->returnError($bookingInfo['message'], NULL, true);
+
+                    if (count($user['services']) <= 0) {
+                        return $this->returns('error.booking.select.service', NULL, true);
                     }
 
-                    if (count($user['services']) > 0) {
-                        foreach ($user['services'] as $key => $value) {
-                            $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, $user);
-                            if (!empty($service['isError']) && !empty($service['message'])) {
-                                return $this->returnError($service['message'], NULL, true);
-                            }
+                    $bookingInfo = $shopModel->addBookingInfo($request, $newBooking, $user, NULL);
+
+                    if (!empty($bookingInfo['isError']) && !empty($bookingInfo['message'])) {
+                        return $this->returns($bookingInfo['message'], NULL, true);
+                    }
+
+                    foreach ($user['services'] as $key => $value) {
+                        $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, $user);
+
+                        if (!empty($service['isError']) && !empty($service['message'])) {
+                            return $this->returns($service['message'], NULL, true);
                         }
                     }
                 }
+            } else {
+                return $this->returns('error.booking.select.user', NULL, true);
             }
+
             DB::commit();
-            return $this->returnSuccess(__($this->successMsg['success.booking.created']));
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
+
+            return $this->returns('success.booking.created', $bookingModel->getGlobalQuery($request));
         } catch (\Throwable $e) {
             DB::rollback();
+
             throw $e;
         }
-}
+
+        return $this->returns('error.something', NULL, true);
+    }
 
     public function buildPack(array $data)
     {
@@ -759,7 +767,10 @@ class UserController extends BaseController
         $model      = new User();
         $id         = (int)$request->get('user_id', false);
 
-        $userPeople = $model->where('user_id', $id)->where('is_removed', (string)$model::$notRemoved)->get();
+        $userPeople = $model->where(function($query) use($id) {
+            $query->where('user_id', $id)
+                  ->orWhere('id', $id);
+        })->where('is_removed', (string)$model::$notRemoved)->get();
 
         // Get user gender preference.
         $userGenderPreference = UserGenderPreference::where('is_removed', UserGenderPreference::$notRemoved)->get();
@@ -1572,6 +1583,23 @@ class UserController extends BaseController
         }
 
         return $this->returns('success.user.qr.not.found', collect([]));
+    }
+
+    public function addEventsCorporateRequest(Request $request)
+    {
+        $modal = new EventsAndCorporateRequest();
+        $data  = $request->all();
+
+        $validator = $modal->validator($data);
+        if ($validator->fails()) {
+            return $this->returns($validator->errors()->first(), NULL, true);
+        }
+
+        $create = $modal->updateOrCreate($data);
+
+        if ($create) {
+            return $this->returns('success.booking.events.corporate.request.created', $create);
+        }
     }
     
     public function getServiceTiming(Request $request) {

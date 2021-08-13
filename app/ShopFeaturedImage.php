@@ -44,9 +44,9 @@ class ShopFeaturedImage extends BaseModel
             return $default;
         }
 
-        $storageFolderNameRegistration = (str_ireplace("\\", "/", $this->storageFolderName));
-        if (Storage::disk($this->fileSystem)->exists($storageFolderNameRegistration . $value)) {
-            return Storage::disk($this->fileSystem)->url($storageFolderNameRegistration . $value);
+        $storageFolderName = (str_ireplace("\\", "/", $this->storageFolderName));
+        if (Storage::disk($this->fileSystem)->exists($storageFolderName . $value)) {
+            return Storage::disk($this->fileSystem)->url($storageFolderName . $value);
         }
 
         return $default;

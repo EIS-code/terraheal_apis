@@ -23,7 +23,6 @@ class BookingsTable extends Migration
             $table->bigInteger('session_id')->unsigned();
             $table->foreign('session_id')->references('id')->on('session_types')->onDelete('cascade');
             $table->string('copy_with_id')->nullable();
-            $table->timestamp('booking_date_time');
             $table->bigInteger('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->bigInteger('shop_id')->unsigned();
