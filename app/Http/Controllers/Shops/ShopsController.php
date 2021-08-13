@@ -14,6 +14,9 @@ use App\SessionType;
 use Carbon\Carbon;
 use App\ShopShift;
 use App\ShopHour;
+use App\Booking;
+use App\BookingInfo;
+use App\BookingMassage;
 
 class ShopsController extends BaseController {
 
@@ -21,6 +24,7 @@ class ShopsController extends BaseController {
         'loginEmail' => "Please provide email.",
         'loginPass' => "Please provide password.",
         'loginBoth' => "Shop email or password seems wrong.",
+        'error.booking' => 'Booking not found.',
     ];
     public $successMsg = [
         'login' => "Shop found successfully !",
@@ -33,7 +37,8 @@ class ShopsController extends BaseController {
         'shifts.get' => 'Shifts data found successfully',
         'shop.free.slots' => 'Shop freeslots are found successfully',
         'shop.hours.not.found' => 'Shop hours not found',
-        'no.data.found' => 'No data found'
+        'no.data.found' => 'No data found',
+        'confirm.booking' => 'Booking confirm successfully'
     ];
 
     public function signIn(Request $request) {
@@ -170,4 +175,22 @@ class ShopsController extends BaseController {
         
     }
 
+    public function confirmBooking(Request $request) {
+        
+        $date = Carbon::createFromTimestampMs($request->actual_date_time);
+        $booking = Booking::find($request->booking_id);
+        if(empty($booking)) {
+            return $this->returnError($this->errorMsg['error.booking']);
+        }
+        $bookingInfos = BookingInfo::where('booking_id', $request->booking_id)->get();
+        
+        foreach ($bookingInfos as $key => $bookinginfo) {
+            
+            $bookingMassages = BookingMassage::where('booking_info_id', $bookinginfo->id)->get();
+            foreach ($bookingMassages as $key => $massage) {
+                $massage->update(['is_confirm' => BookingMassage::IS_CONFIRM, 'actual_date_time' => $date]);
+            }
+        }
+        return $this->returnSuccess(__($this->successMsg['confirm.booking']), $booking);
+    }
 }

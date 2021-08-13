@@ -32,6 +32,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use App\ServiceImage;
 use App\SessionType;
+use App\ServiceTiming;
+use App\BookingMassage;
 
 class UserController extends BaseController
 {
@@ -62,7 +64,10 @@ class UserController extends BaseController
         'error.provide.menu.id' => 'Please provide menu id.',
         'error.user.document.found' => 'Document not found.',
         'error.user.favorite.provide.serviceid' => 'Please provide proper service id.',
-        'error.user.favorite.serviceid.not.found' => 'User favorite not found.'
+        'error.user.favorite.serviceid.not.found' => 'User favorite not found.',
+        'service.pricing.not.found' => 'Service pricing not found.',
+        'error.booking.massage' => 'Booking massage not found.',
+        'error.booking.massage.confirm' => 'Booking massage is confirm.'
     ];
 
     public $successMsg = [
@@ -117,7 +122,10 @@ class UserController extends BaseController
         'success.user.favorite.removed' => 'User favorite removed successfully !',
         'success.user.favorite.found' => 'User favorite found successfully !',
         'success.user.favorite.not.found' => 'User favorite not found !',
-        'success.user.qr.not.found' => 'User QR code not found !'
+        'success.user.qr.not.found' => 'User QR code not found !',
+        'service.timings.found' => 'Service timings found !',
+        'success.booking.massage.updated' => 'Booking massage updated successfully !',
+        'success.booking.massage.deleted' => 'Booking massage deleted successfully !',
     ];
 
     public function __construct()
@@ -1564,5 +1572,48 @@ class UserController extends BaseController
         }
 
         return $this->returns('success.user.qr.not.found', collect([]));
+    }
+    
+    public function getServiceTiming(Request $request) {
+        
+        $timings = ServiceTiming::where('service_id', $request->service_id)->get();
+        return $this->returns('service.timings.found', $timings);
+    }
+    
+    public function updatePendingBooking(Request $request) {
+
+        $price = ServicePricing::where(['service_id' => $request->service_id, 'service_timing_id' => $request->service_timing_id])->first();
+        if (empty($price)) {
+            return $this->returns('service.pricing.not.found', NULL, true);
+        }
+
+        $booking_massage = BookingMassage::find($request->booking_massage_id);
+        if (empty($booking_massage)) {
+            return $this->returns('error.booking.massage', NULL, true);
+        }
+
+        if ($booking_massage->is_confirm == BookingMassage::IS_CONFIRM) {
+            return $this->returns('error.booking.massage.confirm', NULL, true);
+        }
+
+        $booking_massage->update(['service_pricing_id' => $price->id]);
+        return $this->returns('success.booking.massage.updated', $booking_massage);
+    }
+    
+    public function deletePendingBooking(Request $request) {
+
+        $booking_massage = BookingMassage::find($request->booking_massage_id);
+        if (empty($booking_massage)) {
+            return $this->returns('error.booking.massage', NULL, true);
+        }
+
+        if ($booking_massage->is_confirm == BookingMassage::IS_CONFIRM) {
+            return $this->returns('error.booking.massage.confirm', NULL, true);
+        }
+        $is_delete = $booking_massage->delete();
+        if($is_delete) {
+            return $this->returns('success.booking.massage.deleted', $booking_massage);
+        }
+        return $this->returns('error.something', NULL, true);
     }
 }

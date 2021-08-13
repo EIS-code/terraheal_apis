@@ -52,6 +52,8 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/list/past', 'UserController@getPastBooking');
         $router->post('/list/future', 'UserController@getFutureBooking');
         $router->post('/list/pending', 'UserController@getPendingBooking');
+        $router->post('/pending/update', 'UserController@updatePendingBooking');
+        $router->post('/pending/delete', 'UserController@deletePendingBooking');
     });
 
     $router->post('/get', 'UserController@getDetails');
@@ -127,4 +129,5 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     });
 
     $router->get('qr/temp/get', 'UserController@getQRTemp');
+    $router->post('service/timing/get', 'UserController@getServiceTiming');
 });
