@@ -459,9 +459,9 @@ class Booking extends BaseModel
         $modelServicePrice   = new ServicePricing();
         $modelServiceTiming  = new ServiceTiming();
 
-        $bookings = $this->select(DB::RAW(self::getTableName() . '.id, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, ' .  $modelSessionType::getTableName() . '.id as session_id, ' 
+        $bookings = $this->select(DB::RAW(self::getTableName() . '.id, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.address as shop_address, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, ' .  $modelSessionType::getTableName() . '.id as session_id, ' 
                             . $modelBookingInfo::getTableName() . '.id as bookingInfoId, ' . $modelBookingMassage::getTableName() . '.massage_date_time, '. $modelBookingMassage::getTableName() . '.actual_date_time, '. $modelBookingMassage::getTableName() .'.is_confirm, ' . 
-                            $modelBookingInfo::getTableName() . '.user_id, '. $modelUser::getTableName() . '.name as user_name, ' . $modelUser::getTableName() . '.age as user_age, ' . $modelUser::getTableName() . '.gender as user_gender, ' . $modelUser::getTableName() . '.profile_photo as user_profile_photo'))
+                            $modelBookingInfo::getTableName() . '.user_id, '. $modelUser::getTableName() . '.name as user_name, ' . $modelUser::getTableName() . '.age as user_age, ' . $modelUser::getTableName() . '.gender as user_gender, ' . $modelUser::getTableName() . '.profile_photo as user_profile_photo,' . $modelUser::getTableName() . '.qr_code_path'))
                          ->join($modelBookingInfo::getTableName(), self::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
                          ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
                          ->join($modelUser::getTableName(), $modelBookingInfo::getTableName() . '.user_id', '=', $modelUser::getTableName() . '.id')
@@ -524,13 +524,22 @@ class Booking extends BaseModel
                     ];
 
                     $bookingMassages = $modelBookingMassage
-                                            ->select($modelService::getTableName() . '.id as service_id', $modelService::getTableName() . '.english_name as name', $modelService::getTableName() . '.english_name', $modelService::getTableName() . '.portugese_name', $modelBookingMassage::getTableName() . '.id as booking_massage_id', $modelBookingMassage::getTableName() . '.price', $modelServiceTiming::getTableName() . '.time')
+                                            ->select($modelService::getTableName() . '.id as service_id', $modelService::getTableName() . '.english_name as name', $modelService::getTableName() . '.english_name', $modelService::getTableName() . '.portugese_name', 
+                                                    $modelBookingMassage::getTableName() . '.id as booking_massage_id', $modelBookingMassage::getTableName() . '.price', $modelServiceTiming::getTableName() . '.time', 
+                                                    $modelBookingMassage::getTableName() . '.massage_date_time', $modelBookingMassage::getTableName() . '.actual_date_time')
                                             ->join($modelServicePrice::getTableName(), $modelBookingMassage::getTableName() . '.service_pricing_id', '=', $modelServicePrice::getTableName() . '.id')
                                             ->join($modelServiceTiming::getTableName(), $modelServicePrice::getTableName() . '.service_timing_id', '=', $modelServiceTiming::getTableName() . '.id')
                                             ->join($modelService::getTableName(), $modelServicePrice::getTableName() . '.service_id', '=', $modelService::getTableName() . '.id')
                                             ->where('booking_info_id', $bookingInfoId)
                                             ->get();
 
+                    foreach ($bookingMassages as $key => $value) {
+
+                        $start_time = Carbon::createFromTimestampMs($value->massage_date_time);
+                        $actual_time = Carbon::createFromTimestampMs($value->actual_date_time);
+                        $delay = new Carbon($start_time->diff($actual_time)->format("%h:%i"));
+                        $value['delay'] = strtotime($delay->format('H:i:s')) * 1000;
+                    }
                     if (!empty($bookingMassages) && !$bookingMassages->isEmpty()) {
                         $returnUserPeoples[$bookingId][$index]['booking_massages'] = $bookingMassages;
 
@@ -540,23 +549,18 @@ class Booking extends BaseModel
                             $returnBookings[$bookingId]['total_price'] = $bookingMassages->sum('price');
                         }
                     }
-                    $start_time = new Carbon($data->massage_date_time);
-                    $actual_time = new Carbon($data->actual_date_time);
-                    $delay = $start_time->diff($actual_time);
-                    $delay = $delay->h . ":" . $delay->i .":" . $delay->s;
-                    
+                                        
                     $returnBookings[$bookingId] = [
                         'id'                => $bookingId,
                         'booking_type'      => $data->booking_type,
                         'shop_name'         => $data->shop_name,
+                        'shop_address'      => $data->shop_address,
                         'shop_description'  => $data->shop_description,
                         'session_type'      => $data->session_type,
                         'session_id'        => $data->session_id,
                         'is_confirm'        => $data->is_confirm,
-                        'massage_date_time' => strtotime($data->massage_date_time) * 1000,
-                        'actual_date_time'  => strtotime($data->actual_date_time) * 1000,
-                        'delay'             => strtotime($delay) * 1000,
                         'massage_time'      => $data->massage_time,
+                        'qr_code_path'      => $modelUser->getQrCodePathAttribute($data->qr_code_path),
                         'total_price'       => isset($returnBookings[$bookingId]['total_price']) ? number_format($returnBookings[$bookingId]['total_price'], 2) : 0.00
                     ];
                 }

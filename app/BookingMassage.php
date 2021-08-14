@@ -76,6 +76,15 @@ class BookingMassage extends BaseModel
         return strtotime($value) * 1000;
     }
     
+    public function getActualDateTimeAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function bookingInfo()
     {
         return $this->belongsTo('App\BookingInfo');
