@@ -1604,7 +1604,7 @@ class UserController extends BaseController
     
     public function getServiceTiming(Request $request) {
         
-        $timings = ServiceTiming::where('service_id', $request->service_id)->get();
+        $timings = ServiceTiming::with('pricing')->where('service_id', $request->service_id)->get();
         return $this->returns('service.timings.found', $timings);
     }
     
