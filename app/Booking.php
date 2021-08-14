@@ -559,7 +559,6 @@ class Booking extends BaseModel
                         'session_type'      => $data->session_type,
                         'session_id'        => $data->session_id,
                         'is_confirm'        => $data->is_confirm,
-                        'massage_time'      => $data->massage_time,
                         'qr_code_path'      => $modelUser->getQrCodePathAttribute($data->qr_code_path),
                         'total_price'       => isset($returnBookings[$bookingId]['total_price']) ? number_format($returnBookings[$bookingId]['total_price'], 2) : 0.00
                     ];
