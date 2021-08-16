@@ -20,4 +20,9 @@ class PackShop extends BaseModel
             'shop_id' => ['required', 'integer',  'exists:' . Shop::getTableName() . ',id']
         ]);
     }
+    
+    public function pack()
+    {
+        return $this->hasOne('App\Pack', 'id', 'pack_id');
+    }
 }

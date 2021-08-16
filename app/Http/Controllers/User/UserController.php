@@ -35,6 +35,7 @@ use App\SessionType;
 use App\EventsAndCorporateRequest;
 use App\ServiceTiming;
 use App\BookingMassage;
+use App\PackShop;
 
 class UserController extends BaseController
 {
@@ -1200,29 +1201,10 @@ class UserController extends BaseController
 
     public function getPacks(Request $request)
     {
-        $model              = new UserPack();
-        $modelUserPackOrder = new UserPackOrder();
-        $data               = $request->all();
+        $packs = PackShop::with('pack')->where('shop_id', $request->shop_id)->get();
 
-        if (!empty($data['shop_id'])) {
-            $shopId = (int)$data['shop_id'];
-
-            return $model->where('shop_id', $shopId)->get();
-        } elseif (!empty($data['user_id'])) {
-            $return = [];
-            $userId = (int)$data['user_id'];
-
-            $getPacks = $modelUserPackOrder::with('userPack')->where('user_id', $userId)->get();
-
-            if (!empty($getPacks) && !$getPacks->isEmpty()) {
-                $getPacks->map(function($userPack) use(&$return) {
-                    $return[] = $userPack->userPack;
-                });
-            }
-
-            if (!empty($return)) {
-                return $this->returns('success.user.packs.found', collect($return));
-            }
+        if (!empty($packs)) {
+            return $this->returns('success.user.packs.found', $packs);
         }
 
         return $this->returns('success.user.packs.not.found', collect([]));
