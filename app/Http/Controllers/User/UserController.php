@@ -140,6 +140,7 @@ class UserController extends BaseController
         'success.booking.events.corporate.request.created' => 'Booking events and corporate request created successfully !',
         'success.card.details.added' => 'User card details added successfully !',
         'success.id.uploaded' => 'User Id uploaded successfully !',
+        'success.selfie.uploaded' => "User's selfie uploaded successfully !",
     ];
 
     public function __construct()
@@ -1737,11 +1738,11 @@ class UserController extends BaseController
         
         if($is_exist) {
             $is_exist->update(['selfie' => $data['selfie']]);
-            return $this->returns('success.id.uploaded', $is_exist);
+            return $this->returns('success.selfie.uploaded', $is_exist);
         } else {
             $model->create($data);
             $create = $model->where('user_id', $userId)->first();
-            return $this->returns('success.id.uploaded', $create);
+            return $this->returns('success.selfie.uploaded', $create);
         }
         
         return $this->returns('error.something', NULL, true);
