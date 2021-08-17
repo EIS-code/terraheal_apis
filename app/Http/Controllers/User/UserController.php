@@ -75,7 +75,8 @@ class UserController extends BaseController
         'error.booking.select.user' => 'Please select at least one user.',
         'service.pricing.not.found' => 'Service pricing not found.',
         'error.booking.massage' => 'Booking massage not found.',
-        'error.booking.massage.confirm' => 'Booking massage is confirm.'
+        'error.booking.massage.confirm' => 'Booking massage is confirm.',
+        'error.pack.purchased' => 'Pack already purchased.'
     ];
 
     public $successMsg = [
@@ -1271,6 +1272,11 @@ class UserController extends BaseController
         DB::beginTransaction();
 
         try {
+            
+            $is_exist = $model->where(['user_id' => $data['user_id'], 'user_pack_id' => $data['user_pack_id']])->first();
+            if(!empty($is_exist)) {
+                return $this->returns('error.pack.purchased', NULL, true);
+            }
             $validator = $model->validator($data);
             if ($validator->fails()) {
                 return $this->returns($validator->errors()->first(), NULL, true);
@@ -1284,7 +1290,7 @@ class UserController extends BaseController
 
         DB::commit();
 
-        return $this->returns('success.user.pack.ordered', $userPackOrder);
+        return $this->returns('success.user.pack.ordered', collect($data));
     }
 
     public function savePackGifts(Request $request)
