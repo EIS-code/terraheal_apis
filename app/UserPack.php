@@ -33,8 +33,8 @@ class UserPack extends BaseModel
         return strtotime($value) * 1000;
     }
     
-    public function massages()
+    public function pack()
     {
-        return $this->hasMany('App\UserPackMassage', 'user_pack_id', 'id');
+        return $this->hasOne('App\Pack', 'id', 'pack_id');
     }
 }

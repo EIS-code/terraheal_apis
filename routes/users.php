@@ -107,6 +107,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
 
     $router->group(['prefix' => 'pack'], function () use($router) {
         $router->post('/get', 'UserController@getPacks');
+        $router->post('/list', 'UserController@getUserPacks');
 
         $router->post('/services/get', 'UserController@getPackServices');
 

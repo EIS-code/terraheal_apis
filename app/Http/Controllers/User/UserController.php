@@ -1747,4 +1747,34 @@ class UserController extends BaseController
         
         return $this->returns('error.something', NULL, true);
     }
+    
+    public function getUserPacks(Request $request) {
+        
+        $packs = UserPack::with('pack')->where('user_id', $request->user_id)->get();
+        if (!empty($packs)) {
+            
+            $packData = [];
+            foreach ($packs as $key => $value) {
+             
+                $packData[] = [
+                    "id" => $value->id,
+                    "pack_id" => $value->pack_id,
+                    "user_id" => $value->user_id,
+                    "purchase_date" => $value->purchase_date,
+                    "name" => $value->pack->name,
+                    "sub_title" => $value->pack->sub_title,
+                    "number" => $value->pack->number,
+                    "image" => $value->pack->image,
+                    "total_price" => $value->pack->total_price,
+                    "pack_price" => $value->pack->pack_price,
+                    "expired_date" => $value->pack->expired_date,
+                    "receptionist_id" => $value->pack->receptionist_id,
+                    "is_personalized" => $value->pack->is_personalized,
+                ];
+            }
+            return $this->returns('success.user.packs.found', collect($packData));
+        }
+
+        return $this->returns('success.user.packs.not.found', collect([]));
+    }
 }
