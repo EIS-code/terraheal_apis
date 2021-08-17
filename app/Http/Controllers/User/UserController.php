@@ -36,6 +36,8 @@ use App\ServiceTiming;
 use App\BookingMassage;
 use App\PackShop;
 use App\UserCardDetail;
+use App\UserDocument;
+use Illuminate\Support\Str;
 
 class UserController extends BaseController
 {
@@ -136,7 +138,8 @@ class UserController extends BaseController
         'success.booking.massage.updated' => 'Booking massage updated successfully !',
         'success.booking.massage.deleted' => 'Booking massage deleted successfully !',
         'success.booking.events.corporate.request.created' => 'Booking events and corporate request created successfully !',
-        'success.card.details.added' => 'User card details added successfully !'
+        'success.card.details.added' => 'User card details added successfully !',
+        'success.id.uploaded' => 'User Id uploaded successfully !',
     ];
 
     public function __construct()
@@ -1274,7 +1277,7 @@ class UserController extends BaseController
 
         try {
             
-            $is_exist = $model->where(['users_id' => $data['users_id'], 'pack_id' => $data['pack_id']])->first();
+            $is_exist = $model->where(['user_id' => $data['user_id'], 'pack_id' => $data['pack_id']])->first();
             if(!empty($is_exist)) {
                 return $this->returns('error.pack.purchased', NULL, true);
             }
@@ -1668,6 +1671,79 @@ class UserController extends BaseController
         if($create) {
             return $this->returns('success.card.details.added', $create);
         }
+        return $this->returns('error.something', NULL, true);
+    }
+    
+    public function saveIds(Request $request) {
+        
+        $model = new UserDocument();
+        $userId = $request->user_id;
+        $is_exist = $model->where('user_id', $userId)->first();
+        
+        $idPassportFront = $request->file('passport_front', []);
+        $idPassportBack = $request->file('passport_back', []);
+
+        if (!empty($idPassportFront) && $idPassportFront instanceof UploadedFile) {
+            $checkMime = $model->checkPassportFront($request, 'jpeg,png,jpg');
+            if ($checkMime->fails()) {
+                return $this->returns($checkMime->errors()->first(), NULL, true);
+            }
+        }
+        
+        if (!empty($idPassportBack) && $idPassportBack instanceof UploadedFile) {
+            $checkMime = $model->checkPassportBack($request, 'jpeg,png,jpg');
+            if ($checkMime->fails()) {
+                return $this->returns($checkMime->errors()->first(), NULL, true);
+            }
+        }
+        $front = Str::random(5) . '_' . $userId . '.' . $idPassportFront->getClientOriginalExtension();
+        $storeFile = $idPassportFront->storeAs($model->idPassportPath, $front, $model->fileSystem);
+        $data['passport_front'] = $storeFile ? $front : NULL;
+        
+        $back = Str::random(5) . '_' . $userId . '.' . $idPassportBack->getClientOriginalExtension();
+        $storeFile = $idPassportBack->storeAs($model->idPassportPath, $back, $model->fileSystem);
+        $data['passport_back'] = $storeFile ? $back : NULL;
+        
+        $data['user_id'] = $userId;
+        
+        if($is_exist) {
+            $is_exist->update(['passport_front' => $data['passport_front'], 'passport_back' => $data['passport_back']]);
+            return $this->returns('success.id.uploaded', $is_exist);
+        } else {
+            $model->create($data);
+            return $this->returns('success.id.uploaded', collect($data));
+        }
+        
+        return $this->returns('error.something', NULL, true);
+    }
+    
+    public function saveSelfie(Request $request) {
+        
+        $model = new UserDocument();
+        $userId = $request->user_id;
+        $is_exist = $model->where('user_id', $userId)->first();
+        
+        $selfie = $request->file('selfie', []);
+        if (!empty($selfie) && $selfie instanceof UploadedFile) {
+            $checkMime = $model->checkSelfie($request, 'jpeg,png,jpg');
+            if ($checkMime->fails()) {
+                return $this->returns($checkMime->errors()->first(), NULL, true);
+            }
+        }
+        $selfiePic = Str::random(5) . '_' . $userId . '.' . $selfie->getClientOriginalExtension();
+        $storeFile = $selfie->storeAs($model->selfiePath, $selfiePic, $model->fileSystem);
+        $data['selfie'] = $storeFile ? $selfiePic : NULL;
+        $data['user_id'] = $userId;
+        
+        if($is_exist) {
+            $is_exist->update(['selfie' => $data['selfie']]);
+            return $this->returns('success.id.uploaded', $is_exist);
+        } else {
+            $model->create($data);
+            $create = $model->where('user_id', $userId)->first();
+            return $this->returns('success.id.uploaded', $create);
+        }
+        
         return $this->returns('error.something', NULL, true);
     }
 }
