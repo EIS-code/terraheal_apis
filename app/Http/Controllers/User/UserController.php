@@ -35,6 +35,7 @@ use App\EventsAndCorporateRequest;
 use App\ServiceTiming;
 use App\BookingMassage;
 use App\PackShop;
+use App\UserCardDetail;
 
 class UserController extends BaseController
 {
@@ -134,7 +135,8 @@ class UserController extends BaseController
         'service.timings.found' => 'Service timings found !',
         'success.booking.massage.updated' => 'Booking massage updated successfully !',
         'success.booking.massage.deleted' => 'Booking massage deleted successfully !',
-        'success.booking.events.corporate.request.created' => 'Booking events and corporate request created successfully !'
+        'success.booking.events.corporate.request.created' => 'Booking events and corporate request created successfully !',
+        'success.card.details.added' => 'User card details added successfully !'
     ];
 
     public function __construct()
@@ -1647,6 +1649,24 @@ class UserController extends BaseController
         $is_delete = $booking_massage->delete();
         if($is_delete) {
             return $this->returns('success.booking.massage.deleted', $booking_massage);
+        }
+        return $this->returns('error.something', NULL, true);
+    }
+    
+    public function saveCardDetails(Request $request) {
+        
+        $data = $request->all();
+        $model = new UserCardDetail();
+        
+        $validator = $model->validator($data);
+        if ($validator->fails()) {
+            return $this->returns($validator->errors()->first(), NULL, true);
+        }
+        
+        $create = UserCardDetail::create($data);
+        
+        if($create) {
+            return $this->returns('success.card.details.added', $create);
         }
         return $this->returns('error.something', NULL, true);
     }

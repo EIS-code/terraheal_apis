@@ -13,7 +13,6 @@ class UserCardDetail extends Model
         'exp_month',
         'exp_year',
         'cvv',
-        'zip_code',
         'user_id'
     ];
 
@@ -25,8 +24,7 @@ class UserCardDetail extends Model
             'exp_month'    => ['required', 'integer'],
             'exp_year'     => ['required', 'integer'],
             'cvv'          => ['required', 'integer'],
-            'zip_code'     => ['required', 'max:20'],
-            'user_id'      => ['required', 'integer']
+            'user_id'      => ['required', 'integer', 'exists:' . User::getTableName() . ',id']
         ]);
     }
 }

@@ -131,4 +131,5 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
 
     $router->get('qr/temp/get', 'UserController@getQRTemp');
     $router->post('service/timing/get', 'UserController@getServiceTiming');
+    $router->post('card/details/save', 'UserController@saveCardDetails');
 });
