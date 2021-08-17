@@ -21,7 +21,6 @@ use App\UserGiftVoucherInfo;
 use App\UserGiftVoucherTheme;
 use App\UserFaq;
 use App\UserPack;
-use App\UserPackOrder;
 use App\UserPackMassage;
 use App\UserPackGift;
 use App\UserFavoriteService;
@@ -1266,31 +1265,31 @@ class UserController extends BaseController
 
     public function savePackOrders(Request $request)
     {
-        $model  = new UserPackOrder();
+        $model  = new UserPack();
         $data   = $request->all();
 
         DB::beginTransaction();
 
         try {
             
-            $is_exist = $model->where(['user_id' => $data['user_id'], 'user_pack_id' => $data['user_pack_id']])->first();
+            $is_exist = $model->where(['users_id' => $data['users_id'], 'pack_id' => $data['pack_id']])->first();
             if(!empty($is_exist)) {
                 return $this->returns('error.pack.purchased', NULL, true);
             }
+            $data['purchase_date'] = Carbon::now()->format('Y-m-d');
             $validator = $model->validator($data);
             if ($validator->fails()) {
                 return $this->returns($validator->errors()->first(), NULL, true);
             }
 
-            $model->fill($data);
-            $model->save();
+            $packData = $model->create($data);
         } catch(Exception $e) {
             DB::rollBack();
         }
 
         DB::commit();
 
-        return $this->returns('success.user.pack.ordered', collect($data));
+        return $this->returns('success.user.pack.ordered', $packData);
     }
 
     public function savePackGifts(Request $request)

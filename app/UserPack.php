@@ -11,7 +11,6 @@ class UserPack extends BaseModel
 {
     protected $fillable = [
         'pack_id',
-        'therapist_id',
         'users_id',
         'purchase_date'
     ];
@@ -20,7 +19,6 @@ class UserPack extends BaseModel
     {
         return Validator::make($data, [
             'pack_id'         => ['required', 'integer', 'exists:' . Pack::getTableName() . ',id'],
-            'therapist_id'    => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
             'users_id'        => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
             'purchase_date'   => ['required']
         ]);
@@ -38,10 +36,5 @@ class UserPack extends BaseModel
     public function massages()
     {
         return $this->hasMany('App\UserPackMassage', 'user_pack_id', 'id');
-    }
-
-    public function getPurchasedPacks($userId)
-    {
-        return $this->hasMany('App\UserPackOrder', 'user_pack_id', 'id')->where('user_id', (int)$userId);
     }
 }
