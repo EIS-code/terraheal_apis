@@ -16,7 +16,7 @@ class ApiKeysTable extends Migration
         Schema::create('api_keys', function (Blueprint $table) {
             $table->id();
             $table->string('key')->unique();
-            $table->enum('type', ['0', '1', '2', '3', '4'])->default('0')->comment('0: None, 1: Users, 2: Therapists, 3: Freelancer Therapists, 4: Shops');
+            $table->enum('type', ['0', '1', '2', '3', '4', '5'])->default('0')->comment('0: None, 1: Users, 2: Therapists, 3: Freelancer Therapists, 4: Shops, 5: Managers');
             $table->bigInteger('model_id')->unsigned();
             $table->bigInteger('api_key_id')->unsigned();
             $table->foreign('api_key_id')->references('id')->on('api_key_shops')->onDelete('cascade');
