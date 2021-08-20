@@ -12,7 +12,8 @@ class UserCardDetail extends BaseModel
         'exp_month',
         'exp_year',
         'cvv',
-        'user_id'
+        'user_id',
+        'is_default'
     ];
 
     public function validator(array $data)

@@ -1781,8 +1781,8 @@ class UserController extends BaseController
     
     public function getCardDetails(Request $request) {
         
-        $data = UserCardDetail::where('user_id', $request->user_id)->first();
-        if(!empty($data)) {
+        $data = UserCardDetail::where('user_id', $request->user_id)->get();
+        if(count($data) > 0) {
             return $this->returns('success.card.found', collect($data));
         }
         return $this->returns('error.card.not.found', NULL, TRUE);
