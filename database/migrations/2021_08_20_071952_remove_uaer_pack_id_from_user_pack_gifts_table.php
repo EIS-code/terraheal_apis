@@ -14,8 +14,8 @@ class RemoveUaerPackIdFromUserPackGiftsTable extends Migration
     public function up()
     {
         Schema::table('user_pack_gifts', function (Blueprint $table) {
-//            $table->dropForeign(['user_pack_id']);
-//            $table->dropColumn(['user_pack_id']);
+            $table->dropForeign(['user_pack_id']);
+            $table->dropColumn(['user_pack_id']);
             $table->bigInteger('pack_id')->unsigned();
             $table->foreign('pack_id')->references('id')->on('packs')->onDelete('cascade');
         });
