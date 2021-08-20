@@ -1334,7 +1334,7 @@ class UserController extends BaseController
 
         DB::commit();
 
-        return $this->returns('success.user.pack.gift.created', $userPackGift);
+        return $this->returns('success.user.pack.gift.created', collect($data));
     }
 
     public function isOurQRCode(Request $request)

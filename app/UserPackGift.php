@@ -26,7 +26,7 @@ class UserPackGift extends BaseModel
         'giver_message_to_recipient',
         'preference_email',
         'preference_email_date',
-        'user_pack_id',
+        'pack_id',
         'user_id',
         'is_removed'
     ];
@@ -46,7 +46,7 @@ class UserPackGift extends BaseModel
             'giver_message_to_recipient' => ['required', 'string'],
             'preference_email'           => ['required', 'email', 'max:255'],
             'preference_email_date'      => ['required', 'date', 'date_format:Y-m-d'],
-            'user_pack_id'               => ['required', 'integer', 'exists:' . UserPack::getTableName() . ',id'],
+            'pack_id'                    => ['required', 'integer', 'exists:' . Pack::getTableName() . ',id'],
             'user_id'                    => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
             'is_removed'                 => ['integer', 'in:0,1']
         ]);
