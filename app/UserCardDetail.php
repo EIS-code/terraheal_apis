@@ -2,10 +2,9 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 
-class UserCardDetail extends Model
+class UserCardDetail extends BaseModel
 {
     protected $fillable = [
         'holder_name',
@@ -16,7 +15,7 @@ class UserCardDetail extends Model
         'user_id'
     ];
 
-    public function validator(array $data, $id = false, $isUpdate = false)
+    public function validator(array $data)
     {
         return Validator::make($data, [
             'holder_name'  => ['required', 'string', 'max:255'],

@@ -78,7 +78,8 @@ class UserController extends BaseController
         'service.pricing.not.found' => 'Service pricing not found.',
         'error.booking.massage' => 'Booking massage not found.',
         'error.booking.massage.confirm' => 'Booking massage is confirm.',
-        'error.pack.purchased' => 'Pack already purchased.'
+        'error.pack.purchased' => 'Pack already purchased.',
+        'error.card.not.found' => 'User card details not found.',
     ];
 
     public $successMsg = [
@@ -141,6 +142,7 @@ class UserController extends BaseController
         'success.card.details.added' => 'User card details added successfully !',
         'success.id.uploaded' => 'User Id uploaded successfully !',
         'success.selfie.uploaded' => "User's selfie uploaded successfully !",
+        'success.card.found' => "User's card details found successfully !",
     ];
 
     public function __construct()
@@ -1775,5 +1777,14 @@ class UserController extends BaseController
         }
 
         return $this->returns('success.user.packs.not.found', collect([]));
+    }
+    
+    public function getCardDetails(Request $request) {
+        
+        $data = UserCardDetail::where('user_id', $request->user_id)->first();
+        if(!empty($data)) {
+            return $this->returns('success.card.found', collect($data));
+        }
+        return $this->returns('error.card.not.found', NULL, TRUE);
     }
 }
