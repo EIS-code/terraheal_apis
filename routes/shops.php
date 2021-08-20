@@ -130,6 +130,9 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->post('/users/get', 'Manager\ManagerController@getUsers');
     $router->post('/profile/update', 'Manager\ManagerController@updateProfile');
     $router->post('/profile/get', 'Manager\ManagerController@getProfile');
+    $router->post('/side/data/get', 'Dashboard\DashboardController@getDetails');
+    $router->post('/salesInfo/get', 'Dashboard\DashboardController@salesInfo');
+    $router->post('/customerInfo/get', 'Dashboard\DashboardController@customerInfo');
     
     $router->group(['prefix' => 'verify'], function () use($router) {
         $router->post('/mobile', 'Manager\ManagerController@verifyMobile');
