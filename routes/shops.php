@@ -138,6 +138,12 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/get', 'Manager\ManagerController@getTherapists');
         $router->post('/getInfo', 'Therapist\TherapistController@getInfo');
     });
+    $router->group(['prefix' => 'staff'], function () use($router) {
+        
+        $router->post('/add', 'Staffs\StaffsController@createStaff');
+        $router->post('/update', 'Staffs\StaffsController@updateStaff');
+        $router->post('/list', 'Staffs\StaffsController@staffList');
+    });
     
     $router->group(['prefix' => 'verify'], function () use($router) {
         $router->post('/mobile', 'Manager\ManagerController@verifyMobile');

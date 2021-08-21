@@ -13,7 +13,8 @@ use App\StaffWorkingSchedule;
 class StaffsController extends BaseController {
 
     public $errorMsg = [
-        'staff.not.found' => 'Staff not found.'
+        'staff.not.found' => 'Staff not found.',
+        'receptionist.exist' => 'Receptionist is already added.',
     ];
     
     public $successMsg = [
@@ -36,6 +37,12 @@ class StaffsController extends BaseController {
             }
             
             $data['password'] = Hash::make($data['password']);
+            $data['role'] = isset($data['role']) ? (string) $data['role'] : NULL;
+            
+            $is_exist = $model->where(['role' => $data['role'], 'shop_id' => $data['shop_id']])->first();
+            if(!empty($is_exist)) {
+                return $this->returnError(__($this->errorMsg['receptionist.exist']));
+            }
             $staff = Staff::create($data);
             
             if(!empty($data['schedule'])) {
