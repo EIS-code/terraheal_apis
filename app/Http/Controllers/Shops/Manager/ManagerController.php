@@ -10,7 +10,6 @@ use App\TherapistWorkingSchedule;
 use App\TherapistShift;
 use App\Manager;
 use Illuminate\Support\Facades\Hash;
-use App\TherapistNews;
 use App\Therapist;
 use App\News;
 use App\TherapistShop;
@@ -258,8 +257,8 @@ class ManagerController extends BaseController {
     
     public function getTherapists(Request $request) {
         
-        $shopModel = new Shop();
-        $therapists = $shopModel->getTherapists($request);
+        $model = new Therapist();
+        $therapists = $model->getTherapist($request);
         
         return $this->returnSuccess(__($this->successMsg['therapists.details']), $therapists);
     }
