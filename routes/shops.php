@@ -121,9 +121,7 @@ $router->group(['prefix' => 'staffs', 'namespace' => 'Shops'], function () use($
 $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/signIn', 'Manager\ManagerController@signIn');
-    $router->post('/availability/add', 'Manager\ManagerController@addAvailabilities');
     $router->post('/dashboard/info/get', 'Manager\ManagerController@getInfo');
-    $router->post('/therapists/get', 'Manager\ManagerController@getTherapists');
     $router->post('/massages/get', 'Manager\ManagerController@getMassages');
     $router->post('/therapies/get', 'Manager\ManagerController@getTherapies');
     $router->post('/bookings/get', 'Manager\ManagerController@getBookings');
@@ -133,6 +131,13 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->post('/side/data/get', 'Dashboard\DashboardController@getDetails');
     $router->post('/salesInfo/get', 'Dashboard\DashboardController@salesInfo');
     $router->post('/customerInfo/get', 'Dashboard\DashboardController@customerInfo');
+    
+    $router->group(['prefix' => 'therapist'], function () use($router) {
+        
+        $router->post('/availability/add', 'Manager\ManagerController@addAvailabilities');
+        $router->post('/get', 'Manager\ManagerController@getTherapists');
+        $router->post('/getInfo', 'Therapist\TherapistController@getInfo');
+    });
     
     $router->group(['prefix' => 'verify'], function () use($router) {
         $router->post('/mobile', 'Manager\ManagerController@verifyMobile');
