@@ -417,8 +417,8 @@ class Shop extends BaseModel implements CanResetPasswordContract
         }
         $center = clone $booking;
         
-        $homeVisit = $booking->where('bookings.booking_type' , Booking::BOOKING_TYPE_HHV)->groupBy('bookings.id')->get()->count();
-        $centerVisit = $center->where('bookings.booking_type' , Booking::BOOKING_TYPE_IMC)->groupBy('bookings.id')->get()->count();
+        $homeVisit = $booking->where('bookings.booking_type' , Booking::BOOKING_TYPE_HHV)->get()->groupBy('bookings.id')->count();
+        $centerVisit = $center->where('bookings.booking_type' , Booking::BOOKING_TYPE_IMC)->get()->groupBy('bookings.id')->count();
         
         return ['homeVisit' => $homeVisit, 'centerVisit' => $centerVisit];
     }
