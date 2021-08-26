@@ -52,6 +52,8 @@ class Booking extends BaseModel
     const THIS_WEEK = '2';
     const THIS_MONTH = '3';
     const TOMORROW = '4';
+    const LAST_WEEK = 0;
+    const LAST_MONTH = 1;
 
     const BRING_TABLE_FUTON_NONE = '0';
     const BRING_TABLE_FUTON_TABLE = '1';
