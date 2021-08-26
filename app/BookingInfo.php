@@ -204,8 +204,9 @@ class BookingInfo extends BaseModel
                                 ->with('servicePrices');
                       }])
                       ->where('therapist_id', $therapistId)
-                      ->whereBetween('massage_date_time', [$startDate, $endDate])
-                      ->get();
+                        ->whereHas('bookingMassages', function($q) use($startDate, $endDate) {
+                            $q->whereBetween('massage_date_time', [$startDate, $endDate]);
+                        })->get();
         if (!empty($data) && !$data->isEmpty()) {
             foreach ($data as $record) {
                 if (!empty($record->bookingMassages) && !$record->bookingMassages->isEmpty()) {
