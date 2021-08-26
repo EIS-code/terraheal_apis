@@ -140,7 +140,17 @@ class DashboardController extends BaseController {
             $futureHomeBookings = $futureHomeBookings->where($modelBookingMassage::getTableName(). '.massage_date_time', '=', $todayDate)->get();
         }
         if($when == Booking::BOOKING_FUTURE) {
-            $futureHomeBookings = $futureHomeBookings->where($modelBookingMassage::getTableName(). '.massage_date_time', '>=', $todayDate)->get();
+            $previous_week = strtotime("-1 week +1 day");
+            $start_week = strtotime("last monday midnight",$previous_week);
+            $end_week = strtotime("next sunday",$start_week);
+            $start_week = Carbon::parse($start_week);
+            $end_week = Carbon::parse($end_week);
+            if($filter == Booking::LAST_WEEK) {
+                $futureHomeBookings = $futureHomeBookings->whereBetween($modelBookingMassage::getTableName(). '.massage_date_time', [$start_week, $end_week])->get();
+            }
+            if($filter == Booking::LAST_MONTH) {
+                $futureHomeBookings = $futureHomeBookings->whereMonth($modelBookingMassage::getTableName(). '.massage_date_time', Carbon::now()->subMonth()->month)->get();
+            }
         }
                         
         $homeBookings = [];
