@@ -27,6 +27,7 @@ class DashboardController extends BaseController {
      
     public function getDetails(Request $request) {
         
+        $filter = isset($request->filter) ? $request->filter : Review::LAST_WEEK;
         $massages = ShopService::with('service')->where('shop_id', $request->get('shop_id'))
                     ->whereHas('service', function($q) {
                             $q->where('service_type', Service::MASSAGE);
@@ -35,15 +36,38 @@ class DashboardController extends BaseController {
                     ->whereHas('service', function($q) {
                             $q->where('service_type', Service::THERAPY);
                         })->get()->count();
-        $reviews = Review::with('user')->where('is_delete', Review::IS_DELETE)
+                        
+        $weekStartDate = Carbon::now()->startOfWeek();
+        $weekEndDate = Carbon::now()->endOfWeek();
+        $current_week = Review::with('user')->where('is_delete', (string) Review::IS_DELETE)
                         ->whereHas('user', function($q) use($request) {
-                            $q->where('shop_id', '=', $request->get('shop_id'));
-                        })->avg('rating');
-        $reviews = !empty($reviews) ? $reviews : 0;
+                            $q->where('shop_id', $request->get('shop_id'));
+                        })->whereBetween('created_at', [$weekStartDate, $weekEndDate])->get();
+        $current_week = $current_week->count() == 0 ? 0 : number_format(($current_week->count() / $current_week->sum('rating')) * 100, 2);
+        
+        $previous_week = strtotime("-1 week +1 day");
+        $start_week = strtotime("last monday midnight",$previous_week);
+        $end_week = strtotime("next sunday",$start_week);
+        $start_week = Carbon::parse($start_week);
+        $end_week = Carbon::parse($end_week);
+        
+        $reviews = Review::with('user')->where('is_delete', (string) Review::IS_DELETE)
+                    ->whereHas('user', function($q) use($request) {
+                    $q->where('shop_id', $request->get('shop_id'));
+                });
+
+        if($filter == Review::LAST_WEEK) {
+            $reviews = $reviews->whereBetween('created_at', [$start_week, $end_week])->get();
+        }
+        if($filter == Review::LAST_MONTH){
+            $reviews = $reviews->whereMonth('created_at', Carbon::now()->subMonth()->month)->get();
+        }
+        
+        $reviews = $reviews->count() == 0 ? 0 : number_format(($reviews->count() / $reviews->sum('rating')) * 100, 2);
         $vouchers = Voucher::where('expired_date','>=', Carbon::now()->format('Y-m-d'))->get()->count();
         $packs = Pack::where('expired_date','>=', Carbon::now()->format('Y-m-d'))->get()->count();
         return $this->returnSuccess(__($this->successMsg['data.found']), ['massages' => $massages, 'therapies' => $therapies, 'reviews' => $reviews,
-            'vouchers' => $vouchers, 'packs' => $packs]);
+            'vouchers' => $vouchers, 'packs' => $packs, 'currentReviews' => $current_week]);
     }
     
     public function allBookings(Request $request) {

@@ -25,6 +25,9 @@ class Review extends Model
         self::RATING_TOO_HAPPY => 'Too Happy'
     ];
     const IS_DELETE = 0;
+    
+    const LAST_WEEK = 0;
+    const LAST_MONTH = 1;
 
     public function validator(array $data)
     {
