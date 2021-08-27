@@ -20,4 +20,9 @@ class VoucherShop extends BaseModel
             'shop_id'       => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id']
         ]);
     }
+    
+    public function voucher()
+    {
+        return $this->hasOne('App\Voucher', 'id', 'voucher_id');
+    }
 }

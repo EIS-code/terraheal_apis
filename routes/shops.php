@@ -151,6 +151,14 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/email', 'Manager\ManagerController@verifyEmail');
     });
     
+    $router->group(['prefix' => 'packs'], function () use($router) {
+        $router->post('/get', 'Manager\ManagerController@getPacks');
+    });
+    
+    $router->group(['prefix' => 'vouchers'], function () use($router) {
+        $router->post('/get', 'Manager\ManagerController@getVouchers');
+    });
+    
     $router->group(['prefix' => 'compare'], function () use($router) {
         $router->post('/otp/email', 'Manager\ManagerController@compareOtpEmail');
         $router->post('/otp/mobile', 'Manager\ManagerController@compareOtpSms');

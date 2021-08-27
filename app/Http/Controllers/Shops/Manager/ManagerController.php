@@ -19,6 +19,7 @@ use App\ManagerEmailOtp;
 use App\Booking;
 use App\User;
 use App\PackShop;
+use App\VoucherShop;
 
 class ManagerController extends BaseController {
 
@@ -57,6 +58,7 @@ class ManagerController extends BaseController {
         'users.get' => 'Users found successfully!',
         'schedule.data.found' => 'Time Table data found successfully',
         'success.packs.get' => 'Packs found successfully',
+        'success.vouchers.get' => 'Vouchers found successfully',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -581,7 +583,6 @@ class ManagerController extends BaseController {
                     'id' => $value->pack->id,
                     'name' => $value->pack->name,
                     'sub_title' => $value->pack->sub_title,
-                    'sub_title' => $value->pack->sub_title,
                     'number' => $value->pack->number,
                     'image' => $value->pack->image,
                     'total_price' => $value->pack->total_price,
@@ -598,7 +599,25 @@ class ManagerController extends BaseController {
     
     public function getVouchers(Request $request) {
         
+        $manager = Manager::find($request->manager_id);
+        if(empty($manager)) {
+            return $this->returnError($this->errorMsg['manager.not.found']);
+        }
+        $vouchers = VoucherShop::with('voucher')->where('shop_id', $manager->shop_id)->get();
+        $vouchersData = [];
+        if(count($vouchers) > 0) {
+            foreach ($vouchers as $key => $value) {
+                $vouchersData[] = [
+                    'id' => $value->voucher->id,
+                    'name' => $value->voucher->name,
+                    'number' => $value->voucher->number,
+                    'image' => $value->voucher->image,
+                    'price' => $value->voucher->total_price,
+                    'expired_date' => $value->voucher->expired_date,
+                ];
+            }
+        }
         
-        
+        return $this->returnSuccess(__($this->successMsg['success.vouchers.get']), $vouchersData);
     }
 }
