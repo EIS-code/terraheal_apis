@@ -162,6 +162,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/delete', 'News\NewsController@deleteNews');
         $router->post('/get', 'Manager\ManagerController@getNews');
         $router->post('/details/get', 'Manager\ManagerController@newsDetails');
+        $router->post('/read', 'Therapist\TherapistController@readNews');
     });
     
 });

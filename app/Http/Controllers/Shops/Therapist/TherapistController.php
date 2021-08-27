@@ -13,6 +13,7 @@ use App\Libraries\CommonHelper;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DB;
+use App\TherapistNews;
 
 class TherapistController extends BaseController {
 
@@ -27,7 +28,8 @@ class TherapistController extends BaseController {
         'profile.update.successfully' => 'Therapist profile updated successfully!',
         'my.availability.found' => 'My availability found successfully !',
         'therapist.attendance' => 'Therapist attendance data found successfully !',
-        'no.data.found' => 'No data found'
+        'no.data.found' => 'No data found',
+        'news.read' => 'News read successfully !',
     ];
     
     public function myBookings(Request $request) {
@@ -209,5 +211,17 @@ class TherapistController extends BaseController {
         $myBookings = $bookingModel->getGlobalQuery($request);
 
         return $this->returnSuccess(__($this->successMsg['therapist.bookings']), ['Bookings' => $myBookings, 'TotalAbsent' => $totalAbsent, 'TotalPresent' => $totalPresent]);
+    }
+    
+    public function readNews(Request $request) {
+        
+        $model = new TherapistNews();
+        $checks = $model->validator($request->all());
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $read = $model->updateOrCreate($request->all(), $request->all());
+        return $this->returnSuccess(__($this->successMsg['news.read']), $read);
     }
 }
