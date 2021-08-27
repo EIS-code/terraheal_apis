@@ -18,6 +18,7 @@ use App\Libraries\CommonHelper;
 use App\ManagerEmailOtp;
 use App\Booking;
 use App\User;
+use App\PackShop;
 
 class ManagerController extends BaseController {
 
@@ -55,6 +56,7 @@ class ManagerController extends BaseController {
         'get.profile' => 'Manager profile found successfully!',
         'users.get' => 'Users found successfully!',
         'schedule.data.found' => 'Time Table data found successfully',
+        'success.packs.get' => 'Packs found successfully',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -185,12 +187,12 @@ class ManagerController extends BaseController {
 
     public function newsDetails(Request $request) {
         
-        $news = News::with('therapists')->where('id', $request->news_id)->first();
+        $news = News::with('therapistsNews')->where('id', $request->news_id)->first();
         if(empty($news)) {
             return $this->returnSuccess(__($this->errorMsg['news.not.found']));
         }
         $allTherapist = Therapist::where('shop_id', $request->shop_id)->get()->count();
-        $read = $news->therapists->count();
+        $read = $news->therapistsNews->count();
         $unread = $allTherapist = 0 ? 0 : $allTherapist - $read ;
         
         $newsData = [
@@ -563,5 +565,40 @@ class ManagerController extends BaseController {
 //            $schedules = $schedules->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
 //        }                     
         return $this->returnSuccess(__($this->successMsg['schedule.data.found']), $schedules->get());
+    }
+    
+    public function getPacks(Request $request) {
+        
+        $manager = Manager::find($request->manager_id);
+        if(empty($manager)) {
+            return $this->returnError($this->errorMsg['manager.not.found']);
+        }
+        $packs = PackShop::with('pack')->where('shop_id', $manager->shop_id)->get();
+        $packsData = [];
+        if(count($packs) > 0) {
+            foreach ($packs as $key => $value) {
+                $packsData[] = [
+                    'id' => $value->pack->id,
+                    'name' => $value->pack->name,
+                    'sub_title' => $value->pack->sub_title,
+                    'sub_title' => $value->pack->sub_title,
+                    'number' => $value->pack->number,
+                    'image' => $value->pack->image,
+                    'total_price' => $value->pack->total_price,
+                    'pack_price' => $value->pack->pack_price,
+                    'expired_date' => $value->pack->expired_date,
+                    'receptionist_id' => $value->pack->receptionist_id,
+                    'is_personalized' => $value->pack->is_personalized,
+                ];
+            }
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['success.packs.get']), $packsData);
+    }
+    
+    public function getVouchers(Request $request) {
+        
+        
+        
     }
 }
