@@ -54,6 +54,7 @@ class ManagerController extends BaseController {
         'edit.profile' => 'Profile updated successfully!',
         'get.profile' => 'Manager profile found successfully!',
         'users.get' => 'Users found successfully!',
+        'schedule.data.found' => 'Time Table data found successfully',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -531,5 +532,36 @@ class ManagerController extends BaseController {
         $guestUsers = User::where('is_guest', (string) User::IS_GUEST)->get()->count();
         $registeredUsers = User::where('is_guest', (string) User::IS_NOT_GUEST)->get()->count();
         return $this->returnSuccess(__($this->successMsg['users.get']), ['appUsers' => $appUsers, 'guestUsers' => $guestUsers, 'registeredUsers' => $registeredUsers]);
+    }
+    
+    public function getTimeTable(Request $request) {
+        
+        $date  = Carbon::createFromTimestampMs($request->date);
+        $date = !empty($request->date) ? $date : Carbon::now();
+        
+        $schedules = TherapistWorkingSchedule::with('shifts', 'therapist:id,name,shop_id')                   
+                        ->whereMonth('date', $date->month)
+                        ->whereYear('date', $date->year)
+                        ->whereHas('therapist', function($q) use($request) {
+                                $q->where('shop_id',$request->shop_id);
+                        });
+                        
+//        // 1 for yesterday ,2 for current month, 3 for last 7 days, 4 for last 14 days, 5 for last 30 days
+//        if (!empty($filter)) {
+//            if ($filter == 1) {
+//                $schedules = $schedules->where('date', Carbon::yesterday());
+//            } else if ($filter == 2) {
+//                $schedules = $schedules->whereMonth('date', Carbon::now()->month);
+//            } else if ($filter == 3) {
+//                $schedules = $schedules->whereBetween('date', [Carbon::now()->subDays(7), Carbon::now()]);
+//            } else if ($filter == 4) {
+//                $schedules = $schedules->whereBetween('date', [Carbon::now()->subDays(14), Carbon::now()]);
+//            } else if ($filter == 5) {
+//                $schedules = $schedules->whereBetween('date', [Carbon::now()->subDays(30), Carbon::now()]);
+//            }
+//        } else {
+//            $schedules = $schedules->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+//        }                     
+        return $this->returnSuccess(__($this->successMsg['schedule.data.found']), $schedules->get());
     }
 }
