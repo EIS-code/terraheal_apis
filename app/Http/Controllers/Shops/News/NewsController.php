@@ -60,7 +60,7 @@ class NewsController extends BaseController {
             return $this->returnError(__($this->errorMsg['news.not.found']));
         }
         $news->delete();
-        return $this->returnSuccess(__($this->successMsg['news.delete']));
+        return $this->returnSuccess(__($this->successMsg['news.delete']), $news);
     }
     
 }

@@ -3,9 +3,12 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class News extends BaseModel
 {
+    use SoftDeletes;
+    
     protected $fillable = [
         'title',
         'sub_title',

@@ -125,7 +125,7 @@ class ManagerController extends BaseController {
     
     public function getNews(Request $request) {
 
-        $data = News::with('therapistsNews')->where('manager_id', $request->manager_id);
+        $data = News::with('therapistsNews')->where('manager_id', $request->manager_id)->whereNull('deleted_at');
         $filter = !empty($request->filter) ? $request->filter : News::TODAY;
         $now = Carbon::now();
 
