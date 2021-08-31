@@ -116,6 +116,7 @@ $router->group(['prefix' => 'staffs', 'namespace' => 'Shops'], function () use($
     $router->post('/add', 'Staffs\StaffsController@createStaff');
     $router->post('/update', 'Staffs\StaffsController@updateStaff');
     $router->post('/list', 'Staffs\StaffsController@staffList');
+    $router->post('/document/upload', 'Staffs\StaffsController@uploadDocument');
 });
 
 $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use($router) {
