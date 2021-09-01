@@ -16,6 +16,8 @@ use App\Service;
 use App\ShopService;
 use App\ServicePricing;
 use DB;
+use App\Manager;
+use App\News;
 
 class DashboardController extends BaseController {
 
@@ -66,8 +68,11 @@ class DashboardController extends BaseController {
         $reviews = $reviews->count() == 0 ? 0 : number_format(($reviews->count() / $reviews->sum('rating')) * 100, 2);
         $vouchers = Voucher::where('expired_date','>=', Carbon::now()->format('Y-m-d'))->get()->count();
         $packs = Pack::where('expired_date','>=', Carbon::now()->format('Y-m-d'))->get()->count();
+        $manager = Manager::where('shop_id', $request->get('shop_id'))->first();
+        $news = !empty($manager) ? News::where('manager_id', $manager->id)->count() : 0;
+        
         return $this->returnSuccess(__($this->successMsg['data.found']), ['massages' => $massages, 'therapies' => $therapies, 'reviews' => $reviews,
-            'vouchers' => $vouchers, 'packs' => $packs, 'current_reviews' => $current_week]);
+            'vouchers' => $vouchers, 'packs' => $packs, 'current_reviews' => $current_week, 'news' => $news]);
     }
     
     public function allBookings(Request $request) {
