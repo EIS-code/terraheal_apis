@@ -79,7 +79,7 @@ class Pack extends BaseModel
                                 $packModel::getTableName() . '.*,' . 'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
                 ->join($packUsersModel::getTableName(), $packUsersModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->join($packShopModel::getTableName(), $packShopModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
-                ->leftJoin($userModel::getTableName(), $userModel::getTableName() . '.id', '=', $packUsersModel::getTableName() . '.users_id');
+                ->leftJoin($userModel::getTableName(), $userModel::getTableName() . '.id', '=', $packUsersModel::getTableName() . '.user_id');
         return $query;
     }
 
