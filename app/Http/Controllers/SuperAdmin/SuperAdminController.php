@@ -23,6 +23,7 @@ use App\ServicePricing;
 use App\ServiceRequirement;
 use App\ServiceImage;
 use Illuminate\Http\UploadedFile;
+use App\ForgotOtp;
 
 class SuperAdminController extends BaseController {
 
@@ -62,6 +63,7 @@ class SuperAdminController extends BaseController {
         'service.add' => 'Service added successfully !',
         'massages' => 'Massages found successfully !',
         'therapies' => 'Therapies found successfully !',
+        'success.otp' => 'Otp sent successfully !',
     ];
 
     public function addVoucher(Request $request) {
@@ -705,4 +707,25 @@ class SuperAdminController extends BaseController {
         }
         return $this->returnSuccess(__($this->successMsg['therapies']), $therapies);
     }
+    
+    public function forgotPassword(Request $request) {
+
+        $admin = Superadmin::where('tel_number', $request->mobile_number)->first();
+
+        if (empty($admin)) {
+            return $this->returnError($this->errorMsg['admin.not.found']);
+        }
+
+        $data = [
+            'model_id' => $admin->id,
+            'model' => 'SuperAdmin',
+            'otp' => 1234,
+            'mobile_number' => $request->mobile_number,
+            'mobile_code' => $request->mobile_code,
+        ];
+
+        ForgotOtp::create($data);
+        return $this->returnSuccess(__($this->successMsg['success.otp']), ['user_id' => $admin->id, 'otp' => 1234]);
+    }
+
 }
