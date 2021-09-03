@@ -24,7 +24,7 @@ class ShopsTable extends Migration
             $table->decimal('latitude', 11, 8)->nullable();
             $table->integer('zoom')->nullable();
             $table->string('owner_name')->nullable();
-            $table->string('tel_number', 50)->nullable();
+            $table->string('tel_number', 50)->nullable()->unique();
             $table->string('owner_mobile_number', 50)->nullable();
             $table->string('owner_mobile_number_alternative', 50)->nullable();
             $table->string('owner_email')->nullable()->unique();

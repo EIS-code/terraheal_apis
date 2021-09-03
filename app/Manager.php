@@ -41,9 +41,11 @@ class Manager extends BaseModel
     public function validator(array $data, $id = false, $isUpdate = false)
     {
         if ($isUpdate === true && !empty($id)) {
-            $emailValidator      = ['string', 'email', 'max:255', 'unique:superadmins,email,' . $id];
+            $emailValidator      = ['string', 'email', 'max:255', 'unique:manager,email,' . $id];
+            $numberValidator     = ['unique:manager, tel_number,' . $id];
         } else {
             $emailValidator      = ['required', 'string', 'email', 'max:255', 'unique:superadmins'];
+            $numberValidator     = ['nullable', 'unique:manager'];
         }
         
         return Validator::make($data, [
@@ -56,7 +58,7 @@ class Manager extends BaseModel
             'dob'                     => ['nullable', 'string'],
             'nif'                     => ['nullable', 'string'],
             'id_passport'             => ['nullable', 'string'],
-            'tel_number'              => ['nullable', 'string', 'max:50'],
+            'tel_number'              => array_merge(['nullable', 'string', 'max:50'], $numberValidator),
             'emergency_tel_number'    => ['nullable', 'string', 'max:50'],
             'shop_id'                 => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
             'province_id'             => ['nullable', 'integer', 'exists:' . Province::getTableName() . ',id'],

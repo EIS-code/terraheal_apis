@@ -102,8 +102,10 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $user = NULL;
         if ($isUpdate === true && !empty($id)) {
             $emailValidator = ['unique:therapists,email,' . $id];
+            $numberValidator = ['unique:therapists, mobile_number,' . $id];
         } else {
             $emailValidator = ['unique:therapists'];
+            $numberValidator = ['nullable', 'unique:therapists'];
         }
 
         return Validator::make($data, array_merge([
@@ -134,7 +136,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             'nif'                       => array_merge(['string', 'max:255'], !empty($requiredFileds['nif']) ? $requiredFileds['nif'] : ['nullable']),
             'social_security_number'    => array_merge(['string', 'max:255'], !empty($requiredFileds['social_security_number']) ? $requiredFileds['social_security_number'] : ['nullable']),
             'health_conditions_allergies' => array_merge(['string'], !empty($requiredFileds['health_conditions_allergies']) ? $requiredFileds['health_conditions_allergies'] : ['nullable']),
-            'mobile_number'             => array_merge(['string', 'max:255'], !empty($requiredFileds['mobile_number']) ? $requiredFileds['mobile_number'] : ['nullable']),
+            'mobile_number'                => array_merge(array_merge(['string', 'max:255'], $numberValidator), !empty($requiredFileds['mobile_number']) ? $requiredFileds['mobile_number'] : ['nullable']),
             'emergence_contact_number'  => array_merge(['string', 'max:255'], !empty($requiredFileds['emergence_contact_number']) ? $requiredFileds['emergence_contact_number'] : ['nullable']),
             'country_id'            => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
             'city_id'               => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']

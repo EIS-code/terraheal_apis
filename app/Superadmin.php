@@ -57,9 +57,11 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
         if ($isUpdate === true && !empty($id)) {
             $emailValidator      = ['string', 'email', 'max:255', 'unique:superadmins,email,' . $id];
             $nameValidator       = ['string', 'max:255'];
+            $numberValidator     = ['unique:superadmins, tel_number,' . $id];
         } else {
             $emailValidator      = ['required', 'string', 'email', 'max:255', 'unique:superadmins'];
             $nameValidator       = ['required', 'string', 'max:255'];
+            $numberValidator     = ['nullable', 'unique:superadmins'];
         }
         
         return Validator::make($data, [
@@ -70,7 +72,7 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
             'dob'                     => ['nullable', 'string'],
             'nif'                     => ['nullable', 'string'],
             'id_passport'             => ['nullable', 'string'],
-            'tel_number'              => ['nullable', 'string', 'max:50'],
+            'tel_number'              => array_merge(['nullable', 'string', 'max:50'], $numberValidator),
             'emergency_tel_number'    => ['nullable', 'string', 'max:50'],
             'country_id'              => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
             'city_id'                 => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']

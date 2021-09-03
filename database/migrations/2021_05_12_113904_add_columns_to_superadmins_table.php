@@ -16,7 +16,7 @@ class AddColumnsToSuperadminsTable extends Migration
         Schema::table('superadmins', function (Blueprint $table) {
             $table->enum('gender', ['m', 'f'])->nullable()->comment('m: Male, f: Female')->after('email');
             $table->string('dob')->nullable()->after('gender');
-            $table->string('tel_number', 50)->nullable()->after('dob');
+            $table->string('tel_number', 50)->nullable()->after('dob')->unique();
             $table->string('emergency_tel_number', 50)->nullable()->after('tel_number');
             $table->string('nif')->nullable()->after('emergency_tel_number');
             $table->string('id_passport')->nullable()->after('nif');

@@ -62,8 +62,10 @@ class Shop extends BaseModel implements CanResetPasswordContract
     {
         if (!empty($id)) {
             $emailValidator      = ['unique:shops,email,' . $id];
+            $numberValidator     = ['unique:shops,tel_number,' . $id];
         } else {
             $emailValidator      = ['unique:shops'];
+            $numberValidator     = ['unique:shops'];
         }
 
         return Validator::make($data, [
@@ -74,7 +76,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
             'longitude'           => ['nullable', 'between:0,99.99'],
             'latitude'            => ['nullable', 'between:0,99.99'],
             'zoom'                => ['nullable', 'integer'],
-            'tel_number'          => ['nullable', 'string', 'max:50'],
+            'tel_number'          => array_merge(['nullable', 'string', 'max:50'], $numberValidator),
             'email'               => array_merge(['required', 'string', 'email', 'max:255'], $emailValidator),
             'time_zone'           => ['nullable', 'string', 'max:255'],
             'shop_user_name'      => ['required', 'string', 'max:255'],

@@ -141,9 +141,12 @@ class User extends BaseModel implements Authenticatable
         $user = NULL;
         if ($isUpdate === true && !empty($id)) {
             $emailValidator = ['nullable', 'unique:users,email,' . $id];
+            $numberValidator = ['unique:users, tel_number,' . $id];
             $nameValidator  = ['nullable'];
+            
         } else {
             $emailValidator = ['nullable', 'unique:users'];
+            $numberValidator = ['nullable', 'unique:users'];
             $nameValidator  = ['required'];
         }
 
@@ -156,7 +159,7 @@ class User extends BaseModel implements Authenticatable
             'gender'               => ['nullable', 'in:m,f'],
             'email'                => array_merge(['string', 'email', 'max:255'], $emailValidator),
             'tel_number_code'      => ['string', 'max:20'],
-            'tel_number'           => ['string', 'max:50'],
+            'tel_number'           => array_merge(['nullable', 'string', 'max:50'], $numberValidator),
             'emergency_tel_number_code' => ['string', 'max:20'],
             'emergency_tel_number' => ['string', 'max:50'],
             'nif'                  => ['string', 'max:255'],

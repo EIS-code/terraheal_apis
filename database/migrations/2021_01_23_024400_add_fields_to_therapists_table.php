@@ -18,7 +18,7 @@ class AddFieldsToTherapistsTable extends Migration
             $table->string('account_number')->nullable()->after('is_document_verified');
             $table->string('nif')->nullable()->after('account_number');
             $table->string('social_security_number')->nullable()->after('nif');
-            $table->string('mobile_number')->nullable()->after('tel_number');
+            $table->string('mobile_number')->nullable()->after('tel_number')->unique();
             $table->string('emergence_contact_number')->nullable()->after('mobile_number');
             $table->text('health_conditions_allergies')->nullable()->after('emergence_contact_number');
             $table->bigInteger('city_id')->unsigned()->nullable();
