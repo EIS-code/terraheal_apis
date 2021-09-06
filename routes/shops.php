@@ -18,6 +18,9 @@ config(['auth.defaults.passwords' => 'shop']);
 $router->group(['prefix' => 'shops', 'namespace' => 'Shops'], function () use($router) {
 
     $router->post('/signin', 'ShopsController@signIn');
+    $router->post('/signin/forgot', 'ShopsController@forgotPassword');
+    $router->post('/reset/password', 'ShopsController@resetPassword');
+    $router->post('/verify/otp', 'ShopsController@verifyOtp');
     $router->post('/getTherapists', 'ShopsController@getAllTherapists');
     $router->post('/getServices', 'ShopsController@getAllServices');
     $router->post('/getClients', 'ShopsController@getAllClients');

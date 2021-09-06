@@ -1793,6 +1793,15 @@ class UserController extends BaseController
         return $this->returns('error.card.not.found', NULL, TRUE);
     }
     
+    public function deleteOtp(Request $request) {
+        
+        $otps = ForgotOtp::where(['model_id' => $request->user_id, 'model' => User::USER])->get();
+        foreach ($otps as $key => $otp) {
+            $otp->delete();
+        }
+        return true;
+    }
+    
     public function forgotPassword(Request $request) {
 
         $user = User::where('tel_number', $request->mobile_number)->first();
@@ -1801,9 +1810,12 @@ class UserController extends BaseController
             return $this->returnError($this->errorMsg['error.user.not.found']);
         }
 
+        $request->request->add(['user_id' => $user->id]);
+        $this->deleteOtp($request);
+        
         $data = [
             'model_id' => $user->id,
-            'model' => 'User',
+            'model' => User::USER,
             'otp' => 1234,
             'mobile_number' => $request->mobile_number,
             'mobile_code' => $request->mobile_code,
@@ -1822,6 +1834,8 @@ class UserController extends BaseController
         }
         
         $user->update(['password' => Hash::make($request->password)]);
+        $this->deleteOtp($request);
+        
         return $this->returnSuccess(__($this->successMsg['success.reset.password']), $user);
     }
     

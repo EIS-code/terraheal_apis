@@ -17,6 +17,7 @@ use App\ShopHour;
 use App\Booking;
 use App\BookingInfo;
 use App\BookingMassage;
+use App\ForgotOtp;
 
 class ShopsController extends BaseController {
 
@@ -25,6 +26,8 @@ class ShopsController extends BaseController {
         'loginPass' => "Please provide password.",
         'loginBoth' => "Shop email or password seems wrong.",
         'error.booking' => 'Booking not found.',
+        'otp.not.found' => 'Otp not found !',
+        'shop.not.found' => 'Center not found !'
     ];
     public $successMsg = [
         'login' => "Shop found successfully !",
@@ -38,7 +41,10 @@ class ShopsController extends BaseController {
         'shop.free.slots' => 'Shop freeslots are found successfully',
         'shop.hours.not.found' => 'Shop hours not found',
         'no.data.found' => 'No data found',
-        'confirm.booking' => 'Booking confirm successfully'
+        'confirm.booking' => 'Booking confirm successfully',
+        'success.otp' => 'Otp sent successfully !',
+        'success.reset.password' => 'Password reset successfully !',
+        'success.otp.verified' => 'Otp verified successfully !',
     ];
 
     public function signIn(Request $request) {
@@ -192,5 +198,60 @@ class ShopsController extends BaseController {
             }
         }
         return $this->returnSuccess(__($this->successMsg['confirm.booking']), $booking);
+    }
+    
+    public function deleteOtp(Request $request) {
+        
+        $otps = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Shop::SHOP])->get();
+        foreach ($otps as $key => $otp) {
+            $otp->delete();
+        }
+        return true;
+    }
+    
+    public function forgotPassword(Request $request) {
+
+        $shop = Shop::where('tel_number', $request->mobile_number)->first();
+
+        if (empty($shop)) {
+            return $this->returnError($this->errorMsg['shop.not.found']);
+        }
+        $request->request->add(['user_id' => $shop->id]);
+        $this->deleteOtp($request);
+        
+        $data = [
+            'model_id' => $shop->id,
+            'model' => Shop::SHOP,
+            'otp' => 1234,
+            'mobile_number' => $request->mobile_number,
+            'mobile_code' => $request->mobile_code,
+        ];
+
+        ForgotOtp::create($data);
+        return $this->returnSuccess(__($this->successMsg['success.otp']), ['user_id' => $shop->id, 'otp' => 1234]);
+    }
+    
+    public function resetPassword(Request $request) {
+        
+        $shop = Shop::find($request->user_id);
+
+        if (empty($shop)) {
+            return $this->returnError($this->errorMsg['shop.not.found']);
+        }
+        
+        $shop->update(['password' => Hash::make($request->password)]);                
+        $this->deleteOtp($request);
+        
+        return $this->returnSuccess(__($this->successMsg['success.reset.password']), $shop);
+    }
+
+    public function verifyOtp(Request $request) {
+        
+        $is_exist = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Shop::SHOP, 'otp' => $request->otp])->first();
+        
+        if(empty($is_exist)) {
+            return $this->returnError($this->errorMsg['otp.not.found']);
+        }
+        return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
     }
 }

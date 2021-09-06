@@ -1282,6 +1282,15 @@ class TherapistController extends BaseController
         return $this->returnSuccess(__($this->successMsg['news.get']), $allNews);
     }
     
+    public function deleteOtp(Request $request) {
+        
+        $otps = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Therapist::THERAPIST])->get();
+        foreach ($otps as $key => $otp) {
+            $otp->delete();
+        }
+        return true;
+    }
+    
     public function forgotPassword(Request $request) {
 
         $therapist = Therapist::where('mobile_number', $request->mobile_number)->first();
@@ -1290,6 +1299,9 @@ class TherapistController extends BaseController
             return $this->returnError($this->errorMsg['notFound']);
         }
 
+        $request->request->add(['user_id' => $therapist->id]);
+        $this->deleteOtp($request);
+        
         $data = [
             'model_id' => $therapist->id,
             'model' => Therapist::THERAPIST,
@@ -1311,6 +1323,8 @@ class TherapistController extends BaseController
         }
         
         $therapist->update(['password' => Hash::make($request->password)]);
+        $this->deleteOtp($request);
+        
         return $this->returnSuccess(__($this->successMsg['success.reset.password']), $therapist);
     }
     

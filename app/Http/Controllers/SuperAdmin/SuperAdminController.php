@@ -711,6 +711,15 @@ class SuperAdminController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['therapies']), $therapies);
     }
     
+    public function deleteOtp(Request $request) {
+        
+        $otps = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Superadmin::ADMIN])->get();
+        foreach ($otps as $key => $otp) {
+            $otp->delete();
+        }
+        return true;
+    }
+    
     public function forgotPassword(Request $request) {
 
         $admin = Superadmin::where('tel_number', $request->mobile_number)->first();
@@ -719,6 +728,9 @@ class SuperAdminController extends BaseController {
             return $this->returnError($this->errorMsg['admin.not.found']);
         }
 
+        $request->request->add(['user_id' => $admin->id]);
+        $this->deleteOtp($request);
+        
         $data = [
             'model_id' => $admin->id,
             'model' => Superadmin::ADMIN,
@@ -740,6 +752,8 @@ class SuperAdminController extends BaseController {
         }
         
         $admin->update(['password' => Hash::make($request->password)]);
+        $this->deleteOtp($request);
+        
         return $this->returnSuccess(__($this->successMsg['success.reset.password']), $admin);
     }
 

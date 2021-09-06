@@ -2,11 +2,13 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ForgotOtp extends Model
+class ForgotOtp extends BaseModel
 {
+    use SoftDeletes;
+    
     protected $fillable = [
         'model',
         'model_id',

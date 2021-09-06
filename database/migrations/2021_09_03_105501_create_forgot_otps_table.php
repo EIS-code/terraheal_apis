@@ -20,6 +20,7 @@ class CreateForgotOtpsTable extends Migration
             $table->string('otp');
             $table->string('mobile_number');
             $table->string('mobile_code')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }
