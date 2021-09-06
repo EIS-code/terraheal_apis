@@ -81,6 +81,7 @@ class UserController extends BaseController
         'error.booking.massage.confirm' => 'Booking massage is confirm.',
         'error.pack.purchased' => 'Pack already purchased.',
         'error.card.not.found' => 'User card details not found.',
+        'otp.not.found' => 'Otp not found !'
     ];
 
     public $successMsg = [
@@ -146,6 +147,7 @@ class UserController extends BaseController
         'success.card.found' => "User's card details found successfully !",
         'success.otp' => 'Otp sent successfully !',
         'success.reset.password' => 'Password reset successfully !',
+        'success.otp.verified' => 'Otp verified successfully !',
     ];
 
     public function __construct()
@@ -1821,5 +1823,15 @@ class UserController extends BaseController
         
         $user->update(['password' => Hash::make($request->password)]);
         return $this->returnSuccess(__($this->successMsg['success.reset.password']), $user);
+    }
+    
+    public function verifyOtp(Request $request) {
+        
+        $is_exist = ForgotOtp::where(['model_id' => $request->user_id, 'model' => User::USER, 'otp' => $request->otp])->first();
+        
+        if(empty($is_exist)) {
+            return $this->returnError($this->errorMsg['otp.not.found']);
+        }
+        return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
     }
 }

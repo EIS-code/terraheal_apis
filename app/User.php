@@ -129,6 +129,8 @@ class User extends BaseModel implements Authenticatable
         self::FEMALE    => "Female"
     ];
     
+    const USER = 'User';
+    
     private static $qrCode = ['id' => false, 'dob' => NULL, 'email' => NULL, 'shop_id' => false, 'terraheal_flag' => true];
 
     public static function getTableName()
