@@ -74,6 +74,7 @@ class TherapistController extends BaseController
         'shift.approved' => 'Shift already approved.',
         'shift.exchanger.error' => 'Your shift is not found, please select proper shift.',
         'shift.receiver.error' => 'Your selected therapist is not available during your shift, please select another therapist shift.',
+        'otp.not.found' => 'Otp not found !',
     ];
 
     public $successMsg = [
@@ -125,6 +126,7 @@ class TherapistController extends BaseController
         'news.get' => 'News found successfully !',
         'success.otp' => 'Otp sent successfully !',
         'success.reset.password' => 'Password reset successfully !',
+        'success.otp.verified' => 'Otp verified successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1290,7 +1292,7 @@ class TherapistController extends BaseController
 
         $data = [
             'model_id' => $therapist->id,
-            'model' => 'Therapist',
+            'model' => Therapist::THERAPIST,
             'otp' => 1234,
             'mobile_number' => $request->mobile_number,
             'mobile_code' => $request->mobile_code,
@@ -1310,5 +1312,15 @@ class TherapistController extends BaseController
         
         $therapist->update(['password' => Hash::make($request->password)]);
         return $this->returnSuccess(__($this->successMsg['success.reset.password']), $therapist);
+    }
+    
+    public function verifyOtp(Request $request) {
+        
+        $is_exist = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Therapist::THERAPIST, 'otp' => $request->otp])->first();
+        
+        if(empty($is_exist)) {
+            return $this->returnError($this->errorMsg['otp.not.found']);
+        }
+        return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
     }
 }

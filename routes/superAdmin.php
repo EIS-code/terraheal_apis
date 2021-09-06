@@ -108,6 +108,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->group(['prefix' => 'verify'], function () use($router) {
         $router->post('/mobile', 'SuperAdminController@verifyMobile');
         $router->post('/email', 'SuperAdminController@verifyEmail');
+        $router->post('/otp', 'SuperAdminController@verifyOtp');
     });
     
     $router->group(['prefix' => 'compare'], function () use($router) {

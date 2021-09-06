@@ -92,6 +92,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         self::IS_NOT_ACTIVE => 'No'
     ];
 
+    const THERAPIST = 'Therapist';
+    
     public function getFullNameAttribute()
     {
         return $this->name . ' ' . $this->surname;

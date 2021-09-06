@@ -28,6 +28,7 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
 
     $router->post('signin/forgot', 'TherapistController@forgotPassword');
     $router->post('reset/password', 'TherapistController@resetPassword');
+    $router->post('verify/otp', 'TherapistController@verifyOtp');
     
     $router->group(['prefix' => 'freelancer'], function () use($router) {
         $router->post('/signin', function (Request $request) {

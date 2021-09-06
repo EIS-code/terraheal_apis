@@ -38,7 +38,8 @@ class SuperAdminController extends BaseController {
         'error.admin.id' => 'Please provide valid admin id.',
         'error.email.already.verified' => 'This user email already verified with this ',
         'error.email.id' => 'email id.',
-        'error.mimes' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.'
+        'error.mimes' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.',
+        'otp.not.found' => 'Otp not found !'
     ];
     
     public $successMsg = [
@@ -65,6 +66,7 @@ class SuperAdminController extends BaseController {
         'therapies' => 'Therapies found successfully !',
         'success.otp' => 'Otp sent successfully !',
         'success.reset.password' => 'Password reset successfully !',
+        'success.otp.verified' => 'Otp verified successfully !',
     ];
 
     public function addVoucher(Request $request) {
@@ -719,7 +721,7 @@ class SuperAdminController extends BaseController {
 
         $data = [
             'model_id' => $admin->id,
-            'model' => 'SuperAdmin',
+            'model' => Superadmin::ADMIN,
             'otp' => 1234,
             'mobile_number' => $request->mobile_number,
             'mobile_code' => $request->mobile_code,
@@ -741,4 +743,13 @@ class SuperAdminController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['success.reset.password']), $admin);
     }
 
+    public function verifyOtp(Request $request) {
+        
+        $is_exist = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Superadmin::ADMIN, 'otp' => $request->otp])->first();
+        
+        if(empty($is_exist)) {
+            return $this->returnError($this->errorMsg['otp.not.found']);
+        }
+        return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
+    }
 }
