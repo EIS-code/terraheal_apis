@@ -16,6 +16,9 @@ use Illuminate\Http\Request;
 $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], function () use($router) {
     $router->post('/signin', 'UserController@signIn');
 
+    $router->post('signin/forgot', 'UserController@forgotPassword');
+    $router->post('reset/password', 'UserController@resetPassword');
+    
     $router->group(['prefix' => 'signup'], function () use($router) {
         $router->post('/', 'UserController@signUp');
     });

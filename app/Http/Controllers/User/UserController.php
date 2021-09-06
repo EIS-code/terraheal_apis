@@ -38,6 +38,7 @@ use App\PackShop;
 use App\UserCardDetail;
 use App\UserDocument;
 use Illuminate\Support\Str;
+use App\ForgotOtp;
 
 class UserController extends BaseController
 {
@@ -143,6 +144,8 @@ class UserController extends BaseController
         'success.id.uploaded' => 'User Id uploaded successfully !',
         'success.selfie.uploaded' => "User's selfie uploaded successfully !",
         'success.card.found' => "User's card details found successfully !",
+        'success.otp' => 'Otp sent successfully !',
+        'success.reset.password' => 'Password reset successfully !',
     ];
 
     public function __construct()
@@ -1786,5 +1789,37 @@ class UserController extends BaseController
             return $this->returns('success.card.found', collect($data));
         }
         return $this->returns('error.card.not.found', NULL, TRUE);
+    }
+    
+    public function forgotPassword(Request $request) {
+
+        $user = User::where('tel_number', $request->mobile_number)->first();
+
+        if (empty($user)) {
+            return $this->returnError($this->errorMsg['error.user.not.found']);
+        }
+
+        $data = [
+            'model_id' => $user->id,
+            'model' => 'User',
+            'otp' => 1234,
+            'mobile_number' => $request->mobile_number,
+            'mobile_code' => $request->mobile_code,
+        ];
+
+        ForgotOtp::create($data);
+        return $this->returnSuccess(__($this->successMsg['success.otp']), ['user_id' => $user->id, 'otp' => 1234]);
+    }
+    
+    public function resetPassword(Request $request) {
+        
+        $user = User::find($request->user_id);
+
+        if (empty($user)) {
+            return $this->returnError($this->errorMsg['error.user.not.found']);
+        }
+        
+        $user->update(['password' => Hash::make($request->password)]);
+        return $this->returnSuccess(__($this->successMsg['success.reset.password']), $user);
     }
 }

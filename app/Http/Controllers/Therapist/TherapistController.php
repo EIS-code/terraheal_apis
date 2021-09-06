@@ -1280,7 +1280,7 @@ class TherapistController extends BaseController
         return $this->returnSuccess(__($this->successMsg['news.get']), $allNews);
     }
     
-      public function forgotPassword(Request $request) {
+    public function forgotPassword(Request $request) {
 
         $therapist = Therapist::where('mobile_number', $request->mobile_number)->first();
 
