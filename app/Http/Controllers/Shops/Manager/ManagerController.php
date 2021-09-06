@@ -139,7 +139,7 @@ class ManagerController extends BaseController {
         if ($filter == News::THIS_WEEK) {
             $weekStartDate = $now->startOfWeek()->format('Y-m-d');
             $weekEndDate = $now->endOfWeek()->format('Y-m-d');
-            $data->whereDate('created_at', '>=', $weekEndDate)->whereDate('created_at', '<=', $weekStartDate);
+            $data->whereDate('created_at', '>=', $weekStartDate)->whereDate('created_at', '<=', $weekEndDate);
         }
         if ($filter == News::CURRENT_MONTH) {
             $data->whereMonth('created_at', $now->month);
@@ -147,17 +147,17 @@ class ManagerController extends BaseController {
         if ($filter == News::LAST_7_DAYS) {
             $todayDate = $now->format('Y-m-d');
             $agoDate = $now->subDays(7)->format('Y-m-d');           
-            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
         }
         if ($filter == News::LAST_14_DAYS) {
             $todayDate = $now->format('Y-m-d');
             $agoDate = $now->subDays(14)->format('Y-m-d');
-            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
         }
         if ($filter == News::LAST_30_DAYS) {
             $todayDate = $now->format('Y-m-d');
             $agoDate = $now->subDays(30)->format('Y-m-d');
-            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
         }
         if ($filter == News::CUSTOM) {
             $date = $date = Carbon::createFromTimestampMs($request->date);
