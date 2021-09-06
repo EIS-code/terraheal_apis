@@ -18,6 +18,7 @@ config(['auth.defaults.passwords' => 'superadmins']);
 $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' => 'superadmin'], function () use($router) {
 
     $router->post('signin/forgot', 'SuperAdminController@forgotPassword');
+    $router->post('reset/password', 'SuperAdminController@resetPassword');
     $router->post('signIn', 'SuperAdminController@signIn');
     $router->post('update/profile', 'SuperAdminController@updateProfile');
     $router->post('details/get', 'SuperAdminController@getDetails');

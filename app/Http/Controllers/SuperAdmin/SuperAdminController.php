@@ -64,6 +64,7 @@ class SuperAdminController extends BaseController {
         'massages' => 'Massages found successfully !',
         'therapies' => 'Therapies found successfully !',
         'success.otp' => 'Otp sent successfully !',
+        'success.reset.password' => 'Password reset successfully !',
     ];
 
     public function addVoucher(Request $request) {
@@ -726,6 +727,18 @@ class SuperAdminController extends BaseController {
 
         ForgotOtp::create($data);
         return $this->returnSuccess(__($this->successMsg['success.otp']), ['user_id' => $admin->id, 'otp' => 1234]);
+    }
+    
+    public function resetPassword(Request $request) {
+        
+        $admin = Superadmin::find($request->user_id);
+
+        if (empty($admin)) {
+            return $this->returnError($this->errorMsg['admin.not.found']);
+        }
+        
+        $admin->update(['password' => Hash::make($request->password)]);
+        return $this->returnSuccess(__($this->successMsg['success.reset.password']), $admin);
     }
 
 }
