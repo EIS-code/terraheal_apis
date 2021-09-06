@@ -44,6 +44,7 @@ use App\ShopShift;
 use App\Libraries\CommonHelper;
 use App\Manager;
 use App\News;
+use App\ForgotOtp;
 
 class TherapistController extends BaseController
 {
@@ -122,6 +123,8 @@ class TherapistController extends BaseController
         'shift.reject' => 'Shift reject successfully !',
         'observation.add' => 'Observation added successfully !',
         'news.get' => 'News found successfully !',
+        'success.otp' => 'Otp sent successfully !',
+        'success.reset.password' => 'Password reset successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1275,5 +1278,37 @@ class TherapistController extends BaseController
             }
         }
         return $this->returnSuccess(__($this->successMsg['news.get']), $allNews);
+    }
+    
+      public function forgotPassword(Request $request) {
+
+        $therapist = Therapist::where('mobile_number', $request->mobile_number)->first();
+
+        if (empty($therapist)) {
+            return $this->returnError($this->errorMsg['notFound']);
+        }
+
+        $data = [
+            'model_id' => $therapist->id,
+            'model' => 'Therapist',
+            'otp' => 1234,
+            'mobile_number' => $request->mobile_number,
+            'mobile_code' => $request->mobile_code,
+        ];
+
+        ForgotOtp::create($data);
+        return $this->returnSuccess(__($this->successMsg['success.otp']), ['user_id' => $therapist->id, 'otp' => 1234]);
+    }
+    
+    public function resetPassword(Request $request) {
+        
+        $therapist = Therapist::find($request->user_id);
+
+        if (empty($therapist)) {
+            return $this->returnError($this->errorMsg['notFound']);
+        }
+        
+        $therapist->update(['password' => Hash::make($request->password)]);
+        return $this->returnSuccess(__($this->successMsg['success.reset.password']), $therapist);
     }
 }

@@ -26,8 +26,9 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
         return $controller->signIn(Therapist::IS_NOT_FREELANCER, $request);
     });
 
-    $router->post('/signin/forgot', 'Auth\ForgotPasswordController@sendResetLinkEmail');
-
+    $router->post('signin/forgot', 'TherapistController@forgotPassword');
+    $router->post('reset/password', 'TherapistController@resetPassword');
+    
     $router->group(['prefix' => 'freelancer'], function () use($router) {
         $router->post('/signin', function (Request $request) {
             $controller = new \App\Http\Controllers\Therapist\TherapistController();
