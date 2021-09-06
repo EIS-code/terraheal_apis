@@ -38,6 +38,8 @@ class Manager extends BaseModel
     public $fileSystem = 'public';
     public $profilePhotoPath = 'manager\profile\\';
     
+    const MANAGER = 'Manager';
+    
     public function validator(array $data, $id = false, $isUpdate = false)
     {
         if ($isUpdate === true && !empty($id)) {

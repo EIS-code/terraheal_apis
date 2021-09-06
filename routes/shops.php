@@ -125,6 +125,8 @@ $router->group(['prefix' => 'staffs', 'namespace' => 'Shops'], function () use($
 $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use($router) {
     
     $router->post('/signIn', 'Manager\ManagerController@signIn');
+    $router->post('/signin/forgot', 'Manager\ManagerController@forgotPassword');
+    $router->post('/reset/password', 'Manager\ManagerController@resetPassword');
     $router->post('/dashboard/info/get', 'Manager\ManagerController@getInfo');
     $router->post('/massages/get', 'Manager\ManagerController@getMassages');
     $router->post('/therapies/get', 'Manager\ManagerController@getTherapies');
@@ -153,6 +155,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->group(['prefix' => 'verify'], function () use($router) {
         $router->post('/mobile', 'Manager\ManagerController@verifyMobile');
         $router->post('/email', 'Manager\ManagerController@verifyEmail');
+        $router->post('/otp', 'Manager\ManagerController@verifyOtp');
     });
     
     $router->group(['prefix' => 'packs'], function () use($router) {

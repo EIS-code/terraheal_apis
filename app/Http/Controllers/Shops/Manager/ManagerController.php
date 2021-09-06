@@ -21,6 +21,7 @@ use App\User;
 use App\PackShop;
 use App\VoucherShop;
 use App\TherapistUserRating;
+use App\ForgotOtp;
 
 class ManagerController extends BaseController {
 
@@ -60,6 +61,9 @@ class ManagerController extends BaseController {
         'schedule.data.found' => 'Time Table data found successfully',
         'success.packs.get' => 'Packs found successfully',
         'success.vouchers.get' => 'Vouchers found successfully',
+        'success.otp' => 'Otp sent successfully !',
+        'success.reset.password' => 'Password reset successfully !',
+        'success.otp.verified' => 'Otp verified successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -634,5 +638,60 @@ class ManagerController extends BaseController {
         }
         
         return $this->returnSuccess(__($this->successMsg['success.vouchers.get']), $vouchersData);
+    }
+    
+    public function deleteOtp(Request $request) {
+        
+        $otps = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Manager::MANAGER])->get();
+        foreach ($otps as $key => $otp) {
+            $otp->delete();
+        }
+        return true;
+    }
+    
+    public function forgotPassword(Request $request) {
+
+        $manager = Manager::where('tel_number', $request->mobile_number)->first();
+
+        if (empty($manager)) {
+            return $this->returnError($this->errorMsg['manager.not.found']);
+        }
+        $request->request->add(['user_id' => $manager->id]);
+        $this->deleteOtp($request);
+        
+        $data = [
+            'model_id' => $manager->id,
+            'model' => Manager::MANAGER,
+            'otp' => 1234,
+            'mobile_number' => $request->mobile_number,
+            'mobile_code' => $request->mobile_code,
+        ];
+
+        ForgotOtp::create($data);
+        return $this->returnSuccess(__($this->successMsg['success.otp']), ['user_id' => $manager->id, 'otp' => 1234]);
+    }
+    
+    public function resetPassword(Request $request) {
+        
+        $manager = Manager::find($request->user_id);
+
+        if (empty($manager)) {
+            return $this->returnError($this->errorMsg['manager.not.found']);
+        }
+        
+        $manager->update(['password' => Hash::make($request->password)]);                
+        $this->deleteOtp($request);
+        
+        return $this->returnSuccess(__($this->successMsg['success.reset.password']), $manager);
+    }
+
+    public function verifyOtp(Request $request) {
+        
+        $is_exist = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Manager::MANAGER, 'otp' => $request->otp])->first();
+        
+        if(empty($is_exist)) {
+            return $this->returnError($this->errorMsg['otp.not.found']);
+        }
+        return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
     }
 }
