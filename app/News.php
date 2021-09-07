@@ -37,6 +37,6 @@ class News extends BaseModel
     
     public function therapistsNews()
     {
-        return $this->hasMany('App\TherapistNews', 'news_id', 'id');
+        return $this->hasMany('App\TherapistNews', 'news_id', 'id')->with('therapists');
     }
 }

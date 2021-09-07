@@ -151,17 +151,17 @@ class ManagerController extends BaseController {
         if ($filter == News::LAST_7_DAYS) {
             $todayDate = $now->format('Y-m-d');
             $agoDate = $now->subDays(7)->format('Y-m-d');           
-            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
+            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
         }
         if ($filter == News::LAST_14_DAYS) {
             $todayDate = $now->format('Y-m-d');
             $agoDate = $now->subDays(14)->format('Y-m-d');
-            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
+            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
         }
         if ($filter == News::LAST_30_DAYS) {
             $todayDate = $now->format('Y-m-d');
             $agoDate = $now->subDays(30)->format('Y-m-d');
-            $data->whereDate('created_at', '<=', $agoDate)->whereDate('created_at', '>=', $todayDate);
+            $data->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
         }
         if ($filter == News::CUSTOM) {
             $date = $date = Carbon::createFromTimestampMs($request->date);
@@ -195,13 +195,27 @@ class ManagerController extends BaseController {
     public function newsDetails(Request $request) {
         
         $news = News::with('therapistsNews')->where('id', $request->news_id)->first();
+        $filter = $request->filter ? $request->filter : 0;
         if(empty($news)) {
             return $this->returnSuccess(__($this->errorMsg['news.not.found']));
         }
-        $allTherapist = Therapist::where('shop_id', $request->shop_id)->get()->count();
+        $allTherapist = Therapist::where('shop_id', $request->shop_id)->get();
         $read = $news->therapistsNews->count();
-        $unread = $allTherapist = 0 ? 0 : $allTherapist - $read ;
+        $unread = $allTherapist->count() = 0 ? 0 : $allTherapist->count() - $read ;
         
+        $therapists = [];
+        if($filter == 0) {
+            
+            foreach ($news->therapistsNews as $key => $therapist) {
+                $therapists[] = [
+                    "therapist_id" => $therapist->therapists->id,
+                    "therapist_name" => $therapist->therapists->name,
+                    "profile_photo" => $therapist->therapists->profile_photo
+                ];
+            }
+        } else {
+            
+        }
         $newsData = [
             'id' => $news['id'],
             'title' => $news['title'],
@@ -209,7 +223,8 @@ class ManagerController extends BaseController {
             'description' => $news['description'],
             'manager_id' => $news['manager_id'],
             'read' => $read,
-            'unread' => $unread 
+            'unread' => $unread,
+            'therapists' => $therapists
         ];
         
         return $this->returnSuccess(__($this->successMsg['news.details']), $newsData);
