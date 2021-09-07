@@ -206,7 +206,6 @@ class ManagerController extends BaseController {
         
         $therapists = [];
         if($filter == 0) {
-            
             foreach ($news->therapistsNews as $key => $therapist) {
                 $therapists[] = [
                     "therapist_id" => $therapist->therapists->id,
@@ -215,6 +214,16 @@ class ManagerController extends BaseController {
                 ];
             }
         } else {
+            $therapist_read = $news->therapistsNews->pluck('therapist_id')->toArray();
+            foreach ($allTherapist as $key => $therapist) {
+                if (!in_array($therapist->id, $therapist_read)) {
+                    $therapists[] = [
+                        "therapist_id" => $therapist->id,
+                        "therapist_name" => $therapist->name,
+                        "profile_photo" => $therapist->profile_photo
+                    ];
+                }
+            }
             
         }
         $newsData = [
