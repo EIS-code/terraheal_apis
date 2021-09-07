@@ -202,7 +202,7 @@ class ManagerController extends BaseController {
         $allTherapist = Therapist::where('shop_id', $request->shop_id)->get();
         $read = $news->therapistsNews->count();
         $count = $allTherapist->count();
-        $unread = $count = 0 ? 0 : $count - $read ;
+        $unread = $count == 0 ? 0 : $count - $read ;
         
         $therapists = [];
         if($filter == 0) {
