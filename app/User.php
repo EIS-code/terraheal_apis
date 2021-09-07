@@ -64,7 +64,8 @@ class User extends BaseModel implements Authenticatable
         'source',
         'client_note',
         'gender',
-        'age'
+        'age',
+        'is_document_uploaded'
     ];
 
     /**
