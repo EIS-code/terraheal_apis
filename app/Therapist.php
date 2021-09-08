@@ -105,7 +105,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $user = NULL;
         if ($isUpdate === true && !empty($id)) {
             $emailValidator = ['unique:therapists,email,' . $id];
-            $numberValidator = ['unique:therapists, mobile_number,' . $id];
+            $numberValidator = ['unique:therapists,mobile_number,' . $id];
         } else {
             $emailValidator = ['unique:therapists'];
             $numberValidator = ['nullable', 'unique:therapists'];
