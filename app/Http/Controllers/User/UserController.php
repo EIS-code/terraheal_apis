@@ -1690,7 +1690,7 @@ class UserController extends BaseController
         }
         
         $create = UserCardDetail::create($data);
-        $data['is_document_uploaded'] = $user->is_document_uploaded;
+        $create->is_document_uploaded = $user->is_document_uploaded;
         
         $this->checkDocument($request);
         if($create) {
