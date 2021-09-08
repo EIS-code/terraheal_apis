@@ -1682,6 +1682,7 @@ class UserController extends BaseController
         
         $data = $request->all();
         $model = new UserCardDetail();
+        $user = User::find($request->user_id);
         
         $validator = $model->validator($data);
         if ($validator->fails()) {
@@ -1689,6 +1690,7 @@ class UserController extends BaseController
         }
         
         $create = UserCardDetail::create($data);
+        $data['is_document_uploaded'] = $user->is_document_uploaded;
         
         $this->checkDocument($request);
         if($create) {
@@ -1701,6 +1703,7 @@ class UserController extends BaseController
         
         $model = new UserDocument();
         $userId = $request->user_id;
+        $user = User::find($userId);
         $is_exist = $model->where('user_id', $userId)->first();
         
         $idPassportFront = $request->file('passport_front', []);
@@ -1731,10 +1734,12 @@ class UserController extends BaseController
         if($is_exist) {
             $is_exist->update(['passport_front' => $data['passport_front'], 'passport_back' => $data['passport_back']]);
             $this->checkDocument($request);
+            $is_exist->is_document_uploaded = $user->is_document_uploaded;
             return $this->returns('success.id.uploaded', $is_exist);
         } else {
             $model->create($data);
             $this->checkDocument($request);
+            $data['is_document_uploaded'] = $user->is_document_uploaded;
             return $this->returns('success.id.uploaded', collect($data));
         }
         return $this->returns('error.something', NULL, true);
@@ -1744,6 +1749,7 @@ class UserController extends BaseController
         
         $model = new UserDocument();
         $userId = $request->user_id;
+        $user = User::find($userId);
         $is_exist = $model->where('user_id', $userId)->first();
         
         $selfie = $request->file('selfie', []);
@@ -1761,12 +1767,13 @@ class UserController extends BaseController
             if ($is_exist) {
                 $is_exist->update(['selfie' => $data['selfie']]);
                 $this->checkDocument($request);
+                $is_exist->is_document_uploaded = $user->is_document_uploaded;
                 return $this->returns('success.selfie.uploaded', $is_exist);
             } else {
                 $model->create($data);
-                $create = $model->where('user_id', $userId)->first();
                 $this->checkDocument($request);
-                return $this->returns('success.selfie.uploaded', $create);
+                $data['is_document_uploaded'] = $user->is_document_uploaded;
+                return $this->returns('success.selfie.uploaded', collect($data));
             }
         }
         return $this->returns('error.something', NULL, true);
