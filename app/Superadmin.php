@@ -61,7 +61,7 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
         if ($isUpdate === true && !empty($id)) {
             $emailValidator      = ['string', 'email', 'max:255', 'unique:superadmins,email,' . $id];
             $nameValidator       = ['string', 'max:255'];
-            $numberValidator     = ['unique:superadmins, tel_number,' . $id];
+            $numberValidator     = ['unique:superadmins,tel_number,' . $id];
         } else {
             $emailValidator      = ['required', 'string', 'email', 'max:255', 'unique:superadmins'];
             $nameValidator       = ['required', 'string', 'max:255'];

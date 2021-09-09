@@ -144,7 +144,7 @@ class User extends BaseModel implements Authenticatable
         $user = NULL;
         if ($isUpdate === true && !empty($id)) {
             $emailValidator = ['nullable', 'unique:users,email,' . $id];
-            $numberValidator = ['unique:users, tel_number,' . $id];
+            $numberValidator = ['unique:users,tel_number,' . $id];
             $nameValidator  = ['nullable'];
             
         } else {
