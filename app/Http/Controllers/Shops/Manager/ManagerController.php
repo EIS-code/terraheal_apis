@@ -504,13 +504,13 @@ class ManagerController extends BaseController {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
         
-        if(isset($data['mobile_number']) && !empty($data['mobile_number'])) {
-            if($manager->mobile_number != $data['mobile_number']) {
+        if(isset($data['tel_number']) && !empty($data['tel_number'])) {
+            if($manager->tel_number != $data['tel_number']) {
                 $data['is_mobile_verified'] = Manager::IS_NOT_VERIFIED;
             }
         }
         if(isset($data['email']) && !empty($data['email'])) {
-            if($manager->mobile_number != $data['email']) {
+            if($manager->email != $data['email']) {
                 $data['is_email_verified'] = Manager::IS_NOT_VERIFIED;
             }
         }

@@ -50,6 +50,8 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
     public $profilePhotoPath = 'superAdmin\profile\\';
 
     const ADMIN = 'SuperAdmin';
+    const IS_NOT_VERIFIED = '0';
+    const IS_VERIFIED = '1';
     
     public static function getTableName()
     {

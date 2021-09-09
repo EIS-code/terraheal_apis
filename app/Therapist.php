@@ -545,7 +545,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             }
         }
         if(isset($data['email']) && !empty($data['email'])) {
-            if($therapist->mobile_number != $data['email']) {
+            if($therapist->email != $data['email']) {
                 $data['is_email_verified'] = self::IS_NOT_VERIFIED;
             }
         }

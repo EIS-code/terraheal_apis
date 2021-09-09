@@ -345,6 +345,17 @@ class SuperAdminController extends BaseController {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
         
+        if(isset($data['tel_number']) && !empty($data['tel_number'])) {
+            if($admin->tel_number != $data['tel_number']) {
+                $data['is_mobile_verified'] = Superadmin::IS_NOT_VERIFIED;
+            }
+        }
+        if(isset($data['email']) && !empty($data['email'])) {
+            if($admin->email != $data['email']) {
+                $data['is_email_verified'] = Superadmin::IS_NOT_VERIFIED;
+            }
+        }
+        
         $admin->update($data);
         $admin = $adminModel->with('country','city')->find($data['superadmin_id']);
         return $this->returnSuccess(__($this->successMsg['edit.profile']), $admin);
