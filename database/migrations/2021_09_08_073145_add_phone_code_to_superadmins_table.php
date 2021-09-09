@@ -15,6 +15,7 @@ class AddPhoneCodeToSuperadminsTable extends Migration
     {
         Schema::table('superadmins', function (Blueprint $table) {
             $table->string('tel_number_code', 20)->nullable()->after('tel_number');
+            $table->string('emergency_tel_number_code', 20)->nullable()->after('emergency_tel_number');
         });
     }
 
@@ -27,6 +28,7 @@ class AddPhoneCodeToSuperadminsTable extends Migration
     {
         Schema::table('superadmins', function (Blueprint $table) {
             $table->dropColumn('tel_number_code');
+            $table->dropColumn('emergency_tel_number_code');
         });
     }
 }

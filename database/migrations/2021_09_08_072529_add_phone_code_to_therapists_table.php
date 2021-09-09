@@ -15,6 +15,7 @@ class AddPhoneCodeToTherapistsTable extends Migration
     {
         Schema::table('therapists', function (Blueprint $table) {
             $table->string('mobile_number_code', 20)->nullable()->after('mobile_number');
+            $table->string('emergence_contact_number_code', 20)->nullable()->after('emergence_contact_number');
         });
     }
 
@@ -27,6 +28,7 @@ class AddPhoneCodeToTherapistsTable extends Migration
     {
         Schema::table('therapists', function (Blueprint $table) {
             $table->dropColumn('mobile_number_code');
+            $table->dropColumn('emergence_contact_number_code');
         });
     }
 }
