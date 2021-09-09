@@ -29,6 +29,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         'mobile_number',
         'mobile_number_code',
         'emergence_contact_number',
+        'emergence_contact_number_code',
         'hobbies',
         'short_description',
         'is_freelancer',
@@ -142,6 +143,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
             'mobile_number_code' => array_merge(['string'], !empty($requiredFileds['mobile_number_code']) ? $requiredFileds['mobile_number_code'] : ['nullable']),
             'mobile_number'                => array_merge(array_merge(['string', 'max:255'], $numberValidator), !empty($requiredFileds['mobile_number']) ? $requiredFileds['mobile_number'] : ['nullable']),
             'emergence_contact_number'  => array_merge(['string', 'max:255'], !empty($requiredFileds['emergence_contact_number']) ? $requiredFileds['emergence_contact_number'] : ['nullable']),
+            'emergence_contact_number_code'  => array_merge(['string', 'max:20'], !empty($requiredFileds['emergence_contact_number_code']) ? $requiredFileds['emergence_contact_number_code'] : ['nullable']),
             'country_id'            => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
             'city_id'               => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']
         ], $extraFields), [

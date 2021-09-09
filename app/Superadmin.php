@@ -29,6 +29,7 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
         'tel_number',
         'tel_number_code',
         'emergency_tel_number',
+        'emergency_tel_number_code',
         'id_passport',
         'country_id',
         'city_id',
@@ -78,6 +79,7 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
             'tel_number'              => array_merge(['nullable', 'string', 'max:50'], $numberValidator),
             'tel_number_code'         => ['nullable', 'string', 'max:20'],
             'emergency_tel_number'    => ['nullable', 'string', 'max:50'],
+            'emergency_tel_number_code'    => ['nullable', 'string', 'max:20'],
             'country_id'              => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
             'city_id'                 => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id']
         ]);

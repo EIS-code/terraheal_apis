@@ -24,6 +24,7 @@ class Manager extends BaseModel
         'tel_number',
         'tel_number_code',
         'emergency_tel_number',
+        'emergency_tel_number_code',
         'id_passport',
         'is_email_verified',
         'is_mobile_verified',
@@ -45,7 +46,7 @@ class Manager extends BaseModel
     {
         if ($isUpdate === true && !empty($id)) {
             $emailValidator      = ['string', 'email', 'max:255', 'unique:manager,email,' . $id];
-            $numberValidator     = ['unique:manager, tel_number,' . $id];
+            $numberValidator     = ['unique:manager,tel_number,' . $id];
         } else {
             $emailValidator      = ['required', 'string', 'email', 'max:255', 'unique:superadmins'];
             $numberValidator     = ['nullable', 'unique:manager'];
@@ -64,6 +65,7 @@ class Manager extends BaseModel
             'tel_number'              => array_merge(['nullable', 'string', 'max:50'], $numberValidator),
             'tel_number_code'         => ['nullable', 'string', 'max:20'],
             'emergency_tel_number'    => ['nullable', 'string', 'max:50'],
+            'emergency_tel_number_code'    => ['nullable', 'string', 'max:20'],
             'shop_id'                 => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
             'province_id'             => ['nullable', 'integer', 'exists:' . Province::getTableName() . ',id'],
             'country_id'              => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
