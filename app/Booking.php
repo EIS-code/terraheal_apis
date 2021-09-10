@@ -358,7 +358,7 @@ class Booking extends BaseModel
             }
 
             if (in_array(self::BOOKING_FUTURE, $bookingsFilter)) {
-                $data->where($bookingMassageModel::getTableName() . '.massage_date_time', '>=', Carbon::now()->format('Y-m-d'))
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '>=', Carbon::now()->format('Y-m-d'))
                         ->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_NOT_CANCELLED);
             }
 
@@ -373,7 +373,7 @@ class Booking extends BaseModel
             }
 
             if (in_array(self::BOOKING_PAST, $bookingsFilter)) {
-                $data->where($bookingMassageModel::getTableName() . '.massage_date_time', '<=', Carbon::now()->format('Y-m-d'));
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '<=', Carbon::now()->format('Y-m-d'));
             }
 
             if (in_array(self::BOOKING_TODAY, $bookingsFilter)) {
