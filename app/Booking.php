@@ -377,7 +377,7 @@ class Booking extends BaseModel
             }
 
             if (in_array(self::BOOKING_TODAY, $bookingsFilter)) {
-                $data->where($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
             }
         }
 
@@ -422,7 +422,7 @@ class Booking extends BaseModel
                 }
 
                 $record->massage_date_time = $record->massage_date;
-                $bookingType = $record->getAttributes()['booking_type'];
+                    $bookingType = $record->getAttributes()['booking_type'];
 
 //                unset($record->booking_type);
 
