@@ -289,9 +289,9 @@ class Shop extends BaseModel implements CanResetPasswordContract
             "notes_of_injuries" => $injuries,
             "service_pricing_id" => $servicePrice->id,
             "booking_info_id" => $bookingInfo->id,
-            "pressure_preference" => $service['pressure_preference'],
-            "gender_preference" => !empty($service['gender_preference']) ? $service['gender_preference'] : (!empty($request->gender_preference) ? $request->gender_preference : NULL),
-            "focus_area_preference" => !empty($service['focus_area_preference']) ? $service['focus_area_preference'] : NULL,
+            "pressure_preference" => $user['pressure_preference'],
+            "gender_preference" => !empty($user['gender_preference']) ? $user['gender_preference'] : (!empty($request->gender_preference) ? $request->gender_preference : NULL),
+            "focus_area_preference" => !empty($user['focus_area_preference']) ? $user['focus_area_preference'] : NULL,
             "language_id" => !empty($request->language_id) ? $request->language_id : NULL,
         ];
 
