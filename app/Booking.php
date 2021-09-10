@@ -421,8 +421,7 @@ class Booking extends BaseModel
                     }
                 }
 
-                $record->massage_date_time = $bookingMassageModel->getMassageDateTimeAttribute($record->massage_date_time);
-
+                $record->massage_date_time = $record->massage_date;
                 $bookingType = $record->getAttributes()['booking_type'];
 
 //                unset($record->booking_type);
