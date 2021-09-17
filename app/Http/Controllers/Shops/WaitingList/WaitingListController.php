@@ -767,6 +767,8 @@ class WaitingListController extends BaseController {
         $packShopModel          = new PackShop();
         $userModel              = new User();
         
+        $packModel->setMysqlStrictFalse();
+        
         $packs = $packModel->getPackQuery()
                 ->where($packShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($packModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
@@ -778,7 +780,10 @@ class WaitingListController extends BaseController {
                             ->orWhere($userModel::getTableName().'.name', 'like', $search_val.'%');
                 });
         }
-        return $packs->paginate(10, ['*'], 'page', $pageNumber);
+        
+        $packs = $packs->groupBy($packModel::getTableName() . '.id')->paginate(10, ['*'], 'page', $pageNumber);
+        $packModel->setMysqlStrictTrue();
+        return $packs;
     }
     
     public function searchActivePacks(Request $request) {
@@ -799,6 +804,7 @@ class WaitingListController extends BaseController {
         }
         return $packs->paginate(10, ['*'], 'page', $pageNumber);
     }
+    
     public function searchPacks(Request $request) {
         
         $filter = !empty($request->filter) ? $request->filter : Pack::ACTIVE;
@@ -825,6 +831,8 @@ class WaitingListController extends BaseController {
         $voucherShopModel   = new VoucherShop();
         $userModel          = new User();
         
+        $voucherModel->setMysqlStrictFalse();
+        
         $vouchers = $voucherModel->getVoucherQuery()
                 ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'));
@@ -836,7 +844,10 @@ class WaitingListController extends BaseController {
                             ->orWhere($userModel::getTableName().'.name', 'like', $search_val.'%');
                 });
         }
-        return $vouchers->paginate(10, ['*'], 'page', $pageNumber);
+        
+        $vouchers = $vouchers->groupBy($voucherModel::getTableName() . '.id')->paginate(10, ['*'], 'page', $pageNumber);
+        $voucherModel->setMysqlStrictTrue();
+        return $vouchers;
     }
     
     public function searchActiveVoucher(Request $request) {
