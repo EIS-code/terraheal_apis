@@ -180,7 +180,7 @@ class ManagerController extends BaseController {
                     'sub_title' => $news['sub_title'],
                     'description' => $news['description'],
                     'manager_id' => $news['manager_id'],
-                    'created_at' => strtotime($news['created_at']) * 1000,
+                    'created_at' => $news['created_at'],
                 ];
                 $newsData['read'] = $news['therapistsNews']->count();
                 $newsData['unread'] = $newsData['read'] == $allTherapist ? 0 : $allTherapist - $newsData['read'];
