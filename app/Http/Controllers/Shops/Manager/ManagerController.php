@@ -657,7 +657,8 @@ class ManagerController extends BaseController {
                     'name' => $value->voucher->name,
                     'number' => $value->voucher->number,
                     'image' => $value->voucher->image,
-                    'price' => $value->voucher->total_price,
+                    'price' => $value->voucher->price,
+                    'created_at' => strtotime($value->voucher->created_at) * 1000,
                     'expired_date' => $value->voucher->expired_date,
                 ];
             }
