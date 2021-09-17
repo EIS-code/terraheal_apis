@@ -194,8 +194,7 @@ class ManagerController extends BaseController {
 
     public function newsDetails(Request $request) {
         
-        $news = News::with('therapistsNews')->where(['id' => $request->news_id, 'manager_id' => $request->manager_id])->toSql();
-        dd($news);
+        $news = News::with('therapistsNews')->where(['id' => $request->news_id, 'manager_id' => $request->manager_id])->first();
         $filter = $request->filter ? $request->filter : 0;
         if(empty($news)) {
             return $this->returnSuccess(__($this->errorMsg['news.not.found']));
