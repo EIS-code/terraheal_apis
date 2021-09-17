@@ -67,7 +67,8 @@ class Voucher extends BaseModel
         $userModel = new User();
 
         $query = $voucherModel
-                ->select(DB::RAW($voucherUsersModel::getTableName() . '.*,'  . 'UNIX_TIMESTAMP(' . $voucherUsersModel::getTableName() . '.purchase_date) * 1000 as purchase_date,'  . $voucherShopModel::getTableName() . '.*,' .
+                ->select(DB::RAW($voucherUsersModel::getTableName() . '.user_id,' . $voucherUsersModel::getTableName() . '.total_value,' . $voucherUsersModel::getTableName() . '.used_value,' . $voucherUsersModel::getTableName() . '.available_value,' .
+                        'UNIX_TIMESTAMP(' . $voucherUsersModel::getTableName() . '.purchase_date) * 1000 as purchase_date,'  . $voucherShopModel::getTableName() . '.shop_id,' .
                                 $voucherModel::getTableName() . '.*,' . 'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
                 ->join($voucherUsersModel::getTableName(), $voucherUsersModel::getTableName() . '.voucher_id', '=', $voucherModel::getTableName() . '.id')
                 ->join($voucherShopModel::getTableName(), $voucherShopModel::getTableName() . '.voucher_id', '=', $voucherModel::getTableName() . '.id')

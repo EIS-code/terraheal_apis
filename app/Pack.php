@@ -75,8 +75,8 @@ class Pack extends BaseModel
         $userModel = new User();
         
         $query = $packModel
-                ->select(DB::RAW($packUsersModel::getTableName() . '.*,' . $packShopModel::getTableName() . '.*,' .
-                                $packModel::getTableName() . '.*,' . 'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
+                ->select(DB::RAW($packModel::getTableName() . '.*,' . $packUsersModel::getTableName() . '.user_id,' . $packUsersModel::getTableName() . '.purchase_date,' . $packShopModel::getTableName() . '.shop_id,' .
+                                 'CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname) as client_name'))
                 ->join($packUsersModel::getTableName(), $packUsersModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->join($packShopModel::getTableName(), $packShopModel::getTableName() . '.pack_id', '=', $packModel::getTableName() . '.id')
                 ->leftJoin($userModel::getTableName(), $userModel::getTableName() . '.id', '=', $packUsersModel::getTableName() . '.user_id');

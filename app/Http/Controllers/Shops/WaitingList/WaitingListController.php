@@ -24,6 +24,7 @@ use App\Service;
 use App\ServicePricing;
 use App\ServiceTiming;
 use App\SessionType;
+use App\UserPack;
 
 class WaitingListController extends BaseController {
 
@@ -704,11 +705,16 @@ class WaitingListController extends BaseController {
         $packModel              = new Pack();
         $packShopModel          = new PackShop();
         
+        $packModel->setMysqlStrictFalse();
+        
         $packs = $packModel->getPackQuery()
                 ->where($packShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($packModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'))
+                ->groupBy($packModel::getTableName() . '.id')
                 ->paginate(10, ['*'], 'page', $pageNumber);
-
+        
+        $packModel->setMysqlStrictTrue();
+        
         if (count($packs) > 0) {
             return $this->returnSuccess(__($this->successMsg['packs.use']), $packs);
         } else {
@@ -722,11 +728,16 @@ class WaitingListController extends BaseController {
         $voucherModel       = new Voucher();
         $voucherShopModel   = new VoucherShop();
         
+        $voucherModel->setMysqlStrictFalse();
+        
         $vouchers = $voucherModel->getVoucherQuery()
                 ->where($voucherShopModel::getTableName() . '.shop_id', $request->shop_id)
                 ->whereDate($voucherModel::getTableName() . '.expired_date', '>=', Carbon::now()->format('Y-m-d'))
+                ->groupBy($voucherModel::getTableName() . '.id')
                 ->paginate(10, ['*'], 'page', $pageNumber);
 
+        $voucherModel->setMysqlStrictTrue();
+        
         if (count($vouchers) > 0) {
             return $this->returnSuccess(__($this->successMsg['vouchers.use']), $vouchers);
         } else {
