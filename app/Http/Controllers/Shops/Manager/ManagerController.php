@@ -232,6 +232,7 @@ class ManagerController extends BaseController {
             'sub_title' => $news['sub_title'],
             'description' => $news['description'],
             'manager_id' => $news['manager_id'],
+            'created_at' => $news['created_at'],
             'read' => $read,
             'unread' => $unread,
             'therapists' => $therapists

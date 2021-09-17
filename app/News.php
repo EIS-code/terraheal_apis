@@ -35,6 +35,15 @@ class News extends BaseModel
         ]);
     }
     
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function therapistsNews()
     {
         return $this->hasMany('App\TherapistNews', 'news_id', 'id')->with('therapists');
