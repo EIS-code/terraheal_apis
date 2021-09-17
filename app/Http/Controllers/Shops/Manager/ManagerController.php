@@ -282,7 +282,7 @@ class ManagerController extends BaseController {
     
     public function getTherapists(Request $request) {
         
-        $therapists = Therapist::with('selectedService')->get();
+        $therapists = Therapist::with('city', 'country')->get();
 
         foreach ($therapists as $key => $therapist) {
 
