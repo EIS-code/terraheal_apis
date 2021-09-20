@@ -187,7 +187,7 @@ class ClientController extends BaseController {
             $infoForTherapy = UserMassagePreferences::with('massagePreference:id,name','massagePreferenceOption:id,name')->where('user_id',$request->user_id)->get();
 
             $packs = Pack::with('users')->whereHas('users', function($q) use($userId) {
-                                $q->where('users_id',$userId);
+                                $q->where('user_id',$userId);
                             })->get();
             $vouchers = Voucher::with('users')->whereHas('users', function($q) use($userId) {
                                 $q->where('user_id',$userId);
