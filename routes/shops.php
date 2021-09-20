@@ -196,6 +196,46 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->get('/getSources', 'Clients\ClientController@getSources');
         $router->post('/getForgotObjects', 'Clients\ClientController@getForgotObjects');
     });
+    
+    $router->group(['prefix' => 'waiting'], function () use($router) {
+
+        $router->post('/getOngoingMassage', 'WaitingList\WaitingListController@ongoingMassage');
+        $router->post('/getWaitingMassage', 'WaitingList\WaitingListController@waitingMassage');
+        $router->post('/getFutureBooking', 'WaitingList\WaitingListController@futureBooking');
+        $router->post('/getCancelBooking', 'WaitingList\WaitingListController@cancelBooking');
+        $router->post('/getCompletedBooking', 'WaitingList\WaitingListController@completedBooking');
+        $router->post('/getPastBooking', 'WaitingList\WaitingListController@pastBooking');
+        $router->post('/addBookingMassage', 'WaitingList\WaitingListController@addBookingMassage');
+        $router->post('/deleteBooking', 'WaitingList\WaitingListController@deleteBooking');
+        $router->post('/printBookingDetails', 'WaitingList\WaitingListController@printBookingDetails');
+        $router->post('/assignRoom', 'WaitingList\WaitingListController@assignRoom');
+        $router->post('/addNewBooking', 'WaitingList\WaitingListController@addNewBooking');
+        $router->post('/booking/add', 'WaitingList\WaitingListController@addBooking');
+        $router->post('/bookingOverview', 'WaitingList\WaitingListController@bookingOverview');
+        $router->post('/roomOccupation', 'WaitingList\WaitingListController@roomOccupation');
+        $router->post('/getAllMassages', 'WaitingList\WaitingListController@getAllMassages');
+        $router->post('/getAllTherapies', 'WaitingList\WaitingListController@getAllTherapies');
+        $router->post('/getClientList', 'WaitingList\WaitingListController@clientList');
+        $router->post('/addClient', 'WaitingList\WaitingListController@addClient');
+        $router->post('/searchClients', 'WaitingList\WaitingListController@searchClients');
+        $router->post('/getTimeTable', 'WaitingList\WaitingListController@getTimeTable');
+        $router->post('/startServiceTime', 'WaitingList\WaitingListController@startServiceTime');
+        $router->post('/endServiceTime', 'WaitingList\WaitingListController@endServiceTime');
+        $router->post('/assignTherapist', 'WaitingList\WaitingListController@assignTherapist');
+        $router->post('/confirmBooking', 'WaitingList\WaitingListController@confirmBooking');
+        $router->post('/downgradeBooking', 'WaitingList\WaitingListController@downgradeBooking');
+        $router->post('/cancelAppointment', 'WaitingList\WaitingListController@cancelAppointment');
+        $router->post('/recoverAppointment', 'WaitingList\WaitingListController@recoverAppointment');
+        $router->post('/edit/booking', 'WaitingList\WaitingListController@editBooking');
+    });
+    
+    $router->group(['prefix' => 'staffs'], function () use($router) {
+
+        $router->post('/add', 'Staffs\StaffsController@createStaff');
+        $router->post('/update', 'Staffs\StaffsController@updateStaff');
+        $router->post('/list', 'Staffs\StaffsController@staffList');
+        $router->post('/document/upload', 'Staffs\StaffsController@uploadDocument');
+    });
 });
 
 $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {
