@@ -116,4 +116,13 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('/otp/mobile', 'SuperAdminController@compareOtpSms');
     });
     
+    $router->group(['prefix' => 'bookings'], function () use($router) {
+        $router->post('/cancel', 'SuperAdminController@cancelBooking');
+        $router->post('/past', 'SuperAdminController@pastBooking');
+        $router->post('/future', 'SuperAdminController@futureBooking');
+        $router->post('/pending', 'SuperAdminController@pendingBooking');
+        $router->post('/details', 'SuperAdminController@printBookingDetails');
+    });
+    
+    
 });

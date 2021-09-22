@@ -432,7 +432,8 @@ class Shop extends BaseModel implements CanResetPasswordContract
         
         $bookingModel = new Booking();
         $printDetails = $bookingModel->getGlobalQuery($request);
-        $booking = $printDetails->first();
+        $firstBooking  = clone $printDetails;
+        $booking = $firstBooking->first();
         
         if(empty($booking)) {
             return ['isError' => true, 'message' => 'Booking not found'];

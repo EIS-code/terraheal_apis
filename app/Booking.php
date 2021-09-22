@@ -198,6 +198,7 @@ class Booking extends BaseModel
         $dateFilter         = $request->get('date_filter');
         $sessionId          = $request->get('session_id');
         $serviceId          = $request->get('service_id');
+        $search_val         = $request->get('search_val');
 
         $bookingInfoModel               = new BookingInfo();
         $sessionTypeModel               = new SessionType();
@@ -404,7 +405,23 @@ class Booking extends BaseModel
                      ->whereYear($bookingMassageModel::getTableName() . '.massage_date_time', $now->year);
             }
         }
-
+        
+        if(!empty($search_val)) {
+            
+            if(is_numeric($search_val)) {
+                $search_val = Carbon::createFromTimestampMs($search_val);
+                $data->where(function($query) use ($search_val, $bookingMassageModel) {
+                    $query->where($bookingMassageModel::getTableName() . '.massage_date_time', $search_val)
+                            ->orWhereDate($bookingMassageModel::getTableName() . '.massage_date_time', $search_val);
+                });
+            } else {
+                $data->where(function($query) use ($search_val, $userModel) {
+                    $query->where(DB::raw('CONCAT_WS(" ",' . $userModel::getTableName() . '.name,' . $userModel::getTableName() . '.surname)'), 'like', '%' . $search_val . '%')
+                            ->orWhere($userModel::getTableName().'.email', $search_val);
+                });
+            }
+        }
+        
         $data = $data->orderBy($bookingMassageModel::getTableName().'.massage_date_time','DESC')->get();
 
         if (!empty($data) && !$data->isEmpty()) {

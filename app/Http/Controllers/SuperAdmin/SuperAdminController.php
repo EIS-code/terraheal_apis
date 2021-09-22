@@ -24,6 +24,8 @@ use App\ServiceRequirement;
 use App\ServiceImage;
 use Illuminate\Http\UploadedFile;
 use App\ForgotOtp;
+use App\Booking;
+use App\Shop;
 
 class SuperAdminController extends BaseController {
 
@@ -67,6 +69,11 @@ class SuperAdminController extends BaseController {
         'success.otp' => 'Otp sent successfully !',
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
+        'print.booking' => 'Booking data found successfully',
+        'cancelled.booking' => 'Cancelled bookings found successfully',
+        'past.booking' => 'Past bookings found successfully',
+        'future.booking' => 'Future bookings found successfully',
+        'pending.booking' => 'Pending bookings found successfully',
     ];
 
     public function addVoucher(Request $request) {
@@ -777,4 +784,53 @@ class SuperAdminController extends BaseController {
         }
         return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
     }
+    
+    public function cancelBooking(Request $request) {
+
+        $request->request->add(['bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
+        $bookingModel = new Booking();
+        $cancelBooking = $bookingModel->getGlobalQuery($request);        
+
+        return $this->returnSuccess(__($this->successMsg['cancelled.booking']), $cancelBooking);
+    }
+    
+    public function pastBooking(Request $request) {
+
+        $request->request->add(['bookings_filter' => array(Booking::BOOKING_PAST)]);
+        $bookingModel = new Booking();
+        $pastBooking = $bookingModel->getGlobalQuery($request);
+
+        return $this->returnSuccess(__($this->successMsg['past.booking']), $pastBooking);
+    }
+    
+    public function futureBooking(Request $request) {
+
+        $request->request->add(['bookings_filter' => array(Booking::BOOKING_FUTURE)]);
+        $bookingModel = new Booking();
+        $futureBooking = $bookingModel->getGlobalQuery($request);
+
+        return $this->returnSuccess(__($this->successMsg['future.booking']), $futureBooking);
+    }
+    
+    public function pendingBooking(Request $request) {
+
+        $request->request->add(['bookings_filter' => array(Booking::BOOKING_WAITING)]);
+        $bookingModel = new Booking();
+        $futureBooking = $bookingModel->getGlobalQuery($request);
+
+        return $this->returnSuccess(__($this->successMsg['pending.booking']), $futureBooking);
+    }
+    
+    public function printBookingDetails(Request $request) {
+        
+        $shopModel = new Shop();
+        $bookingDetails = $shopModel->printBooking($request);
+        
+        if (!empty($bookingDetails['isError']) && !empty($bookingDetails['message'])) {
+            return $this->returnError($bookingDetails['message'], NULL, true);
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
+    }
+    
 }
