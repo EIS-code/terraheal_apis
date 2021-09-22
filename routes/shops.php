@@ -263,3 +263,8 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Shops'], function () us
     $router->post('/myAttendence', 'Therapist\TherapistController@myAttendence');
     $router->post('/getCalendar', 'Therapist\TherapistController@getCalendar');
 });
+
+$router->group(['namespace' => 'User'], function () use($router) {
+    
+    $router->post('manager/user/ids/save', 'UserController@saveIds');
+});
