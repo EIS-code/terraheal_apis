@@ -195,6 +195,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/getRecipient', 'Clients\ClientController@getRecipient');
         $router->get('/getSources', 'Clients\ClientController@getSources');
         $router->post('/getForgotObjects', 'Clients\ClientController@getForgotObjects');
+        $router->post('/questionnaries/update', 'Manager\ManagerController@updateQuestionnaries');
     });
     
     $router->group(['prefix' => 'waiting'], function () use($router) {
@@ -235,7 +236,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/update', 'Staffs\StaffsController@updateStaff');
         $router->post('/list', 'Staffs\StaffsController@staffList');
         $router->post('/document/upload', 'Staffs\StaffsController@uploadDocument');
-    });
+    });    
 });
 
 $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {

@@ -22,6 +22,7 @@ use App\PackShop;
 use App\VoucherShop;
 use App\TherapistUserRating;
 use App\ForgotOtp;
+use App\TherapyQuestionnaireAnswer;
 
 class ManagerController extends BaseController {
 
@@ -38,6 +39,7 @@ class ManagerController extends BaseController {
         'error.email.already.verified' => 'This user email already verified with this.',
         'manager.not.found' => 'Manager not found.',
         'not.verified' => 'Your account is not verified yet.',
+        'ans.not.found' => 'Therapy questionnaries answer not found.',
     ];
     
     public $successMsg = [
@@ -64,6 +66,7 @@ class ManagerController extends BaseController {
         'success.otp' => 'Otp sent successfully !',
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
+        'questionnaries.answer.saved' => 'Therapy questionnaries answer saved successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -720,5 +723,20 @@ class ManagerController extends BaseController {
             return $this->returnError($this->errorMsg['otp.not.found']);
         }
         return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
+    }
+    
+    public function updateQuestionnaries(Request $request) {
+        
+        $id = $request->answer_id;
+        if(empty($id)) {
+            $ans = TherapyQuestionnaireAnswer::create($request->all());
+        } else {
+            $ans = TherapyQuestionnaireAnswer::find($id);
+            if(empty($ans)) {
+                return $this->returnError($this->errorMsg['ans.not.found']);
+            }
+            $ans->update($request->all());
+        }
+        return $this->returnSuccess(__($this->successMsg['questionnaries.answer.saved']), $ans);
     }
 }
