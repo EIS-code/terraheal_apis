@@ -189,13 +189,31 @@ class ClientController extends BaseController {
             $answers = UserMassagePreferences::with('massagePreference:id,name','massagePreferenceOption:id,name')->where('user_id',$request->user_id)->get();
             $infoForTherapy = ['questions' => $questions, 'answers' => $answers]; 
 
-            $packs = Pack::with('users')->whereHas('users', function($q) use($userId) {
-                                $q->where('user_id',$userId);
-                            })->get();
-            $vouchers = Voucher::with('users')->whereHas('users', function($q) use($userId) {
-                                $q->where('user_id',$userId);
-                            })->get();
+            $packs = Pack::all();
+            $usedPacks = Pack::with('users')->whereHas('users', function($q) use($userId) {
+                        $q->where('user_id', $userId);
+                    })->pluck('id')->toArray();
+                    
+            foreach ($packs as $key => $pack) {
+                if (in_array($pack->id, $usedPacks)) {
+                    $pack->is_used = true;
+                } else {
+                    $pack->is_used = false;
+                }
+            }
+            
+            $vouchers = Voucher::all();
+            $usedVouchers = Voucher::with('users')->whereHas('users', function($q) use($userId) {
+                        $q->where('user_id', $userId);
+                    })->pluck('id')->toArray();
 
+            foreach ($vouchers as $key => $voucher) {
+                if (in_array($voucher->id, $usedVouchers)) {
+                    $voucher->is_used = true;
+                } else {
+                    $voucher->is_used = false;
+                }
+            }
             $client['totalAppointments'] = $totalAppointments->count();
             $client['noShow'] = $noShow;
             $client['registeredAt'] = $client->created_at;

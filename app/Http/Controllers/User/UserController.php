@@ -1709,6 +1709,9 @@ class UserController extends BaseController
         $idPassportFront = $request->file('passport_front', []);
         $idPassportBack = $request->file('passport_back', []);
 
+        $data['passport_front'] = NULL;
+        $data['passport_back'] = NULL;
+        
         if (!empty($idPassportFront) && $idPassportFront instanceof UploadedFile) {
             $checkMime = $model->checkPassportFront($request, 'jpeg,png,jpg');
             if ($checkMime->fails()) {
@@ -1730,7 +1733,7 @@ class UserController extends BaseController
         }
         
         $data['user_id'] = $userId;
-        
+                
         if($is_exist) {
             $is_exist->update(['passport_front' => $data['passport_front'], 'passport_back' => $data['passport_back']]);
             $this->checkDocument($request);
