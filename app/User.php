@@ -106,7 +106,9 @@ class User extends BaseModel implements Authenticatable
     const PUBLICITY = 3;
     const HOTEL = 4;
     const BY_CHANCE = 5;
-    
+    const ACCEPT = '1';
+    const REJECT = '2';
+        
     public static $oauthProviders = [
         self::OAUTH_PROVIDER_GOOGLE   => 'Google',
         self::OAUTH_PROVIDER_FACEBOOK => 'Facebook',

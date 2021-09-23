@@ -67,6 +67,8 @@ class ManagerController extends BaseController {
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
         'questionnaries.answer.saved' => 'Therapy questionnaries answer saved successfully !',
+        'document.accept' => 'Document accepted successfully !',
+        'document.reject' => 'Document rejected successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -738,5 +740,19 @@ class ManagerController extends BaseController {
             $ans->update($request->all());
         }
         return $this->returnSuccess(__($this->successMsg['questionnaries.answer.saved']), $ans);
+    }
+    
+    public function acceptDocument(Request $request) {
+        
+        $user = User::find($request->user_id);
+        $user->update(['is_document_verified' => User::ACCEPT]);
+        return $this->returnSuccess(__($this->successMsg['document.accept']), $user);
+    }
+    
+    public function declineDocument(Request $request) {
+        
+        $user = User::find($request->user_id);
+        $user->update(['is_document_verified' => User::REJECT]);
+        return $this->returnSuccess(__($this->successMsg['document.reject']), $user);
     }
 }
