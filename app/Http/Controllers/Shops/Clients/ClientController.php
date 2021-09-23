@@ -204,7 +204,7 @@ class ClientController extends BaseController {
             $client['is_verified'] = $is_verified;
             return $this->returnSuccess(__($this->successMsg['client.data.found']), 
                     ["client" => $client, "recipient" => $recipient, "addresses" => $addresses, "therapists" => $therapists,"questionnaries" => $questionnaries, "ratings" => $ratingData,
-                        "infoForTherapy" => $infoForTherapy, "packs" => $packs, "vouchers" => $vouchers]);
+                        "massage_preferences" => $infoForTherapy, "packs" => $packs, "vouchers" => $vouchers]);
         }
         return $this->returnSuccess(__($this->successMsg['client.not.found']));
     }
