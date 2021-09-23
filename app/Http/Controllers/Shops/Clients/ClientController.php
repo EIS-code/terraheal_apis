@@ -22,6 +22,7 @@ use App\Pack;
 use App\Voucher;
 use App\Service;
 use App\ServicePricing;
+use App\MassagePreference;
 
 class ClientController extends BaseController {
 
@@ -184,7 +185,9 @@ class ClientController extends BaseController {
             $request->request->add(['bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
             $noShow = $bookingModel->getGlobalQuery($request)->groupBy('booking_id')->count();
 
-            $infoForTherapy = UserMassagePreferences::with('massagePreference:id,name','massagePreferenceOption:id,name')->where('user_id',$request->user_id)->get();
+            $questions = MassagePreference::with('preferenceOptions')->get();
+            $answers = UserMassagePreferences::with('massagePreference:id,name','massagePreferenceOption:id,name')->where('user_id',$request->user_id)->get();
+            $infoForTherapy = ['questions' => $questions, 'answers' => $answers]; 
 
             $packs = Pack::with('users')->whereHas('users', function($q) use($userId) {
                                 $q->where('user_id',$userId);
