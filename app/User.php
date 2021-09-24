@@ -108,6 +108,7 @@ class User extends BaseModel implements Authenticatable
     const PUBLICITY = 3;
     const HOTEL = 4;
     const BY_CHANCE = 5;
+    const NO_ACTION = '0';
     const ACCEPT = '1';
     const REJECT = '2';
         

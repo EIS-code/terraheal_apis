@@ -1482,7 +1482,7 @@ class UserController extends BaseController
                     $storeFile                  = $selfie->storeAs($model->selfiePath, $fileName, $model->fileSystem);
                     $user->selfie               = $storeFile ? $fileName : NULL;
                 }
-
+                $user->is_document_verified = User::NO_ACTION;
                 if ($user->save()) {
                     return $this->returns('success.user.document.updated', $model->getGlobalResponse($userId));
                 }
