@@ -1517,6 +1517,12 @@ class UserController extends BaseController
                     if ($delete) {
                         $user->{$document} = NULL;
                     }
+                } elseif ($document == "selfie") {
+                    $delete = Storage::disk($model->fileSystem)->delete($model->selfiePath . $user->getAttributes()[$document]);
+
+                    if ($delete) {
+                        $user->{$document} = NULL;
+                    }
                 } else {
                     return $this->returns('error.user.document.found', NULL, true);
                 }
