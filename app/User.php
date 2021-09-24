@@ -239,11 +239,6 @@ class User extends BaseModel implements Authenticatable
         return $this->hasOne('App\City', 'id', 'city_id');
     }
     
-    public function userDocument()
-    {
-        return $this->hasOne('App\UserDocument', 'user_id', 'id');
-    }
-    
     public function userCards()
     {
         return $this->hasMany('App\UserCardDetail', 'user_id', 'id');
@@ -469,7 +464,7 @@ class User extends BaseModel implements Authenticatable
     public function getGlobalResponse(int $id)
     {
         $model  = new UserFavoriteService();
-        $data   = $this->where('id', $id)->with(['country', 'city', 'userFavoriteServices', 'userDocument', 'userCards'])->get();
+        $data   = $this->where('id', $id)->with(['country', 'city', 'userFavoriteServices', 'userCards'])->get();
 
         if (!empty($data)) {
             foreach ($data as &$record){

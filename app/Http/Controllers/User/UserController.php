@@ -36,7 +36,6 @@ use App\ServiceTiming;
 use App\BookingMassage;
 use App\PackShop;
 use App\UserCardDetail;
-use App\UserDocument;
 use Illuminate\Support\Str;
 use App\ForgotOtp;
 
@@ -1483,6 +1482,7 @@ class UserController extends BaseController
                     $user->selfie               = $storeFile ? $fileName : NULL;
                 }
                 $user->is_document_verified = User::NO_ACTION;
+                $this->checkDocument($request);
                 if ($user->save()) {
                     return $this->returns('success.user.document.updated', $model->getGlobalResponse($userId));
                 }
@@ -1680,10 +1680,9 @@ class UserController extends BaseController
     public function checkDocument(Request $request) {
         
         $card = UserCardDetail::where('user_id', $request->user_id)->first();
-        $document = UserDocument::where('user_id', $request->user_id)->first();
         $user = User::find($request->user_id);
         
-        if(!empty($card) && !empty($document->passport_front) && !empty($document->passport_back) && !empty($document->selfie)) {
+        if(!empty($card) && !empty($user->id_passport_front) && !empty($user->id_passport_back) && !empty($user->selfie)) {
             $user->update(['is_document_uploaded' => '1']);
         } else {
             $user->update(['is_document_uploaded' => '0']);
@@ -1712,87 +1711,34 @@ class UserController extends BaseController
         return $this->returns('error.something', NULL, true);
     }
     
-    public function saveIds(Request $request) {
-        
-        $model = new UserDocument();
-        $userId = $request->user_id;
-        $user = User::find($userId);
-        $is_exist = $model->where('user_id', $userId)->first();
-        
-        $idPassportFront = $request->file('passport_front', []);
-        $idPassportBack = $request->file('passport_back', []);
-
-        $data['passport_front'] = NULL;
-        $data['passport_back'] = NULL;
-        
-        if (!empty($idPassportFront) && $idPassportFront instanceof UploadedFile) {
-            $checkMime = $model->checkPassportFront($request, 'jpeg,png,jpg');
-            if ($checkMime->fails()) {
-                return $this->returns($checkMime->errors()->first(), NULL, true);
-            }
-            $front = Str::random(5) . '_' . $userId . '.' . $idPassportFront->getClientOriginalExtension();
-            $storeFile = $idPassportFront->storeAs($model->idPassportPath, $front, $model->fileSystem);
-            $data['passport_front'] = $storeFile ? $front : NULL;
-        }
-        
-        if (!empty($idPassportBack) && $idPassportBack instanceof UploadedFile) {
-            $checkMime = $model->checkPassportBack($request, 'jpeg,png,jpg');
-            if ($checkMime->fails()) {
-                return $this->returns($checkMime->errors()->first(), NULL, true);
-            }
-            $back = Str::random(5) . '_' . $userId . '.' . $idPassportBack->getClientOriginalExtension();
-            $storeFile = $idPassportBack->storeAs($model->idPassportPath, $back, $model->fileSystem);
-            $data['passport_back'] = $storeFile ? $back : NULL;
-        }
-        
-        $data['user_id'] = $userId;
-                
-        if($is_exist) {
-            $is_exist->update(['passport_front' => $data['passport_front'], 'passport_back' => $data['passport_back']]);
-            $this->checkDocument($request);
-            $is_exist->is_document_uploaded = $user->is_document_uploaded;
-            return $this->returns('success.id.uploaded', $is_exist);
-        } else {
-            $model->create($data);
-            $this->checkDocument($request);
-            $data['is_document_uploaded'] = $user->is_document_uploaded;
-            return $this->returns('success.id.uploaded', collect($data));
-        }
-        return $this->returns('error.something', NULL, true);
-    }
-    
     public function saveSelfie(Request $request) {
         
-        $model = new UserDocument();
+        $model = new User();
         $userId = $request->user_id;
-        $user = User::find($userId);
-        $is_exist = $model->where('user_id', $userId)->first();
-        
-        $selfie = $request->file('selfie', []);
-        if (!empty($selfie) && $selfie instanceof UploadedFile) {
-            $checkMime = $model->checkSelfie($request, 'jpeg,png,jpg');
-            if ($checkMime->fails()) {
-                return $this->returns($checkMime->errors()->first(), NULL, true);
-            }
+ 
+        if (!empty($userId)) {
+            $user = $model->find($userId);
+            if (!empty($user)) {
 
-            $selfiePic = Str::random(5) . '_' . $userId . '.' . $selfie->getClientOriginalExtension();
-            $storeFile = $selfie->storeAs($model->selfiePath, $selfiePic, $model->fileSystem);
-            $data['selfie'] = $storeFile ? $selfiePic : NULL;
-            $data['user_id'] = $userId;
+                $selfie = $request->file('selfie', []);
+                if (!empty($selfie) && $selfie instanceof UploadedFile) {
+                    $checkMime = $model->checkMimeTypes($request, $selfie, 'jpeg,png,jpg');
+                    if ($checkMime->fails()) {
+                        return $this->returns($checkMime->errors()->first(), NULL, true);
+                    }
 
-            if ($is_exist) {
-                $is_exist->update(['selfie' => $data['selfie']]);
-                $this->checkDocument($request);
-                $is_exist->is_document_uploaded = $user->is_document_uploaded;
-                return $this->returns('success.selfie.uploaded', $is_exist);
-            } else {
-                $model->create($data);
-                $this->checkDocument($request);
-                $data['is_document_uploaded'] = $user->is_document_uploaded;
-                return $this->returns('success.selfie.uploaded', collect($data));
+                    $selfiePic = Str::random(5) . '_' . $userId . '.' . $selfie->getClientOriginalExtension();
+                    $storeFile = $selfie->storeAs($model->selfiePath, $selfiePic, $model->fileSystem);
+                    $data['selfie'] = $storeFile ? $selfiePic : NULL;
+
+                    $user->update(['selfie' => $data['selfie']]);
+                    $this->checkDocument($request);
+                    return $this->returns('success.selfie.uploaded', $user);
+                }
+                return $this->returns('error.something', NULL, true);
             }
         }
-        return $this->returns('error.something', NULL, true);
+        return $this->returns('error.user.not.found', NULL, true);
     }
     
     public function getUserPacks(Request $request) {

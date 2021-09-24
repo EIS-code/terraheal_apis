@@ -269,7 +269,6 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Shops'], function () us
 
 $router->group(['namespace' => 'User'], function () use($router) {
 
-    $router->post('manager/user/ids/save', 'UserController@saveIds');
     $router->post('manager/user/document/upload', 'UserController@updateDocument');
     
 });

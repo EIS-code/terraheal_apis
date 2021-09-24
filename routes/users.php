@@ -137,7 +137,6 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     $router->get('qr/temp/get', 'UserController@getQRTemp');
     $router->post('service/timing/get', 'UserController@getServiceTiming');
     $router->post('booking/card/details/save', 'UserController@saveCardDetails');
-    $router->post('booking/selfie/save', 'UserController@saveSelfie');
-    $router->post('booking/ids/save', 'UserController@saveIds');
+    $router->post('booking/ids/save', 'UserController@updateDocument');
     $router->post('card/details/get', 'UserController@getCardDetails');
 });
