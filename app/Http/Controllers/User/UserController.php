@@ -1469,6 +1469,19 @@ class UserController extends BaseController
                     $storeFile                  = $idPassportBack->storeAs($model->idPassportPath, $fileName, $model->fileSystem);
                     $user->id_passport_back     = $storeFile ? $fileName : NULL;
                 }
+                
+                $selfie = $request->file('selfie', []);
+
+                if (!empty($selfie) && $selfie instanceof UploadedFile) {
+                    $checkMime = $model->checkMimeTypes($request, $selfie, 'jpeg,png,jpg');
+                    if ($checkMime->fails()) {
+                        return $this->returns($checkMime->errors()->first(), NULL, true);
+                    }
+
+                    $fileName                   = time() . '_' . $userId . '.' . $idPassportBack->getClientOriginalExtension();
+                    $storeFile                  = $selfie->storeAs($model->selfiePath, $fileName, $model->fileSystem);
+                    $user->selfie               = $storeFile ? $fileName : NULL;
+                }
 
                 if ($user->save()) {
                     return $this->returns('success.user.document.updated', $model->getGlobalResponse($userId));

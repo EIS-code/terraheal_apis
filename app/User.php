@@ -40,6 +40,7 @@ class User extends BaseModel implements Authenticatable
         'id_passport',
         'id_passport_front',
         'id_passport_back',
+        'selfie',
         'avatar',
         'avatar_original',
         'device_token',
@@ -80,6 +81,7 @@ class User extends BaseModel implements Authenticatable
     public $fileSystem       = 'public';
     public $profilePhotoPath = 'user\profile\\';
     public $idPassportPath   = 'user\id_passport\\';
+    public $selfiePath       = 'user\selfie\\';
     public $qrCodePath       = 'user\qr_codes\\';
 
     public static $notRemoved = '0';
@@ -172,6 +174,7 @@ class User extends BaseModel implements Authenticatable
             'id_passport'          => ['string', 'max:255'],
             'id_passport_front'    => ['string', 'max:255'],
             'id_passport_back'     => ['string', 'max:255'],
+            'selfie'               => ['string', 'max:255'],
             'password'             => ['min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'],
             'shop_id'              => ['integer', 'exists:' . Shop::getTableName() . ',id'],
             'avatar'               => ['max:255'],
@@ -298,6 +301,20 @@ class User extends BaseModel implements Authenticatable
         $idPassportPath = (str_ireplace("\\", "/", $this->idPassportPath));
         if (Storage::disk($this->fileSystem)->exists($idPassportPath . $value)) {
             return Storage::disk($this->fileSystem)->url($idPassportPath . $value);
+        }
+
+        return $value;
+    }
+    
+    public function getSelfieAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        $selfiePath = (str_ireplace("\\", "/", $this->selfiePath));
+        if (Storage::disk($this->fileSystem)->exists($selfiePath . $value)) {
+            return Storage::disk($this->fileSystem)->url($selfiePath . $value);
         }
 
         return $value;
