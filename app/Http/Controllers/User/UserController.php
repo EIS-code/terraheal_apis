@@ -1477,7 +1477,7 @@ class UserController extends BaseController
                         return $this->returns($checkMime->errors()->first(), NULL, true);
                     }
 
-                    $fileName                   = time() . '_' . $userId . '.' . $idPassportBack->getClientOriginalExtension();
+                    $fileName                   = time() . '_' . $userId . '.' . $selfie->getClientOriginalExtension();
                     $storeFile                  = $selfie->storeAs($model->selfiePath, $fileName, $model->fileSystem);
                     $user->selfie               = $storeFile ? $fileName : NULL;
                 }
