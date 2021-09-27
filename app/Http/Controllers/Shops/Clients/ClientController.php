@@ -123,31 +123,30 @@ class ClientController extends BaseController {
                     $user = Shop::where('id',$value->model_id)->select('id','name')->first();
                     $designation = 'Admin';
                 } else {
-                    $user = Therapist::where('id',$value->model_id)->select('id','name')->toSql();
-                    dd($user);
+                    $user = Therapist::where('id',$value->model_id)->select('id','name')->first();
                     $designation = 'Therapist';
                 }
                 $value['user'] = $user;
                 $value['designation'] = $designation;
             }
-            dd($ratings);
             $ratings = $ratings->groupBy('type');
 
-            dd($ratings);
             foreach ($ratings as $key => $rating) {
                 $type = $rating[0]['type'];
                 $sum = 0; $cnt = 0;
                 $users = [];
                 foreach ($rating as $key => $value) {
-                    $cnt += 1;
-                    $sum += $value->rating;
-                    $users[] = [
-                        'id' => $value->id,
-                        'user_id' => $value->user->id,
-                        'user_name' => $value->user->name,
-                        'rating' => $value->rating,
-                        'designation' => $value->designation
-                    ];
+                    if(!is_null($value->user)) {
+                        $cnt += 1;
+                        $sum += $value->rating;
+                        $users[] = [
+                            'id' => $value->id,
+                            'user_id' => $value->user->id,
+                            'user_name' => $value->user->name,
+                            'rating' => $value->rating,
+                            'designation' => $value->designation
+                        ];
+                    }
                 }
                 $avg_rate = $sum / $cnt;
                 $ratingData[] = [
