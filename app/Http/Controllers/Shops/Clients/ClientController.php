@@ -123,7 +123,8 @@ class ClientController extends BaseController {
                     $user = Shop::where('id',$value->model_id)->select('id','name')->first();
                     $designation = 'Admin';
                 } else {
-                    $user = Therapist::where('id',$value->model_id)->select('id','name')->first();
+                    $user = Therapist::where('id',$value->model_id)->select('id','name')->toSql();
+                    dd($user);
                     $designation = 'Therapist';
                 }
                 $value['user'] = $user;
