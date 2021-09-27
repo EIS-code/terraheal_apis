@@ -148,7 +148,7 @@ class ClientController extends BaseController {
                         ];
                     }
                 }
-                $avg_rate = $sum / $cnt;
+                $avg_rate = $cnt == 0 ? 0 : $sum / $cnt;
                 $ratingData[] = [
                     'type' => $type,
                     'users' => $users,
