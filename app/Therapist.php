@@ -687,10 +687,11 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->leftJoin('countries', 'therapists.country_id', '=', 'countries.id')
                 ->leftJoin('cities', 'therapists.city_id', '=', 'cities.id')
+                ->join('shops', 'therapists.shop_id', '=', 'shops.id')
                 ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_massages.massage_date_time as massageDate', 
                         'therapists.id as therapist_id', 'therapists.country_id', 'therapists.city_id', 'therapists.email', 'therapists.mobile_number', 'therapists.nif',
                         DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo',
-                        'countries.name as country_name', 'cities.name as city_name')
+                        'countries.name as country_name', 'cities.name as city_name', 'shops.address as shop_address')
                 ->where('bookings.shop_id', $request->shop_id)->whereDate('booking_massages.massage_date_time', Carbon::now()->format('Y-m-d'));
         } else {
             $therapists = DB::table('therapists')
@@ -699,10 +700,11 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->leftJoin('countries', 'therapists.country_id', '=', 'countries.id')
                 ->leftJoin('cities', 'therapists.city_id', '=', 'cities.id')
+                ->join('shops', 'therapists.shop_id', '=', 'shops.id')
                 ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_massages.massage_date_time', 
                         'therapists.id as therapist_id', 'therapists.country_id', 'therapists.city_id', 'therapists.email', 'therapists.mobile_number', 'therapists.nif', 
                         DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo',
-                        'countries.name as country_name', 'cities.name as city_name')
+                        'countries.name as country_name', 'cities.name as city_name', 'shops.address as shop_address')
                 ->where('therapists.shop_id', $request->shop_id);
         }
         
@@ -724,7 +726,6 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id');
        
         $allTherapists = [];
-        
         if(count($therapists) > 0) {
             
             foreach ($therapists as $key => $value) {
@@ -767,6 +768,15 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                         }
                         $avg = $rates / $cnt;
                     }
+                    
+                    $selectedMassages = TherapistSelectedService::with('service')->where('therapist_id', $row->therapist_id)
+                                    ->whereHas('service', function($q) {
+                                        $q->where('service_type', Service::MASSAGE);
+                                    })->get()->count();
+                    $selectedTherapies = TherapistSelectedService::with('service')->where('therapist_id', $row->therapist_id)
+                                    ->whereHas('service', function($q) {
+                                        $q->where('service_type', Service::THERAPY);
+                                    })->get()->count();
 
                     $data = [
                         'therapist_id' => $row->therapist_id,
@@ -774,13 +784,16 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                         'therapist_email' => $row->email,
                         'therapist_mobile_number' => $row->mobile_number,
                         'therapist_nif' => $row->nif,
+                        'therapist_photo' => $profile_photo,
                         'country_name' => $row->country_name,
                         'city_name' => $row->city_name,
                         'average' => number_format($avg, 2),
-                        'therapist_photo' => $profile_photo,
+                        'shop_address' => $row->shop_address,
                         'massage_date_time' => strtotime($row->massage_date_time) * 1000,
                         'massage_start_time' => strtotime($row->massage_date_time) * 1000,
-                        'available' => $available
+                        'available' => $available,
+                        'massages' => $selectedMassages,
+                        'therapies' => $selectedTherapies
                     ];
                     array_push($allTherapists, $data);
                 } else {
