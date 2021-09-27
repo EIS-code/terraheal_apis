@@ -51,6 +51,7 @@ class ManagerController extends BaseController {
         'existing.therapist' => 'Existing therapist added successfully to this shop!',
         'details' => 'Dashboard data found successfully!',
         'therapists.details' => 'Therapists data found successfully!',
+        'therapists.all' => 'Therapists found successfully!',
         'massages.found' => 'Massages found successfully!',
         'therapies.found' => 'Therapies found successfully!',
         'booking.details' => 'Booking details found successfully!',
@@ -739,5 +740,43 @@ class ManagerController extends BaseController {
         $user = User::find($request->user_id);
         $user->update(['is_document_verified' => User::REJECT]);
         return $this->returnSuccess(__($this->successMsg['document.reject']), $user);
+    }
+    
+    public function getAllTherapists(Request $request) {
+        
+        $therapists = Therapist::with('country', 'city');
+        $search_val = $request->search_val;
+        if(!empty($search_val)) {
+            
+            if(is_numeric($search_val)) {
+                $therapists->where(function($query) use ($search_val) {
+                    $query->where('mobile_number', $search_val)
+                            ->orWhere('nif', $search_val);
+                });
+            } else {
+                $therapists->where(function($query) use ($search_val) {
+                    $query->where('name', 'like', $search_val.'%')
+                            ->orWhere('email', 'like', $search_val.'%');
+                });
+            }
+        }
+        
+        $therapists = $therapists->get();
+        foreach ($therapists as $key => $row) {
+            
+            $ratings = TherapistUserRating::where(['model_id' => $row->id, 'model' => 'App\Therapist'])->get();
+
+            $cnt = $rates = $avg = 0;
+            if ($ratings->count() > 0) {
+                foreach ($ratings as $i => $rating) {
+                    $rates += $rating->rating;
+                    $cnt++;
+                }
+                $avg = $rates / $cnt;
+            }
+            
+            $row['avg'] = number_format($avg, 2);
+        }
+        return $this->returnSuccess(__($this->successMsg['therapists.all']), $therapists);
     }
 }
