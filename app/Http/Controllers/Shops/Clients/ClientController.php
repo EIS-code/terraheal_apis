@@ -136,15 +136,14 @@ class ClientController extends BaseController {
                 $sum = 0; $cnt = 0;
                 $users = [];
                 foreach ($rating as $key => $value) {
-                dd($value->user->id);
                     $cnt += 1;
                     $sum += $value->rating;
                     $users[] = [
-                        'id' => $value['id'],
-                        'user_id' => $value['user']['id'],
-                        'user_name' => $value['user']['name'],
-                        'rating' => $value['rating'],
-                        'designation' => $value['designation']
+                        'id' => $value->id,
+                        'user_id' => $value->user->id,
+                        'user_name' => $value->user->name,
+                        'rating' => $value->rating,
+                        'designation' => $value->designation
                     ];
                 }
                 $avg_rate = $sum / $cnt;
