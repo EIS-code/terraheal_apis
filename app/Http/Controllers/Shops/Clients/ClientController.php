@@ -131,6 +131,7 @@ class ClientController extends BaseController {
             }
             $ratings = $ratings->groupBy('type');
 
+            dd($ratings);
             foreach ($ratings as $key => $rating) {
                 $type = $rating[0]['type'];
                 $sum = 0; $cnt = 0;
