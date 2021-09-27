@@ -777,9 +777,9 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                         'country_name' => $row->country_name,
                         'city_name' => $row->city_name,
                         'average' => number_format($avg, 2),
-                        'therapistPhoto' => $profile_photo,
-                        'massageDate' => strtotime($row->massage_date_time) * 1000,
-                        'massageStartTime' => strtotime($row->massage_date_time) * 1000,
+                        'therapist_photo' => $profile_photo,
+                        'massage_date_time' => strtotime($row->massage_date_time) * 1000,
+                        'massage_start_time' => strtotime($row->massage_date_time) * 1000,
                         'available' => $available
                     ];
                     array_push($allTherapists, $data);
