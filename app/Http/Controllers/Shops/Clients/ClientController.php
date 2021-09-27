@@ -115,42 +115,44 @@ class ClientController extends BaseController {
     
     public function getRatings($ratings)
     {
-        foreach ($ratings as $key => $value) {
-            $model = $value->model;
-            if($model == "App\Shop") {
-                $user = Shop::where('id',$value->model_id)->select('id','name')->first();
-                $designation = 'Admin';
-            } else {
-                $user = Therapist::where('id',$value->model_id)->select('id','name')->first();
-                $designation = 'Therapist';
-            }
-            $value['user'] = $user;
-            $value['designation'] = $designation;
-        }
-        $ratings = $ratings->groupBy('type');
-        
         $ratingData = [];
-        foreach ($ratings as $key => $rating) {
-            $type = $rating[0]['type'];
-            $sum = 0; $cnt = 0;
-            $users = [];
-            foreach ($rating as $key => $value) {
-                $cnt += 1;
-                $sum += $value->rating;
-                $users[] = [
-                    'id' => $value['id'],
-                    'user_id' => $value['user']['id'],
-                    'user_name' => $value['user']['name'],
-                    'rating' => $value['rating'],
-                    'designation' => $value['designation']
+        if(count($ratings) > 0) {
+            foreach ($ratings as $key => $value) {
+                $model = $value->model;
+                if($model == "App\Shop") {
+                    $user = Shop::where('id',$value->model_id)->select('id','name')->first();
+                    $designation = 'Admin';
+                } else {
+                    $user = Therapist::where('id',$value->model_id)->select('id','name')->first();
+                    $designation = 'Therapist';
+                }
+                $value['user'] = $user;
+                $value['designation'] = $designation;
+            }
+            $ratings = $ratings->groupBy('type');
+
+            foreach ($ratings as $key => $rating) {
+                $type = $rating[0]['type'];
+                $sum = 0; $cnt = 0;
+                $users = [];
+                foreach ($rating as $key => $value) {
+                    $cnt += 1;
+                    $sum += $value->rating;
+                    $users[] = [
+                        'id' => $value['id'],
+                        'user_id' => $value['user']['id'],
+                        'user_name' => $value['user']['name'],
+                        'rating' => $value['rating'],
+                        'designation' => $value['designation']
+                    ];
+                }
+                $avg_rate = $sum / $cnt;
+                $ratingData[] = [
+                    'type' => $type,
+                    'users' => $users,
+                    'avg_rating' => round($avg_rate, 2),
                 ];
             }
-            $avg_rate = $sum / $cnt;
-            $ratingData[] = [
-                'type' => $type,
-                'users' => $users,
-                'avg_rating' => round($avg_rate, 2),
-            ];
         }
         return $ratingData;
     }
