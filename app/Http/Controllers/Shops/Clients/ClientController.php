@@ -135,6 +135,7 @@ class ClientController extends BaseController {
                 $type = $rating[0]['type'];
                 $sum = 0; $cnt = 0;
                 $users = [];
+                dd($rating);
                 foreach ($rating as $key => $value) {
                     $cnt += 1;
                     $sum += $value->rating;
