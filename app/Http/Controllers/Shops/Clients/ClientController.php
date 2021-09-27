@@ -129,6 +129,7 @@ class ClientController extends BaseController {
                 $value['user'] = $user;
                 $value['designation'] = $designation;
             }
+            dd($ratings);
             $ratings = $ratings->groupBy('type');
 
             dd($ratings);
