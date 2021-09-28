@@ -23,6 +23,7 @@ use App\Voucher;
 use App\Service;
 use App\ServicePricing;
 use App\MassagePreference;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ClientController extends BaseController {
 
@@ -52,7 +53,7 @@ class ClientController extends BaseController {
         $servicePriceModel = new ServicePricing();
                 
         $userModel->setMysqlStrictFalse();
-        
+
         $clients = $userModel->select(DB::RAW($userModel::getTableName() .'.*', $bookingModel::getTableName().'.id',
                 $bookingModel::getTableName().'.booking_type', $bookingModel::getTableName().'.user_id',
                 $bookingInfoModel::getTableName().'.id', $bookingMassageModel::getTableName().'.service_pricing_id',
@@ -106,8 +107,18 @@ class ClientController extends BaseController {
                 $clients->where($serviceModel::getTableName() . '.service_type', Service::THERAPY);
             }
         }
-        
-        $clientData = $clients->groupBy($userModel::getTableName().'.id')->paginate(10, ['*'], 'page', $pageNumber);
+
+        $clientData = $clients->groupBy($userModel::getTableName().'.id')->get();
+
+        if(!empty($request->rating)) {
+            foreach ($clientData as $key => $data) {
+                if ((int)$data->avg_ratings != (int)$request->rating) {
+                    $clientData->forget($key);
+                }
+            }
+        }
+        $clientData = new LengthAwarePaginator($clientData->forPage($pageNumber, 10),$clientData->count(),10, $pageNumber);
+
         $userModel->setMysqlStrictTrue();
         
         return $this->returnSuccess(__($this->successMsg['client.data.found']), $clientData);

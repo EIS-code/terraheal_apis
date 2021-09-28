@@ -13,6 +13,7 @@ use App\City;
 use App\Shop;
 use App\Booking;
 // use App\BaseModel;
+use App\TherapistUserRating;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\Libraries\QR;
@@ -76,6 +77,10 @@ class User extends BaseModel implements Authenticatable
      */
     protected $hidden = [
         'password', 'is_removed', 'updated_at'
+    ];
+    
+    protected $appends = [
+        'avg_ratings'
     ];
 
     public $fileSystem       = 'public';
@@ -475,5 +480,11 @@ class User extends BaseModel implements Authenticatable
         }
 
         return $data;
+    }
+    
+    public function getAvgRatingsAttribute()
+    {
+        $ratings = TherapistUserRating::where('user_id', $this->id)->avg('rating');
+        return $ratings;
     }
 }
