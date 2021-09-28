@@ -766,7 +766,7 @@ class ManagerController extends BaseController {
     
     public function getAllTherapists(Request $request) {
         
-        $therapists = Therapist::with('country', 'city');
+        $therapists = Therapist::with('country', 'city', 'shops');
         $search_val = $request->search_val;
         if(!empty($search_val)) {
             

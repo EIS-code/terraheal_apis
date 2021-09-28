@@ -174,6 +174,10 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     {
         return $this->hasMany('App\TherapistDocument', 'therapist_id', 'id');
     }
+    public function shops()
+    {
+        return $this->hasMany('App\TherapistShop', 'therapist_id', 'id');
+    }
 
     public function languageSpokens()
     {
