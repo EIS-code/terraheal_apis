@@ -695,6 +695,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 ->where('bookings.shop_id', $request->shop_id)->whereDate('booking_massages.massage_date_time', Carbon::now()->format('Y-m-d'));
         } else {
             $therapists = DB::table('therapists')
+                ->leftJoin('therapist_shops', 'therapist_shops.therapist_id', '=', 'therapists.id')
                 ->leftJoin('booking_infos', 'booking_infos.therapist_id', '=', 'therapists.id')
                 ->leftJoin('booking_massages', 'booking_massages.booking_info_id', '=', 'booking_infos.id')
                 ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
@@ -705,7 +706,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                         'therapists.id as therapist_id', 'therapists.country_id', 'therapists.city_id', 'therapists.email', 'therapists.mobile_number', 'therapists.nif', 
                         DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo',
                         'countries.name as country_name', 'cities.name as city_name', 'shops.address as shop_address')
-                ->where('therapists.shop_id', $request->shop_id);
+                ->where('therapist_shops.shop_id', $request->shop_id);
         }
         
         $search_val = $request->search_val;
