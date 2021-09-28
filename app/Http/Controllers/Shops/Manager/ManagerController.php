@@ -249,16 +249,38 @@ class ManagerController extends BaseController {
     
     public function newTherapist(Request $request) {
         
-        $model = new Therapist();
-        $data = $request->all();
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
+        DB::beginTransaction();
+        try {
+
+            $model = new Therapist();
+            $data = $request->all();
+            $checks = $model->validator($data);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            $data['password'] = Hash::make($data['password']);
+            $therapist = $model->create($data);
+            
+            $shopData = [
+                'therapist_id' => $therapist->id,
+                'shop_id' => $therapist->shop_id
+            ];
+            $therapist_model = new TherapistShop();
+            $checks = $therapist_model->validator($shopData);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            $therapist_model->create($shopData);
+            
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['new.therapist']), $therapist);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
         }
-        $data['password'] = Hash::make($data['password']);
-        $therapist = $model->create($data);
-        
-        return $this->returnSuccess(__($this->successMsg['new.therapist']), $therapist);
     }
     
     public function existingTherapist(Request $request) {
