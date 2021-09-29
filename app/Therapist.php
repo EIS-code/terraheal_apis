@@ -750,7 +750,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                         $available = strtotime($diff) * 1000;
                     }
 
-                    $default = asset('images/therapists/therapist.png');
+                    /* $default = asset('images/therapists/therapist.png');
 
                      // For set default image.
                      if (empty($row->profile_photo)) {
@@ -761,8 +761,10 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                          $profile_photo = Storage::disk($this->fileSystem)->url($profilePhotoPath . $row->profile_photo);
                      } else {
                          $profile_photo = $default;
-                     }
-                     
+                     } */
+
+                    $profile_photo = $this->getProfilePhotoAttribute($row->profile_photo);
+
                     $ratings = TherapistUserRating::where(['model_id' => $row->therapist_id, 'model' => 'App\Therapist'])->get();
 
                     $cnt = $rates = $avg = 0;
