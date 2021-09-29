@@ -309,6 +309,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         } else {
             unset($data['dob']);
         }
+        
+        $data['gender'] = $data['gender'] ? $data['gender'] : NULL;
 
         $data['is_freelancer'] = $isFreelancer;
 
