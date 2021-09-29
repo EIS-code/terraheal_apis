@@ -9,6 +9,8 @@ use App\TherapistUserRating;
 use Carbon\Carbon;
 use App\TherapistWorkingSchedule;
 use App\TherapistReview;
+use App\TherapistSelectedService;
+use App\Service;
 
 class TherapistController extends BaseController
 {   
@@ -21,7 +23,7 @@ class TherapistController extends BaseController
     ];
 
     public function getTherapists() {
-        $therapists = Therapist::with('selectedService')->get();
+        $therapists = Therapist::all();
 
         foreach ($therapists as $key => $therapist) {
 
@@ -36,6 +38,15 @@ class TherapistController extends BaseController
                 $avg = $rates / $cnt;
             }
             $therapist['average'] = number_format($avg, 2);
+            
+            $therapist['selectedMassages'] = TherapistSelectedService::with('service')->where('therapist_id', $therapist->id)
+                                    ->whereHas('service', function($q) {
+                                        $q->where('service_type', Service::MASSAGE);
+                                    })->get()->count();
+            $therapist['selectedTherapies'] = TherapistSelectedService::with('service')->where('therapist_id', $therapist->id)
+                                    ->whereHas('service', function($q) {
+                                        $q->where('service_type', Service::THERAPY);
+                                    })->get()->count();
         }
 
         return $this->returnSuccess(__($this->successMsg['therapist.details']), $therapists);
