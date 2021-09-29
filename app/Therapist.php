@@ -249,6 +249,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                       ->where($model::getTableName() . '.id', $id)
                       ->groupBy($model::getTableName() . '.id')
                       ->get();
+        dd($data);
 
         if (!empty($data) && !$data->isEmpty($data)) {
             $bookingInfo = new BookingInfo();
