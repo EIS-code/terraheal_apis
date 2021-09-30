@@ -236,6 +236,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $modelLanguage          = new Language();
         $modelCountry           = new Country();
         $modelCity              = new City();
+        $modelTherapistDocument = new TherapistDocument();
         $data                   = $request->all();
         $id                     = !empty($data['id']) ? (int)$data['id'] : false;
 
@@ -258,13 +259,21 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         if (!empty($data) && !$data->isEmpty($data)) {
             $bookingInfo = new BookingInfo();
 
-            $data->map(function($record, $key) use($bookingInfo, $request) {
+            $data->map(function($record, $key) use($bookingInfo, $request, $modelTherapistDocument) {
                 $massages = $record->selectedServices(Service::MASSAGE);
                 $therapies = $record->selectedServices(Service::THERAPY);
                 
                 $record->selected_services  = collect(['massages' => $massages, 'therapies' => $therapies]);
                 $record->total_massages     = $bookingInfo->getMassageCountByTherapist($record->id);
                 $record->total_therapies    = $bookingInfo->getTherapyCountByTherapist($record->id);
+
+                if (!empty($record->documents) && !$record->documents->isEmpty()) {
+                    $record->documents->map(function($document) use($modelTherapistDocument) {
+                        if (empty($document->doc_name)) {
+                            $document->doc_name = !empty($modelTherapistDocument->documentTypes[$document->type]) ? $modelTherapistDocument->documentTypes[$document->type] : NULL;
+                        }
+                    });
+                }
             });
         }
 
