@@ -80,6 +80,15 @@ class TherapistDocument extends BaseModel
             $file => 'Please select proper file. The file must be a file of type: ' . $mimes . '.'
         ]);
     }
+    
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
 
     public function getFileNameAttribute($value)
     {
