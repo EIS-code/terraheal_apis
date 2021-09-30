@@ -16,7 +16,7 @@ class TherapistsTable extends Migration
         Schema::create('therapists', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('dob');
+            $table->string('dob')->nullable();
             $table->enum('gender', ['m', 'f'])->comment('m: Male, f: Female')->nullable();
             $table->string('email')->unique();
             $table->string('tel_number', 50)->nullable();
