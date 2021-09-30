@@ -75,7 +75,6 @@ class TherapistController extends BaseController
             foreach ($ratings as $key => $rate) {
              
                 $first = $rate->first();
-                dd($first);
                 $avg = $cnt = 0;
                 foreach ($rate as $key => $value) {
                     $avg += $value->rating;
