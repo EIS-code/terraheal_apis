@@ -75,7 +75,7 @@ class BaseModel extends Model
             // Default shop_id.
             $shopId = (int)request()->get('shop_id', false);
 
-            if(is_null(request()->get('exclude_shop_id'))) {
+            if (is_null(request()->get('exclude_shop_id'))) {
                 if (!empty($shopId) && in_array('shop_id', $tableFillables)) {
                     $where[$this::getTableName() . '.shop_id'] = $shopId;
                 }

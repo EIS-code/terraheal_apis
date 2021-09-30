@@ -184,6 +184,11 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         return $this->hasMany('App\TherapistLanguage', 'therapist_id', 'id');
     }
 
+    public function hasInShop(int $shopId)
+    {
+        return $this->hasMany('App\TherapistShop', 'therapist_id', 'id')->where('shop_id', $shopId);
+    }
+
     public function getProfilePhotoAttribute($value)
     {
         $default = asset('images/therapists/therapist.png');
@@ -299,9 +304,13 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $modelTherapistLanguage         = new TherapistLanguage();
         $modelTherapistDocument         = new TherapistDocument();
         $modelTherapistSelectedServices = new TherapistSelectedService();
+        $modalTherapistShop             = new TherapistShop();
+
+        $request->request->add(['exclude_shop_id' => true]);
 
         $data   = $request->all();
         $id     = !empty($data['id']) ? (int)$data['id'] : false;
+        $shopId = !empty($data['shop_id']) ? (int)$data['shop_id'] : false;
         $inc    = 0;
 
         if (!empty($data['dob'])) {
@@ -312,14 +321,19 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         if (empty($data['gender'])) {
             unset($data['gender']);
         }
-        
+
         $data['is_freelancer'] = $isFreelancer;
 
         if (empty($id)) {
             return ['isError' => true, 'message' => 'notFound'];
         }
 
-        if (!$model::find($id)->where('is_freelancer', (string)$isFreelancer)->exists()) {
+        if (empty($shopId)) {
+            return ['isError' => true, 'message' => 'notFound'];
+        }
+
+        $therapistRow = $model::join($modalTherapistShop::getTableName(), $model::getTableName() . '.id', '=', $modalTherapistShop::getTableName() . '.therapist_id')->where($modalTherapistShop::getTableName() . '.shop_id', $shopId)->where($model::getTableName() . '.id', $id)->first();
+        if (empty($therapistRow)) {
             return ['isError' => true, 'message' => 'notFound'];
         }
 
@@ -614,6 +628,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $modelTherapistSelectedServices::updateOrCreate(['service_id' => $massage['service_id'], 'therapist_id' => $massage['therapist_id']], $massage);
             }
         }
+
+        $request->request->add(['exclude_shop_id' => NULL]);
 
         return true;
     }
