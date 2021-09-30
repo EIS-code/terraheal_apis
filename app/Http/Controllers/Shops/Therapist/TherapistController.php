@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DB;
 use App\TherapistNews;
+use App\TherapistReview;
 
 class TherapistController extends BaseController {
 
@@ -145,6 +146,34 @@ class TherapistController extends BaseController {
         }
         return $this->returnSuccess(__($this->successMsg['therapist.ratings']),$ratingsData);
         
+    }
+    
+    public function getTherapistRatings(Request $request) {
+        
+        $ratings = TherapistReview::with('question')->where(['therapist_id' => $request->therapist_id])
+                ->get()->groupBy('question_id');
+        
+        $ratingData = [];
+        if(!empty($ratings)) {
+            foreach ($ratings as $key => $rate) {
+             
+                $first = $rate->first();
+                $avg = $cnt = 0;
+                foreach ($rate as $key => $value) {
+                    $avg += $value->rating;
+                    $cnt++;
+                }
+                $ratingData[] = [
+                    'question_id' => $first->question_id,
+                    'question' => $first->question->question,
+                    'rate' => (float) number_format($avg / $cnt, 2)
+                ];
+            }
+            return $this->returnSuccess(__($this->successMsg['therapist.ratings']), $ratingData);
+            
+        } else {
+            return $this->returnSuccess(__($this->successMsg['no.data.found']));
+        }
     }
     
     public function myAttendence(Request $request) {
