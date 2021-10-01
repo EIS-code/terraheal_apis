@@ -77,7 +77,7 @@ class TherapistController extends BaseController {
     {
         $date  = Carbon::createFromTimestampMs($request->date);
         $date  = strtotime($date) > 0 ? $date : Carbon::now();
-        $data = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where('therapist_id', $request->therapist_id)->get();
+        $data = TherapistWorkingSchedule::whereMonth('date', $date->month)->where('therapist_id', $request->therapist_id)->get();
         
         if (!empty($data)) {
             return $this->returnSuccess(__($this->successMsg['my.availability.found']), ['Schedule' => $data]);
