@@ -23,6 +23,8 @@ use App\VoucherShop;
 use App\TherapistUserRating;
 use App\ForgotOtp;
 use App\TherapyQuestionnaireAnswer;
+use App\TherapistDocument;
+use App\TherapistSelectedService;
 
 class ManagerController extends BaseController {
 
@@ -40,6 +42,7 @@ class ManagerController extends BaseController {
         'manager.not.found' => 'Manager not found.',
         'not.verified' => 'Your account is not verified yet.',
         'ans.not.found' => 'Therapy questionnaries answer not found.',
+        'data.not.found' => 'Data not found.',
     ];
     
     public $successMsg = [
@@ -70,6 +73,8 @@ class ManagerController extends BaseController {
         'questionnaries.answer.saved' => 'Therapy questionnaries answer saved successfully !',
         'document.accept' => 'Document accepted successfully !',
         'document.reject' => 'Document rejected successfully !',
+        'document.delete' => 'Document deleted successfully !',
+        'service.add' => 'Service added successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -800,5 +805,60 @@ class ManagerController extends BaseController {
             $row['avg'] = number_format($avg, 2);
         }
         return $this->returnSuccess(__($this->successMsg['therapists.all']), $therapists);
+    }
+    
+    public function deleteDocument(Request $request) {
+        
+        $document = TherapistDocument::find($request->document_id);
+        if(empty($document)) {
+            return $this->returnError($this->errorMsg['data.not.found']);
+        }
+        
+        $document->delete();
+        return $this->returnSuccess(__($this->successMsg['document.delete']),$document);
+    }
+    
+    public function addService(Request $request) {
+        
+        $services = $request->services;
+        $model = new TherapistSelectedService();
+        $all_services = [];
+        
+        foreach ($services as $key => $service) {
+            
+            $data = [
+                'therapist_id' => $request->therapist_id,
+                'service_id' => $service
+            ];
+            $checks = $model->validator($data);
+            if ($checks->fails()) {
+                return $this->returnError($checks->errors()->first(), NULL, true);
+            }
+            
+            $all_services[] = $model->updateOrCreate($data); 
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['service.add']),$all_services);
+    }
+    
+    public function deleteService(Request $request) {
+        
+        $services = $request->services;
+        $model = new TherapistSelectedService();
+        $all_services = [];
+        
+        foreach ($services as $key => $service) {
+            
+            $all_services[] = $data = [
+                'therapist_id' => $request->therapist_id,
+                'service_id' => $service
+            ];
+            $find = $model->where($data)->first();
+            if($find) {
+                $find->delete(); 
+            }
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['service.add']),$all_services);
     }
 }

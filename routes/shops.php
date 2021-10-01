@@ -137,6 +137,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->post('/side/data/get', 'Dashboard\DashboardController@getDetails');
     $router->post('/salesInfo/get', 'Dashboard\DashboardController@salesInfo');
     $router->post('/customerInfo/get', 'Dashboard\DashboardController@customerInfo');
+    $router->post('/document/delete', 'Manager\ManagerController@deleteDocument');
     
     $router->group(['prefix' => 'therapist'], function () use($router) {
         
@@ -146,7 +147,13 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/getInfo', 'Therapist\TherapistController@getInfo');
         $router->post('/timetable/get', 'WaitingList\WaitingListController@getTimeTable');
         $router->post('/ratings/get', 'Therapist\TherapistController@getTherapistRatings');
+        
+        $router->group(['prefix' => 'service'], function () use($router) {
+            $router->post('/add', 'Manager\ManagerController@addService');
+            $router->post('/delete', 'Manager\ManagerController@deleteService');
+        });
     });
+    
     $router->group(['prefix' => 'staff'], function () use($router) {
         
         $router->post('/add', 'Staffs\StaffsController@createStaff');
@@ -159,7 +166,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/email', 'Manager\ManagerController@verifyEmail');
         $router->post('/otp', 'Manager\ManagerController@verifyOtp');
     });
-    
+            
     $router->group(['prefix' => 'packs'], function () use($router) {
         $router->post('/get', 'Manager\ManagerController@getPacks');
     });
