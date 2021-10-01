@@ -150,9 +150,45 @@ class TherapistController extends BaseController {
     
     public function getTherapistRatings(Request $request) {
         
-        $ratings = TherapistReview::with('question')->where(['therapist_id' => $request->therapist_id])
-                ->get()->groupBy('question_id');
+        $filter = !empty($request->filter) ? $request->filter : TherapistReview::TODAY;
+        $ratings = TherapistReview::with('question')->where(['therapist_id' => $request->therapist_id]);
+        $now = Carbon::now();
         
+        if ($filter == TherapistReview::TODAY) {
+            $ratings->whereDate('created_at', $now->format('Y-m-d'));
+        }
+        if ($filter == TherapistReview::YESTERDAY) {
+            $ratings->whereDate('created_at', $now->subDays(1));
+        }
+        if ($filter == TherapistReview::THIS_WEEK) {
+            $weekStartDate = $now->startOfWeek()->format('Y-m-d');
+            $weekEndDate = $now->endOfWeek()->format('Y-m-d');
+            $ratings->whereDate('created_at', '>=', $weekStartDate)->whereDate('created_at', '<=', $weekEndDate);
+        }
+        if ($filter == TherapistReview::CURRENT_MONTH) {
+            $ratings->whereMonth('created_at', $now->month);
+        }
+        if ($filter == TherapistReview::LAST_7_DAYS) {
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(7)->format('Y-m-d');           
+            $ratings->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+        }
+        if ($filter == TherapistReview::LAST_14_DAYS) {
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(14)->format('Y-m-d');
+            $ratings->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+        }
+        if ($filter == TherapistReview::LAST_30_DAYS) {
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(30)->format('Y-m-d');
+            $ratings->whereDate('created_at', '>=', $agoDate)->whereDate('created_at', '<=', $todayDate);
+        }
+        if ($filter == TherapistReview::CUSTOM) {
+            $date = $date = Carbon::createFromTimestampMs($request->date);
+            $ratings->whereDate('created_at', $date);
+        }
+        
+        $ratings = $ratings->get()->groupBy('question_id');
         $ratingData = [];
         if(!empty($ratings)) {
             foreach ($ratings as $key => $rate) {
