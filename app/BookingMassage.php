@@ -64,7 +64,7 @@ class BookingMassage extends BaseModel
 
     public function servicePrices()
     {
-        return $this->hasOne('App\ServicePricing', 'id', 'service_pricing_id');
+        return $this->hasOne('App\ServicePricing', 'id', 'service_pricing_id')->with('service');
     }
 
     public function getMassageDateTimeAttribute($value)

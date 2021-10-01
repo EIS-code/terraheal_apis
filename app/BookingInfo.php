@@ -218,6 +218,7 @@ class BookingInfo extends BaseModel
                         $return[] = [
                             'massage_date_time' => $bookingMassage->massage_date_time,
                             'booking_info_id'   => $record->booking_info_id,
+                            'service_name'      => $bookingMassage->servicePrices->service->english_name,
                             'time'              => (int)$timing->time
                         ];
                     }
