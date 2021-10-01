@@ -188,17 +188,20 @@ class BookingInfo extends BaseModel
         return $query;
     }
 
-    public static function getCalender(int $therapistId, $month = NULL)
+    public static function getCalender(int $therapistId, $month = NULL, $type)
     {
         $currentMonth   = Carbon::now();
         $month          = empty($month) ? $currentMonth : new Carbon($month / 1000);
         $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
-        $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
+        $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');        
         $return = [];
 
         $data   = self::select('id as booking_info_id', 'id')
                       ->has('therapistWhereShop')
                       ->has('bookingMassages')
+                      ->with(['booking' => function($query) {
+                          $query->select('id', 'booking_type');
+                      }])
                       ->with(['bookingMassages' => function($query) {
                           $query->select('massage_date_time', 'booking_info_id', 'service_pricing_id')
                                 ->with('servicePrices');
@@ -206,6 +209,9 @@ class BookingInfo extends BaseModel
                       ->where('therapist_id', $therapistId)
                         ->whereHas('bookingMassages', function($q) use($startDate, $endDate) {
                             $q->whereBetween('massage_date_time', [$startDate, $endDate]);
+                        })
+                        ->whereHas('booking', function($q) use($type) {
+                            $q->where('booking_type', $type);
                         })->get();
         if (!empty($data) && !$data->isEmpty()) {
             foreach ($data as $record) {

@@ -331,9 +331,10 @@ class TherapistController extends BaseController
         $model  = new BookingInfo();
         $id     = (int)$request->get('id', false);
         $month  = $request->get('date', 0);
+        $type   = !empty($request->type) ? $request->type : Booking::BOOKING_TYPE_IMC;
 
         if (!empty($id)) {
-            $return = $model::getCalender($id, $month);
+            $return = $model::getCalender($id, $month, $type);
 
             return $this->returns('calender.get.successfully', $return);
         }
