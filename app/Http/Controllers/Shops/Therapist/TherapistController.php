@@ -215,10 +215,10 @@ class TherapistController extends BaseController {
     public function myAttendence(Request $request) {
         
         $date = !empty($request->date) ? Carbon::createFromTimestampMs($request->date) : Carbon::now();
-        $scheduleData = TherapistWorkingSchedule::with('therapistBreakTime','therapistWorkingScheduleTime')->where('therapist_id',$request->therapist_id)
+        $scheduleData = TherapistWorkingSchedule::with('shifts')->where('therapist_id',$request->therapist_id)
                 ->whereMonth('date',$date->month)->get();
-        $presentDays = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->count();
-        $totalAbsent = TherapistWorkingSchedule::with('therapistWorkingScheduleTime')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->count();
+        $presentDays = TherapistWorkingSchedule::with('shifts')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->groupBy('date')->count();
+        $totalAbsent = TherapistWorkingSchedule::with('shifts')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->groupBy('date')->count();
         
         if(count($scheduleData) > 0) {
             
