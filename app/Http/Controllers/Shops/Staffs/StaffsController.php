@@ -22,7 +22,8 @@ class StaffsController extends BaseController {
         'staff.create' => 'Staff added successfully !',
         'staff.update' => 'Staff data updated successfully !',
         'staff.list' => 'Staff data found successfully !',
-        'staff.document' => 'Staff document uploaded successfully !'
+        'staff.document' => 'Staff document uploaded successfully !',
+        'staff.update.status' => 'Staff status updated successfully !'
     ];
     
     public function createStaff(Request $request) {
@@ -199,5 +200,15 @@ class StaffsController extends BaseController {
         $document = $model->create($data);
         
         return $this->returnSuccess(__($this->successMsg['staff.document']),$document);
+    }
+    
+    public function updateStatus(Request $request) {
+        
+        $staff = Staff::find($request->id);
+        if(empty($staff)) {
+            return $this->returnError(__($this->errorMsg['staff.not.found']));
+        }
+        $staff->update(['status' => $request->status]);
+        return $this->returnSuccess(__($this->successMsg['staff.update.status']),$staff);
     }
 }

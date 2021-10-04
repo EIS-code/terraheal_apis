@@ -158,7 +158,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         
         $router->post('/add', 'Staffs\StaffsController@createStaff');
         $router->post('/update', 'Staffs\StaffsController@updateStaff');
-        $router->post('/list', 'Staffs\StaffsController@staffList');
+        $router->post('/list', 'Staffs\StaffsController@staffList');        
     });
     
     $router->group(['prefix' => 'verify'], function () use($router) {
@@ -247,6 +247,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/update', 'Staffs\StaffsController@updateStaff');
         $router->post('/list', 'Staffs\StaffsController@staffList');
         $router->post('/document/upload', 'Staffs\StaffsController@uploadDocument');
+        $router->post('/update/status', 'Staffs\StaffsController@updateStatus');
     });    
 });
 
