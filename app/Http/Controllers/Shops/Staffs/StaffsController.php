@@ -103,7 +103,8 @@ class StaffsController extends BaseController {
             
             $data = $request->all();
             if(!empty($data['dob'])) {
-                $data['dob'] = $data['dob'] ? Carbon::createFromTimestampMs($data['dob']) : NULL;
+                $date = Carbon::createFromTimestampMs($data['dob']);
+                $data['dob'] = $date->format('Y-m-d');
             }
             
             $checks = $model->validator($data, $request->staff_id, true);
@@ -117,10 +118,16 @@ class StaffsController extends BaseController {
             
             if($data['role'] == Staff::RECEPTIONIST) {
                 $is_exist = $model->where(['role' => $data['role'], 'shop_id' => $data['shop_id']])->first();
-                if($is_exist->id != $staff->id) {
-                    return $this->returnError(__($this->errorMsg['receptionist.exist']));
+                if(!empty($is_exist)) {
+                    if($is_exist->id != $staff->id) {
+                        return $this->returnError(__($this->errorMsg['receptionist.exist']));
+                    }
                 }
             }
+            $data['city_id'] = !empty($data['city_id']) ? $data['city_id'] : NULL;
+            $data['country_id'] = !empty($data['country_id']) ? $data['country_id'] : NULL;
+            $data['pay_scale'] = !empty($data['pay_scale']) ? $data['pay_scale'] : NULL;
+            $data['amount'] = !empty($data['amount']) ? $data['amount'] : NULL;
             
             $staff->update($data);
             
