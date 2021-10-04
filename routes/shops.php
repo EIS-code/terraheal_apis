@@ -159,6 +159,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/add', 'Staffs\StaffsController@createStaff');
         $router->post('/update', 'Staffs\StaffsController@updateStaff');
         $router->post('/list', 'Staffs\StaffsController@staffList');        
+        $router->post('/update/status', 'Staffs\StaffsController@updateStatus');
     });
     
     $router->group(['prefix' => 'verify'], function () use($router) {

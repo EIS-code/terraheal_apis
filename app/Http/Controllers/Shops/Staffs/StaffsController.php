@@ -208,14 +208,18 @@ class StaffsController extends BaseController {
         
         return $this->returnSuccess(__($this->successMsg['staff.document']),$document);
     }
-    
+
     public function updateStatus(Request $request) {
-        
         $staff = Staff::find($request->id);
-        if(empty($staff)) {
+
+        if (empty($staff)) {
             return $this->returnError(__($this->errorMsg['staff.not.found']));
         }
-        $staff->update(['status' => $request->status]);
+
+        $staff->status = (string)$request->status;
+
+        $staff->update();
+
         return $this->returnSuccess(__($this->successMsg['staff.update.status']),$staff);
     }
 }

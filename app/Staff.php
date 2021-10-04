@@ -103,7 +103,7 @@ class Staff extends BaseModel
                 'country_id'            => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
                 'city_id'               => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id'],
                 'login_access'          => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$loginAccess))]),
-                'status'                => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$status))])
+                'status'                => ['nullable', 'in:' . implode(",", array_keys(self::$status))]
                 ], [
             'password.regex' => 'Password should contains at least one [a-z, A-Z, 0-9, @, $, !, %, *, #, ?, &].'
         ]);
