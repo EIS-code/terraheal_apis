@@ -16,6 +16,7 @@ class StaffsController extends BaseController {
     public $errorMsg = [
         'staff.not.found' => 'Staff not found.',
         'receptionist.exist' => 'Receptionist is already added.',
+        'staff.status.error' => 'Wrong status value.'
     ];
     
     public $successMsg = [
@@ -214,12 +215,14 @@ class StaffsController extends BaseController {
 
         if (empty($staff)) {
             return $this->returnError(__($this->errorMsg['staff.not.found']));
+        } else if (!array_key_exists($request->status, Staff::$status)) {
+            return $this->returnError(__($this->errorMsg['staff.status.error']));
         }
 
         $staff->status = (string)$request->status;
 
         $staff->update();
 
-        return $this->returnSuccess(__($this->successMsg['staff.update.status']),$staff);
+        return $this->returnSuccess(__($this->successMsg['staff.update.status']), $staff);
     }
 }
