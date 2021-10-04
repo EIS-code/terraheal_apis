@@ -40,7 +40,9 @@ class StaffsController extends BaseController {
             if ($checks->fails()) {
                 return $this->returnError($checks->errors()->first(), NULL, true);
             }
-            $data['password'] = $data['password'] ? Hash::make($data['password']) : NULL;
+            if(!empty($data['password'])) {
+                $data['password'] = $data['password'] ? Hash::make($data['password']) : NULL;
+            }
             
             if($data['role'] == Staff::RECEPTIONIST) {
                 $is_exist = $model->where(['role' => $data['role'], 'shop_id' => $data['shop_id']])->first();
@@ -48,10 +50,10 @@ class StaffsController extends BaseController {
                     return $this->returnError(__($this->errorMsg['receptionist.exist']));
                 }
             }
-            $data['city_id'] = $data['city_id'] ? $data['city_id'] : NULL;
-            $data['country_id'] = $data['country_id'] ? $data['country_id'] : NULL;
-            $data['pay_scale'] = $data['pay_scale'] ? $data['pay_scale'] : NULL;
-            $data['amount'] = $data['amount'] ? $data['amount'] : NULL;
+            $data['city_id'] = isset($data['city_id']) ? $data['city_id'] : NULL;
+            $data['country_id'] = isset($data['country_id']) ? $data['country_id'] : NULL;
+            $data['pay_scale'] = isset($data['pay_scale']) ? $data['pay_scale'] : NULL;
+            $data['amount'] = isset($data['amount']) ? $data['amount'] : NULL;
             $staff = Staff::create($data);
 
             if(!empty($data['schedule'])) {
