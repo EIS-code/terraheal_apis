@@ -21,13 +21,13 @@ class ChangeColumnsToStaffTable extends Migration
             $table->dropColumn('upload_id');
             $table->dropColumn('insurance');
             $table->string('full_name')->after('id');
-            $table->string('password')->after('full_name');
-            $table->enum('gender', ['m','f'])->comment('m: Male, f: Female')->nullable()->after('password');
+            $table->string('password')->after('full_name')->nullable();
+            $table->enum('gender', ['m','f'])->comment('m: Male, f: Female')->after('password');
             $table->string('dob')->nullable()->after('gender');
             $table->string('mobile_number', 50)->nullable()->after('dob');
             $table->string('emergency_number', 50)->nullable()->after('mobile_number');
             $table->string('nif', 50)->nullable()->after('emergency_number');
-            $table->enum('role', [0, 1])->comment('0: Receptionist, 1: Cleaning lady')->nullable()->after('nif');
+            $table->enum('role', [0, 1])->comment('0: Receptionist, 1: Cleaning lady')->after('nif');
             $table->text('address')->nullable()->after('role');
             $table->bigInteger('country_id')->unsigned()->after('role')->nullable();
             $table->foreign('country_id')->references('id')->on('countries')->onDelete('cascade');
