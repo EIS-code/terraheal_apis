@@ -159,6 +159,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/add', 'Staffs\StaffsController@createStaff');
         $router->post('/update', 'Staffs\StaffsController@updateStaff');
         $router->post('/list', 'Staffs\StaffsController@staffList');        
+        $router->post('/document/upload', 'Staffs\StaffsController@uploadDocument');
         $router->post('/update/status', 'Staffs\StaffsController@updateStatus');
     });
     
@@ -240,16 +241,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/cancelAppointment', 'WaitingList\WaitingListController@cancelAppointment');
         $router->post('/recoverAppointment', 'WaitingList\WaitingListController@recoverAppointment');
         $router->post('/edit/booking', 'WaitingList\WaitingListController@editBooking');
-    });
-    
-    $router->group(['prefix' => 'staffs'], function () use($router) {
-
-        $router->post('/add', 'Staffs\StaffsController@createStaff');
-        $router->post('/update', 'Staffs\StaffsController@updateStaff');
-        $router->post('/list', 'Staffs\StaffsController@staffList');
-        $router->post('/document/upload', 'Staffs\StaffsController@uploadDocument');
-        $router->post('/update/status', 'Staffs\StaffsController@updateStatus');
-    });    
+    });   
 });
 
 $router->group(['prefix' => 'receptionist', 'namespace' => 'Shops'], function () use($router) {
