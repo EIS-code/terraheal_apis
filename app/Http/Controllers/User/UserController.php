@@ -38,6 +38,7 @@ use App\PackShop;
 use App\UserCardDetail;
 use Illuminate\Support\Str;
 use App\ForgotOtp;
+use App\TherapistUserRating;
 
 class UserController extends BaseController
 {
@@ -935,6 +936,21 @@ class UserController extends BaseController
         return $this->returns('error.user.people.not.found', NULL, true);
     }
 
+    public function getRatings($id) {
+        $ratings = TherapistUserRating::where(['model_id' => $id, 'model' => 'App\Therapist'])->get();
+
+        $cnt = $rates = $avg = 0;
+        if ($ratings->count() > 0) {
+            foreach ($ratings as $i => $rating) {
+                $rates += $rating->rating;
+                $cnt++;
+            }
+            $avg = $rates / $cnt;
+        }
+        
+        return number_format($avg, 2);
+    }
+
     public function getBookingTherapists(Request $request)
     {
         $model  = new Booking();
@@ -951,7 +967,7 @@ class UserController extends BaseController
                         foreach ($booking->bookingInfo as $bookingInfo) {
                             if (!empty($bookingInfo->therapist)) {
                                 $therapistId = $bookingInfo->therapist->id;
-
+                                $bookingInfo->therapist->avg = $this->getRatings($therapistId);
                                 $response[$therapistId] = $bookingInfo->therapist;
                             }
                         }
@@ -1055,9 +1071,9 @@ class UserController extends BaseController
 
             $data['rating'] = (float)$data['rating'];
 
-            $model->fill($data);
+            $save = $model->UpdateOrCreate($data);
 
-            if ($model->save()) {
+            if ($save) {
                 return $this->returns('success.therapist.review.created', collect([]));
             }
         }
