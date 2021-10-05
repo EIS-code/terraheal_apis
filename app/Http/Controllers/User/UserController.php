@@ -109,6 +109,7 @@ class UserController extends BaseController
         'success.booking.places.found' => 'Booking places found successfully !',
         'success.booking.found' => 'Booking found successfully !',
         'success.therapist.review.created' => 'Therapist review created successfully !',
+        'success.therapist.review.added' => 'You already rated this therapist !',
         'success.user.menu.found' => 'User menu found successfully !',
         'success.user.menu.not.found' => 'User menu not found !',
         'success.user.menu.item.found' => 'User menu item found successfully !',
@@ -1071,7 +1072,12 @@ class UserController extends BaseController
 
             $data['rating'] = (float)$data['rating'];
 
-            $save = $model->UpdateOrCreate($data);
+            $is_exist = $model->where($data)->first();
+            if(!empty($is_exist)) {
+                return $this->returns('success.therapist.review.added', collect([]));
+            }
+            
+            $save = $model->create($data);
 
             if ($save) {
                 return $this->returns('success.therapist.review.created', collect([]));
