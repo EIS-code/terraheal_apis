@@ -87,9 +87,9 @@ class Staff extends BaseModel
                 'password'              => ['nullable', 'min:6', 'regex:/[a-z]/', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'regex:/[@$!%*#?&]/'],
                 'mobile_number'         => ['nullable', 'string', 'max:50'],
                 'emergency_number'      => ['nullable', 'string', 'max:50'],
-                'gender'                => array_merge(['required', 'in:' . implode(",", array_keys(self::$gender))]),
-                'role'                  => array_merge(['required', 'in:' . implode(",", array_keys(self::$roles))]),
-                'pay_scale'             => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$payScle))]),
+                'gender'                => ['required', 'in:' . implode(",", array_keys(self::$gender))],
+                'role'                  => ['required', 'in:' . implode(",", array_keys(self::$roles))],
+                'pay_scale'             => ['nullable', 'in:' . implode(",", array_keys(self::$payScle))],
                 'dob'                   => ['nullable', 'date:Y-m-d'],
                 'nif'                   => ['nullable', 'string', 'max:255'],
                 'security_number'       => ['nullable', 'string', 'max:255'],
@@ -102,7 +102,7 @@ class Staff extends BaseModel
                 'shop_id'               => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
                 'country_id'            => ['nullable', 'integer', 'exists:' . Country::getTableName() . ',id'],
                 'city_id'               => ['nullable', 'integer', 'exists:' . City::getTableName() . ',id'],
-                'login_access'          => array_merge(['nullable', 'in:' . implode(",", array_keys(self::$loginAccess))]),
+                'login_access'          => ['nullable', 'in:' . implode(",", array_keys(self::$loginAccess))],
                 'status'                => ['nullable', 'in:' . implode(",", array_keys(self::$status))]
                 ], [
             'password.regex' => 'Password should contains at least one [a-z, A-Z, 0-9, @, $, !, %, *, #, ?, &].'

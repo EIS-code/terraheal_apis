@@ -127,7 +127,7 @@ class StaffsController extends BaseController {
             }
             $data['city_id'] = !empty($data['city_id']) ? $data['city_id'] : NULL;
             $data['country_id'] = !empty($data['country_id']) ? $data['country_id'] : NULL;
-            $data['pay_scale'] = !empty($data['pay_scale']) ? $data['pay_scale'] : NULL;
+            $data['pay_scale'] = isset($data['pay_scale']) ? $data['pay_scale'] : NULL;
             $data['amount'] = !empty($data['amount']) ? $data['amount'] : NULL;
             
             $staff->update($data);
