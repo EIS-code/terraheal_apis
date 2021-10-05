@@ -132,6 +132,12 @@ class StaffsController extends BaseController {
             
             $staff->update($data);
             
+            $schedules = StaffWorkingSchedule::where('staff_id', $request->staff_id)->get();
+            if(!empty($schedules)) {
+                foreach ($schedules as $key => $schedule) {
+                    $schedule->delete();
+                }
+            }
             if(!empty($data['schedule'])) {
                 foreach ($data['schedule'] as $key => $value) {
 
