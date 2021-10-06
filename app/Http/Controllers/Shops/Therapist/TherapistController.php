@@ -215,48 +215,39 @@ class TherapistController extends BaseController {
     public function myAttendence(Request $request) {
         
         $date = !empty($request->date) ? Carbon::createFromTimestampMs($request->date) : Carbon::now();
-        $scheduleData = TherapistWorkingSchedule::with('shifts')->where('therapist_id',$request->therapist_id)
-                ->whereMonth('date',$date->month)->get();
-        $presentDays = TherapistWorkingSchedule::with('shifts')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->groupBy('date')->count();
-        $totalAbsent = TherapistWorkingSchedule::with('shifts')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id])->get()->groupBy('date')->count();
+        $scheduleData = TherapistWorkingSchedule::with('shifts','shop')->where('therapist_id',$request->therapist_id)->whereMonth('date',$date->month)
+                ->where('is_exchange', TherapistWorkingSchedule::NOT_EXCHANGE)->get()->groupBy('date');
+        $presentDays = TherapistWorkingSchedule::with('shifts')->whereMonth('date', $date->month)->where(['therapist_id' => $request->therapist_id, 'is_exchange' => TherapistWorkingSchedule::NOT_EXCHANGE])->get()->groupBy('date')->count();
         
+        $therapistData = [];
         if(count($scheduleData) > 0) {
             
             $totalHours = [];
-            $breakHours = [];        
 
-            foreach ($scheduleData as $key => $value) {
+            foreach ($scheduleData as $key => $schedules) {
 
-                if(!is_null($value['therapistWorkingScheduleTime'])) {
-                    $start_time = Carbon::createFromTimestampMs($value['therapistWorkingScheduleTime']['start_time']);
-                    $end_time = Carbon::createFromTimestampMs($value['therapistWorkingScheduleTime']['end_time']);
-                    $total = new Carbon($start_time->diff($end_time)->format("%h:%i"));
+                
+                foreach ($schedules as $key => $value) {
+                    
+                    $start_time = Carbon::createFromTimestampMs($value->shifts->from);
+                    $end_time = Carbon::createFromTimestampMs($value->shifts->to);
+                    $total = $totalHours[] = new Carbon($start_time->diff($end_time)->format("%h:%i"));
+                    $therapistData[] = [
+                        'date' => $value->date,
+                        'shift_id' => $value->shift_id,
+                        'shop_name' => $value->shop->name,
+                        'start_time' => $value->shifts->from,
+                        'end_time' => $value->shifts->to,
+                        'total_hours' => $total->format('H:i:s')
+                    ];
                 }
-
-                $therapist_break = [];
-                foreach ($value->therapistBreakTime as $key => $break) {
-                    if(!is_null($break)) {
-                        $break_start_time = new Carbon(Carbon::createFromTimestampMs($break['from']));
-                        $break_end_time = new Carbon(Carbon::createFromTimestampMs($break['to']));
-                        $breakHours[] = $therapist_break[] = $break_start_time->diff($break_end_time)->format("%h:%i");
-                    }
-                }
-                $value['break_time'] = CommonHelper::calculateHours($therapist_break);
-                if(isset($total) && !empty($total)) {
-                    $value['total'] = $totalHours[] = $total->diff(new Carbon($value['break_time']))->format("%h:%i");
-                }
-                unset($therapist_break); 
             }
 
             //calculate total hours
             $hours = CommonHelper::calculateHours($totalHours);
 
-            //calculate total break hours
-            $break = CommonHelper::calculateHours($breakHours);
-
-            return $this->returnSuccess(__($this->successMsg['therapist.attendance']),['receptionistData' => $scheduleData, 
-                'totalWorkingDays' => $presentDays + $totalAbsent, 'presentDays' => $presentDays, 'absentDays' => $totalAbsent,
-                'totalHours' => explode(':', $hours)[0], 'totalBreakHours' => explode(':', $break)[0],'totalWorkingHours' => explode(':', $hours)[0]-explode(':', $break)[0]]);
+            return $this->returnSuccess(__($this->successMsg['therapist.attendance']),['scheduleData' => $therapistData, 'totalWorkingDays' => $presentDays, 
+                'presentDays' => $presentDays, 'totalHours' => explode(':', $hours)[0],'totalWorkingHours' => explode(':', $hours)[0]]);
         } else {
              return $this->returnSuccess(__($this->successMsg['no.data.found']));
         }
