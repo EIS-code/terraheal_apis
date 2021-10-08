@@ -17,6 +17,9 @@ class UserCardDetail extends BaseModel
         'stripe_token'
     ];
 
+    const CARD_DEFAULT = '1';
+    const CARD_NOT_DEFAULT = '0';
+    
     public function validator(array $data)
     {
         return Validator::make($data, [

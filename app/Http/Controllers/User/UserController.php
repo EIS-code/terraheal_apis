@@ -149,6 +149,7 @@ class UserController extends BaseController
         'success.otp' => 'Otp sent successfully !',
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
+        'success.card.save' => 'User card details save successfully !',
     ];
 
     public function __construct()
@@ -1863,5 +1864,29 @@ class UserController extends BaseController
             return $this->returnError($this->errorMsg['otp.not.found']);
         }
         return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
+    }
+    
+    public function saveDefaultCard(Request $request) {
+        
+        DB::beginTransaction();
+
+        try {
+            $is_exist = UserCardDetail::where(['id' => $request->card_id, 'user_id' => $request->user_id])->first();
+            $all_cards = UserCardDetail::where(['user_id' => $request->user_id])->get();
+
+            if (empty($is_exist)) {
+                return $this->returnError($this->errorMsg['error.card.not.found']);
+            }
+
+            foreach ($all_cards as $key => $card) {
+                $card->update(['is_default' => UserCardDetail::CARD_NOT_DEFAULT]);
+            }
+
+            $is_exist->update(['is_default' => UserCardDetail::CARD_DEFAULT]);
+            DB::commit();
+            return $this->returnSuccess(__($this->successMsg['success.card.save']), $is_exist);
+        } catch (Exception $e) {
+            DB::rollBack();
+        }
     }
 }
