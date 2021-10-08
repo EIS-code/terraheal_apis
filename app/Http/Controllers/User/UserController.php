@@ -674,6 +674,7 @@ class UserController extends BaseController
 
         $data   = $model->getGlobalResponse($userId);
 
+        $data['stripe_key'] = env('STRIPE_KEY');
         if (!empty($data)) {
             return $this->returns('success.user.found', $data);
         }
