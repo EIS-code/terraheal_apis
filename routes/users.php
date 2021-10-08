@@ -140,4 +140,5 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     $router->post('booking/ids/save', 'UserController@updateDocument');
     $router->post('card/details/get', 'UserController@getCardDetails');
     $router->post('default/card/save', 'UserController@saveDefaultCard');
+    $router->post('card/delete', 'UserController@deleteCard');
 });

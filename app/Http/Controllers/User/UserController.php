@@ -150,6 +150,7 @@ class UserController extends BaseController
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
         'success.card.save' => 'User card details save successfully !',
+        'success.card.delete' => 'User card delete successfully !',
     ];
 
     public function __construct()
@@ -1888,5 +1889,16 @@ class UserController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
         }
+    }
+    
+    public function deleteCard(Request $request) {
+        
+        $is_exist = UserCardDetail::where(['id' => $request->card_id, 'user_id' => $request->user_id])->first();
+        if (empty($is_exist)) {
+            return $this->returnError($this->errorMsg['error.card.not.found']);
+        }
+        
+        $is_exist->delete();
+        return $this->returnSuccess(__($this->successMsg['success.card.delete']), []);
     }
 }
