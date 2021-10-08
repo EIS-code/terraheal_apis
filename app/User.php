@@ -469,7 +469,7 @@ class User extends BaseModel implements Authenticatable
     public function getGlobalResponse(int $id)
     {
         $model  = new UserFavoriteService();
-        $data   = $this->where('id', $id)->with(['country', 'city', 'userFavoriteServices', 'userCards'])->get();
+        $data   = $this->where('id', $id)->with(['country', 'city', 'userFavoriteServices', 'userCards'])->first();
 
         if (!empty($data)) {
             foreach ($data as &$record){
