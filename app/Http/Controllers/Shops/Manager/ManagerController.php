@@ -75,6 +75,7 @@ class ManagerController extends BaseController {
         'document.reject' => 'Document rejected successfully !',
         'document.delete' => 'Document deleted successfully !',
         'service.add' => 'Service added successfully !',
+        'service.delete' => 'Service deleted successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -859,6 +860,6 @@ class ManagerController extends BaseController {
             }
         }
         
-        return $this->returnSuccess(__($this->successMsg['service.add']),$all_services);
+        return $this->returnSuccess(__($this->successMsg['service.delete']),$all_services);
     }
 }
