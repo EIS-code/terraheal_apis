@@ -199,11 +199,13 @@ class TherapistController extends BaseController {
                     $avg += $value->rating;
                     $cnt++;
                 }
-                $ratingData[] = [
-                    'question_id' => $first->question_id,
-                    'question' => $first->question->question,
-                    'rate' => (float) number_format($avg / $cnt, 2)
-                ];
+                if(!empty($first->question)) {
+                    $ratingData[] = [
+                        'question_id' => $first->question_id,
+                        'question' => $first->question->question,
+                        'rate' => (float) number_format($avg / $cnt, 2)
+                    ];
+                }
             }
             return $this->returnSuccess(__($this->successMsg['therapist.ratings']), $ratingData);
             
