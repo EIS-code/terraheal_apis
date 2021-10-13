@@ -378,6 +378,7 @@ class WaitingListController extends BaseController {
 
         DB::beginTransaction();
         try {
+            $total_price = 0;
             if (!empty($request->users)) {
                 $shopModel = new Shop();
                 $bookingModel = new Booking();
@@ -430,9 +431,11 @@ class WaitingListController extends BaseController {
                             if (!empty($service['isError']) && !empty($service['message'])) {
                                 return $this->returnError($service['message'], NULL, true);
                             }
+                            $total_price += $service['price'];
                         }
                     }
                 }
+                $newBooking->update(['total_price' => $total_price]);
             }
             DB::commit();
             return $this->returnSuccess(__($this->successMsg['new.booking']));

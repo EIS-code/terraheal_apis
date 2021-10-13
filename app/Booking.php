@@ -29,7 +29,9 @@ class Booking extends BaseModel
         'shop_id',
         'booking_date_time',
         'pack_id',
-        'book_platform'
+        'book_platform',
+        'total_price',
+        'payment_type'
     ];
 
     protected $hidden = ['is_removed', 'updated_at', 'deleted_at'];

@@ -329,6 +329,7 @@ class UserController extends BaseController
         try {
             $shopModel    = new Shop();
             $bookingModel = new Booking();
+            $total_price = 0;
 
             if ($request->session_id == SessionType::SINGLE && count($request->users) > 1) {
                 return $this->returns('error.single.users', NULL, true);
@@ -342,12 +343,14 @@ class UserController extends BaseController
                 return $this->returns('error.group.users', NULL, true);
             }
 
+            $date = !empty($request->booking_date_time) ? Carbon::createFromTimestampMs($request->booking_date_time) : Carbon::now();
             $bookingData = [
                 'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
                 'special_notes' => $request->special_notes,
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
                 'session_id' => $request->session_id,
+                'booking_date_time' => $date,
                 'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
                 'bring_table_futon' => !empty($request->bring_table_futon) ? (string)$request->bring_table_futon : $bookingModel::BRING_TABLE_FUTON_NONE,
                 'table_futon_quantity' => !empty($request->table_futon_quantity) ? (int)$request->table_futon_quantity : 0
@@ -359,7 +362,7 @@ class UserController extends BaseController
             }
 
             $newBooking = Booking::create($bookingData);
-
+            
             $request->request->add(['booking_id' => $newBooking->id]);
 
             if (!empty($request->users)) {
@@ -386,8 +389,10 @@ class UserController extends BaseController
                         if (!empty($service['isError']) && !empty($service['message'])) {
                             return $this->returns($service['message'], NULL, true);
                         }
+                        $total_price += $service['price'];
                     }
                 }
+                $newBooking->update(['total_price' => $total_price]);
             } else {
                 return $this->returns('error.booking.select.user', NULL, true);
             }
