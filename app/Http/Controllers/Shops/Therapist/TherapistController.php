@@ -15,6 +15,7 @@ use Carbon\CarbonPeriod;
 use DB;
 use App\TherapistNews;
 use App\TherapistReview;
+use App\TherapistReviewQuestion;
 
 class TherapistController extends BaseController {
 
@@ -189,6 +190,7 @@ class TherapistController extends BaseController {
         }
         
         $ratings = $ratings->get()->groupBy('question_id');
+        $ques = TherapistReviewQuestion::all()->pluck('id')->toArray();
         $ratingData = [];
         if(!empty($ratings)) {
             foreach ($ratings as $key => $rate) {
@@ -204,6 +206,17 @@ class TherapistController extends BaseController {
                         'question_id' => $first->question_id,
                         'question' => $first->question->question,
                         'rate' => (float) number_format($avg / $cnt, 2)
+                    ];
+                    $ans[] = $first->question_id;
+                }
+            }
+            foreach ($ques as $key => $q) {
+                if (!in_array($q, $ans)) {
+                    $question = TherapistReviewQuestion::find($q);
+                    $ratingData[] = [
+                        'question_id' => $q,
+                        'question' => $question->question,
+                        'rate' => 0
                     ];
                 }
             }
