@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\BookingInfo;
 use App\MassagePreferenceOption;
 use App\BookingMassageStart;
+use Carbon\Carbon;
 
 class BookingMassage extends BaseModel
 {
@@ -120,5 +121,43 @@ class BookingMassage extends BaseModel
         }
 
         return 0;
+    }
+    
+    public function addBookingMassages($service, $bookingInfo, $request, $user) {
+        
+        $bookingMassageModel = new BookingMassage();     
+        $servicePrice = ServicePricing::where(['service_timing_id' => $service['service_timing_id']])->first();
+        if(empty($servicePrice)) {
+                return ['isError' => true, 'message' => 'Service price not found'];
+        }
+        
+        $injuries = !empty($user['notes_of_injuries']) ? $user['notes_of_injuries'] : (!empty($request->notes_of_injuries) ? $request->notes_of_injuries : NULL);
+
+        $date = !empty($request->massage_date_time) ? Carbon::createFromTimestampMs($request->massage_date_time) : NULL;
+
+        $bookingMassageData = [
+            "massage_date_time" => $date,
+            "price" => $servicePrice->price,
+            "cost" => $servicePrice->cost,
+            "origional_price" => $servicePrice->price,
+            "origional_cost"  => $servicePrice->cost,
+            "exchange_rate" => isset($service['exchange_rate']) ? $service['exchange_rate'] : 0.00,
+            "notes_of_injuries" => $injuries,
+            "service_pricing_id" => $servicePrice->id,
+            "booking_info_id" => $bookingInfo->id,
+            "pressure_preference" => $service['pressure_preference'],
+            "gender_preference" => !empty($service['gender_preference']) ? $service['gender_preference'] : (!empty($request->gender_preference) ? $request->gender_preference : NULL),
+            "focus_area_preference" => !empty($service['focus_area_preference']) ? $service['focus_area_preference'] : NULL,
+            "language_id" => !empty($request->language_id) ? $request->language_id : NULL,
+        ];
+
+        $checks = $bookingMassageModel->validator($bookingMassageData);
+
+        if ($checks->fails()) {
+            return ['isError' => true, 'message' => $checks->errors()->first()];
+        }
+
+        $is_done = BookingMassage::updateOrCreate(["service_pricing_id" => $servicePrice->id,"booking_info_id" => $bookingInfo->id], $bookingMassageData);
+        return ['is_done' => $is_done, 'price' => $servicePrice->price];
     }
 }

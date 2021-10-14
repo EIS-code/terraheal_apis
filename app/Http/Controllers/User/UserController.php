@@ -383,8 +383,9 @@ class UserController extends BaseController
                         return $this->returns($bookingInfo['message'], NULL, true);
                     }
 
+                    $massageModel = new BookingMassage();
                     foreach ($user['services'] as $key => $value) {
-                        $service = $shopModel->addBookingMassages($value, $bookingInfo, $request, $user);
+                        $service = $massageModel->addBookingMassages($value, $bookingInfo, $request, $user);
 
                         if (!empty($service['isError']) && !empty($service['message'])) {
                             return $this->returns($service['message'], NULL, true);
