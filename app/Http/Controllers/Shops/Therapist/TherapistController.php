@@ -227,7 +227,15 @@ class TherapistController extends BaseController {
             return $this->returnSuccess(__($this->successMsg['therapist.ratings']), $ratingData);
             
         } else {
-            return $this->returnError(__($this->successMsg['no.data.found']));
+            foreach ($ques as $key => $q) {
+                    $question = TherapistReviewQuestion::find($q);
+                    $ratingData[] = [
+                        'question_id' => $q,
+                        'question' => $question->question,
+                        'rate' => 0
+                    ];
+            }
+            return $this->returnSuccess(__($this->successMsg['therapist.ratings']), $ratingData);
         }
     }
     
