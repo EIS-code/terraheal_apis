@@ -32,6 +32,7 @@ class TherapistController extends BaseController {
         'therapist.attendance' => 'Therapist attendance data found successfully !',
         'no.data.found' => 'No data found',
         'news.read' => 'News read successfully !',
+        'therapist.id' => 'Please provide therapist Id !',
     ];
     
     public function myBookings(Request $request) {
@@ -152,6 +153,9 @@ class TherapistController extends BaseController {
     public function getTherapistRatings(Request $request) {
         
         $filter = !empty($request->filter) ? $request->filter : TherapistReview::TODAY;
+        if(empty($request->therapist_id)) {
+            return $this->returnError(__($this->successMsg['therapist.id']));
+        }
         $ratings = TherapistReview::with('question')->where(['therapist_id' => $request->therapist_id]);
         $now = Carbon::now();
         
@@ -223,7 +227,7 @@ class TherapistController extends BaseController {
             return $this->returnSuccess(__($this->successMsg['therapist.ratings']), $ratingData);
             
         } else {
-            return $this->returnSuccess(__($this->successMsg['no.data.found']));
+            return $this->returnError(__($this->successMsg['no.data.found']));
         }
     }
     
