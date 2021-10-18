@@ -25,6 +25,7 @@ use App\ForgotOtp;
 use App\TherapyQuestionnaireAnswer;
 use App\TherapistDocument;
 use App\TherapistSelectedService;
+use Carbon\CarbonPeriod;
 
 class ManagerController extends BaseController {
 
@@ -86,12 +87,13 @@ class ManagerController extends BaseController {
             $data = $request->all();
             $therapist = Therapist::find($data['therapist_id']);
             $scheduleModel = new TherapistWorkingSchedule();
-            $date = Carbon::createFromTimestampMs($data['date']);
-            
-            foreach ($data['shifts'] as $key => $shift) {
-                    
+            $from_date = Carbon::createFromTimestampMs($data['from_date']);
+            $to_date = Carbon::createFromTimestampMs($data['to_date']);
+            $period = CarbonPeriod::create($from_date, $to_date)->toArray();
+
+            foreach ($period as $key => $date) {
                 $scheduleData = [
-                    'shift_id' => $shift,
+                    'shift_id' => $data['shift'],
                     'date' => $date->format('Y-m-d'),
                     'therapist_id' => $data['therapist_id'],
                     'is_working' => TherapistWorkingSchedule::WORKING,
