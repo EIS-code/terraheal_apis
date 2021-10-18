@@ -192,7 +192,7 @@ class TherapistController extends BaseController {
         $ratings = $ratings->get()->groupBy('question_id');
         $ques = TherapistReviewQuestion::all()->pluck('id')->toArray();
         $ratingData = [];
-        if(!empty($ratings)) {
+        if(count($ratings) > 0) {
             foreach ($ratings as $key => $rate) {
              
                 $first = $rate->first();
