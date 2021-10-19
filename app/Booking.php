@@ -77,6 +77,9 @@ class Booking extends BaseModel
         self::BOOKING_PLATFORM_APP => 'App',
         self::BOOKING_PLATFORM_WEB => 'Web'
     ];
+    
+    const PAYMENT_FULL = '0';
+    const PAYMENT_HALF = '1';
 
     public function validator(array $data, $isUpdate = false)
     {
@@ -133,6 +136,11 @@ class Booking extends BaseModel
     public function bookingInfo()
     {
         return $this->hasMany('App\BookingInfo', 'booking_id', 'id');
+    }
+    
+    public function payment()
+    {
+        return $this->hasOne('App\BookingPayment', 'booking_id', 'id');
     }
 
     public function bookingInfoWithFilters($type = 'today')

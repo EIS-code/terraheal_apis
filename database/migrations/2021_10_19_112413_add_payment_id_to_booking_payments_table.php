@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddStripeTokenToUserCardDetailsTable extends Migration
+class AddPaymentIdToBookingPaymentsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class AddStripeTokenToUserCardDetailsTable extends Migration
      */
     public function up()
     {
-        Schema::table('user_card_details', function (Blueprint $table) {
-            $table->string('stripe_token')->nullable()->after('cvv');
+        Schema::table('booking_payments', function (Blueprint $table) {
+            $table->string('payment_id')->nullable()->after('booking_id');
         });
     }
 
@@ -25,8 +25,8 @@ class AddStripeTokenToUserCardDetailsTable extends Migration
      */
     public function down()
     {
-        Schema::table('user_card_details', function (Blueprint $table) {
-            $table->dropColumn('stripe_token');
+        Schema::table('booking_payments', function (Blueprint $table) {
+            $table->dropColumn('payment_id');
         });
     }
 }

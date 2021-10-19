@@ -17,7 +17,8 @@
         "laravel/lumen-framework": "^7.0",
         "laravel/scout": "^8.6",
         "laravelista/lumen-vendor-publish": "^7.0.0",
-        "owen-it/laravel-auditing": "^10.0"
+        "owen-it/laravel-auditing": "^10.0",
+        "stripe/stripe-php": "^7.98"
     },
     "require-dev": {
         "fzaninotto/faker": "^1.9.1",

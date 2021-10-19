@@ -14,10 +14,8 @@ class BookingPayment extends Model
         'remaining_amounts',
         'paid_percentage',
         'is_success',
-        'api_responce',
-        'currency_id',
         'booking_id',
-        'shop_payment_detail_id'
+        'payment_id'
     ];
 
     public function validator(array $data)
@@ -29,10 +27,8 @@ class BookingPayment extends Model
             'remaining_amounts'      => ['required'],
             'paid_percentage'        => ['required'],
             'is_success'             => ['required', 'integer'],
-            'api_responce'           => ['max:255'],
-            'currency_id'            => ['required', 'integer'],
-            'booking_id'             => ['required', 'integer'],
-            'shop_payment_detail_id' => ['required', 'integer']
+            'payment_id'             => ['nullable', 'string'],
+            'booking_id'             => ['required', 'integer']
         ]);
 
         return $validator;

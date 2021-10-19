@@ -42,7 +42,8 @@ class AuthApi
                 $request->is('therapist*') || 
                 $request->is('waiting*') || 
                 $request->is('service*') || 
-                $request->is('manager*')
+                $request->is('manager*') ||
+                $request->is('payment*')
         ) {
             return $next($request);
         }

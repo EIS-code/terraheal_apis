@@ -13,8 +13,7 @@ class UserCardDetail extends BaseModel
         'exp_year',
         'cvv',
         'user_id',
-        'is_default',
-        'stripe_token'
+        'is_default'
     ];
 
     const CARD_DEFAULT = '1';
@@ -28,7 +27,6 @@ class UserCardDetail extends BaseModel
             'exp_month'    => ['required', 'integer'],
             'exp_year'     => ['required', 'integer'],
             'cvv'          => ['required', 'integer'],
-            'stripe_token' => ['nullable', 'string'],
             'user_id'      => ['required', 'integer', 'exists:' . User::getTableName() . ',id']
         ]);
     }

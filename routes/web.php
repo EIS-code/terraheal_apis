@@ -73,4 +73,5 @@ $router->group(['middleware' => ['auth']], function () use($router) {
     include("shops.php");
     include("superAdmin.php");
     include("notification.php");
+    include("stripe.php");
 });
