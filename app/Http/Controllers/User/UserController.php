@@ -39,6 +39,7 @@ use App\UserCardDetail;
 use Illuminate\Support\Str;
 use App\ForgotOtp;
 use App\TherapistUserRating;
+use App\BookingPayment;
 
 class UserController extends BaseController
 {
@@ -397,13 +398,17 @@ class UserController extends BaseController
             } else {
                 return $this->returns('error.booking.select.user', NULL, true);
             }
-
+            
             DB::commit();
-
+            $request->booking_id = $newBooking->id;
+            $paymentModule = new BookingPayment();
+            $payment = $paymentModule->bookingPayment($request);
+            if (!empty($payment['isError']) && !empty($payment['message'])) {
+                return $this->returns($payment['message'], NULL, true);
+            }
             return $this->returns('success.booking.created', $bookingModel->getGlobalQuery($request));
         } catch (\Throwable $e) {
             DB::rollback();
-
             throw $e;
         }
 
