@@ -58,25 +58,16 @@ class BookingPayment extends Model
                     $amount = $booking->total_price;
                 }
             }
-            if ($amount > 0) {
-                $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
-                $token_obj = $stripe->tokens->create([
-                    'card' => [
-                        'number' => $card->card_number,
-                        'exp_month' => $card->exp_month,
-                        'exp_year' => $card->exp_year,
-                        'cvc' => $card->cvv,
-                    ],
-                ]);
-
+            if ($amount > 0) {               
                 try {
                     Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
-                    $charge = Stripe\Charge::create([
+                    $charge = \Stripe\Charge::create(array(
                                 "amount" => $amount * 100,
                                 "currency" => "usd",
-                                "source" => $token_obj->id,
-                                "description" => "Test payment from evolution.com."
-                    ]);
+                                "customer" => $card->stripe_id,
+                                "description" => "Test payment from evolution.com.")
+                    );
+
                     if ($charge->status == 'succeeded') {
                         $data = [
                             'final_amounts' => $booking->total_price,

@@ -40,6 +40,7 @@ use Illuminate\Support\Str;
 use App\ForgotOtp;
 use App\TherapistUserRating;
 use App\BookingPayment;
+use Stripe;
 
 class UserController extends BaseController
 {
@@ -1734,21 +1735,38 @@ class UserController extends BaseController
     
     public function saveCardDetails(Request $request) {
         
-        $data = $request->all();
-        $model = new UserCardDetail();
-        $user = User::find($request->user_id);
-        
-        $validator = $model->validator($data);
-        if ($validator->fails()) {
-            return $this->returns($validator->errors()->first(), NULL, true);
-        }
-        
-        $create = UserCardDetail::create($data);
-        $create->is_document_uploaded = $user->is_document_uploaded;
-        
-        $this->checkDocument($request);
-        if($create) {
-            return $this->returns('success.card.details.added', $create);
+        DB::beginTransaction();
+        try {
+
+            $data = $request->all();
+            $model = new UserCardDetail();
+            $user = User::find($request->user_id);
+
+            $validator = $model->validator($data);
+            if ($validator->fails()) {
+                return $this->returns($validator->errors()->first(), NULL, true);
+            }
+
+            $create = UserCardDetail::create($data);
+            
+            $create->is_document_uploaded = $user->is_document_uploaded;
+            $this->checkDocument($request);
+            unset($create->is_document_uploaded);
+            
+            if ($create) {
+
+                Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                // Create a Customer
+                $customer = \Stripe\Customer::create(array(
+                            "source" => $request->stripe_token,
+                            'email' => $user->email,
+                            'name' => $user->name));
+                $create->update(['stripe_id' => $customer->id]);
+                DB::commit();
+                return $this->returns('success.card.details.added', $create);
+            }
+        } catch (Exception $e) {
+            DB::rollBack();
         }
         return $this->returns('error.something', NULL, true);
     }
