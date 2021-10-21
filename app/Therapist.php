@@ -759,6 +759,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id');
        
         $allTherapists = [];
+        dd($therapists);
         if(count($therapists) > 0) {
             
             foreach ($therapists as $key => $value) {
