@@ -720,7 +720,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 ->leftJoin('countries', 'therapists.country_id', '=', 'countries.id')
                 ->leftJoin('cities', 'therapists.city_id', '=', 'cities.id')
                 ->join('shops', 'therapists.shop_id', '=', 'shops.id')
-                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_massages.massage_date_time as massageDate', 
+                ->select('bookings.id as booking_id', 'booking_infos.id as booking_info_id', 'booking_massages.id as booking_massage_id', 'booking_massages.massage_date_time', 
                         'therapists.id as therapist_id', 'therapists.country_id', 'therapists.city_id', 'therapists.email', 'therapists.mobile_number', 'therapists.nif',
                         DB::raw('CONCAT(COALESCE(therapists.name,"")," ",COALESCE(therapists.surname,"")) AS therapistName'), 'therapists.profile_photo',
                         'countries.name as country_name', 'cities.name as city_name', 'shops.address as shop_address')
@@ -759,7 +759,6 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $therapists = $therapists->orderBy('booking_massage_id', 'DESC')->get()->groupBy('therapist_id');
        
         $allTherapists = [];
-        dd($therapists);
         if(count($therapists) > 0) {
             
             foreach ($therapists as $key => $value) {
