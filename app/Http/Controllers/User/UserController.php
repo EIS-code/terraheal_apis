@@ -1742,11 +1742,18 @@ class UserController extends BaseController
             $model = new UserCardDetail();
             $user = User::find($request->user_id);
 
+            $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
+            $token = $stripe->tokens->retrieve(
+                    $request->stripe_token, []);
+            $data['card_number'] = $token->card->last4;
+            $data['exp_month'] = $token->card->exp_month;
+            $data['exp_year'] = $token->card->exp_year;
+            
             $validator = $model->validator($data);
             if ($validator->fails()) {
                 return $this->returns($validator->errors()->first(), NULL, true);
             }
-
+            
             $create = UserCardDetail::create($data);
             
             $create->is_document_uploaded = $user->is_document_uploaded;
