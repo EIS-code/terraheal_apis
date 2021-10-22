@@ -46,6 +46,8 @@ class ManagerController extends BaseController {
         'data.not.found' => 'Data not found.',
         'therapist.not.found' => 'Therapist not found.',
         'schedule.not.found' => 'Schedule data not found.',
+        'from.date.not.found' => 'Please select from date.',
+        'to.date.not.found' => 'Please select to date.',
     ];
     
     public $successMsg = [
@@ -88,15 +90,21 @@ class ManagerController extends BaseController {
 
             $data = $request->all();
             $therapist = Therapist::find($data['therapist_id']);
+            $scheduleModel = new TherapistWorkingSchedule();
+            $schedule = [];
             
             if(empty($therapist)) {
                 return $this->returnError($this->errorMsg['therapist.not.found']);
             }
-            $scheduleModel = new TherapistWorkingSchedule();
+            if(empty($data['from_date'])) {
+                return $this->returnError($this->errorMsg['from.date.not.found']);
+            }
+            if(empty($data['to_date'])) {
+                return $this->returnError($this->errorMsg['to.date.not.found']);
+            }
             $from_date = Carbon::createFromTimestampMs($data['from_date']);
             $to_date = Carbon::createFromTimestampMs($data['to_date']);
             $period = CarbonPeriod::create($from_date, $to_date)->toArray();
-            $schedule = [];
             
             if(!empty($period)) {
                 foreach ($period as $key => $date) {
