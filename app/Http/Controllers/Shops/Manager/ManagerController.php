@@ -89,7 +89,7 @@ class ManagerController extends BaseController {
         try {
 
             $data = $request->all();
-            $therapist = Therapist::find($data['therapist_id']);
+            $therapist = Therapist::find($request->therapist_id);
             $scheduleModel = new TherapistWorkingSchedule();
             $schedule = [];
             
@@ -109,9 +109,9 @@ class ManagerController extends BaseController {
             if(!empty($period)) {
                 foreach ($period as $key => $date) {
                     $scheduleData = [
-                        'shift_id' => $data['shift'],
+                        'shift_id' => $request->shift,
                         'date' => $date->format('Y-m-d'),
-                        'therapist_id' => $data['therapist_id'],
+                        'therapist_id' => $request->therapist_id,
                         'is_working' => TherapistWorkingSchedule::WORKING,
                         'shop_id' => $therapist->shop_id
                     ];
