@@ -49,14 +49,12 @@ class SuperAdminController extends BaseController {
         'voucher.update' => 'Voucher updated successfully!',
         'voucher.get' => 'Vouchers found successfully!',
         'voucher.share' => 'Voucher shared successfully!',
-        'voucher.shared' => 'Voucher already shared!',
-        'voucher.purchase' => 'Voucher purchased successfully!',
+        'voucher.shared' => 'Voucher already shared!',        
         'voucher.add.services' => 'Services added to voucher successfully!',
         'pack.add' => 'Pack created successfully!',
         'pack.share' => 'Pack shared successfully!',
         'pack.shared' => 'Pack already shared!',
-        'pack.get' => 'Packs found successfully!',
-        'pack.purchase' => 'Pack purchased successfully!',
+        'pack.get' => 'Packs found successfully!',        
         'login' => "Login successfully !",
         'edit.profile' => "Profile updated successfully!",
         'details.found' => "Admin details found successfully!",
@@ -186,23 +184,6 @@ class SuperAdminController extends BaseController {
         }
     }
 
-    public function purchaseVoucher(Request $request) {
-
-        $model = new UserVoucherPrice();
-        $data = $request->all();
-        $voucher = Voucher::find($request->voucher_id);
-        $data['total_value'] = $voucher->price;
-        $data['purchase_date'] = Carbon::now()->format('Y-m-d');
-
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
-        }
-
-        $purchaseVoucher = $model->create($data);
-        return $this->returnSuccess(__($this->successMsg['voucher.purchase']), $purchaseVoucher);
-    }
-
     public function addPack(Request $request) {
 
         DB::beginTransaction();
@@ -281,22 +262,7 @@ class SuperAdminController extends BaseController {
         
         $packs = Pack::with('services')->get();
         return $this->returnSuccess(__($this->successMsg['pack.get']), $packs);
-    }
-    
-    public function purchasePack(Request $request) {
-        
-        $model = new UserPack();
-        $data = $request->all();
-        $data['purchase_date'] = Carbon::now()->format('Y-m-d');
-
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
-        }
-        
-        $purchasePack = $model->create($data);
-        return $this->returnSuccess(__($this->successMsg['pack.purchase']), $purchasePack);
-    }
+    }        
     
     public function signIn(Request $request) {
         $data = $request->all();

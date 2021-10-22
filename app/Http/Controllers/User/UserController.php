@@ -153,6 +153,8 @@ class UserController extends BaseController
         'success.otp.verified' => 'Otp verified successfully !',
         'success.card.save' => 'User card details save successfully !',
         'success.card.delete' => 'User card delete successfully !',
+        'pack.purchase' => 'Pack purchased successfully!',
+        'voucher.purchase' => 'Voucher purchased successfully!',
     ];
 
     public function __construct()
@@ -1936,5 +1938,37 @@ class UserController extends BaseController
         
         $is_exist->delete();
         return $this->returnSuccess(__($this->successMsg['success.card.delete']), []);
+    }
+    
+    public function purchaseVoucher(Request $request) {
+
+        $model = new UserVoucherPrice();
+        $data = $request->all();
+        $voucher = Voucher::find($request->voucher_id);
+        $data['total_value'] = $voucher->price;
+        $data['purchase_date'] = Carbon::now()->format('Y-m-d');
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+
+        $purchaseVoucher = $model->create($data);
+        return $this->returnSuccess(__($this->successMsg['voucher.purchase']), $purchaseVoucher);
+    }
+    
+    public function purchasePack(Request $request) {
+        
+        $model = new UserPack();
+        $data = $request->all();
+        $data['purchase_date'] = Carbon::now()->format('Y-m-d');
+
+        $checks = $model->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $purchasePack = $model->create($data);
+        return $this->returnSuccess(__($this->successMsg['pack.purchase']), $purchasePack);
     }
 }

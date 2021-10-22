@@ -44,6 +44,8 @@ class ManagerController extends BaseController {
         'not.verified' => 'Your account is not verified yet.',
         'ans.not.found' => 'Therapy questionnaries answer not found.',
         'data.not.found' => 'Data not found.',
+        'therapist.not.found' => 'Therapist not found.',
+        'schedule.not.found' => 'Schedule data not found.',
     ];
     
     public $successMsg = [
@@ -86,27 +88,35 @@ class ManagerController extends BaseController {
 
             $data = $request->all();
             $therapist = Therapist::find($data['therapist_id']);
+            
+            if(empty($therapist)) {
+                return $this->returnError($this->errorMsg['therapist.not.found']);
+            }
             $scheduleModel = new TherapistWorkingSchedule();
             $from_date = Carbon::createFromTimestampMs($data['from_date']);
             $to_date = Carbon::createFromTimestampMs($data['to_date']);
             $period = CarbonPeriod::create($from_date, $to_date)->toArray();
-
-            foreach ($period as $key => $date) {
-                $scheduleData = [
-                    'shift_id' => $data['shift'],
-                    'date' => $date->format('Y-m-d'),
-                    'therapist_id' => $data['therapist_id'],
-                    'is_working' => TherapistWorkingSchedule::WORKING,
-                    'shop_id' => $therapist->shop_id
-                ];
-                $checks = $scheduleModel->validator($scheduleData);
-                if ($checks->fails()) {
-                    return $this->returnError($checks->errors()->first(), NULL, true);
+            $schedule = [];
+            
+            if(!empty($period)) {
+                foreach ($period as $key => $date) {
+                    $scheduleData = [
+                        'shift_id' => $data['shift'],
+                        'date' => $date->format('Y-m-d'),
+                        'therapist_id' => $data['therapist_id'],
+                        'is_working' => TherapistWorkingSchedule::WORKING,
+                        'shop_id' => $therapist->shop_id
+                    ];
+                    $checks = $scheduleModel->validator($scheduleData);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $schedule[] = $scheduleModel->updateOrCreate($scheduleData, $scheduleData);
                 }
-                $schedule[] = $scheduleModel->updateOrCreate($scheduleData, $scheduleData);
+                DB::commit();
+                return $this->returnSuccess(__($this->successMsg['therapist.availability']), $schedule);
             }
-            DB::commit();
-            return $this->returnSuccess(__($this->successMsg['therapist.availability']), $schedule);
+            return $this->returnError($this->errorMsg['schedule.not.found']);
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;

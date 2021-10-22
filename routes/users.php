@@ -133,6 +133,11 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/save', 'UserController@saveFavorite');
         $router->post('/remove', 'UserController@removeFavorite');
     });
+    
+    $router->group(['prefix' => 'purchase'], function () use($router) {
+        $router->post('/voucher', 'UserController@purchaseVoucher');
+        $router->post('/pack', 'UserController@purchasePack');
+    });
 
     $router->get('qr/temp/get', 'UserController@getQRTemp');
     $router->post('service/timing/get', 'UserController@getServiceTiming');
