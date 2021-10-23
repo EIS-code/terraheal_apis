@@ -41,6 +41,9 @@ use App\ForgotOtp;
 use App\TherapistUserRating;
 use App\BookingPayment;
 use Stripe;
+use App\UserVoucherPrice;
+use App\Voucher;
+use App\Pack;
 
 class UserController extends BaseController
 {
@@ -83,7 +86,10 @@ class UserController extends BaseController
         'error.booking.massage.confirm' => 'Booking massage is confirm.',
         'error.pack.purchased' => 'Pack already purchased.',
         'error.card.not.found' => 'User card details not found.',
-        'otp.not.found' => 'Otp not found !'
+        'otp.not.found' => 'Otp not found !',
+        'voucher.not.found' => 'Voucher not found !',
+        'pack.not.found' => 'Pack not found !',
+        'card.not.found' => 'Card not found !',
     ];
 
     public $successMsg = [
@@ -1942,33 +1948,121 @@ class UserController extends BaseController
     
     public function purchaseVoucher(Request $request) {
 
-        $model = new UserVoucherPrice();
-        $data = $request->all();
-        $voucher = Voucher::find($request->voucher_id);
-        $data['total_value'] = $voucher->price;
-        $data['purchase_date'] = Carbon::now()->format('Y-m-d');
+        DB::beginTransaction();
+        try {
+            $card = UserCardDetail::where(['user_id' => $request->user_id, 'is_default' => UserCardDetail::CARD_DEFAULT])->first();
+            if(empty($card)) {
+                return $this->returnError($this->errorMsg['card.not.found']);
+            }
+            $voucher = Voucher::find($request->voucher_id);
+            if(empty($voucher)) {
+                return $this->returnError($this->errorMsg['voucher.not.found']);
+            }
+            
+            
+            try {
+                Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                $charge = \Stripe\Charge::create(array(
+                            "amount" => $voucher->price * 100,
+                            "currency" => "usd",
+                            "customer" => $card->stripe_id,
+                            "description" => "Test payment from evolution.com.")
+                );
 
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
+                if ($charge->status == 'succeeded') {
+                    $model = new UserVoucherPrice();
+                    $data = $request->all();
+                    $data['total_value'] = $voucher->price;
+                    $data['purchase_date'] = Carbon::now()->format('Y-m-d');
+
+                    $checks = $model->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $purchaseVoucher = $model->create($data);
+                }
+                DB::commit();
+                return $this->returnSuccess(__($this->successMsg['voucher.purchase']), $purchaseVoucher);
+            } catch (\Stripe\Exception\CardException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\RateLimitException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\InvalidRequestException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\AuthenticationException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\ApiConnectionException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\ApiErrorException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (Exception $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            }            
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
         }
-
-        $purchaseVoucher = $model->create($data);
-        return $this->returnSuccess(__($this->successMsg['voucher.purchase']), $purchaseVoucher);
     }
     
     public function purchasePack(Request $request) {
         
-        $model = new UserPack();
-        $data = $request->all();
-        $data['purchase_date'] = Carbon::now()->format('Y-m-d');
+        DB::beginTransaction();
+        try {
+            $card = UserCardDetail::where(['user_id' => $request->user_id, 'is_default' => UserCardDetail::CARD_DEFAULT])->first();
+            if(empty($card)) {
+                return $this->returnError($this->errorMsg['card.not.found']);
+            }
+            $pack = Pack::find($request->pack_id);
+            if(empty($pack)) {
+                return $this->returnError($this->errorMsg['pack.not.found']);
+            }
+            
+            try {
+                Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                $charge = \Stripe\Charge::create(array(
+                            "amount" => $pack->pack_price  * 100,
+                            "currency" => "usd",
+                            "customer" => $card->stripe_id,
+                            "description" => "Test payment from evolution.com.")
+                );
 
-        $checks = $model->validator($data);
-        if ($checks->fails()) {
-            return $this->returnError($checks->errors()->first(), NULL, true);
-        }
-        
-        $purchasePack = $model->create($data);
-        return $this->returnSuccess(__($this->successMsg['pack.purchase']), $purchasePack);
+                if ($charge->status == 'succeeded') {
+                    $model = new UserPack();
+                    $data = $request->all();
+                    $data['purchase_date'] = Carbon::now()->format('Y-m-d');
+
+                    $checks = $model->validator($data);
+                    if ($checks->fails()) {
+                        return $this->returnError($checks->errors()->first(), NULL, true);
+                    }
+                    $purchasePack = $model->create($data);
+                }
+                DB::commit();
+                return $this->returnSuccess(__($this->successMsg['pack.purchase']), $purchasePack);
+            } catch (\Stripe\Exception\CardException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\RateLimitException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\InvalidRequestException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\AuthenticationException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\ApiConnectionException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\ApiErrorException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (Exception $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            }            
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }                
     }
 }
