@@ -14,7 +14,8 @@ class UserVoucherPrice extends BaseModel
         "total_value",
         "used_value",
         "available_value",
-        "purchase_date"
+        "purchase_date",
+        "payment_id"
     ];
 
     public function validator(array $data)
@@ -25,5 +26,14 @@ class UserVoucherPrice extends BaseModel
             'total_value'   => ['required'],
             'purchase_date' => ['required']
         ]);
+    }
+    
+    public function getPurchaseDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
     }
 }

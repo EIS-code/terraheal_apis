@@ -85,6 +85,7 @@ class UserController extends BaseController
         'error.booking.massage' => 'Booking massage not found.',
         'error.booking.massage.confirm' => 'Booking massage is confirm.',
         'error.pack.purchased' => 'Pack already purchased.',
+        'error.voucher.purchased' => 'Voucher already purchased.',
         'error.card.not.found' => 'User card details not found.',
         'otp.not.found' => 'Otp not found !',
         'voucher.not.found' => 'Voucher not found !',
@@ -1958,7 +1959,10 @@ class UserController extends BaseController
             if(empty($voucher)) {
                 return $this->returnError($this->errorMsg['voucher.not.found']);
             }
-            
+            $is_exist = UserVoucherPrice::where(['user_id' => $request->user_id, 'voucher_id' => $request->voucher_id])->first();
+            if(!empty($is_exist)) {
+                return $this->returnError($this->errorMsg['error.voucher.purchased']);
+            }
             
             try {
                 Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
@@ -1974,7 +1978,8 @@ class UserController extends BaseController
                     $data = $request->all();
                     $data['total_value'] = $voucher->price;
                     $data['purchase_date'] = Carbon::now()->format('Y-m-d');
-
+                    $data['payment_id'] = $charge->id;
+                    
                     $checks = $model->validator($data);
                     if ($checks->fails()) {
                         return $this->returnError($checks->errors()->first(), NULL, true);
@@ -2019,6 +2024,10 @@ class UserController extends BaseController
             if(empty($pack)) {
                 return $this->returnError($this->errorMsg['pack.not.found']);
             }
+            $is_exist = UserPack::where(['user_id' => $request->user_id, 'pack_id' => $request->pack_id])->first();
+            if(!empty($is_exist)) {
+                return $this->returnError($this->errorMsg['error.pack.purchased']);
+            }
             
             try {
                 Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
@@ -2033,7 +2042,8 @@ class UserController extends BaseController
                     $model = new UserPack();
                     $data = $request->all();
                     $data['purchase_date'] = Carbon::now()->format('Y-m-d');
-
+                    $data['payment_id'] = $charge->id;
+                    
                     $checks = $model->validator($data);
                     if ($checks->fails()) {
                         return $this->returnError($checks->errors()->first(), NULL, true);

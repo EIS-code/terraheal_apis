@@ -12,7 +12,8 @@ class UserPack extends BaseModel
     protected $fillable = [
         'pack_id',
         'user_id',
-        'purchase_date'
+        'purchase_date',
+        'payment_id'
     ];
         
     public function validator(array $data)
