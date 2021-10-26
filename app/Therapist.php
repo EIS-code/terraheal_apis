@@ -449,6 +449,16 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
         foreach ($documents as $document) {
             switch ($document) {
+                case 'document_address_proof':
+                    $key = 'document_address_proof';
+
+                    $checkDocumentError = $checkDocument($request, $key, 'jpeg,png,jpg', $inc, $modelTherapistDocument::TYPE_ADDRESS_PROOF);
+
+                    if ($checkDocumentError) {
+                        return ['isError' => true, 'message' => $checkDocumentError];
+                    }
+
+                    break;
                 case 'document_id_passport_front':
                     $key = 'document_id_passport_front';
 

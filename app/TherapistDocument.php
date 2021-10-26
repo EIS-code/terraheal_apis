@@ -26,7 +26,7 @@ class TherapistDocument extends BaseModel
     public $fileSystem = 'public';
     public $directory  = 'therapists\document\\';
 
-    // const TYPE_ADDRESS_PROOF                    = '1';
+    const TYPE_ADDRESS_PROOF                    = '1';
     const TYPE_IDENTITY_PROOF_FRONT             = '2';
     const TYPE_IDENTITY_PROOF_BACK              = '3';
     const TYPE_INSURANCE                        = '4';
