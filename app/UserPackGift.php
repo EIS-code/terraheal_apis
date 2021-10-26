@@ -28,7 +28,8 @@ class UserPackGift extends BaseModel
         'preference_email_date',
         'pack_id',
         'user_id',
-        'is_removed'
+        'is_removed',
+        'payment_id'
     ];
 
     public function validator(array $data)

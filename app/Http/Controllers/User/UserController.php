@@ -1353,40 +1353,81 @@ class UserController extends BaseController
     public function savePackGifts(Request $request)
     {
         $model  = new UserPackGift();
-        $data   = $request->all();
+        $data   = $request->all();        
 
         DB::beginTransaction();
-
         try {
-            if (!empty($data['preference_email_date'])) {
-                $emailDate = $data['preference_email_date'] = date("Y-m-d", ($data['preference_email_date'] / 1000));
+            $card = UserCardDetail::where(['user_id' => $request->user_id, 'is_default' => UserCardDetail::CARD_DEFAULT])->first();
+            if(empty($card)) {
+                return $this->returnError($this->errorMsg['card.not.found']);
             }
-
-            $validator = $model->validator($data);
-            if ($validator->fails()) {
-                return $this->returns($validator->errors()->first(), NULL, true);
+            $pack = Pack::find($request->pack_id);
+            if(empty($pack)) {
+                return $this->returnError($this->errorMsg['pack.not.found']);
             }
+            $is_exist = $model->where(['user_id' => $request->user_id, 'pack_id' => $request->pack_id])->first();
+            if(!empty($is_exist)) {
+                return $this->returnError($this->errorMsg['error.pack.purchased']);
+            }
+            
+            try {
+                Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                $charge = \Stripe\Charge::create(array(
+                            "amount" => $pack->pack_price  * 100,
+                            "currency" => "usd",
+                            "customer" => $card->stripe_id,
+                            "description" => "Test payment from evolution.com.")
+                );
 
-            $model->fill($data);
-            $save = $model->save();
+                if ($charge->status == 'succeeded') {
+                    
+                    if (!empty($data['preference_email_date'])) {
+                        $emailDate = $data['preference_email_date'] = date("Y-m-d", ($data['preference_email_date'] / 1000));
+                    }
+                    $data['payment_id'] = $charge->id;
+                    $validator = $model->validator($data);
+                    if ($validator->fails()) {
+                        return $this->returns($validator->errors()->first(), NULL, true);
+                    }
 
-            if ($save) {
-                $today     = strtotime(date('Y-m-d'));
-                $emailDate = strtotime($emailDate);
+                    $save = $model->create($data);
+                    
+                    if ($save) {
+                        $today = strtotime(date('Y-m-d'));
+                        $emailDate = strtotime($emailDate);
 
-                if ($today == $emailDate) {
-                    // Send Email.
-                } else {
-                    // Set console command for send email for the future date.
+                        if ($today == $emailDate) {
+                            // Send Email.
+                        } else {
+                            // Set console command for send email for the future date.
+                        }
+                    }
                 }
-            }
-        } catch(Exception $e) {
-            DB::rollBack();
+                DB::commit();
+                return $this->returns('success.user.pack.gift.created', collect($data));
+                
+            } catch (\Stripe\Exception\CardException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\RateLimitException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\InvalidRequestException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\AuthenticationException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\ApiConnectionException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\ApiErrorException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (Exception $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            }            
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
         }
-
-        DB::commit();
-
-        return $this->returns('success.user.pack.gift.created', collect($data));
     }
 
     public function isOurQRCode(Request $request)
