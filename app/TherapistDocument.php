@@ -38,7 +38,7 @@ class TherapistDocument extends BaseModel
     const TYPE_OTHERS                           = '10';
 
     public $documentTypes = [
-        // self::TYPE_ADDRESS_PROOF                    => 'Address Proof',
+        self::TYPE_ADDRESS_PROOF                    => 'Address Proof',
         self::TYPE_IDENTITY_PROOF_FRONT             => 'Identity Proof Front',
         self::TYPE_IDENTITY_PROOF_BACK              => 'Identity Proof back',
         self::TYPE_INSURANCE                        => 'Insurance',
