@@ -137,7 +137,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->post('/side/data/get', 'Dashboard\DashboardController@getDetails');
     $router->post('/salesInfo/get', 'Dashboard\DashboardController@salesInfo');
     $router->post('/customerInfo/get', 'Dashboard\DashboardController@customerInfo');
-    $router->post('/document/delete', 'Manager\ManagerController@deleteDocument');
+    $router->post('/therapist/document/delete', 'Manager\ManagerController@deleteDocument');
     
     $router->group(['prefix' => 'therapist'], function () use($router) {
         
