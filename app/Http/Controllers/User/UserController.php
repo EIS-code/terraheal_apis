@@ -91,6 +91,7 @@ class UserController extends BaseController
         'voucher.not.found' => 'Voucher not found !',
         'pack.not.found' => 'Pack not found !',
         'card.not.found' => 'Card not found !',
+        'error.amount' => 'Please provide amount !',
     ];
 
     public $successMsg = [
@@ -1179,56 +1180,94 @@ class UserController extends BaseController
     }
 
     public function saveGiftVouchers(Request $request)
-    {
+    {        
         $model  = new UserGiftVoucher();
-        $data   = $request->all();
+        $data   = $request->all();        
 
         DB::beginTransaction();
-
         try {
-            $uniqueId = mt_rand(10000000,99999999);
-
-            // Check exists.
-            $check = $model->where('unique_id', $uniqueId)->first();
-            if (!empty($check)) {
-                $uniqueId = mt_rand(10000000,99999999);
+            $card = UserCardDetail::where(['user_id' => $request->user_id, 'is_default' => UserCardDetail::CARD_DEFAULT])->first();
+            if(empty($card)) {
+                return $this->returnError($this->errorMsg['card.not.found']);
             }
-
-            $data['unique_id'] = $uniqueId;
-
-            if (!empty($data['preference_email_date'])) {
-                $emailDate = $data['preference_email_date'] = date("Y-m-d", ($data['preference_email_date'] / 1000));
+            if(empty($data['amount'])) {
+                return $this->returnError($this->errorMsg['error.amount']);
             }
+            
+            try {
+                Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                $charge = \Stripe\Charge::create(array(
+                            "amount" => $data['amount'] * 100,
+                            "currency" => "usd",
+                            "customer" => $card->stripe_id,
+                            "description" => "Test payment from evolution.com.")
+                );
 
-            if (!empty($data['amount'])) {
-                $data['amount'] = (float)$data['amount'];
-            }
+                if ($charge->status == 'succeeded') {
 
-            $validator = $model->validator($data);
-            if ($validator->fails()) {
-                return $this->returns($validator->errors()->first(), NULL, true);
-            }
+                    $uniqueId = mt_rand(10000000, 99999999);
 
-            $model->fill($data);
-            $save = $model->save();
+                    // Check exists.
+                    $check = $model->where('unique_id', $uniqueId)->first();
+                    if (!empty($check)) {
+                        $uniqueId = mt_rand(10000000, 99999999);
+                    }
 
-            if ($save) {
-                $today     = strtotime(date('Y-m-d'));
-                $emailDate = strtotime($emailDate);
+                    $data['unique_id'] = $uniqueId;
 
-                if ($today == $emailDate) {
-                    // Send Email.
-                } else {
-                    // Set console command for send email for the future date.
+                    if (!empty($data['preference_email_date'])) {
+                        $emailDate = $data['preference_email_date'] = date("Y-m-d", ($data['preference_email_date'] / 1000));
+                    }
+
+                    if (!empty($data['amount'])) {
+                        $data['amount'] = (float) $data['amount'];
+                    }
+
+                    $data['payment_id'] = $charge->id;
+                    $validator = $model->validator($data);
+                    if ($validator->fails()) {
+                        return $this->returns($validator->errors()->first(), NULL, true);
+                    }
+
+                    $model->fill($data);
+                    $save = $model->save();
+
+                    if ($save) {
+                        $today = strtotime(date('Y-m-d'));
+                        $emailDate = strtotime($emailDate);
+
+                        if ($today == $emailDate) {
+                            // Send Email.
+                        } else {
+                            // Set console command for send email for the future date.
+                        }
+                    }
                 }
-            }
-        } catch(Exception $e) {
-            DB::rollBack();
+                DB::commit();
+                return $this->returns('success.user.gift.voucher.created', $model);
+                
+            } catch (\Stripe\Exception\CardException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\RateLimitException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\InvalidRequestException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\AuthenticationException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\ApiConnectionException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (\Stripe\Exception\ApiErrorException $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            } catch (Exception $e) {
+                return ['isError' => true, 'message' => $e->getError()->message];
+            }            
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
         }
-
-        DB::commit();
-
-        return $this->returns('success.user.gift.voucher.created', $model);
     }
 
     public function getGiftVoucherDesigns()

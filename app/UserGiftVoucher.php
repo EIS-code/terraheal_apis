@@ -31,7 +31,8 @@ class UserGiftVoucher extends BaseModel
         'design_id',
         'unique_id',
         'is_pack',
-        'is_removed'
+        'is_removed',
+        'payment_id'
     ];
 
     public function validator(array $data)
