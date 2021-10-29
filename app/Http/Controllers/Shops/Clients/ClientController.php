@@ -162,6 +162,7 @@ class ClientController extends BaseController {
                 $avg_rate = $cnt == 0 ? 0 : $sum / $cnt;
                 $ratingData[] = [
                     'type' => $type,
+                    'rating_name' => TherapistUserRating::$types[$rating[0]['type']],
                     'users' => $users,
                     'avg_rating' => round($avg_rate, 2),
                 ];

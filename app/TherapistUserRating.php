@@ -16,7 +16,17 @@ class TherapistUserRating extends BaseModel
         'model',
         'edit_by'
     ];
-
+    
+    
+    public static $types = [
+        0 => 'Punctuality And Presence For Reservations',
+        1 => 'Behavior',
+        2 => 'Sexual Issues',
+        3 => 'Hygiene',
+        4 => 'Left Bad / Good Review',
+        5 => 'Payment Issues',
+    ];
+    
     public function validator(array $data, $id = false, $isUpdate = false)
     {
         return Validator::make($data, [
