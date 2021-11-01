@@ -352,10 +352,10 @@ class User extends BaseModel implements Authenticatable
         return $this->name . ' ' . $this->surname;
     }
     
-    public function getSourceAttribute($value)
-    {
-        return (isset(self::$source[$value])) ? self::$source[$value] : $value;
-    }
+//    public function getSourceAttribute($value)
+//    {
+//        return (isset(self::$source[$value])) ? self::$source[$value] : $value;
+//    }
 
     public function qrCodeKey()
     {
