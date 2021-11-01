@@ -14,6 +14,8 @@ class UsersForgottenObjects extends BaseModel
         "is_client_informed",
         "is_returned"
     ];
+    
+    protected $hidden = ['updated_at'];
 
     public function validator(array $data)
     {
@@ -30,8 +32,18 @@ class UsersForgottenObjects extends BaseModel
     {
         return $this->hasOne('App\Shop', 'id', 'shop_id');
     }
+    
     public function rooms()
     {
         return $this->hasOne('App\Room', 'id', 'room_id');
+    }
+    
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
     }
 }

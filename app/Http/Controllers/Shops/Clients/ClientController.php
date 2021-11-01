@@ -275,7 +275,15 @@ class ClientController extends BaseController {
     
     public function addForgotObject(Request $request) {
         
-        $object = UsersForgottenObjects::create($request->all());
+        $objectModel = new UsersForgottenObjects();
+        $data = $request->all();
+        
+        $checks = $objectModel->validator($data);
+        if ($checks->fails()) {
+            return $this->returnError($checks->errors()->first(), NULL, true);
+        }
+        
+        $object = $objectModel->create($request->all());
         return $this->returnSuccess(__($this->successMsg['client.forgot.object']), $object);
         
     }
