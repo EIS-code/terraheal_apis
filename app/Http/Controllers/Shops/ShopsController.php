@@ -263,7 +263,11 @@ class ShopsController extends BaseController {
         
         $location = [];
         foreach ($rooms as $key => $room) {
-            array_push($location, $room->shop->name .'-'. $room->name);
+            
+            $location[] = [
+                'room_id' => $room->id,
+                'room' => $room->shop->name . '-' . $room->name
+            ];
         }
         
         return $this->returnSuccess(__($this->successMsg['success.location']), $location);
