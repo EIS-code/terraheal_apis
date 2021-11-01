@@ -18,6 +18,7 @@ use App\Booking;
 use App\BookingInfo;
 use App\BookingMassage;
 use App\ForgotOtp;
+use App\Room;
 
 class ShopsController extends BaseController {
 
@@ -45,6 +46,7 @@ class ShopsController extends BaseController {
         'success.otp' => 'Otp sent successfully !',
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
+        'success.location' => 'Location get successfully !',
     ];
 
     public function signIn(Request $request) {
@@ -253,5 +255,17 @@ class ShopsController extends BaseController {
             return $this->returnError($this->errorMsg['otp.not.found']);
         }
         return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
+    }
+    
+    public function getShopRooms(Request $request) {
+        
+        $rooms = Room::with('shop')->where('shop_id', $request->shop_id)->get();
+        
+        $location = [];
+        foreach ($rooms as $key => $room) {
+            array_push($location, $room->shop->name .'-'. $room->name);
+        }
+        
+        return $this->returnSuccess(__($this->successMsg['success.location']), $location);
     }
 }

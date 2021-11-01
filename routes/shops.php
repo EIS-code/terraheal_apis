@@ -30,6 +30,7 @@ $router->group(['prefix' => 'shops', 'namespace' => 'Shops'], function () use($r
     $router->post('shifts/get', 'ShopsController@getShifts');
     $router->post('free/slots/get', 'ShopsController@getFreeSlots');
     $router->post('booking/confirm', 'ShopsController@confirmBooking');
+    $router->post('location/get', 'ShopsController@getShopRooms');
 });
 
 $router->group(['prefix' => 'shops', 'namespace' => 'Shops', 'guard' => 'shop'], function () use($router) {
