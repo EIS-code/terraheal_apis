@@ -24,7 +24,7 @@ class UsersForgottenObjects extends BaseModel
             'shop_id' => ['required', 'integer'],
             'room_id' => ['required', 'integer'],
             'is_client_informed' => ['required', 'integer'],
-            'is_returned' => ['required', 'integer']
+            'is_returned' => ['integer']
         ]);
     }
     
