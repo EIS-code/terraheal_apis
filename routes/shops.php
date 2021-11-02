@@ -211,6 +211,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/questionnaries/update', 'Manager\ManagerController@updateQuestionnaries');
         $router->post('/document/accept', 'Manager\ManagerController@acceptDocument');
         $router->post('/document/decline', 'Manager\ManagerController@declineDocument');
+        $router->post('/inform', 'Clients\ClientController@informClient');
     });
     
     $router->group(['prefix' => 'waiting'], function () use($router) {
