@@ -36,14 +36,20 @@ class ClientController extends BaseController {
         'client.forgot.object.return' => 'Client forgotten object returned successfully!',
         'client.email.send' => 'Email sent successfully!',
         'client.rating.update' => 'Client ratings updated successfully!',
-        'client.not.found' => 'Client not found',
-        'shop.not.found' => 'Shop not found',
-        'room.not.found' => 'Room not found',
-        'data.not.found' => 'Data not found',
+        'client.not.found' => 'Client not found',        
         'client.recipient' => 'Client recipient found successfully!',
         'client.source' => 'Client sources found successfully!',
         'client.forgot.objects' => 'Client forgotten objectes found successfully!',
-    ];        
+        'client.inform' => 'Inform client successfully!',
+    ]; 
+    
+    public $errorMsg = [
+        'shop.not.found' => 'Shop not found',
+        'room.not.found' => 'Room not found',
+        'data.not.found' => 'Data not found',
+        'object.not.found' => 'Object not found',
+        'object.not.provide' => 'Please provide forgot object',
+    ];
     
     public function searchClients(Request $request) {
         
@@ -285,7 +291,7 @@ class ClientController extends BaseController {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
         
-        $object = $objectModel->updateOrCreate($request->all(), $request->all());
+        $object = $objectModel->create($data);
         return $this->returnSuccess(__($this->successMsg['client.forgot.object']), $object);
         
     }
@@ -305,13 +311,16 @@ class ClientController extends BaseController {
         $room = Room::find($request->room_id);
         
         if(empty($user)) {
-            return $this->returnError(__($this->successMsg['client.not.found']));
+            return $this->returnError(__($this->errorMsg['client.not.found']));
         }
         if(empty($shop)) {
-            return $this->returnError(__($this->successMsg['shop.not.found']));
+            return $this->returnError(__($this->errorMsg['shop.not.found']));            
         }
         if(empty($room)) {
-            return $this->returnError(__($this->successMsg['room.not.found']));
+            return $this->returnError(__($this->errorMsg['room.not.found']));
+        }
+        if(empty($request->forgotten_object)) {
+            return $this->returnError(__($this->errorMsg['object.not.provide']));
         }
         
         $view = "forgotObject";
@@ -355,5 +364,17 @@ class ClientController extends BaseController {
         
         $objects = UsersForgottenObjects::with('shops:id,name','rooms:id,name')->where('user_id',$request->client_id)->get();
         return $this->returnSuccess(__($this->successMsg['client.forgot.objects']), $objects);
+    }
+    
+    public function informClient(Request $request) {
+        
+        $model = new UsersForgottenObjects();
+        $object = $model->find($request->object_id);
+        if(empty($object)) {
+            return $this->returnError(__($this->errorMsg['object.not.found']));
+        }
+        
+        $object->update(['is_client_informed' => (string) $request->client_inform]);
+        return $this->returnSuccess(__($this->successMsg['client.inform']), $object);
     }
 }

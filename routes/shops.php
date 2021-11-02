@@ -107,6 +107,7 @@ $router->group(['prefix' => 'clients', 'namespace' => 'Shops'], function () use(
     $router->post('/getRecipient', 'Clients\ClientController@getRecipient');
     $router->get('/getSources', 'Clients\ClientController@getSources');
     $router->post('/getForgotObjects', 'Clients\ClientController@getForgotObjects');
+    $router->post('/inform', 'Clients\ClientController@informClient');
 });
 
 $router->group(['prefix' => 'rooms', 'namespace' => 'Shops'], function () use($router) {
