@@ -501,7 +501,7 @@ class Booking extends BaseModel
                     ->where(
                             function($query) use($modelBookingInfo) {
                         return $query
-                                ->where($modelBookingInfo::getTableName() . '.is_confirm', (string) BookingInfo::IS_DONE)
+                                ->where($modelBookingInfo::getTableName() . '.is_done', (string) BookingInfo::IS_DONE)
                                 ->orWhere($modelBookingInfo::getTableName() . '.is_cancelled', (string) BookingInfo::IS_CANCELLED);
                     });
         }
