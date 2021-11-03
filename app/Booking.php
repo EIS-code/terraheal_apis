@@ -476,7 +476,7 @@ class Booking extends BaseModel
 
     public function getWherePastFuture($userId, $isPast = false, $isUpcoming = true, $isPending = false)
     {
-        $now                 = Carbon::now();
+        $now                 = Carbon::now()->format('Y-m-d');
 
         $modelBookingMassage = new BookingMassage();
         $modelBookingInfo    = new BookingInfo();
@@ -497,13 +497,13 @@ class Booking extends BaseModel
                          ->leftJoin($modelSessionType::getTableName(), self::getTableName() . '.session_id', '=', $modelSessionType::getTableName() . '.id');
 
         if($isPast) {
-            $bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', '<' , $now);
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '<' , $now);
         }
         if($isUpcoming) {
-            $bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $now);
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $now);
         }
         if($isPending) {
-            $bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $now)
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $now)
                     ->where([$modelBookingMassage::getTableName() . '.is_confirm' => (string)BookingMassage::IS_NOT_CONFIRM,
                               $modelBookingInfo::getTableName() . '.is_cancelled' => (string)BookingInfo::IS_NOT_CANCELLED]);
         }
