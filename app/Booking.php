@@ -507,9 +507,6 @@ class Booking extends BaseModel
                     ->where([$modelBookingMassage::getTableName() . '.is_confirm' => (string)BookingMassage::IS_NOT_CONFIRM,
                               $modelBookingInfo::getTableName() . '.is_cancelled' => (string)BookingInfo::IS_NOT_CANCELLED]);
         }
-        if($isPast) {
-            $bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', '<' , $now);
-        }
         if (!empty($userId) && is_numeric($userId)) {
             $bookings->where(self::getTableName() . '.user_id', $userId);
         }
