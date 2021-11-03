@@ -25,7 +25,7 @@ class UserCardDetail extends BaseModel
     {
         return Validator::make($data, [
             'holder_name'  => ['required', 'string', 'max:255'],
-            'card_number'  => ['required', 'integer', 'unique:user_card_details'],
+            'card_number'  => ['required', 'integer'],
             'exp_month'    => ['required', 'integer'],
             'exp_year'     => ['required', 'integer'],
             'cvv'          => ['required', 'integer'],

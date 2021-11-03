@@ -16,7 +16,7 @@ class UserCardDetailsTable extends Migration
         Schema::create('user_card_details', function (Blueprint $table) {
             $table->id();
             $table->string('holder_name');
-            $table->string('card_number')->unique();
+            $table->string('card_number');
             $table->integer('exp_month');
             $table->integer('exp_year');
             $table->integer('cvv');
