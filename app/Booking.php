@@ -497,7 +497,13 @@ class Booking extends BaseModel
                          ->leftJoin($modelSessionType::getTableName(), self::getTableName() . '.session_id', '=', $modelSessionType::getTableName() . '.id');
 
         if($isPast) {
-            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '<' , $now);
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '<', $now)
+                    ->where(
+                            function($query) use($modelBookingInfo) {
+                        return $query
+                                ->where($modelBookingInfo::getTableName() . '.is_confirm', (string) BookingInfo::IS_DONE)
+                                ->orWhere($modelBookingInfo::getTableName() . '.is_cancelled', (string) BookingInfo::IS_CANCELLED);
+                    });
         }
         if($isUpcoming) {
             $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $now);
