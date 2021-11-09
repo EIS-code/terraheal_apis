@@ -50,6 +50,7 @@ class UserController extends BaseController
     protected $currencyHelper;
 
     public $errorMsg = [
+        'error.oauth.id' => 'User oauth id seems wrong.',
         'error.email'    => 'Please provide email properly.',
         'error.password' => 'Please provide password properly.',
         'error.email.password' => 'User email or password seems wrong.',
@@ -195,23 +196,43 @@ class UserController extends BaseController
     {
         $data     = $request->all();
         $model    = new User();
+        $oauthId  = !empty($data['oauth_uid']) ? $data['oauth_uid'] : NULL;
         $email    = (!empty($data['email'])) ? $data['email'] : NULL;
         $password = (!empty($data['password'])) ? $data['password'] : NULL;
+        
+        // Check username & password.
+        $if     = ((empty($email) || empty($password)) && empty($oauthId));
+        $elseif = (empty($oauthId) && (empty($email) || empty($password)));
 
-        if (empty($email)) {
-            return $this->returns('error.email', NULL, true);
-        } elseif (empty($password)) {
-            return $this->returns('error.password', NULL, true);
+        if ($if) {
+            return $this->returnError(__('Username or Password is incorrect.'));
+        } elseif ($elseif) {
+            return $this->returnError(__('Oauth uid is incorrect.'));
         }
 
-        if (!empty($email) && !empty($password)) {
-            $getUser = $model::where('email', $email)->first();
+        $isUserNamePasswordLogin = (!empty($email) && !empty($password) || empty($oauthId));
+        $isOauthLogin            = (!$isUserNamePasswordLogin && (empty($email) || empty($password)) && !empty($oauthId));
 
-            if (!empty($getUser) && Hash::check($password, $getUser->password)) {
-                return $this->returns('success.user.found', $getUser);
-            } else {
-                return $this->returns('error.email.password', NULL, true);
+        if ($isUserNamePasswordLogin) {
+            $user = $model->where('email', $email)->first();
+        } elseif ($isOauthLogin) {
+            $user = $model->where('oauth_uid', $oauthId)->first();
+        }
+
+        $check = false;
+
+        if (!empty($user)) {
+            if ($isUserNamePasswordLogin) {
+                $check = ((string)$user->email === (string)$email && Hash::check($password, $user->password));
+            } elseif ($isOauthLogin) {
+                $check = (string)$user->oauth_uid === (string)$oauthId;
             }
+        }
+
+        if ($check === true) {
+            return $this->returns('success.user.found', $user);
+        } elseif ($isOauthLogin) {
+            return $this->returns('error.oauth.id', NULL, true);
         }
 
         return $this->returns('error.something', NULL, true);
