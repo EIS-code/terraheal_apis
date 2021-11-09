@@ -28,7 +28,8 @@ class Manager extends BaseModel
         'id_passport',
         'is_email_verified',
         'is_mobile_verified',
-        'news'
+        'news',
+        'fcm_token'
     ];
 
     protected $table = 'manager';

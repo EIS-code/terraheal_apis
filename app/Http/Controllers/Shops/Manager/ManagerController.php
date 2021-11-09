@@ -81,6 +81,7 @@ class ManagerController extends BaseController {
         'document.delete' => 'Document deleted successfully !',
         'service.add' => 'Service added successfully !',
         'service.delete' => 'Service deleted successfully !',
+        'success.token.save' => 'Client FCM token saved successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -881,5 +882,17 @@ class ManagerController extends BaseController {
         }
         
         return $this->returnSuccess(__($this->successMsg['service.delete']),$all_services);
+    }
+    
+    public function saveToken(Request $request) {
+        
+        $manager = Manager::find($request->manager_id);
+        if(empty($manager)) {
+            return $this->returnError($this->errorMsg['manager.not.found']);
+        }
+        
+        $manager->update(['fcm_token' => $request->fcm_token]);
+        
+        return $this->returnSuccess(__($this->successMsg['success.token.save']),$manager);
     }
 }

@@ -170,7 +170,11 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/email', 'Manager\ManagerController@verifyEmail');
         $router->post('/otp', 'Manager\ManagerController@verifyOtp');
     });
-            
+       
+    $router->group(['prefix' => 'fcm'], function () use($router) {
+        $router->post('/token/save', 'Manager\ManagerController@saveToken');
+    });
+    
     $router->group(['prefix' => 'packs'], function () use($router) {
         $router->post('/get', 'Manager\ManagerController@getPacks');
     });
