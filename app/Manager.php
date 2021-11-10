@@ -114,4 +114,11 @@ class Manager extends BaseModel
     {
         return $this->hasOne('App\City', 'id', 'city_id');
     }
+
+    public static function getToken(int $id)
+    {
+        $row = self::find($id);
+
+        return (!empty($row) && !empty($row->fcm_token)) ? $row->fcm_token : NULL;
+    }
 }
