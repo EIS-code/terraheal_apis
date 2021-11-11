@@ -117,9 +117,9 @@ class Notification extends BaseModel
     public function notifications($isAll = false, $isRead = self::IS_UNREAD, $isSuccess = self::IS_SUCCESS)
     {
         if ($isAll) {
-            return $this->where('user_id', $this->user_id);
+            return $this->whereIn('is_read', [self::IS_READ, self::IS_UNREAD]);
         } else {
-            return $this->where('user_id', $this->user_id)->where('is_read', $isRead)->where('is_success', $isSuccess);
+            return $this->where('is_read', $isRead)->where('is_success', $isSuccess);
         }
     }
 
