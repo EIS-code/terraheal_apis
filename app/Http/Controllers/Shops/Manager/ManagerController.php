@@ -900,8 +900,7 @@ class ManagerController extends BaseController {
     
     public function getUnreadNotification() {
         
-        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_MANAGER_EXE])->toSql();
-        dd($notifications);
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_MANAGER_EXE])->get();
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']),$notifications);
     }
 }
