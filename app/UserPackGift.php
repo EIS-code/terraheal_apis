@@ -52,4 +52,9 @@ class UserPackGift extends BaseModel
             'is_removed'                 => ['integer', 'in:0,1']
         ]);
     }
+    
+    public function pack()
+    {
+        return $this->hasOne('App\Pack', 'id', 'pack_id');
+    }
 }

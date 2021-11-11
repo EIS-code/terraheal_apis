@@ -24,6 +24,9 @@ class Pack extends BaseModel
     const ACTIVE = '0';
     const USED = '1';
     
+    const MY_PACKS = 0;
+    const GIFT_PACKS = 1;
+    
     public $fileSystem = 'public';
     public $profilePhotoPath = 'pack\images\\';
 

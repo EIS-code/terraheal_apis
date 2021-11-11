@@ -1317,19 +1317,16 @@ class UserController extends BaseController
         return $this->returns('success.user.faq.not.found', collect([]));
     }
 
-    public function getPacks(Request $request)
-    {
-        $packs = PackShop::with('pack')->where('shop_id', $request->shop_id)->get();
-
+    public function myPacks(Request $request) {
+        $packs = UserPack::with('pack')->where(['user_id' => $request->user_id])->get();
+        $packData = [];
         if (!empty($packs)) {
             
-            $packData = [];
             foreach ($packs as $key => $value) {
              
                 $packData[] = [
                     "id" => $value->id,
                     "pack_id" => $value->pack_id,
-                    "shop_id" => $value->shop_id,
                     "name" => $value->pack->name,
                     "sub_title" => $value->pack->sub_title,
                     "number" => $value->pack->number,
@@ -1341,12 +1338,48 @@ class UserController extends BaseController
                     "is_personalized" => $value->pack->is_personalized,
                 ];
             }
-            return $this->returns('success.user.packs.found', collect($packData));
         }
-
-        return $this->returns('success.user.packs.not.found', collect([]));
+        return $packData;
     }
-
+    
+    public function myGiftPacks(Request $request) {
+        $packs = UserPackGift::with('pack')->where('user_id', $request->user_id)->get();
+        $packData = [];
+        if (!empty($packs)) {
+            
+            foreach ($packs as $key => $value) {
+             
+                $packData[] = [
+                    "id" => $value->id,
+                    "pack_id" => $value->pack_id,
+                    "name" => $value->pack->name,
+                    "sub_title" => $value->pack->sub_title,
+                    "number" => $value->pack->number,
+                    "image" => $value->pack->image,
+                    "total_price" => $value->pack->total_price,
+                    "pack_price" => $value->pack->pack_price,
+                    "expired_date" => $value->pack->expired_date,
+                    "receptionist_id" => $value->pack->receptionist_id,
+                    "is_personalized" => $value->pack->is_personalized,
+                ];
+            }
+        }
+        return $packData;
+    }
+    
+    public function getPacks(Request $request)
+    {
+        $filter = !empty($request->filter) ? $request->filter : Pack::MY_PACKS;
+        
+        if($filter == Pack::MY_PACKS) {
+            $packs = $this->myPacks($request);
+        } else {
+            $packs = $this->myGiftPacks($request);
+        }
+        
+        return $this->returns('success.user.packs.found', collect($packs));
+    }
+       
     public function getPackServices(Request $request)
     {
         $model      = new UserPackMassage();
