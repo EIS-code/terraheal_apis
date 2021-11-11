@@ -26,6 +26,7 @@ use App\TherapyQuestionnaireAnswer;
 use App\TherapistDocument;
 use App\TherapistSelectedService;
 use Carbon\CarbonPeriod;
+use App\Notification;
 
 class ManagerController extends BaseController {
 
@@ -82,6 +83,7 @@ class ManagerController extends BaseController {
         'service.add' => 'Service added successfully !',
         'service.delete' => 'Service deleted successfully !',
         'success.token.save' => 'Client FCM token saved successfully !',
+        'success.unread.notification' => 'Unread notifications get successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -894,5 +896,11 @@ class ManagerController extends BaseController {
         $manager->update(['fcm_token' => $request->fcm_token]);
         
         return $this->returnSuccess(__($this->successMsg['success.token.save']),$manager);
+    }
+    
+    public function getUnreadNotification() {
+        
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_MANAGER_EXE])->get();
+        return $this->returnSuccess(__($this->successMsg['success.unread.notification']),$notifications);
     }
 }

@@ -175,6 +175,10 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
         $router->post('/token/save', 'Manager\ManagerController@saveToken');
     });
     
+    $router->group(['prefix' => 'notification'], function () use($router) {
+        $router->get('/unread', 'Manager\ManagerController@getUnreadNotification');
+    });
+    
     $router->group(['prefix' => 'packs'], function () use($router) {
         $router->post('/get', 'Manager\ManagerController@getPacks');
     });
