@@ -20,4 +20,9 @@ class PackService extends BaseModel
             'service_timing_id' => ['integer',  'exists:' . ServiceTiming::getTableName() . ',id']
         ]);
     }
+    
+    public function service()
+    {
+        return $this->hasOne('App\Service', 'id', 'service_id');
+    }
 }

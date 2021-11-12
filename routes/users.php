@@ -112,7 +112,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     $router->group(['prefix' => 'pack'], function () use($router) {
         $router->post('/get', 'UserController@getPacks');
         $router->post('/list', 'UserController@getUserPacks');
-
+        $router->post('/get/details', 'UserController@getPackDetails');
         $router->post('/services/get', 'UserController@getPackServices');
 
         $router->group(['prefix' => 'order'], function () use($router) {

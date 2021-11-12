@@ -44,6 +44,8 @@ use Stripe;
 use App\UserVoucherPrice;
 use App\Voucher;
 use App\Pack;
+use App\ShopHour;
+use App\PackService;
 
 class UserController extends BaseController
 {
@@ -1319,13 +1321,7 @@ class UserController extends BaseController
     
     public function getPacks(Request $request)
     {
-        $filter = !empty($request->filter) ? $request->filter : Pack::MY_PACKS;
-        
-        if($filter == Pack::MY_PACKS) {
-            $packs = UserPack::with('pack')->where(['user_id' => $request->user_id])->get();
-        } else {
-            $packs = UserPackGift::with('pack')->where('user_id', $request->user_id)->get();
-        }
+        $packs = PackShop::with('pack')->where('shop_id', $request->shop_id)->get();
                 
         if (!empty($packs)) {
             
@@ -1335,6 +1331,7 @@ class UserController extends BaseController
                 $packData[] = [
                     "id" => $value->id,
                     "pack_id" => $value->pack_id,
+                    "shop_id" => $value->shop_id,
                     "name" => $value->pack->name,
                     "sub_title" => $value->pack->sub_title,
                     "number" => $value->pack->number,
@@ -1925,7 +1922,14 @@ class UserController extends BaseController
     
     public function getUserPacks(Request $request) {
         
-        $packs = UserPack::with('pack')->where('user_id', $request->user_id)->get();
+        $filter = !empty($request->filter) ? $request->filter : Pack::MY_PACKS;
+        
+        if($filter == Pack::MY_PACKS) {
+            $packs = UserPack::with('pack')->where(['user_id' => $request->user_id])->get();
+        } else {
+            $packs = UserPackGift::with('pack')->where('user_id', $request->user_id)->get();
+        }
+                
         if (!empty($packs)) {
             
             $packData = [];
@@ -1934,8 +1938,6 @@ class UserController extends BaseController
                 $packData[] = [
                     "id" => $value->id,
                     "pack_id" => $value->pack_id,
-                    "user_id" => $value->user_id,
-                    "purchase_date" => $value->purchase_date,
                     "name" => $value->pack->name,
                     "sub_title" => $value->pack->sub_title,
                     "number" => $value->pack->number,
@@ -2180,5 +2182,34 @@ class UserController extends BaseController
             DB::rollback();
             throw $e;
         }                
+    }
+    
+    public function getPackDetails(Request $request) {
+        
+        $pack = PackShop::with('pack','shop')->where('pack_id', $request->pack_id)->first();
+        if (empty($pack)) {
+            return $this->returnError($this->errorMsg['pack.not.found']);
+        }
+        $hours = ShopHour::where('shop_id', $pack->shop->id)->get();
+        $service = PackService::with('service')->where('pack_id', $request->pack_id)->get();
+        $services = [];
+        
+        foreach ($service as $key => $value) {
+            $price = ServicePricing::where(['service_id' => $value->service_id, 'service_timing_id' => $value->service_timing_id])->first();
+            $services[] = [
+                'service_id' => $value->service->id,
+                'service_name' => $value->service->english_name,
+                'service_type' => $value->service->service_type,
+                'service_timing_id' => $value->service_timing_id,
+                'service_pricing_id' => $price->id
+            ];
+        }
+        
+        $packData['pack'] = $pack->pack;
+        $packData['shop'] = $pack->shop;
+        $packData['shop_hours'] = $hours;
+        $packData['pack_services'] = $services;
+        
+        return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($packData));
     }
 }

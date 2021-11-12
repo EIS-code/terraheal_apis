@@ -25,4 +25,8 @@ class PackShop extends BaseModel
     {
         return $this->hasOne('App\Pack', 'id', 'pack_id');
     }
+    public function shop()
+    {
+        return $this->hasOne('App\Shop', 'id', 'shop_id');
+    }
 }
