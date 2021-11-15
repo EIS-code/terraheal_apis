@@ -2209,8 +2209,16 @@ class UserController extends BaseController
         }
         
         $packData['pack'] = $pack->pack;
-        $packData['shop'] = $pack->shop;
-        $packData['shop']['shop_hours'] = $hours;
+        $packData['shop'] = [
+            'id' => $pack->shop->id,
+            'name' => $pack->shop->name,
+            'address' => $pack->shop->address,
+            'latitude' => $pack->shop->latitude,
+            'longitude' => $pack->shop->longitude,
+            'longitude' => $pack->shop->longitude,
+            'featuredImage' => $pack->shop->featuredImage->image,
+            'shop_hours' => $hours
+        ];
         $packData['pack_services'] = $services;
         
         return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($packData));
