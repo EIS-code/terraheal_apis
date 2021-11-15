@@ -2210,7 +2210,7 @@ class UserController extends BaseController
         
         $packData['pack'] = $pack->pack;
         $packData['shop'] = $pack->shop;
-        $packData['shop_hours'] = $hours;
+        $packData['shop']['shop_hours'] = $hours;
         $packData['pack_services'] = $services;
         
         return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($packData));

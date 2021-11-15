@@ -24,7 +24,7 @@ use App\Service;
 use App\ServicePricing;
 use App\ServiceTiming;
 use App\SessionType;
-use App\UserPack;
+use App\BookingPayment;
 
 class WaitingListController extends BaseController {
 
@@ -294,7 +294,8 @@ class WaitingListController extends BaseController {
                 'session_id' => $request->session_id,
                 'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL,
                 'booking_date_time' => $date,
-                'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL
+                'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
+                'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL
             ];
             $checks = $bookingModel->validator($bookingData);
             if ($checks->fails()) {
@@ -361,6 +362,14 @@ class WaitingListController extends BaseController {
                             }
                         }
                     }
+                }
+            }
+            $request->booking_id = $newBooking->id;
+            if(empty($request->pack_id)) {
+                $paymentModule = new BookingPayment();
+                $payment = $paymentModule->bookingPayment($request);
+                if (!empty($payment['isError']) && !empty($payment['message'])) {
+                    return $this->returns($payment['message'], NULL, true);
                 }
             }
             DB::commit();
