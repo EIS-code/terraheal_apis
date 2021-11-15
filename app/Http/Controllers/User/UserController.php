@@ -388,7 +388,8 @@ class UserController extends BaseController
                 'booking_date_time' => $date,
                 'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
                 'bring_table_futon' => !empty($request->bring_table_futon) ? (string)$request->bring_table_futon : $bookingModel::BRING_TABLE_FUTON_NONE,
-                'table_futon_quantity' => !empty($request->table_futon_quantity) ? (int)$request->table_futon_quantity : 0
+                'table_futon_quantity' => !empty($request->table_futon_quantity) ? (int)$request->table_futon_quantity : 0,
+                'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL
             ];
 
             $checks = $bookingModel->validator($bookingData);
@@ -433,13 +434,15 @@ class UserController extends BaseController
                 return $this->returns('error.booking.select.user', NULL, true);
             }
             
-            DB::commit();
             $request->booking_id = $newBooking->id;
-            $paymentModule = new BookingPayment();
-            $payment = $paymentModule->bookingPayment($request);
-            if (!empty($payment['isError']) && !empty($payment['message'])) {
-                return $this->returns($payment['message'], NULL, true);
+            if(empty($request->pack_id)) {
+                $paymentModule = new BookingPayment();
+                $payment = $paymentModule->bookingPayment($request);
+                if (!empty($payment['isError']) && !empty($payment['message'])) {
+                    return $this->returns($payment['message'], NULL, true);
+                }
             }
+            DB::commit();
             return $this->returns('success.booking.created', $bookingModel->getGlobalQuery($request));
         } catch (\Throwable $e) {
             DB::rollback();
