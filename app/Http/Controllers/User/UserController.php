@@ -2223,4 +2223,9 @@ class UserController extends BaseController
         
         return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($packData));
     }
+    
+    public function payRemainingPayment(Request $request) {
+        
+        $model = new BookingPayment($request);
+    }
 }
