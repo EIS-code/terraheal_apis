@@ -95,6 +95,8 @@ class UserController extends BaseController
         'pack.not.found' => 'Pack not found !',
         'card.not.found' => 'Card not found !',
         'error.amount' => 'Please provide amount !',
+        'error.pack.id' => 'Please provide pack id !',
+        'error.user.id' => 'Please provide user id !',
     ];
 
     public $successMsg = [
@@ -2189,20 +2191,34 @@ class UserController extends BaseController
     
     public function getPackDetails(Request $request) {
         
+        if(empty($request->pack_id)){
+            return $this->returnError($this->errorMsg['error.pack.id']);
+        }
+        if(empty($request->user_id)){
+            return $this->returnError($this->errorMsg['error.user.id']);
+        }
+        
         $pack = PackShop::with('pack','shop')->where('pack_id', $request->pack_id)->first();
         if (empty($pack)) {
             return $this->returnError($this->errorMsg['pack.not.found']);
         }
+        
+        $user = UserPack::where(['user_id' => $request->user_id, 'pack_id' => $request->pack_id])->first();
+        if (empty($user)) {
+            return $this->returnError($this->errorMsg['pack.not.found']);
+        }
+        $pack->pack->purchase_date = $user->purchase_date;
         $hours = ShopHour::where('shop_id', $pack->shop->id)->get();
         $service = PackService::with('service')->where('pack_id', $request->pack_id)->get();
         $services = [];
         
         foreach ($service as $key => $value) {
-            $price = ServicePricing::where(['service_id' => $value->service_id, 'service_timing_id' => $value->service_timing_id])->first();
+            $price = ServicePricing::with('timing')->where(['service_id' => $value->service_id, 'service_timing_id' => $value->service_timing_id])->first();
             $services[] = [
                 'service_id' => $value->service->id,
                 'service_name' => $value->service->english_name,
                 'service_type' => $value->service->service_type,
+                'service_timie' => $price->timing->time,
                 'service_timing_id' => $value->service_timing_id,
                 'service_pricing_id' => $price->id
             ];
@@ -2226,6 +2242,7 @@ class UserController extends BaseController
     
     public function payRemainingPayment(Request $request) {
         
-        $model = new BookingPayment($request);
+        $model = new BookingPayment();
+        $model->bookingHalfPayment($request);
     }
 }
