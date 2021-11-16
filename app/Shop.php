@@ -177,7 +177,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
 
     public function centerHours()
     {
-        return $this->hasOne('App\ShopHour', 'shop_id', 'id');
+        return $this->hasMany('App\ShopHour', 'shop_id', 'id');
     }
     
     public function featuredImages()
