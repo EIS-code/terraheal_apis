@@ -9,6 +9,7 @@ use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Arr;
 
 class Handler extends ExceptionHandler
 {
