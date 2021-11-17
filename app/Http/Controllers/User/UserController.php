@@ -2279,8 +2279,27 @@ class UserController extends BaseController
             'featuredImage' => $shop->shop->featuredImage->image,
             'shop_hours' => $hours
         ];
-        $pack->pack->pack_services = $services;
-        $packData['giverDetails'] = $pack;
+        $packData['giverData'] = [
+            'recipient_name' => $pack->recipient_name,
+            'recipient_last_name' => $pack->recipient_last_name,
+            'recipient_second_name' => $pack->recipient_second_name,
+            'recipient_mobile' => $pack->recipient_mobile,
+            'recipient_email' => $pack->recipient_email,
+            'giver_first_name' => $pack->giver_first_name,
+            'giver_last_name' => $pack->giver_last_name,
+            'giver_mobile' => $pack->giver_mobile,
+            'giver_email' => $pack->giver_email,
+            'giver_message_to_recipient' => $pack->giver_message_to_recipient,
+            'preference_email' => $pack->preference_email,
+            'preference_email_date' => $pack->preference_email_date,
+            'pack_id' => $pack->pack_id,
+            'user_id' => $pack->user_id,
+            'is_removed' => $pack->is_removed,
+            'payment_id' => $pack->payment_id,
+            'sent_date' => $pack->created_at,
+        ];
+        $packData['pack'] = $pack->pack;
+        $packData['pack_services'] = $services;
         $packData['shop'] = $shopData;
         return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($packData));
     }
