@@ -2242,8 +2242,20 @@ class UserController extends BaseController
     
     public function getGiftPackDetails(Request $request) {
         
+        if(empty($request->pack_id)){
+            return $this->returnError($this->errorMsg['error.pack.id']);
+        }
+        if(empty($request->user_id)){
+            return $this->returnError($this->errorMsg['error.user.id']);
+        }
+        
         $pack = UserPackGift::with('pack')->where(['user_id' => $request->user_id, 'pack_id' => $request->pack_id])->first();
+        if (empty($pack)) {
+            return $this->returnError($this->errorMsg['pack.not.found']);
+        }
         $service = PackService::with('service')->where('pack_id', $request->pack_id)->get();
+        $shop = PackShop::with('shop')->where('pack_id', $request->pack_id)->first();
+        $hours = ShopHour::where('shop_id', $shop->shop->id)->get();
         $services = [];
         
         foreach ($service as $key => $value) {
@@ -2257,9 +2269,20 @@ class UserController extends BaseController
                 'service_pricing_id' => $price->id
             ];
         }
-        
+        $shopData = [
+            'id' => $shop->shop->id,
+            'name' => $shop->shop->name,
+            'address' => $shop->shop->address,
+            'latitude' => $shop->shop->latitude,
+            'longitude' => $shop->shop->longitude,
+            'longitude' => $shop->shop->longitude,
+            'featuredImage' => $shop->shop->featuredImage->image,
+            'shop_hours' => $hours
+        ];
         $pack->pack->pack_services = $services;
-        return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($pack));
+        $packData['giverDetails'] = $pack;
+        $packData['shop'] = $shopData;
+        return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($packData));
     }
     
     public function payRemainingPayment(Request $request) {
