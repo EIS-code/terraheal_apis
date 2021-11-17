@@ -59,6 +59,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/events/corporate/request/add', 'UserController@addEventsCorporateRequest');
         $router->post('/pending/update', 'UserController@updatePendingBooking');
         $router->post('/pending/delete', 'UserController@deletePendingBooking');
+        $router->post('/remaining/payment', 'UserController@payRemainingPayment');
     });
 
     $router->post('/get', 'UserController@getDetails');
@@ -121,6 +122,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
 
         $router->group(['prefix' => 'gift'], function () use($router) {
             $router->post('/save', 'UserController@savePackGifts');
+            $router->post('/get', 'UserController@getGiftPackDetails');
         });
     });
 

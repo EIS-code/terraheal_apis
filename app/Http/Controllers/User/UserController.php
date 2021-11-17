@@ -2240,6 +2240,28 @@ class UserController extends BaseController
         return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($packData));
     }
     
+    public function getGiftPackDetails(Request $request) {
+        
+        $pack = UserPackGift::with('pack')->where(['user_id' => $request->user_id, 'pack_id' => $request->pack_id])->first();
+        $service = PackService::with('service')->where('pack_id', $request->pack_id)->get();
+        $services = [];
+        
+        foreach ($service as $key => $value) {
+            $price = ServicePricing::with('timing')->where(['service_id' => $value->service_id, 'service_timing_id' => $value->service_timing_id])->first();
+            $services[] = [
+                'service_id' => $value->service->id,
+                'service_name' => $value->service->english_name,
+                'service_type' => $value->service->service_type,
+                'service_timie' => $price->timing->time,
+                'service_timing_id' => $value->service_timing_id,
+                'service_pricing_id' => $price->id
+            ];
+        }
+        
+        $pack->pack->pack_services = $services;
+        return $this->returnSuccess(__($this->successMsg['success.user.packs.found']), collect($pack));
+    }
+    
     public function payRemainingPayment(Request $request) {
         
         $model = new BookingPayment();

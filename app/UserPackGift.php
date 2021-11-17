@@ -31,6 +31,8 @@ class UserPackGift extends BaseModel
         'is_removed',
         'payment_id'
     ];
+    
+    protected $hidden = ['updated_at'];
 
     public function validator(array $data)
     {
@@ -56,5 +58,22 @@ class UserPackGift extends BaseModel
     public function pack()
     {
         return $this->hasOne('App\Pack', 'id', 'pack_id');
+    }
+    
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    public function getPreferenceEmailDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
     }
 }
