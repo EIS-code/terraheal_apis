@@ -74,7 +74,7 @@ class BookingPayment extends Model
                             'booking_id' => $booking->id,
                             'payment_id' => $charge->id
                         ];
-                        BookingPayment::updateOrCreate(['booking_id' => $booking->id], $data);
+                        BookingPayment::create($data);
                     }
                     DB::commit();
                     return $data;
@@ -111,15 +111,13 @@ class BookingPayment extends Model
         if (empty($booking)) {
             return ['isError' => true, 'message' => 'Booking not found !'];
         }
+        if (empty($booking->payment)) {
+            return ['isError' => true, 'message' => 'First payment is remaining !'];
+        }
 
-        dd($booking);
         DB::beginTransaction();
         try {
-            if ($booking->payment_type == Booking::PAYMENT_HALF) {
-                $amount = $booking->total_price / 2;
-            } else {
-                $amount = $booking->total_price;
-            }
+            $amount = $booking->payment->remaining_amounts;
             if ($amount > 0) {               
                 try {
                     Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
@@ -133,14 +131,14 @@ class BookingPayment extends Model
                     if ($charge->status == 'succeeded') {
                         $data = [
                             'final_amounts' => $booking->total_price,
-                            'paid_amounts' => $amount,
-                            'remaining_amounts' => $booking->total_price - $amount,
-                            'paid_percentage' => ($booking->payment_type == Booking::PAYMENT_HALF) ? 50 : 100,
+                            'paid_amounts' => $booking->payment->remaining_amounts + $amount,
+                            'remaining_amounts' => $booking->payment->remaining_amounts - $amount,
+                            'paid_percentage' => 100,
                             'is_success' => '1',
                             'booking_id' => $booking->id,
                             'payment_id' => $charge->id
                         ];
-                        BookingPayment::updateOrCreate(['booking_id' => $booking->id], $data);
+                        $create = BookingPayment::create($data);
                     }
                     DB::commit();
                     return $data;

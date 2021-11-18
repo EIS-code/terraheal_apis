@@ -168,6 +168,7 @@ class UserController extends BaseController
         'success.card.delete' => 'User card delete successfully !',
         'pack.purchase' => 'Pack purchased successfully!',
         'voucher.purchase' => 'Voucher purchased successfully!',
+        'success.payment' => 'Payment done successfully!',
     ];
 
     public function __construct()
@@ -2307,6 +2308,10 @@ class UserController extends BaseController
     public function payRemainingPayment(Request $request) {
         
         $model = new BookingPayment();
-        $model->bookingHalfPayment($request);
+        $payment = $model->bookingHalfPayment($request);
+        if (!empty($payment['isError']) && !empty($payment['message'])) {
+            return $this->returns($payment['message'], NULL, true);
+        }
+        return $this->returnSuccess(__($this->successMsg['success.payment']), $payment);
     }
 }
