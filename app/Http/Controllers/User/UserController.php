@@ -2280,7 +2280,7 @@ class UserController extends BaseController
             'featuredImage' => $shop->shop->featuredImage->image,
             'shop_hours' => $hours
         ];
-        $packData['giverData'] = [
+        $packData['pack_user_detail'] = [
             'recipient_name' => $pack->recipient_name,
             'recipient_last_name' => $pack->recipient_last_name,
             'recipient_second_name' => $pack->recipient_second_name,
