@@ -32,7 +32,8 @@ class UserGiftVoucher extends BaseModel
         'unique_id',
         'is_pack',
         'is_removed',
-        'payment_id'
+        'payment_id',
+        'shop_id'
     ];
     
     protected $hidden = ['updated_at'];
@@ -54,6 +55,7 @@ class UserGiftVoucher extends BaseModel
             'preference_email_date'      => ['required', 'date', 'date_format:Y-m-d'],
             'amount'                     => ['required', 'between:0,99.99'],
             'user_id'                    => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
+            'shop_id'                    => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
             'design_id'                  => ['required', 'integer', 'exists:' . UserGiftVoucherThemeDesign::getTableName() . ',id'],
             'unique_id'                  => ['required', 'unique:' . self::getTableName() . ',unique_id'],
             'is_pack'                    => ['integer', 'in:0,1'],
@@ -68,5 +70,10 @@ class UserGiftVoucher extends BaseModel
         }
 
         return strtotime($value) * 1000;
+    }
+    
+    public function shop()
+    {
+        return $this->hasOne('App\Shop', 'id', 'shop_id');
     }
 }

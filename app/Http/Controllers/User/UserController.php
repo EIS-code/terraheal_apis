@@ -98,7 +98,6 @@ class UserController extends BaseController
         'error.pack.id' => 'Please provide pack id !',
         'error.voucher.id' => 'Please provide voucher id !',
         'error.user.id' => 'Please provide user id !',
-        'error.shop.id' => 'User does not have any shop !',
     ];
 
     public $successMsg = [
@@ -2327,26 +2326,40 @@ class UserController extends BaseController
             return $this->returnError($this->errorMsg['error.user.id']);
         }
         
-        $voucher = UserGiftVoucher::where(['id' => $request->voucher_id, 'user_id' => $request->user_id])->first();
+        $voucher = UserGiftVoucher::with('shop')->where(['id' => $request->voucher_id, 'user_id' => $request->user_id])->first();
         if(empty($voucher)){
             return $this->returnError($this->errorMsg['voucher.not.found']);
         }
-        $user = User::with('shop')->where('id',$request->user_id)->first();
-        if(empty($user->shop)) {
-            return $this->returnError($this->errorMsg['error.shop.id']);
-        }
-        $shop_hours = ShopHour::where('shop_id', $user->shop->id)->get();
+        $shop_hours = ShopHour::where('shop_id', $voucher->shop->id)->get();
         $shopData = [
-            'id' => $user->shop->id,
-            'name' => $user->shop->name,
-            'address' => $user->shop->address,
-            'latitude' => $user->shop->latitude,
-            'longitude' => $user->shop->longitude,
-            'longitude' => $user->shop->longitude,
-            'featuredImage' => $user->shop->featuredImage->image,
+            'id' => $voucher->shop->id,
+            'name' => $voucher->shop->name,
+            'address' => $voucher->shop->address,
+            'latitude' => $voucher->shop->latitude,
+            'longitude' => $voucher->shop->longitude,
+            'longitude' => $voucher->shop->longitude,
+            'featuredImage' => $voucher->shop->featuredImage->image,
             'shop_hours' => $shop_hours
         ];
-        
+        $voucher = [
+            'recipient_name' => $voucher->recipient_name,
+            'recipient_last_name' => $voucher->recipient_last_name,
+            'recipient_second_name' => $voucher->recipient_second_name,
+            'recipient_mobile' => $voucher->recipient_mobile,
+            'recipient_email' => $voucher->recipient_email,
+            'giver_first_name' => $voucher->giver_first_name,
+            'giver_last_name' => $voucher->giver_last_name,
+            'giver_mobile' => $voucher->giver_mobile,
+            'giver_email' => $voucher->giver_email,
+            'giver_message_to_recipient' => $voucher->giver_message_to_recipient,
+            'preference_email' => $voucher->preference_email,
+            'preference_email_date' => $voucher->preference_email_date,
+            'amount' => $voucher->amount,
+            'user_id' => $voucher->user_id,
+            'design_id' => $voucher->design_id,
+            'unique_id' => $voucher->unique_id,
+            'payment_id' => $voucher->payment_id,
+        ];
         $voucherData = [
             'user_voucher_detail' => $voucher,
             'shop' => $shopData,
