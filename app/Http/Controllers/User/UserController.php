@@ -2332,10 +2332,20 @@ class UserController extends BaseController
         }
         $user = User::with('shop')->where('id',$request->user_id)->first();
         $shop_hours = ShopHour::where('shop_id', $user->shop->id)->get();
+        $shopData = [
+            'id' => $user->shop->id,
+            'name' => $user->shop->name,
+            'address' => $user->shop->address,
+            'latitude' => $user->shop->latitude,
+            'longitude' => $user->shop->longitude,
+            'longitude' => $user->shop->longitude,
+            'featuredImage' => $user->shop->featuredImage->image,
+            'shop_hours' => $shop_hours
+        ];
+        
         $voucherData = [
             'user_voucher_detail' => $voucher,
-            'shop' => $user->shop,
-            'shop_hours' => $shop_hours
+            'shop' => $shopData,
         ];
         return $this->returnSuccess(__($this->successMsg['success.user.gift.voucher.found']), $voucherData);
     }
