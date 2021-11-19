@@ -1253,7 +1253,10 @@ class UserController extends BaseController
                         $data['amount'] = (float) $data['amount'];
                     }
 
+                    $now = Carbon::now();
                     $data['payment_id'] = $charge->id;
+                    $data['expired_date'] = $now->addYear()->format('Y-m-d');
+                    
                     $validator = $model->validator($data);
                     if ($validator->fails()) {
                         return $this->returns($validator->errors()->first(), NULL, true);
@@ -2326,7 +2329,8 @@ class UserController extends BaseController
             return $this->returnError($this->errorMsg['error.user.id']);
         }
         
-        $voucher = UserGiftVoucher::with('shop')->where(['id' => $request->voucher_id, 'user_id' => $request->user_id])->first();
+        $model = new UserGiftVoucher();
+        $voucher = $model->with('shop','design')->where(['id' => $request->voucher_id, 'user_id' => $request->user_id])->first();
         if(empty($voucher)){
             return $this->returnError($this->errorMsg['voucher.not.found']);
         }
@@ -2359,6 +2363,9 @@ class UserController extends BaseController
             'design_id' => $voucher->design_id,
             'unique_id' => $voucher->unique_id,
             'payment_id' => $voucher->payment_id,
+            'expired_at' => $voucher->expired_at,
+            'design' => $voucher->design,
+            'theme' => $model->getTheme($voucher->design->theme_id)
         ];
         $voucherData = [
             'user_voucher_detail' => $voucher,

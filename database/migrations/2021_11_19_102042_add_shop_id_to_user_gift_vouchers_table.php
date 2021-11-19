@@ -16,6 +16,7 @@ class AddShopIdToUserGiftVouchersTable extends Migration
         Schema::table('user_gift_vouchers', function (Blueprint $table) {
             $table->bigInteger('shop_id')->unsigned()->nullable();
             $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
+            $table->string('expired_date')->nullable();
         });
     }
 
@@ -29,6 +30,7 @@ class AddShopIdToUserGiftVouchersTable extends Migration
         Schema::table('user_gift_vouchers', function (Blueprint $table) {
             $table->dropForeign(['shop_id']);
             $table->dropColumn(['shop_id']);
+            $table->dropColumn('expired_date');
         });
     }
 }

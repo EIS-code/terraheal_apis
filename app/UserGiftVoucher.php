@@ -33,7 +33,8 @@ class UserGiftVoucher extends BaseModel
         'is_pack',
         'is_removed',
         'payment_id',
-        'shop_id'
+        'shop_id',
+        'expired_date'
     ];
     
     protected $hidden = ['updated_at'];
@@ -72,8 +73,27 @@ class UserGiftVoucher extends BaseModel
         return strtotime($value) * 1000;
     }
     
+    public function getExpiredDateAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
+    
     public function shop()
     {
         return $this->hasOne('App\Shop', 'id', 'shop_id');
+    }
+    public function design()
+    {
+        return $this->hasOne('App\UserGiftVoucherThemeDesign', 'id', 'design_id');
+    }
+    
+    public function getTheme($id) {
+        
+        $design = UserGiftVoucherTheme::where('id', $id)->get();
+        return $design;
     }
 }
