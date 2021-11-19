@@ -27,6 +27,7 @@ use App\TherapistDocument;
 use App\TherapistSelectedService;
 use Carbon\CarbonPeriod;
 use App\Notification;
+use App\UserCardDetail;
 
 class ManagerController extends BaseController {
 
@@ -49,6 +50,7 @@ class ManagerController extends BaseController {
         'schedule.not.found' => 'Schedule data not found.',
         'from.date.not.found' => 'Please select from date.',
         'to.date.not.found' => 'Please select to date.',
+        'error.card.not.found' => 'Card not found.',
     ];
     
     public $successMsg = [
@@ -84,6 +86,7 @@ class ManagerController extends BaseController {
         'service.delete' => 'Service deleted successfully !',
         'success.token.save' => 'Client FCM token saved successfully !',
         'success.unread.notification' => 'Unread notifications get successfully !',
+        'success.card.found' => 'Card details found successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -902,5 +905,14 @@ class ManagerController extends BaseController {
         $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_MANAGER_EXE])->get();
 
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
+    }
+    
+    public function getCardDetails(Request $request) {
+        
+        $data = UserCardDetail::whereIn('user_id', $request->user_id)->get();
+        if(count($data) > 0) {
+            return $this->returns('success.card.found', collect($data));
+        }
+        return $this->returns('error.card.not.found', NULL, TRUE);
     }
 }

@@ -140,6 +140,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->post('/salesInfo/get', 'Dashboard\DashboardController@salesInfo');
     $router->post('/customerInfo/get', 'Dashboard\DashboardController@customerInfo');
     $router->post('/therapist/document/delete', 'Manager\ManagerController@deleteDocument');
+    $router->post('/user/card/details/get', 'Manager\ManagerController@getCardDetails');
     
     $router->group(['prefix' => 'therapist'], function () use($router) {
         
@@ -285,7 +286,6 @@ $router->group(['namespace' => 'User'], function () use($router) {
 
     $router->post('manager/user/document/upload', 'UserController@updateDocument');
     $router->post('manager/card/details/save', 'UserController@saveCardDetails');
-    $router->post('manager/user/card/details/get', 'UserController@getCardDetails');
     $router->post('manager/user/default/card/save', 'UserController@saveDefaultCard');
     
 });
