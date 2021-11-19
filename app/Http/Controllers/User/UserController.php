@@ -98,6 +98,7 @@ class UserController extends BaseController
         'error.pack.id' => 'Please provide pack id !',
         'error.voucher.id' => 'Please provide voucher id !',
         'error.user.id' => 'Please provide user id !',
+        'error.shop.id' => 'User does not have any shop !',
     ];
 
     public $successMsg = [
@@ -2331,6 +2332,9 @@ class UserController extends BaseController
             return $this->returnError($this->errorMsg['voucher.not.found']);
         }
         $user = User::with('shop')->where('id',$request->user_id)->first();
+        if(empty($user->shop)) {
+            return $this->returnError($this->errorMsg['error.shop.id']);
+        }
         $shop_hours = ShopHour::where('shop_id', $user->shop->id)->get();
         $shopData = [
             'id' => $user->shop->id,
