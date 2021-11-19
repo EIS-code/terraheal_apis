@@ -95,6 +95,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     $router->group(['prefix' => 'gift'], function () use($router) {
         $router->group(['prefix' => 'voucher'], function () use($router) {
             $router->post('/get', 'UserController@getGiftVouchers');
+            $router->post('/get/detail', 'UserController@getVoucherDetail');
 
             $router->get('/info', 'UserController@getGiftVoucherInfos');
 

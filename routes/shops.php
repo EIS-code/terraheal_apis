@@ -287,5 +287,4 @@ $router->group(['namespace' => 'User'], function () use($router) {
     $router->post('manager/user/document/upload', 'UserController@updateDocument');
     $router->post('manager/card/details/save', 'UserController@saveCardDetails');
     $router->post('manager/user/default/card/save', 'UserController@saveDefaultCard');
-    
 });

@@ -96,6 +96,7 @@ class UserController extends BaseController
         'card.not.found' => 'Card not found !',
         'error.amount' => 'Please provide amount !',
         'error.pack.id' => 'Please provide pack id !',
+        'error.voucher.id' => 'Please provide voucher id !',
         'error.user.id' => 'Please provide user id !',
     ];
 
@@ -2314,5 +2315,28 @@ class UserController extends BaseController
             return $this->returns($payment['message'], NULL, true);
         }
         return $this->returnSuccess(__($this->successMsg['success.payment']), $payment);
+    }
+    
+    public function getVoucherDetail(Request $request) {
+        
+        if(empty($request->voucher_id)){
+            return $this->returnError($this->errorMsg['error.voucher.id']);
+        }
+        if(empty($request->user_id)){
+            return $this->returnError($this->errorMsg['error.user.id']);
+        }
+        
+        $voucher = UserGiftVoucher::where(['id' => $request->voucher_id, 'user_id' => $request->user_id])->first();
+        if(empty($voucher)){
+            return $this->returnError($this->errorMsg['voucher.not.found']);
+        }
+        $user = User::with('shop')->where('id',$request->user_id)->first();
+        $shop_hours = ShopHour::where('shop_id', $user->shop->id)->get();
+        $voucherData = [
+            'user_voucher_detail' => $voucher,
+            'shop' => $user->shop,
+            'shop_hours' => $shop_hours
+        ];
+        return $this->returnSuccess(__($this->successMsg['success.user.gift.voucher.found']), $voucherData);
     }
 }

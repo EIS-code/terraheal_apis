@@ -34,6 +34,8 @@ class UserGiftVoucher extends BaseModel
         'is_removed',
         'payment_id'
     ];
+    
+    protected $hidden = ['updated_at'];
 
     public function validator(array $data)
     {
@@ -57,5 +59,14 @@ class UserGiftVoucher extends BaseModel
             'is_pack'                    => ['integer', 'in:0,1'],
             'is_removed'                 => ['integer', 'in:0,1']
         ]);
+    }
+    
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
     }
 }
