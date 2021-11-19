@@ -1935,15 +1935,15 @@ class UserController extends BaseController
         } else {
             $packs = UserPackGift::with('pack')->where('user_id', $request->user_id)->get();
         }
-                
+        
         if (!empty($packs)) {
             
             $packData = [];
             foreach ($packs as $key => $value) {
              
+                $purchased_date = $filter == Pack::MY_PACKS ? $value->purchase_date : $value->created_at;
                 $packData[] = [
-                    "id" => $value->id,
-                    "pack_id" => $value->pack_id,
+                    "id" => $value->pack_id,
                     "name" => $value->pack->name,
                     "sub_title" => $value->pack->sub_title,
                     "number" => $value->pack->number,
@@ -1953,6 +1953,7 @@ class UserController extends BaseController
                     "expired_date" => $value->pack->expired_date,
                     "receptionist_id" => $value->pack->receptionist_id,
                     "is_personalized" => $value->pack->is_personalized,
+                    "purchase_date" => $purchased_date,
                 ];
             }
             return $this->returns('success.user.packs.found', collect($packData));
