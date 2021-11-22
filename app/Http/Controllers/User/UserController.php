@@ -1181,12 +1181,13 @@ class UserController extends BaseController
         $userId = $request->get('user_id', false);
 
         if (!empty($userId)) {
-            $data = $model->where('user_id', $userId)->get();
+            $data = $model->with('design')->where('user_id', $userId)->get();
 
             if (!empty($data) && !$data->isEmpty()) {
-                $data->map(function($value) {
+                $data->map(function($value) use($model){
                     $value->start_from = $value->created_at;
                     $value->last_date  = date("Y-m-d", strtotime(date("Y-m-d", strtotime($value->created_at)) . " + ".GIFT_VOUCHER_LIMIT." days"));
+                    $value->theme = $model->getTheme($value->design->theme_id);
                 });
 
                 return $this->returns('success.user.gift.voucher.found', $data);
