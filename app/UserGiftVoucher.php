@@ -93,7 +93,7 @@ class UserGiftVoucher extends BaseModel
     
     public function getTheme($id) {
         
-        $design = UserGiftVoucherTheme::where('id', $id)->get();
+        $design = UserGiftVoucherTheme::where('id', $id)->first();
         return $design;
     }
 }
