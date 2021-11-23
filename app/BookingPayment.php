@@ -2,13 +2,12 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use DB;
 use Stripe;
 
-class BookingPayment extends Model
+class BookingPayment extends BaseModel
 {
     protected $fillable = [
         'final_amounts',
@@ -163,5 +162,11 @@ class BookingPayment extends Model
         } catch (Exception $e) {
             DB::rollBack();
         }
+    }
+    
+    public function getPayment($id) {
+        
+        $payment = self::where('booking_id', $id)->get()->last();
+        return $payment;
     }
 }

@@ -224,6 +224,7 @@ class Booking extends BaseModel
         $userGenderPreferenceModel      = new UserGenderPreference();
         $bookingMassageStartModel       = new BookingMassageStart();
         $languageModel                  = new Language();
+        $paymentModel                   = new BookingPayment();
 
         $data = $this
                 ->select(
@@ -278,7 +279,8 @@ class Booking extends BaseModel
                             $bookingMassageStartModel::getTableName().'.start_time as actual_start_time, ' . 
                             $bookingMassageStartModel::getTableName().'.end_time as actual_end_time, ' . 
                             $this::getTableName().'.bring_table_futon, ' . 
-                            $this::getTableName().'.table_futon_quantity'
+                            $this::getTableName().'.table_futon_quantity, '. 
+                            $this::getTableName().'.payment_type'
                         )
                 )
                 ->join($bookingInfoModel::getTableName(), $this::getTableName() . '.id', '=', $bookingInfoModel::getTableName() . '.booking_id')
@@ -435,9 +437,9 @@ class Booking extends BaseModel
         $data = $data->orderBy($bookingMassageModel::getTableName().'.massage_date_time','DESC')->get();
 
         if (!empty($data) && !$data->isEmpty()) {
-            $data->map(function(&$record) use($userModel, $bookingMassageModel, $bookingMassageStartModel, $bookingInfoModel) {
+            $data->map(function(&$record) use($userModel, $bookingMassageModel, $bookingMassageStartModel, $paymentModel) {
                 $record->qr_code_path = $userModel->getQrCodePathAttribute($record->qr_code_path);
-
+                
                 if (empty($record->qr_code_path)) {
                     $find = $userModel::find($record->client_id);
 
@@ -449,9 +451,7 @@ class Booking extends BaseModel
                 }
 
                 $record->massage_date_time = $record->massage_date;
-                    $bookingType = $record->getAttributes()['booking_type'];
-
-//                unset($record->booking_type);
+                $bookingType = $record->getAttributes()['booking_type'];
 
                 $record->booking_type_value = $bookingType;
 
@@ -466,10 +466,13 @@ class Booking extends BaseModel
                 if (!empty($record->actual_end_time)) {
                     $record->actual_end_time = $bookingMassageStartModel->getEndTimeAttribute($record->actual_end_time);
                 }
+                
+                $payment = $paymentModel->getPayment($record->booking_id);
+                $record->final_amounts = $payment['final_amounts'];
+                $record->paid_amounts = $payment['paid_amounts'];
+                $record->remaining_amounts = $payment['remaining_amounts'];
+                $record->paid_percentage = $payment['paid_percentage'];
             });
-
-            // $data->put('total_massages', $bookingInfoModel->getMassageCountByTherapist($therapistId));
-            // $data->put('total_therapies', $bookingInfoModel->getTherapyCountByTherapist($therapistId));
         }
         return $data;
     }
