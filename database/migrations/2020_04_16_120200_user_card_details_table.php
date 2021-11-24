@@ -19,7 +19,7 @@ class UserCardDetailsTable extends Migration
             $table->string('card_number');
             $table->integer('exp_month');
             $table->integer('exp_year');
-            $table->integer('cvv');
+            $table->integer('cvv')->nullable();
             $table->string('zip_code', 20);
             // $table->string('copy_with_id')->nullable();
             $table->bigInteger('user_id')->unsigned();
