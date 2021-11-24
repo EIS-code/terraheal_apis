@@ -468,10 +468,10 @@ class Booking extends BaseModel
                 }
                 
                 $payment = $paymentModel->getPayment($record->booking_id);
-                $record->final_amounts = $payment['final_amounts'];
-                $record->paid_amounts = $payment['paid_amounts'];
-                $record->remaining_amounts = $payment['remaining_amounts'];
-                $record->paid_percentage = $payment['paid_percentage'];
+                $record->final_amounts = !empty($payment) ? $payment['final_amounts'] : NULL;
+                $record->paid_amounts = !empty($payment) ? $payment['paid_amounts'] : NULL;
+                $record->remaining_amounts = !empty($payment) ? $payment['remaining_amounts'] : NULL;
+                $record->paid_percentage = !empty($payment) ? $payment['paid_percentage'] : NULL;
             });
         }
         return $data;
