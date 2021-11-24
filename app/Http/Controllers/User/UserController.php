@@ -369,6 +369,10 @@ class UserController extends BaseController
             $shopModel    = new Shop();
             $bookingModel = new Booking();
             $total_price = 0;
+            
+            if(!empty($request->pack_id)) {
+                $request->session_id = SessionType::SINGLE;
+            }
 
             if ($request->session_id == SessionType::SINGLE && count($request->users) > 1) {
                 return $this->returns('error.single.users', NULL, true);
