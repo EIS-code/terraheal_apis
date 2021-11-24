@@ -28,7 +28,7 @@ class UserCardDetail extends BaseModel
             'card_number'  => ['required', 'integer'],
             'exp_month'    => ['required', 'integer'],
             'exp_year'     => ['required', 'integer'],
-            'cvv'          => ['required', 'integer'],
+            'cvv'          => ['nullable', 'integer'],
             'stripe_token' => ['nullable', 'string', 'max:255'],
             'stripe_id'    => ['nullable', 'string', 'max:255'],
             'user_id'      => ['required', 'integer', 'exists:' . User::getTableName() . ',id']
