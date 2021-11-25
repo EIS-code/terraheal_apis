@@ -141,7 +141,7 @@ class Booking extends BaseModel
     
     public function payment()
     {
-        return $this->hasOne('App\BookingPayment', 'booking_id', 'id');
+        return $this->hasMany('App\BookingPayment', 'booking_id', 'id');
     }
 
     public function bookingInfoWithFilters($type = 'today')

@@ -77,10 +77,7 @@ class DashboardController extends BaseController {
     }
     
     public function allBookings(Request $request) {
-        $booking = BookingInfo::with('booking')
-                        ->whereHas('booking', function($q) use($request) {
-                            $q->where('shop_id', '=', $request->get('shop_id'));
-                        })->count();
+        $booking = Booking::with('payment')->where('shop_id', '=', $request->get('shop_id'))->get();
         return $booking;
     }
     
@@ -258,11 +255,16 @@ class DashboardController extends BaseController {
         
         $packs_earning = Booking::whereNotNull('pack_id')->sum('total_price');
         
-        $recevied_amount = BookingPayment::all()->sum('paid_amounts');
+        $recevied_amount = $unpaid_amount = 0;
         
-        $unpaid_amount = Booking::all()->sum('remaining_price');
+        foreach ($allBookings as $key => $booking) {
+            $unpaid_amount += $booking->remaining_price;
+            foreach ($booking->payment as $key => $payment) {
+                $recevied_amount += $payment->paid_amounts;
+            }
+        }
         
-        return $this->returnSuccess(__($this->successMsg['sales.data.found']), ['allBookings' => $allBookings, 'cancelBooking' => $cancelBookings->groupBy('booking_id')->count(), 'pendingBooking' => $pendingBookings,
+        return $this->returnSuccess(__($this->successMsg['sales.data.found']), ['allBookings' => $allBookings->count(), 'cancelBooking' => $cancelBookings->groupBy('booking_id')->count(), 'pendingBooking' => $pendingBookings,
             'totalMassages' => $massages->count(), 'totalTherapies' => $therapies->count(), 'futureBookings' => $futureBookings, 'todayBookings' => $todayBookings,'topMassages' => $topMassages, 
             'topTherapies' => $topTherapies, 'packEarnings' => $packs_earning, 'cancelBookingValues' => $cancel_earnings, 'paymentRecevied' => $recevied_amount, 'unpaidAmount' => $unpaid_amount]);
     }
