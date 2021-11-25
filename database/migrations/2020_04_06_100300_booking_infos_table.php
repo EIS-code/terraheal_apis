@@ -29,9 +29,9 @@ class BookingInfosTable extends Migration
             $table->float('origional_cost');*/
             $table->enum('is_done', [0, 1])->default(0)->comment('0: Nope, 1: Yes');
             // $table->decimal('exchange_rate', 8, 4);
-            $table->bigInteger('booking_currency_id')->unsigned();
+            $table->bigInteger('booking_currency_id')->unsigned()->nullable();
             $table->foreign('booking_currency_id')->references('id')->on('currencies')->onDelete('cascade');
-            $table->bigInteger('shop_currency_id')->unsigned();
+            $table->bigInteger('shop_currency_id')->unsigned()->nullable();
             $table->foreign('shop_currency_id')->references('id')->on('currencies')->onDelete('cascade');            
             $table->bigInteger('therapist_id')->unsigned();
             $table->foreign('therapist_id')->references('id')->on('therapists')->onDelete('cascade');

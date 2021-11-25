@@ -75,8 +75,8 @@ class BookingInfo extends BaseModel
             'cancelled_reason'     => ['mas:255'],
             'imc_type'             => ['nullable', 'in:1,2'],
             'therapist_id'         => ['nullable', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
-            'booking_currency_id'  => ['required', 'integer', 'exists:' . Currency::getTableName() . ',id'],
-            'shop_currency_id'     => ['required', 'integer', 'exists:' . Currency::getTableName() . ',id'],
+            'booking_currency_id'  => ['nullable', 'integer', 'exists:' . Currency::getTableName() . ',id'],
+            'shop_currency_id'     => ['nullable', 'integer', 'exists:' . Currency::getTableName() . ',id'],
             'booking_id'           => ['required', 'integer', 'exists:' . Booking::getTableName() . ',id'],
         ]);
     }
