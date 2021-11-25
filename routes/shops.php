@@ -31,6 +31,8 @@ $router->group(['prefix' => 'shops', 'namespace' => 'Shops'], function () use($r
     $router->post('free/slots/get', 'ShopsController@getFreeSlots');
     $router->post('booking/confirm', 'ShopsController@confirmBooking');
     $router->post('location/get', 'ShopsController@getShopRooms');
+    $router->post('fcm/token/save', 'Manager\ManagerController@saveToken');
+    $router->get('notification/unread', 'Manager\ManagerController@getUnreadNotification');
 });
 
 $router->group(['prefix' => 'shops', 'namespace' => 'Shops', 'guard' => 'shop'], function () use($router) {
@@ -287,4 +289,7 @@ $router->group(['namespace' => 'User'], function () use($router) {
     $router->post('manager/user/document/upload', 'UserController@updateDocument');
     $router->post('manager/card/details/save', 'UserController@saveCardDetails');
     $router->post('manager/user/default/card/save', 'UserController@saveDefaultCard');
+    $router->post('shops/user/card/details/save', 'UserController@saveCardDetails');
+    $router->post('shops/user/default/card/save', 'UserController@saveDefaultCard');
+    $router->post('shops/user/card/details/get', 'UserController@getCardDetails');
 });

@@ -84,7 +84,7 @@ class ManagerController extends BaseController {
         'document.delete' => 'Document deleted successfully !',
         'service.add' => 'Service added successfully !',
         'service.delete' => 'Service deleted successfully !',
-        'success.token.save' => 'Client FCM token saved successfully !',
+        'success.token.save' => 'FCM token saved successfully !',
         'success.unread.notification' => 'Unread notifications get successfully !',
         'success.card.found' => 'Card details found successfully !',
     ];
@@ -891,7 +891,11 @@ class ManagerController extends BaseController {
     
     public function saveToken(Request $request) {
         
-        $manager = Manager::find($request->manager_id);
+        if(!empty($request->shop_id)) {
+            $manager = Manager::where('shop_id', $request->shop_id)->first();
+        } else {
+            $manager = Manager::find($request->manager_id);
+        }
         if(empty($manager)) {
             return $this->returnError($this->errorMsg['manager.not.found']);
         }
