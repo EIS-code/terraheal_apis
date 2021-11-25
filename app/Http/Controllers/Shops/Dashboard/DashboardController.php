@@ -18,6 +18,7 @@ use App\ServicePricing;
 use DB;
 use App\Manager;
 use App\News;
+use App\BookingPayment;
 
 class DashboardController extends BaseController {
 
@@ -84,10 +85,10 @@ class DashboardController extends BaseController {
     }
     
     public function cancelBookings(Request $request) {
-        $booking = BookingInfo::with('booking')->where('is_cancelled', BookingInfo::IS_CANCELLED)
-                        ->whereHas('booking', function($q) use($request) {
-                            $q->where('shop_id', '=', $request->get('shop_id'));
-                        })->count();
+        
+        $request->request->add(['bookings_filter' => array(Booking::BOOKING_CANCELLED)]);
+        $bookingModel = new Booking();
+        $booking = $bookingModel->getGlobalQuery($request);
         return $booking;
     }
     
@@ -232,6 +233,8 @@ class DashboardController extends BaseController {
         $allBookings = $this->allBookings($request);
         
         $cancelBookings = $this->cancelBookings($request);
+        $cancel_earnings = clone $cancelBookings;
+        $cancel_earnings = $cancel_earnings->sum('price');
         
         $pendingBookings = $this->pendingBookings($request);
         
@@ -253,9 +256,15 @@ class DashboardController extends BaseController {
         
         $topTherapies = $this->topServices($request, $therapies, $todayDate, $agoDate);
         
-        return $this->returnSuccess(__($this->successMsg['sales.data.found']), ['allBookings' => $allBookings, 'cancelBooking' => $cancelBookings, 'pendingBooking' => $pendingBookings,
-            'totalMassages' => $massages->count(), 'totalTherapies' => $therapies->count(), 'futureBookings' => $futureBookings,
-            'todayBookings' => $todayBookings,'topMassages' => $topMassages, 'topTherapies' => $topTherapies]);
+        $packs_earning = Booking::whereNotNull('pack_id')->sum('total_price');
+        
+        $recevied_amount = BookingPayment::all()->sum('paid_amounts');
+        
+        $unpaid_amount = Booking::all()->sum('remaining_price');
+        
+        return $this->returnSuccess(__($this->successMsg['sales.data.found']), ['allBookings' => $allBookings, 'cancelBooking' => $cancelBookings->groupBy('booking_id')->count(), 'pendingBooking' => $pendingBookings,
+            'totalMassages' => $massages->count(), 'totalTherapies' => $therapies->count(), 'futureBookings' => $futureBookings, 'todayBookings' => $todayBookings,'topMassages' => $topMassages, 
+            'topTherapies' => $topTherapies, 'packEarnings' => $packs_earning, 'cancelBookingValues' => $cancel_earnings, 'paymentRecevied' => $recevied_amount, 'unpaidAmount' => $unpaid_amount]);
     }
     
     public function customerInfo(Request $request) {

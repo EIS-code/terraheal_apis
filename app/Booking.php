@@ -31,6 +31,7 @@ class Booking extends BaseModel
         'pack_id',
         'book_platform',
         'total_price',
+        'remaining_price',
         'payment_type'
     ];
 

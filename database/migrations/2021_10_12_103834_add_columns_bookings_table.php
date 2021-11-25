@@ -15,7 +15,8 @@ class AddColumnsBookingsTable extends Migration
     {
         Schema::table('bookings', function (Blueprint $table) {
             
-            $table->string('total_price')->nullable()->after('pack_id');
+            $table->double('total_price')->nullable()->after('pack_id');
+            $table->double('remaining_price')->nullable()->after('total_price');
             $table->enum('payment_type', [0,1])->comment('0: Full, 1: Half')->default(0);
         });
     }
