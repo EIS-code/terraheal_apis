@@ -10,10 +10,7 @@ use Stripe;
 class BookingPayment extends BaseModel
 {
     protected $fillable = [
-        'final_amounts',
         'paid_amounts',
-        'remaining_amounts',
-        'paid_percentage',
         'is_success',
         'booking_id',
         'payment_id'
@@ -23,10 +20,6 @@ class BookingPayment extends BaseModel
     {
         $validator = Validator::make($data, [
             'paid_amounts'           => ['required'],
-            'final_amounts'          => ['required'],
-            'paid_amounts'           => ['required'],
-            'remaining_amounts'      => ['required'],
-            'paid_percentage'        => ['required'],
             'is_success'             => ['required', 'integer'],
             'payment_id'             => ['nullable', 'string'],
             'booking_id'             => ['required', 'integer']
@@ -65,16 +58,15 @@ class BookingPayment extends BaseModel
 
                     if ($charge->status == 'succeeded') {
                         $data = [
-                            'final_amounts' => $booking->total_price,
                             'paid_amounts' => $amount,
-                            'remaining_amounts' => $booking->total_price - $amount,
-                            'paid_percentage' => ($booking->payment_type == Booking::PAYMENT_HALF) ? 50 : 100,
                             'is_success' => '1',
                             'booking_id' => $booking->id,
                             'payment_id' => $charge->id
                         ];
                         BookingPayment::create($data);
                     }
+                    $remaining  = $booking->total_price - $amount;
+                    $booking->update(['remaining_price' => $remaining]);
                     DB::commit();
                     return $data;
                 } catch (\Stripe\Exception\CardException $e) {
@@ -116,7 +108,7 @@ class BookingPayment extends BaseModel
 
         DB::beginTransaction();
         try {
-            $amount = $booking->payment->remaining_amounts;
+            $amount = $booking->remaining_price;
             if ($amount > 0) {               
                 try {
                     Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
@@ -129,16 +121,15 @@ class BookingPayment extends BaseModel
 
                     if ($charge->status == 'succeeded') {
                         $data = [
-                            'final_amounts' => $booking->total_price,
-                            'paid_amounts' => $booking->payment->remaining_amounts + $amount,
-                            'remaining_amounts' => $booking->payment->remaining_amounts - $amount,
-                            'paid_percentage' => 100,
+                            'paid_amounts' => $amount,
                             'is_success' => '1',
                             'booking_id' => $booking->id,
                             'payment_id' => $charge->id
                         ];
-                        $create = BookingPayment::create($data);
+                        BookingPayment::create($data);
                     }
+                    $remaining  = $booking->remaining_price - $amount;
+                    $booking->update(['remaining_price' => $remaining]);
                     DB::commit();
                     return $data;
                 } catch (\Stripe\Exception\CardException $e) {

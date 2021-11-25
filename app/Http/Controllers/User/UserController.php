@@ -393,6 +393,7 @@ class UserController extends BaseController
                 'user_id' => $request->user_id,
                 'shop_id' => $request->shop_id,
                 'session_id' => $request->session_id,
+                'payment_type' => (string)$request->payment_type,
                 'booking_date_time' => $date,
                 'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
                 'bring_table_futon' => !empty($request->bring_table_futon) ? (string)$request->bring_table_futon : $bookingModel::BRING_TABLE_FUTON_NONE,
