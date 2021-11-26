@@ -1186,7 +1186,12 @@ class UserController extends BaseController
         $userId = $request->get('user_id', false);
 
         if (!empty($userId)) {
-            $data = $model->with('design')->where('user_id', $userId)->get();
+            
+            $user = User::find($userId);
+            if(empty($user)) {
+                return $this->returnError($this->errorMsg['error.user.not.found']);
+            }
+            $data = $model->with('design')->where('recipient_email', $user->email)->get();
 
             if (!empty($data) && !$data->isEmpty()) {
                 $data->map(function($value) use($model){
