@@ -493,7 +493,7 @@ class Booking extends BaseModel
 
         $bookings = $this->select(DB::RAW(self::getTableName() . '.id, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.address as shop_address, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, ' .  $modelSessionType::getTableName() . '.id as session_id, ' 
                             . $modelBookingInfo::getTableName() . '.id as bookingInfoId, ' . $modelBookingMassage::getTableName() . '.massage_date_time, '. $modelBookingMassage::getTableName() . '.actual_date_time, '. $modelBookingMassage::getTableName() .'.is_confirm, ' . 
-                            $modelBookingInfo::getTableName() . '.user_id, '. $modelUser::getTableName() . '.name as user_name, ' . $modelUser::getTableName() . '.age as user_age, ' . $modelUser::getTableName() . '.gender as user_gender, ' . $modelUser::getTableName() . '.profile_photo as user_profile_photo,' . $modelUser::getTableName() . '.qr_code_path'))
+                            $modelBookingInfo::getTableName() . '.user_id, '. $modelUser::getTableName() . '.name as user_name, ' . $modelUser::getTableName() . '.age as user_age, ' . $modelUser::getTableName() . '.dob as user_dob, ' . $modelUser::getTableName() . '.gender as user_gender, ' . $modelUser::getTableName() . '.profile_photo as user_profile_photo,' . $modelUser::getTableName() . '.qr_code_path'))
                          ->join($modelBookingInfo::getTableName(), self::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
                          ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
                          ->join($modelUser::getTableName(), $modelBookingInfo::getTableName() . '.user_id', '=', $modelUser::getTableName() . '.id')
@@ -553,7 +553,7 @@ class Booking extends BaseModel
                     $returnUserPeoples[$bookingId][$index] = [
                         'id'     => $userPeopleId,
                         'name'   => $data->user_name,
-                        'age'    => !empty($data->dob) ? Carbon::createFromTimestampMs($data->dob)->age : $data->user_age,
+                        'age'    => !empty($data->user_dob) ? Carbon::createFromTimestampMs($data->user_dob)->age : $data->user_age,
                         'gender' => $data->user_gender,
                         'photo'  => $data->user_photo
                     ];
@@ -577,14 +577,9 @@ class Booking extends BaseModel
                     }
                     if (!empty($bookingMassages) && !$bookingMassages->isEmpty()) {
                         $returnUserPeoples[$bookingId][$index]['booking_massages'] = $bookingMassages;
-
-                        if (isset($returnBookings[$bookingId]['total_price'])) {
-                            $returnBookings[$bookingId]['total_price'] += $bookingMassages->sum('price');
-                        } else {
-                            $returnBookings[$bookingId]['total_price'] = $bookingMassages->sum('price');
-                        }
+                        $returnBookings[$bookingId]['total_price'] = $bookingMassages->sum('price');
                     }
-                                        
+                             
                     $returnBookings[$bookingId] = [
                         'id'                => $bookingId,
                         'booking_type'      => $data->booking_type,
