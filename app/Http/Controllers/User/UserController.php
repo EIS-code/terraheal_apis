@@ -987,9 +987,10 @@ class UserController extends BaseController
     {
         $model = new User();
         $id    = (int)$request->get('id', false);
+        $user_id    = (int)$request->get('user_id', false);
 
         if (!empty($id)) {
-            $userPeople = $model->find($id);
+            $userPeople = $model->where(['id' => $id, 'user_id' => $user_id])->first();
 
             if (!empty($userPeople)) {
                 $userPeople->is_removed = $model::$removed;
