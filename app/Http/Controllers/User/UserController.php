@@ -1198,7 +1198,7 @@ class UserController extends BaseController
             if(empty($user)) {
                 return $this->returnError($this->errorMsg['error.user.not.found']);
             }
-            $data = $model->with('design')->where('5user_id', $userId)->get();
+            $data = $model->with('design')->where('user_id', $userId)->get();
 
             if (!empty($data) && !$data->isEmpty()) {
                 $data->map(function($value) use($model){
