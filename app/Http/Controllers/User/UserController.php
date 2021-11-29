@@ -261,7 +261,7 @@ class UserController extends BaseController
                 return $this->returns($validator->errors()->first(), NULL, true);
             }
 
-            $data['age'] = !empty($data['dob']) ?  Carbon::createFromTimestampMs($data['dob'])->age : $request->dob;
+            $data['age'] = !empty($data['dob']) ?  Carbon::createFromTimestampMs($data['dob'])->age : $request->age;
             $data['password'] = (!empty($data['password']) ? Hash::make($data['password']) : NULL);
             
             $model->fill($data);
@@ -293,6 +293,10 @@ class UserController extends BaseController
 
             if (isset($data['user_id'])) {
                 unset($data['user_id']);
+            }
+            
+            if(!empty($request->dob)) {
+                $data['age'] = Carbon::createFromTimestampMs($data['dob'])->age;
             }
 
             $validator = $model->validator($data, $userId, true);
