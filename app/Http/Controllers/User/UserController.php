@@ -2360,7 +2360,8 @@ class UserController extends BaseController
             'latitude' => $voucher->shop->latitude,
             'longitude' => $voucher->shop->longitude,
             'longitude' => $voucher->shop->longitude,
-            'featuredImage' => $voucher->shop->featuredImage->image,
+            'featured_image' => $voucher->shop->featuredImage->image,
+            'total_services' => $voucher->shop->totalServices,
             'shop_hours' => $shop_hours
         ];
         $voucher = [
