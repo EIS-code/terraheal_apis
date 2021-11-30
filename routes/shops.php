@@ -286,10 +286,17 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Shops'], function () us
 
 $router->group(['namespace' => 'User'], function () use($router) {
 
-    $router->post('manager/user/document/upload', 'UserController@updateDocument');
-    $router->post('manager/card/details/save', 'UserController@saveCardDetails');
-    $router->post('manager/user/default/card/save', 'UserController@saveDefaultCard');
-    $router->post('shops/user/card/details/save', 'UserController@saveCardDetails');
-    $router->post('shops/user/default/card/save', 'UserController@saveDefaultCard');
-    $router->post('shops/user/card/details/get', 'UserController@getCardDetails');
+    $router->group(['prefix' => 'manager'], function () use($router) {
+        $router->post('user/document/upload', 'UserController@updateDocument');
+        $router->post('card/details/save', 'UserController@saveCardDetails');
+        $router->post('user/default/card/save', 'UserController@saveDefaultCard');
+    });
+    $router->group(['prefix' => 'shops'], function () use($router) {
+        $router->group(['prefix' => 'user'], function () use($router) {
+            $router->post('card/details/save', 'UserController@saveCardDetails');
+            $router->post('default/card/save', 'UserController@saveDefaultCard');
+            $router->post('card/details/get', 'UserController@getCardDetails');
+            $router->post('booking/remaining/payment', 'UserController@payRemainingPayment');
+        });
+    });
 });
