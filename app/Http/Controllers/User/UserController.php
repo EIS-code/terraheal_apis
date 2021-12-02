@@ -418,12 +418,6 @@ class UserController extends BaseController
 
             if (!empty($request->users)) {
                 foreach ($request->users as $key => $user) {
-                    if ($request->session_id == SessionType::COUPLE_WITH_THERAPIST) {
-                        if (!isset($user['therapist_id'])) {
-                            return $this->returns('error.booking.select.therapist', NULL, true);
-                        }
-                    }
-
                     if (count($user['services']) <= 0) {
                         return $this->returns('error.booking.select.service', NULL, true);
                     }
