@@ -33,7 +33,7 @@ class BookingPayment extends BaseModel
         $available_amount = 0;
         if (!empty($voucher)) {
             $total_amount = $booking->total_price;
-            $voucher_amount = $voucher->amount;
+            $voucher_amount = $voucher->available_amount > 0 ? $voucher->available_amount : $voucher->amount;
             if ($booking->payment_type == Booking::PAYMENT_HALF) {
                 if($voucher_amount >= $total_amount) {
                     $deduct = $available_amount = $voucher_amount - $total_amount;
