@@ -32,7 +32,9 @@ class Booking extends BaseModel
         'book_platform',
         'total_price',
         'remaining_price',
-        'payment_type'
+        'payment_type',
+        'pack_id',
+        'voucher_id'
     ];
 
     protected $hidden = ['is_removed', 'updated_at', 'deleted_at'];
@@ -98,6 +100,7 @@ class Booking extends BaseModel
             'shop_id'              => ['required', 'integer', 'exists:' . Shop::getTableName() . ',id'],
             'session_id'           => ['required', 'integer', 'exists:' . SessionType::getTableName() . ',id'],
             'pack_id'              => ['nullable', 'integer', 'exists:' . Pack::getTableName() . ',id'],
+            'voucher_id'           => ['nullable', 'integer', 'exists:' . UserGiftVoucher::getTableName() . ',id'],
             'total_persons'        => ['required', 'integer'],
             'bring_table_futon'    => ['in:' . implode(",", self::$tableFutons)],
             'table_futon_quantity' => ['integer']
@@ -168,6 +171,16 @@ class Booking extends BaseModel
         return $this->hasOne('App\Shop', 'id', 'shop_id');
     }
 
+    public function pack()
+    {
+        return $this->hasOne('App\Pack', 'id', 'pack_id');
+    }
+    
+    public function voucher()
+    {
+        return $this->hasOne('App\Voucher', 'id', 'voucher_id');
+    }
+    
     public function user()
     {
         return $this->hasOne('App\User', 'id', 'user_id');

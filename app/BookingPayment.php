@@ -28,10 +28,49 @@ class BookingPayment extends BaseModel
         return $validator;
     }
     
+    public function getAmount($booking, $voucher) {
+        
+        $available_amount = 0;
+        if (!empty($voucher)) {
+            $total_amount = $booking->total_price;
+            $voucher_amount = $voucher->amount;
+            if ($booking->payment_type == Booking::PAYMENT_HALF) {
+                if($voucher_amount >= $total_amount) {
+                    $deduct = $available_amount = $voucher_amount - $total_amount;
+                    $amount = $remaining_amount = $deduct / 2;
+                } else {
+                    $deduct = $total_amount - $voucher_amount;
+                    $amount = $remaining_amount = $deduct / 2;
+                    $available_amount = 0;
+                }
+            } else {
+                if($voucher_amount >= $total_amount) {
+                    $amount = $available_amount = $voucher_amount - $total_amount;
+                    $remaining_amount = 0;
+                } else {
+                    $amount = $total_amount - $voucher_amount;
+                    $remaining_amount = 0;
+                    $available_amount = 0;
+                }
+            }
+        } else {
+            if ($booking->payment_type == Booking::PAYMENT_HALF) {
+                $amount = $remaining_amount = $booking->total_price / 2;
+            } else {
+                $amount = $booking->total_price;
+                $remaining_amount = 0;
+            }
+        }
+        
+        return ['payable' => $amount, 'remaining_amount' => $remaining_amount, 'available_amount' => $available_amount];
+    }
+    
     public function bookingPayment(Request $request) {
         $card = UserCardDetail::where(['user_id' => $request->user_id, 'is_default' => UserCardDetail::CARD_DEFAULT])->first();
         $booking = Booking::with('payment')->where(['id' => $request->booking_id, 'user_id' => $request->user_id])->first();
-
+        $voucher_model = new UserGiftVoucher(); 
+        $voucher = $voucher_model->where(['id' => $request->voucher_id, 'is_used' => UserGiftVoucher::IS_NOT_USED])->first();
+        
         if (empty($card)) {
             return ['isError' => true, 'message' => 'Card not found !'];
         }
@@ -41,16 +80,12 @@ class BookingPayment extends BaseModel
 
         DB::beginTransaction();
         try {
-            if ($booking->payment_type == Booking::PAYMENT_HALF) {
-                $amount = $booking->total_price / 2;
-            } else {
-                $amount = $booking->total_price;
-            }
-            if ($amount > 0) {               
+            $all_amount = $this->getAmount($booking, $voucher);
+            if ($all_amount['payable'] > 0) {               
                 try {
                     Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
                     $charge = \Stripe\Charge::create(array(
-                                "amount" => $amount * 100,
+                                "amount" => $all_amount['payable'] * 100,
                                 "currency" => "usd",
                                 "customer" => $card->stripe_id,
                                 "description" => "Test payment from evolution.com.")
@@ -58,15 +93,16 @@ class BookingPayment extends BaseModel
 
                     if ($charge->status == 'succeeded') {
                         $data = [
-                            'paid_amounts' => $amount,
+                            'paid_amounts' => $all_amount['payable'],
                             'is_success' => '1',
                             'booking_id' => $booking->id,
                             'payment_id' => $charge->id
                         ];
                         BookingPayment::create($data);
                     }
-                    $remaining  = $booking->total_price - $amount;
-                    $booking->update(['remaining_price' => $remaining]);
+                    $booking->update(['remaining_price' => $all_amount['remaining_amount']]);
+                    $is_used = $all_amount['available_amount'] > 0 ? UserGiftVoucher::IS_NOT_USED : UserGiftVoucher::IS_USED;
+                    $voucher->update(['available_amount' => $all_amount['available_amount'], 'is_used' => $is_used]);
                     DB::commit();
                     return $data;
                 } catch (\Stripe\Exception\CardException $e) {

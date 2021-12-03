@@ -27,6 +27,8 @@ class UserGiftVoucher extends BaseModel
         'preference_email',
         'preference_email_date',
         'amount',
+        'available_amount',
+        'is_used',
         'user_id',
         'design_id',
         'unique_id',
@@ -36,6 +38,9 @@ class UserGiftVoucher extends BaseModel
         'shop_id',
         'expired_date'
     ];
+    
+    const IS_USED = "1";
+    const IS_NOT_USED = "0";
     
     protected $hidden = ['updated_at'];
 

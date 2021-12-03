@@ -404,7 +404,8 @@ class UserController extends BaseController
                 'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
                 'bring_table_futon' => !empty($request->bring_table_futon) ? (string)$request->bring_table_futon : $bookingModel::BRING_TABLE_FUTON_NONE,
                 'table_futon_quantity' => !empty($request->table_futon_quantity) ? (int)$request->table_futon_quantity : 0,
-                'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL
+                'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL,
+                'voucher_id' => !empty($request->voucher_id) ? $request->voucher_id : NULL
             ];
 
             $checks = $bookingModel->validator($bookingData);
