@@ -68,8 +68,14 @@ class BookingPayment extends BaseModel
     public function bookingPayment(Request $request) {
         $card = UserCardDetail::where(['user_id' => $request->user_id, 'is_default' => UserCardDetail::CARD_DEFAULT])->first();
         $booking = Booking::with('payment')->where(['id' => $request->booking_id, 'user_id' => $request->user_id])->first();
-        $voucher_model = new UserGiftVoucher(); 
-        $voucher = $voucher_model->where(['id' => $request->voucher_id, 'is_used' => UserGiftVoucher::IS_NOT_USED])->first();
+        $voucher = NULL;
+        if(isset($request->voucher_id) && !empty($request->voucher_id)) {
+            $voucher_model = new UserGiftVoucher(); 
+            $voucher = $voucher_model->where(['id' => $request->voucher_id, 'is_used' => UserGiftVoucher::IS_NOT_USED])->first();
+            if (empty($voucher)) {
+                return ['isError' => true, 'message' => 'Voucher not found !'];
+            }
+        }
         
         if (empty($card)) {
             return ['isError' => true, 'message' => 'Card not found !'];
@@ -101,8 +107,10 @@ class BookingPayment extends BaseModel
                         BookingPayment::create($data);
                     }
                     $booking->update(['remaining_price' => $all_amount['remaining_amount']]);
-                    $is_used = $all_amount['available_amount'] > 0 ? UserGiftVoucher::IS_NOT_USED : UserGiftVoucher::IS_USED;
-                    $voucher->update(['available_amount' => $all_amount['available_amount'], 'is_used' => $is_used]);
+                    if(!empty($voucher)) {
+                        $is_used = $all_amount['available_amount'] > 0 ? UserGiftVoucher::IS_NOT_USED : UserGiftVoucher::IS_USED;
+                        $voucher->update(['available_amount' => $all_amount['available_amount'], 'is_used' => $is_used]);
+                    }
                     DB::commit();
                     return $data;
                 } catch (\Stripe\Exception\CardException $e) {
