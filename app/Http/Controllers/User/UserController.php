@@ -1264,6 +1264,7 @@ class UserController extends BaseController
 
                     if (!empty($data['amount'])) {
                         $data['amount'] = (float) $data['amount'];
+                        $data['available_amount'] = (float) $data['amount'];
                     }
 
                     $now = Carbon::now();
@@ -2373,6 +2374,7 @@ class UserController extends BaseController
             'preference_email' => $voucher->preference_email,
             'preference_email_date' => $voucher->preference_email_date,
             'amount' => $voucher->amount,
+            'available_amount' => $voucher->available_amount,
             'user_id' => $voucher->user_id,
             'design_id' => $voucher->design_id,
             'unique_id' => $voucher->unique_id,
