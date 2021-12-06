@@ -70,6 +70,7 @@ class WaitingListController extends BaseController {
         'group.users' => 'Please select more than one users!',
         'single.users' => 'Please select only one user!',
         'couple.therapist.users' => 'Please select therapist!',
+        'error.booking.select.user' => 'Please select at least one user.',
     ];
 
     public function ongoingMassage(Request $request) {
@@ -422,7 +423,9 @@ class WaitingListController extends BaseController {
                         'shop_id' => $request->shop_id,
                         'session_id' => $request->session_id,
                         'booking_date_time' => $date,
-                        'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL
+                        'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
+                        'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL,
+                        'voucher_id' => !empty($request->voucher_id) ? $request->voucher_id : NULL
                     ];
                     $checks = $bookingModel->validator($bookingData);
                     if ($checks->fails()) {
@@ -445,9 +448,19 @@ class WaitingListController extends BaseController {
                     }
                 }
                 $newBooking->update(['total_price' => $total_price]);
+            } else {
+                return $this->returnError(__($this->successMsg['error.booking.select.user']));
+            }
+            $request->booking_id = $newBooking->id;
+            if(empty($request->pack_id)) {
+                $paymentModule = new BookingPayment();
+                $payment = $paymentModule->bookingPayment($request);
+                if (!empty($payment['isError']) && !empty($payment['message'])) {
+                    return $this->returnError($payment['message']);
+                }
             }
             DB::commit();
-            return $this->returnSuccess(__($this->successMsg['new.booking']));
+            return $this->returnSuccess(__($this->successMsg['new.booking']), $bookingModel->getGlobalQuery($request));
         } catch (\Exception $e) {
             DB::rollback();
             throw $e;
