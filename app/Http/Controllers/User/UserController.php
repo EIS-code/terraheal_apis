@@ -98,6 +98,7 @@ class UserController extends BaseController
         'error.pack.id' => 'Please provide pack id !',
         'error.voucher.id' => 'Please provide voucher id !',
         'error.user.id' => 'Please provide user id !',
+        'error.user.card.added' => 'You have already added this card !',
     ];
 
     public $successMsg = [
@@ -1884,6 +1885,11 @@ class UserController extends BaseController
             $data['card_number'] = $token->card->last4;
             $data['exp_month'] = $token->card->exp_month;
             $data['exp_year'] = $token->card->exp_year;
+            
+            $is_exist = $model->where(['user_id' => $request->user_id, 'card_number' => $token->card->last4])->first();
+            if ($is_exist) {
+                return $this->returns('error.user.card.added', NULL, true);
+            }
             
             $validator = $model->validator($data);
             if ($validator->fails()) {
