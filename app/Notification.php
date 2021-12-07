@@ -3,8 +3,6 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
-use App\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Notification extends BaseModel
@@ -136,5 +134,15 @@ class Notification extends BaseModel
     public function getTotalUnreadNotificationsAttribute()
     {
         return $this->notifications()->count();
+    }
+    
+    public function read($id) {
+        
+        $notification = $this->find($id);
+        if(empty($notification)) {
+            return ['isError' => true, 'message' => 'Notification not found !'];
+        }
+        $notification->update(['is_read' => self::IS_READ]);
+        return $notification;
     }
 }
