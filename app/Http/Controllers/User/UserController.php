@@ -2398,9 +2398,13 @@ class UserController extends BaseController
         return $this->returnSuccess(__($this->successMsg['success.user.gift.voucher.found']), $voucherData);
     }
     
-    public function getUnreadNotification() {
+    public function getUnreadNotification(Request $request) {
         
-        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_CLIENT_APP])->get();
+        $user = User::find($request->user_id);
+        if(empty($user)) {
+            return $this->returnError($this->errorMsg['error.user.not.found']);
+        }
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_CLIENT_APP, 'device_token' => $user->device_token])->get();
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
     }
     

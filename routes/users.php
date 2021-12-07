@@ -144,7 +144,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     });
 
     $router->group(['prefix' => 'notification'], function () use($router) {
-        $router->get('/unread', 'UserController@getUnreadNotification');
+        $router->post('/unread', 'UserController@getUnreadNotification');
         $router->post('/read', 'UserController@readNotification');
     });
     
