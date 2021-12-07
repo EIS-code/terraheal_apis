@@ -46,6 +46,8 @@ use App\Voucher;
 use App\Pack;
 use App\ShopHour;
 use App\PackService;
+use App\Notification;
+use App\Jobs\UserNotification;
 
 class UserController extends BaseController
 {
@@ -171,6 +173,9 @@ class UserController extends BaseController
         'pack.purchase' => 'Pack purchased successfully!',
         'voucher.purchase' => 'Voucher purchased successfully!',
         'success.payment' => 'Payment done successfully!',
+        'success.unread.notification' => 'Unread notifications get successfully !',
+        'success.read.notification' => 'Notification read successfully !',
+        'success.token.save' => 'Token save successfully !',
     ];
 
     public function __construct()
@@ -454,6 +459,7 @@ class UserController extends BaseController
                 }
             }
             DB::commit();
+            dispatch(new UserNotification($request->user_id, "Booking", "Booking created successfully", Notification::SEND_FROM_CLIENT_APP, Notification::SEND_FROM_SHOP_APP));
             return $this->returns('success.booking.created', $bookingModel->getGlobalQuery($request));
         } catch (\Throwable $e) {
             DB::rollback();
@@ -1491,6 +1497,7 @@ class UserController extends BaseController
                     }
                 }
                 DB::commit();
+                dispatch(new UserNotification($request->user_id, "Pack", "Gift pack purchased successfully", Notification::SEND_FROM_CLIENT_APP, Notification::SEND_FROM_SHOP_APP));
                 return $this->returns('success.user.pack.gift.created', collect($data));
                 
             } catch (\Stripe\Exception\CardException $e) {
@@ -2215,6 +2222,7 @@ class UserController extends BaseController
                     $purchasePack = $model->create($data);
                 }
                 DB::commit();
+                dispatch(new UserNotification($request->user_id, "Pack", "Pack purchased successfully", Notification::SEND_FROM_CLIENT_APP, Notification::SEND_FROM_SHOP_APP));
                 return $this->returnSuccess(__($this->successMsg['pack.purchase']), $purchasePack);
             } catch (\Stripe\Exception\CardException $e) {
                 return ['isError' => true, 'message' => $e->getError()->message];
@@ -2419,5 +2427,37 @@ class UserController extends BaseController
             'shop' => $shopData,
         ];
         return $this->returnSuccess(__($this->successMsg['success.user.gift.voucher.found']), $voucherData);
+    }
+    
+    public function getUnreadNotification(Request $request) {
+        
+        $user = User::find($request->user_id);
+        if(empty($user)) {
+            return $this->returnError($this->errorMsg['error.user.not.found']);
+        }
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_CLIENT_APP, 'device_token' => $user->device_token])->get();
+        return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
+    }
+    
+    public function readNotification(Request $request) {
+        
+        $model = new Notification();
+        $notification = $model->read($request->id);
+        if (!empty($notification['isError']) && !empty($notification['message'])) {
+            return $this->returnError($notification['message'], NULL, true);
+        }
+        return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
+    }
+    
+    public function saveToken(Request $request) {
+                
+        $user = User::find($request->user_id);
+        if(empty($user)) {
+            return $this->returnError($this->errorMsg['error.user.not.found']);
+        }
+        
+        $user->update(['device_token' => $request->device_token]);
+        
+        return $this->returnSuccess(__($this->successMsg['success.token.save']),$user);
     }
 }

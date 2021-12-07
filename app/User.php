@@ -487,4 +487,11 @@ class User extends BaseModel implements Authenticatable
         $ratings = TherapistUserRating::where('user_id', $this->id)->avg('rating');
         return $ratings;
     }
+    
+    public static function getToken(int $id)
+    {
+        $row = self::find($id);
+
+        return (!empty($row) && !empty($row->device_token)) ? $row->device_token : NULL;
+    }
 }

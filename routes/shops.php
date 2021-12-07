@@ -33,6 +33,7 @@ $router->group(['prefix' => 'shops', 'namespace' => 'Shops'], function () use($r
     $router->post('location/get', 'ShopsController@getShopRooms');
     $router->post('fcm/token/save', 'Manager\ManagerController@saveToken');
     $router->get('notification/unread', 'Manager\ManagerController@getUnreadNotification');
+    $router->post('notification/read', 'Manager\ManagerController@readNotification');
 });
 
 $router->group(['prefix' => 'shops', 'namespace' => 'Shops', 'guard' => 'shop'], function () use($router) {
@@ -180,6 +181,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     
     $router->group(['prefix' => 'notification'], function () use($router) {
         $router->get('/unread', 'Manager\ManagerController@getUnreadNotification');
+        $router->post('/read', 'Manager\ManagerController@readNotification');
     });
     
     $router->group(['prefix' => 'packs'], function () use($router) {

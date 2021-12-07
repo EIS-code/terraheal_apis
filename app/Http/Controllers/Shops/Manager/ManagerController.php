@@ -86,6 +86,7 @@ class ManagerController extends BaseController {
         'service.delete' => 'Service deleted successfully !',
         'success.token.save' => 'FCM token saved successfully !',
         'success.unread.notification' => 'Unread notifications get successfully !',
+        'success.read.notification' => 'Notification read successfully !',
         'success.card.found' => 'Card details found successfully !',
     ];
 
@@ -909,6 +910,16 @@ class ManagerController extends BaseController {
         $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_MANAGER_EXE])->get();
 
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
+    }
+    
+    public function readNotification(Request $request) {
+        
+        $model = new Notification();
+        $notification = $model->read($request->id);
+        if (!empty($notification['isError']) && !empty($notification['message'])) {
+            return $this->returnError($notification['message'], NULL, true);
+        }
+        return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
     }
     
     public function getCardDetails(Request $request) {

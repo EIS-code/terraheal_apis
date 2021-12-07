@@ -19,6 +19,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     $router->post('signin/forgot', 'UserController@forgotPassword');
     $router->post('reset/password', 'UserController@resetPassword');
     $router->post('verify/otp', 'UserController@verifyOtp');
+    $router->post('token/save', 'UserController@saveToken');
     
     $router->group(['prefix' => 'signup'], function () use($router) {
         $router->post('/', 'UserController@signUp');
@@ -142,6 +143,11 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
         $router->post('/pack', 'UserController@purchasePack');
     });
 
+    $router->group(['prefix' => 'notification'], function () use($router) {
+        $router->post('/unread', 'UserController@getUnreadNotification');
+        $router->post('/read', 'UserController@readNotification');
+    });
+    
     $router->get('qr/temp/get', 'UserController@getQRTemp');
     $router->post('service/timing/get', 'UserController@getServiceTiming');
     $router->post('booking/card/details/save', 'UserController@saveCardDetails');
