@@ -98,6 +98,7 @@ class UserController extends BaseController
         'error.pack.id' => 'Please provide pack id !',
         'error.voucher.id' => 'Please provide voucher id !',
         'error.user.id' => 'Please provide user id !',
+        'error.stripe.duplicate.card' => 'This card already added !',
     ];
 
     public $successMsg = [
@@ -1868,7 +1869,29 @@ class UserController extends BaseController
         }
         return true;
     }
-    
+
+    public function stripeCheckDuplicate(string $token, int $userId):bool {
+        $stripe   = new \Stripe\StripeClient(env('STRIPE_SECRET'));
+
+        $response = $stripe->tokens->retrieve(
+            $token,
+            []
+        );
+
+        $cardFingerprint = $response->card->fingerprint;
+        $cardExpMonth    = $response->card->exp_month;
+        $cardExpYear     = $response->card->exp_year;
+
+        // Check is duplicate.
+        $isDuplicate     = UserCardDetail::where('user_id', $userId)
+                                ->where('fingerprint', $cardFingerprint)
+                                ->where('exp_month', $cardExpMonth)
+                                ->where('exp_year', $cardExpYear)
+                                ->exists();
+
+        return $isDuplicate;
+    }
+
     public function saveCardDetails(Request $request) {
         
         DB::beginTransaction();
@@ -1879,12 +1902,20 @@ class UserController extends BaseController
             $user = User::find($request->user_id);
 
             $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
+
+            $checkDuplicate = $this->stripeCheckDuplicate($request->stripe_token, $request->user_id);
+
+            if ($checkDuplicate) {
+                return $this->returns('error.stripe.duplicate.card', NULL, true);
+            }
+
             $token = $stripe->tokens->retrieve(
                     $request->stripe_token, []);
             $data['card_number'] = $token->card->last4;
             $data['exp_month'] = $token->card->exp_month;
             $data['exp_year'] = $token->card->exp_year;
-            
+            $data['fingerprint'] = $token->card->fingerprint;
+
             $validator = $model->validator($data);
             if ($validator->fails()) {
                 return $this->returns($validator->errors()->first(), NULL, true);

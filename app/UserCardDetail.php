@@ -15,7 +15,8 @@ class UserCardDetail extends BaseModel
         'user_id',
         'is_default',
         'stripe_token',
-        'stripe_id'
+        'stripe_id',
+        'fingerprint'
     ];
 
     const CARD_DEFAULT = '1';
@@ -31,6 +32,7 @@ class UserCardDetail extends BaseModel
             'cvv'          => ['nullable', 'integer'],
             'stripe_token' => ['nullable', 'string', 'max:255'],
             'stripe_id'    => ['nullable', 'string', 'max:255'],
+            'fingerprint'  => ['nullable', 'string', 'max:255'],
             'user_id'      => ['required', 'integer', 'exists:' . User::getTableName() . ',id']
         ]);
     }
