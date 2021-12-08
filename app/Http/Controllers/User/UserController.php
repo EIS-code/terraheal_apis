@@ -2435,14 +2435,14 @@ class UserController extends BaseController
         if(empty($user)) {
             return $this->returnError($this->errorMsg['error.user.not.found']);
         }
-        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_CLIENT_APP, 'device_token' => $user->device_token])->get();
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_CLIENT_APP, 'model_id' => $request->user_id])->get();
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
     }
     
     public function readNotification(Request $request) {
         
         $model = new Notification();
-        $notification = $model->read($request->id);
+        $notification = $model->read($request->id, $request->user_id);
         if (!empty($notification['isError']) && !empty($notification['message'])) {
             return $this->returnError($notification['message'], NULL, true);
         }

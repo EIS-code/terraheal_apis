@@ -18,12 +18,13 @@ class Notification extends BaseModel
         'title', 'message', 'payload', 'device_token', 'is_success', 'apns_id', 'error_infos', 'send_to', 'send_from', 'is_read', 'created_at', 'updated_at'
     ];
 
+    protected $hidden = ['updated_at', 'deleted_at'];
     /**
      * The attributes that should be appends to model object.
      *
      * @var array
      */
-    public $appends = ['total_notifications', 'total_read_notifications', 'total_unread_notifications'];
+//    public $appends = ['total_notifications', 'total_read_notifications', 'total_unread_notifications'];
 
     const IS_READ   = '1';
     const IS_UNREAD = '0';
@@ -136,9 +137,13 @@ class Notification extends BaseModel
         return $this->notifications()->count();
     }
     
-    public function read($id) {
+    public function read($id, $userId) {
         
-        $notification = $this->find($id);
+        $user = User::find($userId);
+        if(empty($user)) {
+            return ['isError' => true, 'message' => 'User not found !'];
+        }
+        $notification = $this->where(['id' => $id, 'model_id' => $userId])->first();
         if(empty($notification)) {
             return ['isError' => true, 'message' => 'Notification not found !'];
         }
