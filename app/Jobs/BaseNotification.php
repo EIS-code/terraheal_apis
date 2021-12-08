@@ -24,8 +24,10 @@ class BaseNotification extends Job
     protected $sendTo;
 
     protected $sendFrom;
+    
+    protected $modelId;
 
-    public function __construct(string $deviceToken, string $title, string $description = NULL, array $dataPayload = [], string $sendTo = '0', string $sendFrom = '0')
+    public function __construct(string $deviceToken = NULL, string $title, string $description = NULL, array $dataPayload = [], string $sendTo = '0', string $sendFrom = '0', int $modelId = NULL)
     {
         $this->title         = $title;
 
@@ -38,6 +40,8 @@ class BaseNotification extends Job
         $this->deviceToken   = $deviceToken;
 
         $this->sendFrom      = $sendFrom;
+        
+        $this->modelId      = $modelId;
     }
 
     public function storeNotification()
@@ -51,7 +55,8 @@ class BaseNotification extends Job
             'apns_id'       => env('FCM_SERVER_KEY'),
             'error_infos'   => json_encode($this->downstreamResponse->tokensWithError()),
             'send_to'       => $this->sendTo,
-            'send_from'     => $this->sendFrom
+            'send_from'     => $this->sendFrom,
+            'model_id'     => $this->modelId,
         ];
 
         $create = modalNotification::create($notification);

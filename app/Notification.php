@@ -15,7 +15,19 @@ class Notification extends BaseModel
      * @var array
      */
     protected $fillable = [
-        'title', 'message', 'payload', 'device_token', 'is_success', 'apns_id', 'error_infos', 'send_to', 'send_from', 'is_read', 'created_at', 'updated_at'
+        'title', 
+        'message', 
+        'payload', 
+        'device_token', 
+        'is_success', 
+        'apns_id', 
+        'error_infos', 
+        'send_to', 
+        'send_from', 
+        'is_read', 
+        'created_at', 
+        'updated_at',
+        'model_id'
     ];
 
     protected $hidden = ['updated_at', 'deleted_at'];

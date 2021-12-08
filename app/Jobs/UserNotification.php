@@ -18,7 +18,7 @@ class UserNotification extends BaseNotification
 
         $dataPayload = ["date" => Carbon::now()->timestamp * 1000];
 
-        parent::__construct($deviceToken, $title, $description, $dataPayload, $sendTo, $sendFrom);
+        parent::__construct($deviceToken, $title, $description, $dataPayload, $sendTo, $sendFrom, $id);
     }
 
     /**
