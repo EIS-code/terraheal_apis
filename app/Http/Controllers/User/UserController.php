@@ -48,6 +48,7 @@ use App\ShopHour;
 use App\PackService;
 use App\Notification;
 use App\Jobs\UserNotification;
+use App\BookingInfo;
 
 class UserController extends BaseController
 {
@@ -2273,13 +2274,20 @@ class UserController extends BaseController
         
         foreach ($service as $key => $value) {
             $price = ServicePricing::with('timing')->where(['service_id' => $value->service_id, 'service_timing_id' => $value->service_timing_id])->first();
+            $booking = BookingMassage::select(BookingMassage::getTableName() . '.*', BookingInfo::getTableName().'.*', Booking::getTableName().'.*')
+                                            ->join(BookingInfo::getTableName(), BookingMassage::getTableName() . '.booking_info_id', '=', BookingInfo::getTableName() . '.id')
+                                            ->join(Booking::getTableName(), BookingInfo::getTableName() . '.booking_id', '=', Booking::getTableName() . '.id')
+                                            ->where([BookingMassage::getTableName().'.service_pricing_id' => $price->id ,
+                                            Booking::getTableName().'.pack_id' => $request->pack_id, Booking::getTableName().'.user_id' => $request->user_id])
+                                            ->first();
             $services[] = [
                 'service_id' => $value->service->id,
                 'service_name' => $value->service->english_name,
                 'service_type' => $value->service->service_type,
                 'service_timie' => $price->timing->time,
                 'service_timing_id' => $value->service_timing_id,
-                'service_pricing_id' => $price->id
+                'service_pricing_id' => $price->id,
+                'is_used' => !empty($booking) ? true : false
             ];
         }
         
