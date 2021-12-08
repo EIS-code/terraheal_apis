@@ -94,6 +94,15 @@ class Notification extends BaseModel
 
         return $validator;
     }
+    
+    public function getCreatedAtAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        return strtotime($value) * 1000;
+    }
 
     public function getIsReadAttribute($value)
     {
