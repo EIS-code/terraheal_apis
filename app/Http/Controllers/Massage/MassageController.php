@@ -260,6 +260,6 @@ class MassageController extends BaseController
         $kms = !empty($request->distance) ? round($request->distance / 1000) : 0;
         $price = ShopKm::where('kms', '>=', (int)$kms)->first();
 
-        return $this->returnSuccess(__($this->successMsg['success.massage.session.found']), [ 'sessions' => $getSessionTypes, 'distance_charge' => $price->price]);
+        return $this->returnSuccess(__($this->successMsg['success.massage.session.found']), [ 'sessions' => $getSessionTypes, 'distance_charge' => !empty($price) ? $price->price : 0]);
     }
 }
