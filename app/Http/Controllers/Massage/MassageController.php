@@ -14,6 +14,7 @@ use DB;
 use Carbon\Carbon;
 use App\Libraries\CommonHelper;
 use App\Service;
+use App\ShopKm;
 
 class MassageController extends BaseController
 {
@@ -255,7 +256,10 @@ class MassageController extends BaseController
         }
 
         $getSessionTypes = $model::where('booking_type', $bookingType)->get();
+        
+        $kms = !empty($request->distance) ? round($request->distance / 1000) : 0;
+        $price = ShopKm::where('kms', '>=', $kms)->first();
 
-        return $this->returns('success.massage.session.found', $getSessionTypes);
+        return $this->returnSuccess(__($this->successMsg['success.massage.session.found']), [ 'sessions' => $getSessionTypes, 'distance_charge' => $price->price]);
     }
 }
