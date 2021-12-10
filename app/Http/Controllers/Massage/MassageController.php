@@ -258,7 +258,7 @@ class MassageController extends BaseController
         $getSessionTypes = $model::where('booking_type', $bookingType)->get();
         
         $kms = !empty($request->distance) ? round($request->distance / 1000) : 0;
-        $price = ShopKm::where('kms', '>=', $kms)->first();
+        $price = ShopKm::where('kms', '>=', (int)$kms)->first();
 
         return $this->returnSuccess(__($this->successMsg['success.massage.session.found']), [ 'sessions' => $getSessionTypes, 'distance_charge' => $price->price]);
     }
