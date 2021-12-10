@@ -2473,6 +2473,20 @@ class UserController extends BaseController
     public function getShops(Request $request) {
         
         $shops = Shop::where('province_id', $request->province_id)->get();
-        return $this->returnSuccess(__($this->successMsg['success.shop.get']),$shops);
+        
+        $shopData = [];
+        foreach ($shops as $key => $shop) {
+            $shopData[] = [
+                'id' => $shop->id,
+                'name' => $shop->name,
+                'address' => $shop->address,
+                'latitude' => $shop->latitude,
+                'longitude' => $shop->longitude,
+                'total_services' => $shop->totalServices,
+                'shop_hours' => $shop->centerHours,
+                'shop_featured_image' => (!empty($shop->featuredImage) && !empty($shop->featuredImage->image)) ? $shop->featuredImage->image : NULL
+            ];
+        }
+        return $this->returnSuccess(__($this->successMsg['success.shop.get']),$shopData);
     }
 }
