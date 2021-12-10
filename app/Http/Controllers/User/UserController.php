@@ -177,6 +177,7 @@ class UserController extends BaseController
         'success.unread.notification' => 'Unread notifications get successfully !',
         'success.read.notification' => 'Notification read successfully !',
         'success.token.save' => 'Token save successfully !',
+        'success.shop.get' => 'Shops get successfully !',
     ];
 
     public function __construct()
@@ -2467,5 +2468,11 @@ class UserController extends BaseController
         $user->update(['device_token' => $request->device_token]);
         
         return $this->returnSuccess(__($this->successMsg['success.token.save']),$user);
+    }
+    
+    public function getShops(Request $request) {
+        
+        $shops = Shop::where('province_id', $request->province_id)->get();
+        return $this->returnSuccess(__($this->successMsg['success.shop.get']),$shops);
     }
 }

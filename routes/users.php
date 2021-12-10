@@ -20,6 +20,7 @@ $router->group(['prefix' => 'user', 'namespace' => 'User', 'guard' => 'user'], f
     $router->post('reset/password', 'UserController@resetPassword');
     $router->post('verify/otp', 'UserController@verifyOtp');
     $router->post('token/save', 'UserController@saveToken');
+    $router->post('shops/get', 'UserController@getShops');
     
     $router->group(['prefix' => 'signup'], function () use($router) {
         $router->post('/', 'UserController@signUp');
