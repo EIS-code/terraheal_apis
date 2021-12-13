@@ -901,7 +901,7 @@ class ManagerController extends BaseController {
             return $this->returnError($this->errorMsg['manager.not.found']);
         }
         
-        $manager->update(['fcm_token' => $request->fcm_token]);
+        $manager->update(['fcm_token' => $request->device_token]);
         
         return $this->returnSuccess(__($this->successMsg['success.token.save']),$manager);
     }
