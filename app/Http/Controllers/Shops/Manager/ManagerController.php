@@ -51,6 +51,7 @@ class ManagerController extends BaseController {
         'from.date.not.found' => 'Please select from date.',
         'to.date.not.found' => 'Please select to date.',
         'error.card.not.found' => 'Card not found.',
+        'error.notification.not.found' => 'Notification not found !',
     ];
     
     public $successMsg = [
@@ -918,11 +919,15 @@ class ManagerController extends BaseController {
     
     public function readNotification(Request $request) {
         
-        $model = new Notification();
-        $notification = $model->read($request->id);
-        if (!empty($notification['isError']) && !empty($notification['message'])) {
-            return $this->returnError($notification['message'], NULL, true);
+        $manager = Manager::find($request->user_id);
+        if(empty($manager)) {
+            return $this->returnError($this->errorMsg['manager.not.found']);
         }
+        $notification = Notification::where(['id' => $request->id, 'model_id' => $request->user_id])->first();
+        if(empty($notification)) {
+            return $this->returnError($this->errorMsg['error.notification.not.found']);
+        }
+        $notification->update(['is_read' => Notification::IS_READ]);
         return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
     }
     

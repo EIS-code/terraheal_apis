@@ -59,6 +59,8 @@ class Notification extends BaseModel
     const SEND_TO_MANAGER_EXE   = '4';
     const SEND_TO_SHOP_APP      = '5';
     const SEND_TO_SHOP_EXE      = '6';
+    const SEND_TO_THERAPIST_APP = '7';
+    const SEND_TO_THERAPIST_EXE = '8';
     public $sendTo = [
         self::SEND_TO_NONE          => 'None',
         self::SEND_TO_SUPERADMIN    => 'Superadmin',
@@ -66,7 +68,9 @@ class Notification extends BaseModel
         self::SEND_TO_MANAGER_APP   => 'Manager APP',
         self::SEND_TO_MANAGER_EXE   => 'Manager EXE',
         self::SEND_TO_SHOP_APP      => 'Shop APP',
-        self::SEND_TO_SHOP_EXE      => 'Shop EXE'
+        self::SEND_TO_SHOP_EXE      => 'Shop EXE',
+        self::SEND_TO_THERAPIST_APP => 'Therapist APP',
+        self::SEND_TO_THERAPIST_EXE => 'Therapist EXE',
     ];
 
     const SEND_FROM_NONE          = '0';
@@ -76,6 +80,8 @@ class Notification extends BaseModel
     const SEND_FROM_MANAGER_EXE   = '4';
     const SEND_FROM_SHOP_APP      = '5';
     const SEND_FROM_SHOP_EXE      = '6';
+    const SEND_FROM_THERAPIST_APP = '7';
+    const SEND_FROM_THERAPIST_EXE = '8';
     public $sendFrom = [
         self::SEND_FROM_NONE          => 'None',
         self::SEND_FROM_SUPERADMIN    => 'Superadmin',
@@ -83,7 +89,9 @@ class Notification extends BaseModel
         self::SEND_FROM_MANAGER_APP   => 'Manager APP',
         self::SEND_FROM_MANAGER_EXE   => 'Manager EXE',
         self::SEND_FROM_SHOP_APP      => 'Shop APP',
-        self::SEND_FROM_SHOP_EXE      => 'Shop EXE'
+        self::SEND_FROM_SHOP_EXE      => 'Shop EXE',
+        self::SEND_FROM_THERAPIST_APP => 'Therapist APP',
+        self::SEND_FROM_THERAPIST_EXE => 'Therapist EXE',
     ];
 
     public function validator(array $data, $returnBoolsOnly = false)
@@ -156,19 +164,5 @@ class Notification extends BaseModel
     public function getTotalUnreadNotificationsAttribute()
     {
         return $this->notifications()->count();
-    }
-    
-    public function read($id, $userId) {
-        
-        $user = User::find($userId);
-        if(empty($user)) {
-            return ['isError' => true, 'message' => 'User not found !'];
-        }
-        $notification = $this->where(['id' => $id, 'model_id' => $userId])->first();
-        if(empty($notification)) {
-            return ['isError' => true, 'message' => 'Notification not found !'];
-        }
-        $notification->update(['is_read' => self::IS_READ]);
-        return $notification;
     }
 }

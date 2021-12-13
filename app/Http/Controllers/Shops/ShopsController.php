@@ -29,7 +29,8 @@ class ShopsController extends BaseController {
         'loginBoth' => "Shop email or password seems wrong.",
         'error.booking' => 'Booking not found.',
         'otp.not.found' => 'Otp not found !',
-        'shop.not.found' => 'Center not found !'
+        'shop.not.found' => 'Center not found !',
+        'error.notification.not.found' => 'Notification not found !',
     ];
     public $successMsg = [
         'login' => "Shop found successfully !",
@@ -48,7 +49,8 @@ class ShopsController extends BaseController {
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
         'success.location' => 'Location get successfully !',
-        'success.unread.notification' => 'Unread notifications get successfully !'
+        'success.unread.notification' => 'Unread notifications get successfully !',
+        'success.read.notification' => 'Notification read successfully !',
     ];
 
     public function signIn(Request $request) {
@@ -283,5 +285,19 @@ class ShopsController extends BaseController {
         }
         $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_FROM_SHOP_EXE, 'model_id' => $request->user_id])->get();
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
+    }
+    
+    public function readNotification(Request $request) {
+        
+        $shop = Shop::find($request->user_id);
+        if(empty($shop)) {
+            return $this->returnError($this->errorMsg['shop.not.found']);
+        }
+        $notification = Notification::where(['id' => $request->id, 'model_id' => $request->user_id])->first();
+        if(empty($notification)) {
+            return $this->returnError($this->errorMsg['error.notification.not.found']);
+        }
+        $notification->update(['is_read' => Notification::IS_READ]);
+        return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
     }
 }

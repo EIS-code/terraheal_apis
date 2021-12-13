@@ -102,6 +102,7 @@ class UserController extends BaseController
         'error.voucher.id' => 'Please provide voucher id !',
         'error.user.id' => 'Please provide user id !',
         'error.stripe.duplicate.card' => 'This card already added !',
+        'error.notification.not.found' => 'Notification not found !',
     ];
 
     public $successMsg = [
@@ -2454,11 +2455,15 @@ class UserController extends BaseController
     
     public function readNotification(Request $request) {
         
-        $model = new Notification();
-        $notification = $model->read($request->id, $request->user_id);
-        if (!empty($notification['isError']) && !empty($notification['message'])) {
-            return $this->returnError($notification['message'], NULL, true);
+        $user = User::find($request->user_id);
+        if(empty($user)) {
+            return $this->returnError($this->errorMsg['error.user.not.found']);
         }
+        $notification = Notification::where(['id' => $request->id, 'model_id' => $request->user_id])->first();
+        if(empty($notification)) {
+            return $this->returnError($this->errorMsg['error.notification.not.found']);
+        }
+        $notification->update(['is_read' => Notification::IS_READ]);
         return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
     }
     

@@ -14,8 +14,7 @@ class AddModelIdToNotificationsTable extends Migration
     public function up()
     {
         Schema::table('notifications', function (Blueprint $table) {
-            $table->bigInteger('model_id')->unsigned()->nullable();
-            $table->foreign('model_id')->references('id')->on('users')->onDelete('cascade');
+            $table->bigInteger('model_id')->nullable();
         });
     }
 
@@ -27,7 +26,6 @@ class AddModelIdToNotificationsTable extends Migration
     public function down()
     {
         Schema::table('notifications', function (Blueprint $table) {
-            $table->dropForeign(['model_id']);
             $table->dropColumn(['model_id']);
         });
     }

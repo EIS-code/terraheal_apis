@@ -32,8 +32,8 @@ $router->group(['prefix' => 'shops', 'namespace' => 'Shops'], function () use($r
     $router->post('booking/confirm', 'ShopsController@confirmBooking');
     $router->post('location/get', 'ShopsController@getShopRooms');
     $router->post('fcm/token/save', 'Manager\ManagerController@saveToken');
-    $router->post('notification/unread', 'Manager\ManagerController@getUnreadNotification');
-    $router->post('notification/read', 'Manager\ManagerController@readNotification');
+    $router->post('notification/unread', 'ShopsController@getUnreadNotification');
+    $router->post('notification/read', 'ShopsController@readNotification');
 });
 
 $router->group(['prefix' => 'shops', 'namespace' => 'Shops', 'guard' => 'shop'], function () use($router) {

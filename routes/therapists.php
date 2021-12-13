@@ -144,6 +144,11 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     $router->post('/suggestion', 'TherapistController@suggestion');
     $router->post('/complaint', 'TherapistController@complaint');
 
+    $router->group(['prefix' => 'notification'], function () use($router) {
+        $router->post('/unread', 'TherapistController@getUnreadNotification');
+        $router->post('/read', 'TherapistController@readNotification');
+    });
+    
     $router->group(['prefix' => 'service'], function () use($router) {
         $router->post('/', 'TherapistController@getAllServices');
     });
