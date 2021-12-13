@@ -19,6 +19,7 @@ use App\BookingInfo;
 use App\BookingMassage;
 use App\ForgotOtp;
 use App\Room;
+use App\Notification;
 
 class ShopsController extends BaseController {
 
@@ -47,6 +48,7 @@ class ShopsController extends BaseController {
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
         'success.location' => 'Location get successfully !',
+        'success.unread.notification' => 'Unread notifications get successfully !'
     ];
 
     public function signIn(Request $request) {
@@ -271,5 +273,15 @@ class ShopsController extends BaseController {
         }
         
         return $this->returnSuccess(__($this->successMsg['success.location']), $location);
+    }
+    
+    public function getUnreadNotification(Request $request) {
+        
+        $shop = Shop::find($request->user_id);
+        if(empty($shop)) {
+            return $this->returnError($this->errorMsg['shop.not.found']);
+        }
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_FROM_SHOP_EXE, 'model_id' => $request->user_id])->get();
+        return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
     }
 }

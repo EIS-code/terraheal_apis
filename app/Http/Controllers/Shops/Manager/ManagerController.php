@@ -906,9 +906,13 @@ class ManagerController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['success.token.save']),$manager);
     }
     
-    public function getUnreadNotification() {
-        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_MANAGER_EXE])->get();
-
+    public function getUnreadNotification(Request $request) {
+        
+        $manager = Manager::find($request->user_id);
+        if(empty($manager)) {
+            return $this->returnError($this->errorMsg['manager.not.found']);
+        }
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_MANAGER_EXE, 'model_id' => $request->user_id])->get();
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
     }
     

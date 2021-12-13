@@ -19,7 +19,7 @@ class ManagerNotification extends BaseNotification
 
         $dataPayload = ["date" => Carbon::now()->timestamp * 1000];
 
-        parent::__construct($deviceToken, $title, $description, $dataPayload, $sendTo, $sendFrom, NULL);
+        parent::__construct($deviceToken, $title, $description, $dataPayload, $sendTo, $sendFrom, $id);
     }
 
     /**
