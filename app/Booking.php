@@ -34,7 +34,11 @@ class Booking extends BaseModel
         'remaining_price',
         'payment_type',
         'pack_id',
-        'voucher_id'
+        'voucher_id',
+        'address',
+        'latitude',
+        'longitude',
+        'distance_charge'
     ];
 
     protected $hidden = ['is_removed', 'updated_at', 'deleted_at'];
