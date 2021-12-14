@@ -45,6 +45,7 @@ use App\Libraries\CommonHelper;
 use App\Manager;
 use App\News;
 use App\ForgotOtp;
+use App\Notification;
 
 class TherapistController extends BaseController
 {
@@ -75,6 +76,7 @@ class TherapistController extends BaseController
         'shift.exchanger.error' => 'Your shift is not found, please select proper shift.',
         'shift.receiver.error' => 'Your selected therapist is not available during your shift, please select another therapist shift.',
         'otp.not.found' => 'Otp not found !',
+        'error.notification.not.found' => 'Notification not found !'
     ];
 
     public $successMsg = [
@@ -127,6 +129,8 @@ class TherapistController extends BaseController
         'success.otp' => 'Otp sent successfully !',
         'success.reset.password' => 'Password reset successfully !',
         'success.otp.verified' => 'Otp verified successfully !',
+        'success.unread.notification' => 'Unread notifications get successfully !',
+        'success.read.notification' => 'Read notification successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1337,5 +1341,29 @@ class TherapistController extends BaseController
             return $this->returnError($this->errorMsg['otp.not.found']);
         }
         return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
+    }
+    
+    public function getUnreadNotification(Request $request) {
+        
+        $user = Therapist::find($request->user_id);
+        if(empty($user)) {
+            return $this->returnError($this->errorMsg['notFound']);
+        }
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_THERAPIST_APP, 'model_id' => $request->user_id])->get();
+        return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
+    }
+    
+    public function readNotification(Request $request) {
+        
+        $therapist = Therapist::find($request->user_id);
+        if(empty($therapist)) {
+            return $this->returnError($this->errorMsg['notFound']);
+        }
+        $notification = Notification::where(['id' => $request->id, 'send_to' => Notification::SEND_TO_THERAPIST_APP, 'model_id' => $request->user_id])->first();
+        if(empty($notification)) {
+            return $this->returnError($this->errorMsg['error.notification.not.found']);
+        }
+        $notification->update(['is_read' => Notification::IS_READ]);
+        return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
     }
 }

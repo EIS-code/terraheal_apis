@@ -283,7 +283,7 @@ class ShopsController extends BaseController {
         if(empty($shop)) {
             return $this->returnError($this->errorMsg['shop.not.found']);
         }
-        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_FROM_SHOP_EXE, 'model_id' => $request->user_id])->get();
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_FROM_SHOP_APP, 'model_id' => $request->user_id])->get();
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
     }
     
@@ -293,7 +293,7 @@ class ShopsController extends BaseController {
         if(empty($shop)) {
             return $this->returnError($this->errorMsg['shop.not.found']);
         }
-        $notification = Notification::where(['id' => $request->id, 'model_id' => $request->user_id])->first();
+        $notification = Notification::where(['id' => $request->id, 'send_to' => Notification::SEND_FROM_SHOP_APP, 'model_id' => $request->user_id])->first();
         if(empty($notification)) {
             return $this->returnError($this->errorMsg['error.notification.not.found']);
         }

@@ -22,8 +22,8 @@ class CreateNotificationsTable extends Migration
             $table->enum('is_success', ['0', '1'])->default('1')->comment('0: Nope, 1: Yes');
             $table->string('apns_id')->nullable();
             $table->text('error_infos')->nullable();
-            $table->enum('send_to', ['0', '1', '2', '3', '4', '5', '6'])->default('0')->comment('0: None, 1: Superadmin, 2: Client APP, 3: Manager APP, 4: Manager EXE, 5: Shop APP, 6: Shop EXE');
-            $table->enum('send_from', ['0', '1', '2', '3', '4', '5', '6'])->default('0')->comment('0: None, 1: Superadmin, 2: Client APP, 3: Manager APP, 4: Manager EXE, 5: Shop APP, 6: Shop EXE');
+            $table->enum('send_to', ['0', '1', '2', '3', '4', '5', '6', '7', '8'])->default('0')->comment('0: None, 1: Superadmin, 2: Client APP, 3: Manager APP, 4: Manager EXE, 5: Shop APP, 6: Shop EXE, 7: Therapist APP, 8: Therapist EXE');
+            $table->enum('send_from', ['0', '1', '2', '3', '4', '5', '6', '7', '8'])->default('0')->comment('0: None, 1: Superadmin, 2: Client APP, 3: Manager APP, 4: Manager EXE, 5: Shop APP, 6: Shop EXE, 7: Therapist APP, 8: Therapist EXE');
             $table->enum('is_read', ['0', '1'])->default('0')->comment('0: Nope, 1: Yes');
             $table->timestamps();
             $table->softDeletes();
