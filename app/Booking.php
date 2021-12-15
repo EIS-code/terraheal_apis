@@ -389,7 +389,13 @@ class Booking extends BaseModel
             }
 
             if (in_array(self::BOOKING_FUTURE, $bookingsFilter)) {
-                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '>=', Carbon::now()->format('Y-m-d'))
+                
+                if(!empty($request->future_date)) {
+                    $date = Carbon::createFromTimestampMs($request->future_date)->format('Y-m-d');
+                } else {
+                    $date = Carbon::now()->format('Y-m-d');
+                }
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '>=', $date)
                         ->where($bookingInfoModel::getTableName() . '.is_cancelled', (string)BookingInfo::IS_NOT_CANCELLED);
             }
 
@@ -404,11 +410,21 @@ class Booking extends BaseModel
             }
 
             if (in_array(self::BOOKING_PAST, $bookingsFilter)) {
-                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '<=', Carbon::now()->format('Y-m-d'));
+                if(!empty($request->past_date)) {
+                    $date = Carbon::createFromTimestampMs($request->past_date)->format('Y-m-d');
+                } else {
+                    $date = Carbon::now()->format('Y-m-d');
+                }
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '<=', $date);
             }
 
             if (in_array(self::BOOKING_TODAY, $bookingsFilter)) {
-                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
+                if(!empty($request->today_date)) {
+                    $date = Carbon::createFromTimestampMs($request->today_date)->format('Y-m-d');
+                } else {
+                    $date = Carbon::now()->format('Y-m-d');
+                }
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', $date);
             }
         }
 

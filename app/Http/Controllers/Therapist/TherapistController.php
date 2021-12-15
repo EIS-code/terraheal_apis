@@ -268,8 +268,9 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_TODAY]]);
-
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_TODAY], 'today_date' => $request->date]);
+        $request->request->remove('date');
+        
         $data = $bookingModel->getGlobalQuery($request);
 
         return $this->returns('booking.today.found.successfully', $data);
@@ -279,8 +280,9 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_FUTURE]]);
-
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_FUTURE], 'future_date' => $request->date]);
+        $request->request->remove('date');
+        
         $data = $bookingModel->getGlobalQuery($request);
 
         return $this->returns('booking.future.found.successfully', $data);
@@ -323,7 +325,8 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_PAST]]);
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_PAST, 'past_date' => $request->date]]);
+        $request->request->remove('date');
 
         $data = $bookingModel->getGlobalQuery($request);
 
