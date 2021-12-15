@@ -3,7 +3,6 @@
 namespace App;
 
 use App\User;
-use App\Therapist;
 use Illuminate\Support\Facades\Validator;
 
 class TherapistUserRating extends BaseModel
@@ -33,7 +32,8 @@ class TherapistUserRating extends BaseModel
             'rating'        => ['in:0,1,2,3,4,5'],
             'type'          => ['in:0,1,2,3,4,5'],
             'user_id'       => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
-            'therapist_id'  => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
+            'model_id'      => ['required', 'integer'],
+            'model'         => ['required', 'string', 'max:255']
         ]);
     }
 
@@ -43,7 +43,8 @@ class TherapistUserRating extends BaseModel
             'rating.*'      => ['in:0,1,2,3,4,5'],
             'type.*'        => ['in:0,1,2,3,4,5'],
             'user_id'       => ['required', 'integer', 'exists:' . User::getTableName() . ',id'],
-            'therapist_id'  => ['required', 'integer', 'exists:' . Therapist::getTableName() . ',id']
+            'model_id'      => ['required', 'integer'],
+            'model'         => ['required', 'string', 'max:255']
         ]);
     }
     

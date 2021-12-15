@@ -498,9 +498,9 @@ class TherapistController extends BaseController
         $id         = !empty($data['id']) ? $data['id'] : false;
         $isCreate   = collect();
 
-        $data['therapist_id'] = $id;
-
-        $data['type']         = !empty($data['rating']) && is_array($data['rating']) ? array_keys($data['rating']) : [];
+        $data['model_id'] = $id;
+        $data['model'] = get_class(new Therapist());
+        $data['type'] = !empty($data['rating']) && is_array($data['rating']) ? array_keys($data['rating']) : [];
 
         $checks = $model->validators($data);
         if ($checks->fails()) {
@@ -513,7 +513,8 @@ class TherapistController extends BaseController
                     'rating'        => $data['rating'][$type],
                     'type'          => $type,
                     'user_id'       => $data['user_id'],
-                    'therapist_id'  => $id
+                    'model_id'      => $id,
+                    'model'         => get_class(new Therapist())
                 ];
 
                 $isCreate->push(collect($model::updateOrCreate($create[$index], $create[$index])));
