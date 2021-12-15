@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Shops\News;
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\News;
+use App\Manager;
+use App\Therapist;
+use App\Jobs\TherapistNotification;
+use App\Notification;
 
 class NewsController extends BaseController {
 
@@ -27,8 +31,13 @@ class NewsController extends BaseController {
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
+        $manager = Manager::find($request->manager_id);
+        $therapists = Therapist::where('shop_id', $manager->shop_id)->get();
         
         $news = $newsModel->create($data);
+        foreach ($therapists as $key => $therapist) {
+            dispatch(new TherapistNotification($therapist->id, "News", "News added successfully", Notification::SEND_FROM_MANAGER_APP, Notification::SEND_TO_THERAPIST_APP, $therapist->id));
+        }
         return $this->returnSuccess(__($this->successMsg['news.add']), $news);
     }
     
