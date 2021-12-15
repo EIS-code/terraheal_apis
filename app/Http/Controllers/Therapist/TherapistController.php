@@ -131,6 +131,7 @@ class TherapistController extends BaseController
         'success.otp.verified' => 'Otp verified successfully !',
         'success.unread.notification' => 'Unread notifications get successfully !',
         'success.read.notification' => 'Read notification successfully !',
+        'success.token.save' => 'Token save successfully !',
     ];
 
     public function signIn(int $isFreelancer = Therapist::IS_NOT_FREELANCER, Request $request)
@@ -1369,5 +1370,17 @@ class TherapistController extends BaseController
         }
         $notification->update(['is_read' => Notification::IS_READ]);
         return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
+    }
+    
+    public function saveToken(Request $request) {
+        
+        $therapist = Therapist::find($request->therapist_id);
+        if(empty($therapist)) {
+            return $this->returnError($this->errorMsg['notFound']);
+        }
+        
+        $therapist->update(['device_token' => $request->device_token]);
+        
+        return $this->returnSuccess(__($this->successMsg['success.token.save']),$therapist);
     }
 }
