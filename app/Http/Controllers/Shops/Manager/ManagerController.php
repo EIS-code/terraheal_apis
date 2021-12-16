@@ -956,13 +956,13 @@ class ManagerController extends BaseController {
         
         foreach ($data as $key => $value) {
             foreach($value as $i => $booking) {
-                $row = $value->first();
-                if(!null($row->pack_id)  || !null($row->voucher_id)) {
-                    $voucher_pack_earnings += $booking->total_price;
-                } else if($row->service_type == Booking::MASSAGES) {
-                    $massage_earnings += $booking->total_price;
-                } else if($row->service_type == Booking::THERAPIES) {
-                    $therapy_earnings += $booking->total_price;
+                $row = $booking->first();
+                if(!empty($row['pack_id'])  || !empty($row['voucher_id'])) {
+                    $voucher_pack_earnings += $row['total_price'];
+                } else if($row['service_type'] == Booking::MASSAGES) {
+                    $massage_earnings += $row['total_price'];
+                } else if($row['service_type'] == Booking::THERAPIES) {
+                    $therapy_earnings += $row['total_price'];
                 }
             }
             $earnings[] = [
