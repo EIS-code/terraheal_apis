@@ -964,7 +964,7 @@ class ManagerController extends BaseController {
             $request->request->add(['date_filter' => Booking::TODAY]);
         }
         
-        $data = $bookingModel->getGlobalQuery($request)->groupBy(['massage_date_time', 'booking_id']);
+        $data = $bookingModel->getGlobalQuery($request)->groupBy(['booking_date', 'booking_id']);
         
         if(!empty($data)) {
             foreach ($data as $key => $value) {

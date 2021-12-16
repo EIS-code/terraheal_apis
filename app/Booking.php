@@ -496,6 +496,7 @@ class Booking extends BaseModel
                 $bookingType = $record->getAttributes()['booking_type'];
 
                 $record->booking_type_value = $bookingType;
+                $record->booking_date = Carbon::createFromTimestampMs($record->massage_date_time)->format('Y-m-d');
 
                 $bookingMassage = $bookingMassageModel::find($record->booking_massage_id);
 
