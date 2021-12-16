@@ -28,6 +28,9 @@ use App\TherapistSelectedService;
 use Carbon\CarbonPeriod;
 use App\Notification;
 use App\UserCardDetail;
+use App\BookingInfo;
+use App\BookingMassage;
+use App\ServicePricing;
 
 class ManagerController extends BaseController {
 
@@ -89,6 +92,7 @@ class ManagerController extends BaseController {
         'success.unread.notification' => 'Unread notifications get successfully !',
         'success.read.notification' => 'Notification read successfully !',
         'success.card.found' => 'Card details found successfully !',
+        'success.earnings.found' => 'Earnings found successfully !',
     ];
 
     public function addAvailabilities(Request $request) {
@@ -938,5 +942,103 @@ class ManagerController extends BaseController {
             return $this->returns('success.card.found', collect($data));
         }
         return $this->returns('error.card.not.found', NULL, TRUE);
+    }
+    
+    public function getEarnings(Request $request) {
+        
+        $filter = isset($request->filter) ? $request->filter : Booking::TODAY;
+        $modelBooking = new Booking();
+        $modelBookingMassage = new BookingMassage();
+        $modelBookingInfo = new BookingInfo();
+        $modelServicePrice = new ServicePricing();
+        $modelService = new Service();
+        $massage_earnings = $therapy_earnings = $voucher_pack_earnings = 0;
+        
+        $pack_earning = $modelBooking->select(DB::RAW($modelBooking::getTableName() . '.id as booking_id, ' . $modelBooking::getTableName() . '.*, ' . $modelBookingInfo::getTableName() . '.*, ' . $modelBookingMassage::getTableName() . '.*'))
+                ->join($modelBookingInfo::getTableName(), $modelBooking::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
+                ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
+                ->where($modelBooking::getTableName().'.shop_id', $request->get('shop_id'))
+                ->whereNotNull($modelBooking::getTableName().'.pack_id')
+                ->whereNull($modelBooking::getTableName().'.voucher_id');
+        
+        $voucher_earning = $modelBooking->select(DB::RAW($modelBooking::getTableName() . '.id as booking_id, ' . $modelBooking::getTableName() . '.*, ' . $modelBookingInfo::getTableName() . '.*, ' . $modelBookingMassage::getTableName() . '.*'))
+                ->join($modelBookingInfo::getTableName(), $modelBooking::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
+                ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
+                ->where($modelBooking::getTableName().'.shop_id', $request->get('shop_id'))
+                ->whereNotNull($modelBooking::getTableName().'.voucher_id')
+                ->whereNull($modelBooking::getTableName().'.pack_id');
+        
+        $massage_bookings = $modelBooking->select(DB::RAW($modelBooking::getTableName() . '.id as booking_id, ' . $modelBooking::getTableName() . '.*, ' . $modelBookingInfo::getTableName() . '.*, ' . $modelBookingMassage::getTableName() . '.*'))
+                ->join($modelBookingInfo::getTableName(), $modelBooking::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
+                ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
+                ->join($modelServicePrice::getTableName(), $modelServicePrice::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.service_pricing_id')
+                ->join($modelService::getTableName(), $modelService::getTableName() . '.id', '=', $modelServicePrice::getTableName() . '.service_id')
+                ->where($modelBooking::getTableName().'.shop_id', $request->get('shop_id'))
+                ->whereNull($modelBooking::getTableName().'.pack_id')
+                ->whereNull($modelBooking::getTableName().'.voucher_id')
+                ->where($modelService::getTableName().'.service_type', Service::MASSAGE);                
+        
+        $therapy_bookings = $modelBooking->select(DB::RAW($modelBooking::getTableName() . '.id as booking_id, ' . $modelBooking::getTableName() . '.*, ' . $modelBookingInfo::getTableName() . '.*, ' . $modelBookingMassage::getTableName() . '.*'))
+                ->join($modelBookingInfo::getTableName(), $modelBooking::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
+                ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
+                ->join($modelServicePrice::getTableName(), $modelServicePrice::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.service_pricing_id')
+                ->join($modelService::getTableName(), $modelService::getTableName() . '.id', '=', $modelServicePrice::getTableName() . '.service_id')
+                ->where($modelBooking::getTableName().'.shop_id', $request->get('shop_id'))
+                ->whereNull($modelBooking::getTableName().'.pack_id')
+                ->whereNull($modelBooking::getTableName().'.voucher_id')
+                ->where($modelService::getTableName().'.service_type', Service::THERAPY);
+                
+        
+        if($filter == Booking::TODAY) {
+            $pack_earning->where($modelBookingMassage::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
+            $voucher_earning->where($modelBookingMassage::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
+            $massage_bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
+            $therapy_bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
+            
+        } else if($filter == Booking::YESTERDAY) {
+            $pack_earning->where($modelBookingMassage::getTableName() . '.massage_date_time', Carbon::yesterday()->format('Y-m-d'));
+            $voucher_earning->where($modelBookingMassage::getTableName() . '.massage_date_time', Carbon::yesterday()->format('Y-m-d'));
+            $massage_bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', Carbon::yesterday()->format('Y-m-d'));
+            $therapy_bookings->where($modelBookingMassage::getTableName() . '.massage_date_time', Carbon::yesterday()->format('Y-m-d'));
+            
+        } else if($filter== Booking::THIS_WEEK) {
+            $now = Carbon::now();
+            $weekStartDate = $now->startOfWeek()->format('Y-m-d');
+            $weekEndDate = $now->endOfWeek()->format('Y-m-d');
+            
+            $pack_earning->whereBetween($modelBookingMassage::getTableName() . '.massage_date_time', [$weekStartDate, $weekEndDate]);
+            $voucher_earning->whereBetween($modelBookingMassage::getTableName() . '.massage_date_time', [$weekStartDate, $weekEndDate]);
+            $massage_bookings->whereBetween($modelBookingMassage::getTableName() . '.massage_date_time', [$weekStartDate, $weekEndDate]);
+            $therapy_bookings->whereBetween($modelBookingMassage::getTableName() . '.massage_date_time', [$weekStartDate, $weekEndDate]);
+            
+        } else if($filter == Booking::THIS_MONTH) {
+            $now = Carbon::now();
+            $pack_earning->whereMonth($modelBookingMassage::getTableName() . '.massage_date_time', $now->month)
+                     ->whereYear($modelBookingMassage::getTableName() . '.massage_date_time', $now->year);
+            $voucher_earning->whereMonth($modelBookingMassage::getTableName() . '.massage_date_time', $now->month)
+                     ->whereYear($modelBookingMassage::getTableName() . '.massage_date_time', $now->year);
+            $massage_bookings->whereMonth($modelBookingMassage::getTableName() . '.massage_date_time', $now->month)
+                     ->whereYear($modelBookingMassage::getTableName() . '.massage_date_time', $now->year);
+            $therapy_bookings->whereMonth($modelBookingMassage::getTableName() . '.massage_date_time', $now->month)
+                     ->whereYear($modelBookingMassage::getTableName() . '.massage_date_time', $now->year);
+        }
+        
+        $pack_earning = $pack_earning->sum('total_price');
+        $voucher_earning = $voucher_earning->sum('total_price');
+        $massage_bookings = $massage_bookings->get()->groupBy('booking_id');
+        $therapy_bookings = $therapy_bookings->get()->groupBy('booking_id');
+        
+        foreach ($massage_bookings as $key => $massage) {
+            $row = $massage->first();
+            $massage_earnings += $row->total_price;
+        }
+        
+        foreach ($therapy_bookings as $key => $therapy) {
+            $row = $therapy->first();
+            $therapy_earnings += $row->total_price;
+        }
+        
+        $voucher_pack_earnings = $pack_earning + $voucher_earning;
+        return $this->returns('success.earnings.found', collect(['massage_earnings' => $massage_earnings, 'therapy_earnings' => $therapy_earnings, 'voucher_pack_earnings' => $voucher_pack_earnings]));
     }
 }

@@ -34,6 +34,7 @@ $router->group(['prefix' => 'shops', 'namespace' => 'Shops'], function () use($r
     $router->post('fcm/token/save', 'Manager\ManagerController@saveToken');
     $router->post('notification/unread', 'ShopsController@getUnreadNotification');
     $router->post('notification/read', 'ShopsController@readNotification');
+    $router->post('earnings/get', 'Manager\ManagerController@getEarnings');
 });
 
 $router->group(['prefix' => 'shops', 'namespace' => 'Shops', 'guard' => 'shop'], function () use($router) {
@@ -144,6 +145,7 @@ $router->group(['prefix' => 'manager', 'namespace' => 'Shops'], function () use(
     $router->post('/customerInfo/get', 'Dashboard\DashboardController@customerInfo');
     $router->post('/therapist/document/delete', 'Manager\ManagerController@deleteDocument');
     $router->post('/user/card/details/get', 'Manager\ManagerController@getCardDetails');
+    $router->post('/earnings/get', 'Manager\ManagerController@getEarnings');
     
     $router->group(['prefix' => 'therapist'], function () use($router) {
         

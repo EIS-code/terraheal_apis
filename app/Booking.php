@@ -182,7 +182,7 @@ class Booking extends BaseModel
     
     public function voucher()
     {
-        return $this->hasOne('App\Voucher', 'id', 'voucher_id');
+        return $this->hasOne('App\UserGiftVoucher', 'id', 'voucher_id');
     }
     
     public function user()
