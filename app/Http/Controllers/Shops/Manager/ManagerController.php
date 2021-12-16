@@ -979,7 +979,7 @@ class ManagerController extends BaseController {
                     }
                 }
                 $earnings[] = [
-                    'date' => $key,
+                    'date' => strtotime($key)*1000,
                     'voucher_pack_earnings' => $voucher_pack_earnings,
                     'massage_earnings' => $massage_earnings,
                     'therapy_earnings' => $therapy_earnings
