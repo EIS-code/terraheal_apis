@@ -965,7 +965,6 @@ class ManagerController extends BaseController {
         }
         
         $data = $bookingModel->getGlobalQuery($request)->groupBy(['massage_date_time', 'booking_id']);
-        dd($data);
         
         if(!empty($data)) {
             foreach ($data as $key => $value) {
