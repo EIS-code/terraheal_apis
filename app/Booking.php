@@ -439,7 +439,6 @@ class Booking extends BaseModel
             }
             
             if ($dateFilter == self::YESTERDAY) {
-//                dd('here');
                 $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::yesterday()->format('Y-m-d'));
             }
 
