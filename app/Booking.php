@@ -248,6 +248,9 @@ class Booking extends BaseModel
                 ->select(
                         DB::RAW(
                             $this::getTableName().'.id as booking_id,'.
+                            $this::getTableName().'.pack_id,'.
+                            $this::getTableName().'.voucher_id,'.
+                            $this::getTableName().'.total_price,'.
                             $bookingInfoModel::getTableName() . '.id as booking_info_id, '.
                             $bookingMassageModel::getTableName() . '.id as booking_massage_id, ' .
                             $this::getTableName() . '.user_id as client_id,'.
