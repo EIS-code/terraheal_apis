@@ -434,19 +434,25 @@ class Booking extends BaseModel
         if (isset($dateFilter)) {
             $now = Carbon::now();
 
+            if ($dateFilter == self::TODAY) {
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::now()->format('Y-m-d'));
+            }
+            
             if ($dateFilter == self::YESTERDAY) {
-                $data->where($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::yesterday()->format('Y-m-d'));
+//                dd('here');
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::yesterday()->format('Y-m-d'));
             }
 
             if ($dateFilter == self::TOMORROW) {
-                $data->where($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::tomorrow()->format('Y-m-d'));
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', Carbon::tomorrow()->format('Y-m-d'));
             }
 
             if ($dateFilter == self::THIS_WEEK) {
                 $weekStartDate = $now->startOfWeek()->format('Y-m-d');
                 $weekEndDate = $now->endOfWeek()->format('Y-m-d');
 
-                $data->whereBetween($bookingMassageModel::getTableName() . '.massage_date_time', [$weekStartDate, $weekEndDate]);
+                $data->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '>=' , $weekStartDate)
+                ->whereDate($bookingMassageModel::getTableName() . '.massage_date_time', '<=' , $weekEndDate);
             }
 
             if ($dateFilter == self::THIS_MONTH) {
