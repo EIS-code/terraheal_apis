@@ -949,7 +949,7 @@ class ManagerController extends BaseController {
         
         $filter = isset($request->filter) ? $request->filter : Booking::TODAY;
         $massage_earnings = $therapy_earnings = $voucher_pack_earnings = 0;
-        
+        $earnings = [];
         $bookingModel = new Booking();
         
         if($filter == Booking::TODAY) {
@@ -966,24 +966,26 @@ class ManagerController extends BaseController {
         
         $data = $bookingModel->getGlobalQuery($request)->groupBy(['massage_date_time', 'booking_id']);
         
-        foreach ($data as $key => $value) {
-            foreach($value as $i => $booking) {
-                $row = $booking->first();
-                if(!empty($row['pack_id'])  || !empty($row['voucher_id'])) {
-                    $voucher_pack_earnings += $row['total_price'];
-                } else if($row['service_type'] == Booking::MASSAGES) {
-                    $massage_earnings += $row['total_price'];
-                } else if($row['service_type'] == Booking::THERAPIES) {
-                    $therapy_earnings += $row['total_price'];
+        if(!empty($data)) {
+            foreach ($data as $key => $value) {
+                foreach($value as $i => $booking) {
+                    $row = $booking->first();
+                    if(!empty($row['pack_id'])  || !empty($row['voucher_id'])) {
+                        $voucher_pack_earnings += $row['total_price'];
+                    } else if($row['service_type'] == Booking::MASSAGES) {
+                        $massage_earnings += $row['total_price'];
+                    } else if($row['service_type'] == Booking::THERAPIES) {
+                        $therapy_earnings += $row['total_price'];
+                    }
                 }
+                $earnings[] = [
+                    'date' => $key,
+                    'voucher_pack_earnings' => $voucher_pack_earnings,
+                    'massage_earnings' => $massage_earnings,
+                    'therapy_earnings' => $therapy_earnings
+                ];
+                $massage_earnings = $therapy_earnings = $voucher_pack_earnings = 0;
             }
-            $earnings[] = [
-                'date' => $key,
-                'voucher_pack_earnings' => $voucher_pack_earnings,
-                'massage_earnings' => $massage_earnings,
-                'therapy_earnings' => $therapy_earnings
-            ];
-            $massage_earnings = $therapy_earnings = $voucher_pack_earnings = 0;
         }
         return $this->returns('success.earnings.found', collect($earnings));
     }
