@@ -951,7 +951,19 @@ class ManagerController extends BaseController {
         $massage_earnings = $therapy_earnings = $voucher_pack_earnings = 0;
         
         $bookingModel = new Booking();
-        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_TODAY]]);
+        
+        if($filter == Booking::TODAY) {
+            $request->request->add(['date_filter' => Booking::TODAY]);
+        } else if($filter == Booking::YESTERDAY) {
+            $request->request->add(['date_filter' => Booking::YESTERDAY]);
+        } else if($filter == Booking::THIS_WEEK) {
+            $request->request->add(['date_filter' => Booking::THIS_WEEK]);
+        } else if($filter == Booking::THIS_MONTH) {
+            $request->request->add(['date_filter' => Booking::THIS_MONTH]);
+        } else {
+            $request->request->add(['date_filter' => Booking::TODAY]);
+        }
+        
         $data = $bookingModel->getGlobalQuery($request)->groupBy(['massage_date_time', 'booking_id']);
         
         foreach ($data as $key => $value) {
