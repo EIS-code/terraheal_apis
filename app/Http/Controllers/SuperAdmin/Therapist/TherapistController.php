@@ -24,7 +24,12 @@ class TherapistController extends BaseController
     ];
 
     public function getTherapists(Request $request) {
-        $therapists = Therapist::all();
+        
+        if(!empty($request->shop_id)) {
+            $therapists = Therapist::where('shop_id', $request->shop_id)->get();
+        } else {
+            $therapists = Therapist::all();
+        }
 
         foreach ($therapists as $key => $therapist) {
 
