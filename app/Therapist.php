@@ -96,6 +96,10 @@ class Therapist extends BaseModel implements CanResetPasswordContract
 
     const THERAPIST = 'Therapist';
     
+    const GOLD = '1';
+    const SILVER = '2';
+    const BRONZE = '3';
+    
     public function getFullNameAttribute()
     {
         return $this->name . ' ' . $this->surname;
