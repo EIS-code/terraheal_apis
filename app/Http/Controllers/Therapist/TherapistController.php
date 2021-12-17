@@ -46,6 +46,7 @@ use App\Manager;
 use App\News;
 use App\ForgotOtp;
 use App\Notification;
+use App\Jobs\TherapistNotification;
 
 class TherapistController extends BaseController
 {
@@ -556,6 +557,11 @@ class TherapistController extends BaseController
         }
 
         $create = $model::create($data);
+        $therapists = Therapist::where('shop_id', $request->shop_id)->get();
+        
+        foreach ($therapists as $key => $therapist) {
+            dispatch(new TherapistNotification($therapist->id, "Complaint", "Complaint added successfully", Notification::SEND_FROM_MANAGER_APP, Notification::SEND_TO_THERAPIST_APP, $therapist->id));
+        }
 
         return $this->returns('therapist.complaint', $create);
     }
