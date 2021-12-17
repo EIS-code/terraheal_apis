@@ -1003,19 +1003,21 @@ class ManagerController extends BaseController {
             $end   = new DateTime($weekEndDate);
             
         }
-        for ($i = $begin; $i <= $end; $i->modify('+1 day')) {
-            if (!in_array($i->format('Y-m-d'), $dates)) {
-                $data = [
-                    'date' => strtotime($i->format('Y-m-d'))*1000,
-                    'voucher_pack_earnings' => 0.00,
-                    'massage_earnings' => 0.00,
-                    'therapy_earnings' => 0.00
-                ];
-                array_push($earnings, $data);
+        if($filter == Booking::THIS_WEEK || $filter == Booking::THIS_MONTH) {
+            for ($i = $begin; $i <= $end; $i->modify('+1 day')) {
+                if (!in_array($i->format('Y-m-d'), $dates)) {
+                    $data = [
+                        'date' => strtotime($i->format('Y-m-d'))*1000,
+                        'voucher_pack_earnings' => 0.00,
+                        'massage_earnings' => 0.00,
+                        'therapy_earnings' => 0.00
+                    ];
+                    array_push($earnings, $data);
+                }
             }
         }
         
         $earnings = collect($earnings)->sortBy('date')->reverse()->toArray();
-        return $this->returns('success.earnings.found', collect($earnings));
+        return $this->returns('success.earnings.found', collect(array_values($earnings)));
     }
 }
