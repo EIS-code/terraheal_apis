@@ -997,7 +997,7 @@ class ManagerController extends BaseController {
         } if($filter == Booking::THIS_MONTH) {
             $now = Carbon::now();
             $weekStartDate = $now->startOfMonth()->format('Y-m-d');
-            $weekEndDate = $now->endOfMonth()->format('Y-m-d');
+            $weekEndDate = $now->format('Y-m-d');
             
             $begin = new DateTime($weekStartDate);
             $end   = new DateTime($weekEndDate);
