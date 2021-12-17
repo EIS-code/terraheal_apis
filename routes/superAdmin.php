@@ -22,6 +22,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->post('signIn', 'SuperAdminController@signIn');
     $router->post('update/profile', 'SuperAdminController@updateProfile');
     $router->post('details/get', 'SuperAdminController@getDetails');
+    $router->post('/fcm/token/save', 'SuperAdminController@saveToken');    
     
     // For vouchers
     $router->post('addVoucher', 'SuperAdminController@addVoucher');
@@ -122,5 +123,9 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
         $router->post('/details', 'SuperAdminController@printBookingDetails');
     });
     
+    $router->group(['prefix' => 'notification'], function () use($router) {
+        $router->post('/unread', 'SuperAdminController@getUnreadNotification');
+        $router->post('/read', 'SuperAdminController@readNotification');
+    });
     
 });

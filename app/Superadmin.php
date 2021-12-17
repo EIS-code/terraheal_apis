@@ -35,6 +35,7 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
         'city_id',
         'is_email_verified',
         'is_mobile_verified',
+        'device_token'
     ];
 
     /**

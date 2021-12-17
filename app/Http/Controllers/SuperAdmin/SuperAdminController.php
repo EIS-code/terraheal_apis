@@ -26,6 +26,7 @@ use Illuminate\Http\UploadedFile;
 use App\ForgotOtp;
 use App\Booking;
 use App\Shop;
+use App\Notification;
 
 class SuperAdminController extends BaseController {
 
@@ -41,7 +42,8 @@ class SuperAdminController extends BaseController {
         'error.email.already.verified' => 'This user email already verified with this ',
         'error.email.id' => 'email id.',
         'error.mimes' => 'Please select proper file. The file must be a file of type: jpeg, png, jpg.',
-        'otp.not.found' => 'Otp not found !'
+        'otp.not.found' => 'Otp not found !',
+        'error.notification.not.found' => 'Notification not found !',
     ];
     
     public $successMsg = [
@@ -72,6 +74,9 @@ class SuperAdminController extends BaseController {
         'past.booking' => 'Past bookings found successfully',
         'future.booking' => 'Future bookings found successfully',
         'pending.booking' => 'Pending bookings found successfully',
+        'success.token.save' => 'FCM token saved successfully !',
+        'success.unread.notification' => 'Unread notifications get successfully !',
+        'success.read.notification' => 'Notification read successfully !',
     ];
 
     public function addVoucher(Request $request) {
@@ -799,4 +804,39 @@ class SuperAdminController extends BaseController {
         return $this->returnSuccess(__($this->successMsg['print.booking']), $bookingDetails);
     }
     
+    public function saveToken(Request $request) {
+        
+        $admin = Superadmin::find($request->user_id);
+        if(empty($admin)) {
+            return $this->returnError($this->errorMsg['admin.not.found']);
+        }
+        
+        $admin->update(['device_token' => $request->device_token]);
+        
+        return $this->returnSuccess(__($this->successMsg['success.token.save']),$admin);
+    }
+    
+    public function getUnreadNotification(Request $request) {
+        
+        $admin = Superadmin::find($request->user_id);
+        if(empty($admin)) {
+            return $this->returnError($this->errorMsg['admin.not.found']);
+        }
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_SUPERADMIN, 'model_id' => $request->user_id])->get();
+        return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
+    }
+    
+    public function readNotification(Request $request) {
+        
+        $admin = Superadmin::find($request->user_id);
+        if(empty($admin)) {
+            return $this->returnError($this->errorMsg['admin.not.found']);
+        }
+        $notification = Notification::where(['id' => $request->id, 'send_to' => Notification::SEND_TO_SUPERADMIN, 'model_id' => $request->user_id])->first();
+        if(empty($notification)) {
+            return $this->returnError($this->errorMsg['error.notification.not.found']);
+        }
+        $notification->update(['is_read' => Notification::IS_READ]);
+        return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
+    }
 }
