@@ -532,7 +532,7 @@ class Booking extends BaseModel
         $modelServicePrice   = new ServicePricing();
         $modelServiceTiming  = new ServiceTiming();
 
-        $bookings = $this->select(DB::RAW(self::getTableName() . '.id, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.address as shop_address, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, ' .  $modelSessionType::getTableName() . '.id as session_id, ' 
+        $bookings = $this->select(DB::RAW(self::getTableName() . '.id, '. self::getTableName() . '.payment_type, ' . self::getTableName() . '.booking_type, ' . $modelShop::getTableName() . '.name as shop_name, ' . $modelShop::getTableName() . '.address as shop_address, ' . $modelShop::getTableName() . '.description as shop_description, ' . $modelSessionType::getTableName() . '.type as session_type, ' .  $modelSessionType::getTableName() . '.id as session_id, ' 
                             . $modelBookingInfo::getTableName() . '.id as bookingInfoId, ' . $modelBookingMassage::getTableName() . '.massage_date_time, '. $modelBookingMassage::getTableName() . '.actual_date_time, '. $modelBookingMassage::getTableName() .'.is_confirm, ' . 
                             $modelBookingInfo::getTableName() . '.user_id, '. $modelUser::getTableName() . '.name as user_name, ' . $modelUser::getTableName() . '.age as user_age, ' . $modelUser::getTableName() . '.dob as user_dob, ' . $modelUser::getTableName() . '.gender as user_gender, ' . $modelUser::getTableName() . '.profile_photo as user_profile_photo,' . $modelUser::getTableName() . '.qr_code_path'))
                          ->join($modelBookingInfo::getTableName(), self::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
@@ -627,6 +627,7 @@ class Booking extends BaseModel
                     $returnBookings[$bookingId] = [
                         'id'                => $bookingId,
                         'booking_type'      => $data->booking_type,
+                        'payment_type'      => $data->payment_type,
                         'shop_name'         => $data->shop_name,
                         'shop_address'      => $data->shop_address,
                         'shop_description'  => $data->shop_description,
