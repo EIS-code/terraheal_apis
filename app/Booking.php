@@ -514,7 +514,6 @@ class Booking extends BaseModel
                 $record->final_amounts = !empty($payment) ? $payment['final_amounts'] : NULL;
                 $record->paid_amounts = !empty($payment) ? $payment['paid_amounts'] : NULL;
                 $record->remaining_amounts = !empty($payment) ? $payment['remaining_amounts'] : NULL;
-                $record->paid_percentage = !empty($payment) ? $payment['paid_percentage'] : NULL;
             });
         }
         return $data;
@@ -621,7 +620,10 @@ class Booking extends BaseModel
                         $returnUserPeoples[$bookingId][$index]['booking_massages'] = $bookingMassages;
                         $returnBookings[$bookingId]['total_price'] = $bookingMassages->sum('price');
                     }
-                             
+                         
+                    $paymentModel = new BookingPayment();
+                    $payment = $paymentModel->getPayment($bookingId);
+                    
                     $returnBookings[$bookingId] = [
                         'id'                => $bookingId,
                         'booking_type'      => $data->booking_type,
@@ -633,7 +635,10 @@ class Booking extends BaseModel
                         'is_confirm'        => $data->is_confirm,
                         'massage_date_time' => strtotime($data->massage_date_time) * 1000,
                         'qr_code_path'      => $modelUser->getQrCodePathAttribute($data->qr_code_path),
-                        'total_price'       => isset($returnBookings[$bookingId]['total_price']) ? number_format($returnBookings[$bookingId]['total_price'], 2) : 0.00
+                        'total_price'       => isset($returnBookings[$bookingId]['total_price']) ? number_format($returnBookings[$bookingId]['total_price'], 2) : 0.00,
+                        'final_amounts'     => !empty($payment) ? $payment['final_amounts'] : NULL,
+                        'paid_amounts'      => !empty($payment) ? $payment['paid_amounts'] : NULL,
+                        'remaining_amounts' => !empty($payment) ? $payment['remaining_amounts'] : NULL
                     ];
                 }
 
