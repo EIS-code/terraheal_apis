@@ -36,4 +36,9 @@ class UserVoucherPrice extends BaseModel
 
         return strtotime($value) * 1000;
     }
+    
+    public function user()
+    {
+        return $this->hasOne('App\User', 'id', 'user_id');
+    }
 }

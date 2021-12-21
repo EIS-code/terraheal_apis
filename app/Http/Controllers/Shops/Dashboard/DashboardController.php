@@ -18,7 +18,8 @@ use App\ServicePricing;
 use DB;
 use App\Manager;
 use App\News;
-use App\BookingPayment;
+use App\UserPack;
+use App\UserVoucherPrice;
 
 class DashboardController extends BaseController {
 
@@ -269,11 +270,110 @@ class DashboardController extends BaseController {
             'topTherapies' => $topTherapies, 'packEarnings' => $packs_earning, 'cancelBookingValues' => $cancel_earnings, 'paymentRecevied' => $recevied_amount, 'unpaidAmount' => $unpaid_amount]);
     }
     
+    public function getPacks(Request $request, $type) {
+
+        $filter = $request->filter ? $request->filter : UserPack::TODAY;
+        
+        $packs = UserPack::with('pack', 'user')->whereHas('user', function($q) use($request) {
+                    $q->where('shop_id', $request->shop_id);
+                })->where('purchase_platform', $type);
+                
+        $now = Carbon::now();
+        
+        if ($filter == UserPack::TODAY) {
+            $packs->whereDate('purchase_date', $now->format('Y-m-d'));
+        }
+        if ($filter == UserPack::YESTERDAY) {
+            $packs->whereDate('purchase_date', $now->subDays(1));
+        }
+        if ($filter == UserPack::THIS_WEEK) {
+            $weekStartDate = $now->startOfWeek()->format('Y-m-d');
+            $weekEndDate = $now->endOfWeek()->format('Y-m-d');
+            $packs->whereDate('purchase_date', '>=', $weekStartDate)->whereDate('purchase_date', '<=', $weekEndDate);
+        }
+        if ($filter == UserPack::CURRENT_MONTH) {
+            $packs->whereMonth('purchase_date', $now->month);
+        }
+        if ($filter == UserPack::LAST_7_DAYS) {
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(7)->format('Y-m-d');           
+            $packs->whereDate('purchase_date', '>=', $agoDate)->whereDate('purchase_date', '<=', $todayDate);
+        }
+        if ($filter == UserPack::LAST_14_DAYS) {
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(14)->format('Y-m-d');
+            $packs->whereDate('purchase_date', '>=', $agoDate)->whereDate('purchase_date', '<=', $todayDate);
+        }
+        if ($filter == UserPack::LAST_30_DAYS) {
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(30)->format('Y-m-d');
+            $packs->whereDate('purchase_date', '>=', $agoDate)->whereDate('purchase_date', '<=', $todayDate);
+        }
+        if ($filter == UserPack::CUSTOM) {
+            $date = $date = Carbon::createFromTimestampMs($request->date);
+            $packs->whereDate('purchase_date', $date);
+        }
+
+        $packs = $packs->get();
+        $earnings = 0;
+        foreach ($packs as $key => $value) {
+            $earnings += $value->pack->pack_price;
+        }
+        return $earnings;
+    }
+
     public function customerInfo(Request $request) {
         
+        $app_packs = $this->getPacks($request, UserPack::APP);
+        $web_packs = $this->getPacks($request, UserPack::WEB);
+        $center_packs = $this->getPacks($request, UserPack::CENTER);
+        $total_pack_earnings = $app_packs + $web_packs + $center_packs;
+        
+        $app_pack_earnings = $total_pack_earnings > 0 ? ($app_packs * 100) / $total_pack_earnings : 0;
+        $web_pack_earnings = $total_pack_earnings > 0 ? ($web_packs * 100) / $total_pack_earnings : 0;
+        $center_pack_earnings = $total_pack_earnings > 0 ? ($center_packs * 100) / $total_pack_earnings : 0;
+        
+        $total_pack_sold = UserPack::with('user')->whereHas('user', function($q) use($request) {
+                    $q->where('shop_id', $request->shop_id);
+                })->get()->groupBy('pack_id')->count();
+                
+        $packData = [
+            'total_pack_sold' => $total_pack_sold,
+            'sold_through_app' => $app_packs,
+            'sold_through_web' => $web_packs,
+            'sold_through_center' => $center_packs,
+            'app_pack_earnings' => $app_pack_earnings.'%',
+            'web_pack_earnings' => $web_pack_earnings.'%',
+            'center_pack_earnings' => $center_pack_earnings.'%',
+        ];
+        
+        $total_sold_vouchers = UserVoucherPrice::with('user')->whereHas('user', function($q) use($request) {
+                    $q->where('shop_id', $request->shop_id);
+                })->get()->groupBy('voucher_id')->count();
+                
+        $total_sold = UserVoucherPrice::with('user')->whereHas('user', function($q) use($request) {
+                    $q->where('shop_id', $request->shop_id);
+                })->get()->sum('total_value');
+                
+        $total_used = UserVoucherPrice::with('user')->whereHas('user', function($q) use($request) {
+                    $q->where('shop_id', $request->shop_id);
+                })->get()->sum('used_value');
+                
+        $total_unused = UserVoucherPrice::with('user')->whereHas('user', function($q) use($request) {
+                    $q->where('shop_id', $request->shop_id);
+                })->get()->sum('available_value');
+                
+        $voucherData = [
+            'total_sold_vouchers' => $total_sold_vouchers,
+            'total_sold' => $total_sold,
+            'total_used' => $total_used,
+            'total_unused' => $total_unused
+        ];
+
         $activeUsers = User::where(['is_removed' => User::$notRemoved, 'shop_id' => $request->shop_id])->count();
         $defectedUsers = User::where(['is_removed' => User::$removed, 'shop_id' => $request->shop_id])->count();
         
-        return $this->returnSuccess(__($this->successMsg['customer.data.found']), ['activeUsers' => $activeUsers, 'defectedUsers' => $defectedUsers]);
+        return $this->returnSuccess(__($this->successMsg['customer.data.found']), ['activeUsers' => $activeUsers, 'defectedUsers' => $defectedUsers, 
+            'packData' => $packData, 'voucherData' => $voucherData]);
     }
 }
