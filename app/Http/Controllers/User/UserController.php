@@ -400,7 +400,7 @@ class UserController extends BaseController
             if ($request->session_id == SessionType::GROUP && count($request->users) < 2) {
                 return $this->returns('error.group.users', NULL, true);
             }
-
+            $request->pre_payment = !empty($request->pre_payment) ? $request->pre_payment : Booking::WITHOUT_PAYMENT;
             $date = !empty($request->booking_date_time) ? Carbon::createFromTimestampMs($request->booking_date_time) : Carbon::now();
             $bookingData = [
                 'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
@@ -410,6 +410,7 @@ class UserController extends BaseController
                 'session_id' => $request->session_id,
                 'payment_type' => (string)$request->payment_type,
                 'booking_date_time' => $date,
+                'pre_payment' => $request->pre_payment,
                 'address' => !empty($request->address) ? $request->address : NULL,
                 'latitude' => !empty($request->latitude) ? $request->latitude : NULL,
                 'longitude' => !empty($request->longitude) ? $request->longitude : NULL,

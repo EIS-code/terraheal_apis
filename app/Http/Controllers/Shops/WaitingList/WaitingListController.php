@@ -419,6 +419,7 @@ class WaitingListController extends BaseController {
                         }
                     }
 
+                    $request->pre_payment = !empty($request->pre_payment) ? $request->pre_payment : Booking::WITHOUT_PAYMENT;
                     $date = !empty($user['booking_date_time']) ? Carbon::createFromTimestampMs($user['booking_date_time']) : Carbon::now();
                     $bookingData = [
                         'booking_type' => !empty($request->booking_type) ? $request->booking_type : Booking::BOOKING_TYPE_IMC,
@@ -427,6 +428,7 @@ class WaitingListController extends BaseController {
                         'shop_id' => $request->shop_id,
                         'session_id' => $request->session_id,
                         'booking_date_time' => $date,
+                        'pre_payment' => $request->pre_payment,
                         'book_platform' => !empty($request->book_platform) ? $request->book_platform : NULL,
                         'pack_id' => !empty($request->pack_id) ? $request->pack_id : NULL,
                         'voucher_id' => !empty($request->voucher_id) ? $request->voucher_id : NULL
@@ -456,11 +458,13 @@ class WaitingListController extends BaseController {
                 return $this->returnError(__($this->successMsg['error.booking.select.user']));
             }
             $request->booking_id = $newBooking->id;
-            if(empty($request->pack_id)) {
-                $paymentModule = new BookingPayment();
-                $payment = $paymentModule->bookingPayment($request);
-                if (!empty($payment['isError']) && !empty($payment['message'])) {
-                    return $this->returnError($payment['message']);
+             if($request->pre_payment == Booking::WITH_PAYMENT) {
+                if(empty($request->pack_id)) {
+                    $paymentModule = new BookingPayment();
+                    $payment = $paymentModule->bookingPayment($request);
+                    if (!empty($payment['isError']) && !empty($payment['message'])) {
+                        return $this->returns($payment['message'], NULL, true);
+                    }
                 }
             }
             DB::commit();
