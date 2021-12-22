@@ -458,11 +458,13 @@ class UserController extends BaseController
             }
             
             $request->booking_id = $newBooking->id;
-            if(empty($request->pack_id)) {
-                $paymentModule = new BookingPayment();
-                $payment = $paymentModule->bookingPayment($request);
-                if (!empty($payment['isError']) && !empty($payment['message'])) {
-                    return $this->returns($payment['message'], NULL, true);
+            if($request->pre_payment == Booking::WITH_PAYMENT) {
+                if(empty($request->pack_id)) {
+                    $paymentModule = new BookingPayment();
+                    $payment = $paymentModule->bookingPayment($request);
+                    if (!empty($payment['isError']) && !empty($payment['message'])) {
+                        return $this->returns($payment['message'], NULL, true);
+                    }
                 }
             }
             DB::commit();

@@ -87,6 +87,9 @@ class Booking extends BaseModel
     
     const PAYMENT_FULL = '0';
     const PAYMENT_HALF = '1';
+    
+    const WITHOUT_PAYMENT = '0';
+    const WITH_PAYMENT = '1';
 
     public function validator(array $data, $isUpdate = false)
     {

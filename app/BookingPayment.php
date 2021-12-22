@@ -28,12 +28,22 @@ class BookingPayment extends BaseModel
         return $validator;
     }
     
-    public function getAmount($booking, $voucher) {
+    public function getAmount($booking, $voucher, $request) {
         
         $available_amount = 0;
         if (!empty($voucher)) {
             $total_amount = $booking->total_price;
             $voucher_amount = $voucher->available_amount > 0 ? $voucher->available_amount : $voucher->amount;
+            if(($request->booking_type == Booking::BOOKING_TYPE_HHV) || ($booking->payment_type == Booking::PAYMENT_FULL)) {
+                if ($voucher_amount >= $total_amount) {
+                    $amount = $available_amount = $voucher_amount - $total_amount;
+                    $remaining_amount = 0;
+                } else {
+                    $amount = $total_amount - $voucher_amount;
+                    $remaining_amount = 0;
+                    $available_amount = 0;
+                }
+            }
             if ($booking->payment_type == Booking::PAYMENT_HALF) {
                 if($voucher_amount >= $total_amount) {
                     $deduct = $available_amount = $voucher_amount - $total_amount;
@@ -43,22 +53,18 @@ class BookingPayment extends BaseModel
                     $amount = $remaining_amount = $deduct / 2;
                     $available_amount = 0;
                 }
-            } else {
-                if($voucher_amount >= $total_amount) {
-                    $amount = $available_amount = $voucher_amount - $total_amount;
-                    $remaining_amount = 0;
-                } else {
-                    $amount = $total_amount - $voucher_amount;
-                    $remaining_amount = 0;
-                    $available_amount = 0;
-                }
             }
         } else {
-            if ($booking->payment_type == Booking::PAYMENT_HALF) {
-                $amount = $remaining_amount = $booking->total_price / 2;
+            if($request->booking_type == Booking::BOOKING_TYPE_HHV) {
+                    $amount = $booking->total_price;
+                    $remaining_amount = 0;
             } else {
-                $amount = $booking->total_price;
-                $remaining_amount = 0;
+                if ($booking->payment_type == Booking::PAYMENT_HALF) {
+                    $amount = $remaining_amount = $booking->total_price / 2;
+                } else {
+                    $amount = $booking->total_price;
+                    $remaining_amount = 0;
+                }
             }
         }
         
@@ -86,7 +92,7 @@ class BookingPayment extends BaseModel
 
         DB::beginTransaction();
         try {
-            $all_amount = $this->getAmount($booking, $voucher);
+            $all_amount = $this->getAmount($booking, $voucher, $request);
             if ($all_amount['payable'] > 0) {               
                 try {
                     Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
