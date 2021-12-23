@@ -568,7 +568,7 @@ class Booking extends BaseModel
         }
 
         $bookings       = $bookings->orderBy($modelBookingMassage::getTableName() . '.massage_date_time', 'DESC')->get();
-
+        
         $returnBookings = [];
 
         if (!empty($bookings) && !$bookings->isEmpty()) {
@@ -592,7 +592,10 @@ class Booking extends BaseModel
             foreach ($return as $bookingId => $datas) {
                 $returnUserPeoples = [];
 
+                $datas = collect($datas);
+                $datas = $datas->groupBy('bookingInfoId');
                 foreach ($datas as $index => $data) {
+                    $data = $data->first();
                     $bookingInfoId = $data->bookingInfoId;
                     $userPeopleId  = $data->user_id;
 
@@ -649,7 +652,7 @@ class Booking extends BaseModel
                     ];
                 }
 
-                $returnBookings[$bookingId]['user_people'] = $returnUserPeoples[$bookingId];
+                $returnBookings[$bookingId]['user_people'] = array_values($returnUserPeoples[$bookingId]);
             }
 
             $returnBookings = array_values($returnBookings);
