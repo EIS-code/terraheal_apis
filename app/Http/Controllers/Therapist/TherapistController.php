@@ -327,7 +327,7 @@ class TherapistController extends BaseController
     {
         $bookingModel = new Booking();
 
-        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_PAST, 'past_date' => $request->date]]);
+        $request->request->add(['bookings_filter' => [$bookingModel::BOOKING_PAST], 'past_date' => $request->date]);
         $request->request->remove('date');
 
         $data = $bookingModel->getGlobalQuery($request);
