@@ -119,7 +119,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         return Validator::make($data, array_merge([
             'name'                 => array_merge(['string', 'max:255'], !empty($requiredFileds['name']) ? $requiredFileds['name'] : ['nullable']),
             'surname'              => array_merge(['string', 'max:255'], !empty($requiredFileds['surname']) ? $requiredFileds['surname'] : ['nullable']),
-            'dob'                  => array_merge(['date:Y-m-d'], !empty($requiredFileds['dob']) ? $requiredFileds['dob'] : ['nullable']),
+            'dob'                  => array_merge(['string', 'max:255'], !empty($requiredFileds['dob']) ? $requiredFileds['dob'] : ['nullable']),
             'gender'               => array_merge(['in:m,f'], !empty($requiredFileds['gender']) ? $requiredFileds['gender'] : ['nullable']),
             'email'                => array_merge(array_merge(['string', 'email', 'max:255'], $emailValidator), !empty($requiredFileds['email']) ? $requiredFileds['email'] : ['nullable']),
             'tel_number'           => array_merge(['string', 'max:50'], !empty($requiredFileds['tel_number']) ? $requiredFileds['tel_number'] : ['nullable']),
@@ -267,7 +267,6 @@ class Therapist extends BaseModel implements CanResetPasswordContract
                 $massages = $record->selectedServices(Service::MASSAGE);
                 $therapies = $record->selectedServices(Service::THERAPY);
                 
-                $record->dob = $request->dob;
                 $record->selected_services  = collect(['massages' => $massages, 'therapies' => $therapies]);
                 $record->total_massages     = $bookingInfo->getMassageCountByTherapist($record->id);
                 $record->total_therapies    = $bookingInfo->getTherapyCountByTherapist($record->id);
@@ -327,9 +326,7 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         $shopId = !empty($data['shop_id']) ? (int)$data['shop_id'] : false;
         $inc    = 0;
 
-        if (!empty($data['dob'])) {
-            $data['dob'] = date('Y-m-d', ($data['dob'] / 1000));
-        } else {
+        if (empty($data['dob'])) {
             unset($data['dob']);
         }
         if (empty($data['gender'])) {
