@@ -151,11 +151,10 @@ class TherapistController extends BaseController
 
         if (!empty($email) && !empty($password)) {
             $getTherapist = $model->where(['email' => $email, 'is_freelancer' => (string)$isFreelancer, 'active_app' => Therapist::IS_ACTIVE])->first();
-            $type = ($isFreelancer == Therapist::IS_FREELANCER) ? ApiKey::TYPE_FREELANCER_THERAPISTS : ApiKey::TYPE_THERAPISTS;
-            $apiKey = ApiKey::where(['model_id' => $getTherapist->id, 'type' => $type])->first();
-            $getTherapist->api_key = !empty($apiKey) ? $apiKey->key : NULL;
             if (!empty($getTherapist) && Hash::check($password, $getTherapist->password)) {
-
+                $type = ($isFreelancer == Therapist::IS_FREELANCER) ? ApiKey::TYPE_FREELANCER_THERAPISTS : ApiKey::TYPE_THERAPISTS;
+                $apiKey = ApiKey::where(['model_id' => $getTherapist->id, 'type' => $type])->first();
+                $getTherapist->api_key = !empty($apiKey) ? $apiKey->key : NULL;
                 return $this->returnSuccess(__($this->successMsg['login']), $getTherapist);
             } else {
                 return $this->returnError($this->errorMsg['loginBoth']);

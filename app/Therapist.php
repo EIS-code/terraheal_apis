@@ -321,13 +321,16 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         if (!empty($data) && !$data->isEmpty($data)) {
             $bookingInfo = new BookingInfo();
 
-            $data->map(function($record, $key) use($bookingInfo, $request, $modelTherapistDocument) {
+            $data->map(function($record, $key) use($bookingInfo, $request, $modelTherapistDocument, $id) {
                 $massages = $record->selectedServices(Service::MASSAGE);
                 $therapies = $record->selectedServices(Service::THERAPY);
                 
                 $record->selected_services  = collect(['massages' => $massages, 'therapies' => $therapies]);
                 $record->total_massages     = $bookingInfo->getMassageCountByTherapist($record->id);
                 $record->total_therapies    = $bookingInfo->getTherapyCountByTherapist($record->id);
+                $type = ($record->is_freelancer == self::IS_FREELANCER) ? ApiKey::TYPE_FREELANCER_THERAPISTS : ApiKey::TYPE_THERAPISTS;
+                $apiKey = ApiKey::where(['model_id' => $id, 'type' => $type])->first();
+                $record->api_key = !empty($apiKey) ? $apiKey->key : NULL;
 
                 if (!empty($record->documents) && !$record->documents->isEmpty()) {
                     $record->documents->map(function($document) use($modelTherapistDocument) {
