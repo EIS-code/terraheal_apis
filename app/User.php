@@ -324,16 +324,16 @@ class User extends BaseModel implements Authenticatable
     public function getQrCodePathAttribute($value)
     {
         $default = NULL;
-
+        
         if (empty($value)) {
-            return $default;
+            return $this->storeQRCode();
         }
 
         $qrCodePath = (str_ireplace("\\", "/", $this->qrCodePath));
         if (Storage::disk($this->fileSystem)->exists($qrCodePath . $value)) {
             return Storage::disk($this->fileSystem)->url($qrCodePath . $value);
         }
-
+                
         return $default;
     }
 
