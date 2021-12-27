@@ -39,7 +39,8 @@ class AuthApi
                 $request->is('clients*') || 
                 $request->is('rooms*') || 
                 $request->is('receptionist*') || 
-                $request->is('therapist*') || 
+                $request->is('therapist/signin') || 
+                $request->is('therapist/freelancer/signin') || 
                 $request->is('waiting*') || 
                 $request->is('service*') || 
                 $request->is('manager*')
