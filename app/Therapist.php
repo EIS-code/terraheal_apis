@@ -14,6 +14,7 @@ use App\BookingMassage;
 use Illuminate\Http\UploadedFile;
 use DB;
 use Carbon\Carbon;
+use App\Libraries\QR;
 
 class Therapist extends BaseModel implements CanResetPasswordContract
 {
@@ -56,13 +57,15 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         'country_id',
         'personal_description',
         'address',
-        'active_app'
+        'active_app',
+        'qr_code_path'
     ];
 
     protected $hidden = ['is_deleted', 'created_at', 'updated_at', 'password'];
 
     public $fileSystem = 'public';
     public $profilePhotoPath = 'therapists\profile\\';
+    public $qrCodePath = 'therapists\qr_codes\\';
 
     const GENDER_MALE   = 'm';
     const GENDER_FEMALE = 'f';
@@ -99,6 +102,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
     const GOLD = '1';
     const SILVER = '2';
     const BRONZE = '3';
+    
+    private static $qrCode = ['id' => false, 'dob' => NULL, 'email' => NULL, 'shop_id' => false, 'terraheal_flag' => true];
     
     public function getFullNameAttribute()
     {
@@ -155,6 +160,59 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         ]);
     }
 
+    public function qrCodeKey()
+    {
+        self::$qrCode['id']      = $this->id;
+        self::$qrCode['dob']     = $this->dob;
+        self::$qrCode['email']   = $this->email;
+        self::$qrCode['shop_id'] = $this->shop_id;
+
+        return json_encode(self::$qrCode);
+    }
+    
+    public function storeQRCode()
+    {
+        $qr = new QR();
+
+        $qr->json($this->qrCodeKey());
+
+        $qrUrl = $qr->getUrl();
+
+        if (!empty($qrUrl)) {
+            $contents = file_get_contents($qrUrl);
+
+            $isStore  = Storage::disk($this->fileSystem)->put($this->qrCodePath . $this->id . '.png', $contents);
+
+            if ($isStore) {
+                $therapist = self::find($this->id);
+                $update = $therapist->update(['qr_code_path' => $this->id . '.png']);
+                $this->qr_code_path = $this->id . '.png';
+                
+                if ($update) {
+                    return $this->qr_code_path;
+                }
+            }
+        }
+
+        return false;
+    }
+    
+    public function getQrCodePathAttribute($value)
+    {
+        $default = NULL;
+        
+        if (empty($value)) {
+            return $this->storeQRCode();
+        }
+
+        $qrCodePath = (str_ireplace("\\", "/", $this->qrCodePath));
+        if (Storage::disk($this->fileSystem)->exists($qrCodePath . $value)) {
+            return Storage::disk($this->fileSystem)->url($qrCodePath . $value);
+        }
+                
+        return $default;
+    }
+    
     public function validateProfilePhoto($request)
     {
         return Validator::make($request, [
