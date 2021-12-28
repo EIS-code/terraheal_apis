@@ -48,6 +48,8 @@ use App\ForgotOtp;
 use App\Notification;
 use App\Jobs\TherapistNotification;
 use App\ApiKey;
+use App\TherapistSelectedService;
+use App\Service;
 
 class TherapistController extends BaseController
 {
@@ -642,8 +644,20 @@ class TherapistController extends BaseController
         }
 
         if (!empty($data) && !$data->isEmpty()) {
-            $data->each->append('massage_count');
-            $data->each->append('therapy_count');
+            
+            foreach ($data as $key => $row) {
+                
+                $selectedMassages = TherapistSelectedService::with('service')->where('therapist_id', $row->id)
+                                ->whereHas('service', function($q) {
+                                    $q->where('service_type', Service::MASSAGE);
+                                })->get()->count();
+                $selectedTherapies = TherapistSelectedService::with('service')->where('therapist_id', $row->id)
+                                ->whereHas('service', function($q) {
+                                    $q->where('service_type', Service::THERAPY);
+                                })->get()->count();
+                $row->massage_count = $selectedMassages;
+                $row->therapy_count = $selectedTherapies;
+            }
 
             return $this->returns('other.therapist.found', $data);
         } else {
