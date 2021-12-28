@@ -157,7 +157,7 @@ class Booking extends BaseModel
 
     public function bookingInfoWithFilters($type = 'today')
     {
-        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['id', 'booking_id', 'id as booking_info_id', 'user_id', 'therapist_id', 'is_done'])
+        return $this->hasMany('App\BookingInfo', 'booking_id', 'id')->select(['id', 'booking_id', 'id as booking_info_id', 'user_id', 'is_done'])
                     ->where(function($query) use($type) {
                         $query->filterDatas();
                     })->with(['user' => function($query) {
@@ -316,7 +316,7 @@ class Booking extends BaseModel
                 ->join($sessionTypeModel::getTableName(), $this::getTableName() . '.session_id', '=', $sessionTypeModel::getTableName() . '.id')
                 ->leftJoin($roomModel::getTableName(),$bookingMassageModel::getTableName().'.room_id', '=', $roomModel::getTableName().'.id')
                 ->leftJoin($userGenderPreferenceModel::getTableName(),$bookingMassageModel::getTableName().'.gender_preference', '=', $userGenderPreferenceModel::getTableName().'.id')
-                ->leftJoin($therapistModel::getTableName(),$bookingInfoModel::getTableName().'.therapist_id', '=', $therapistModel::getTableName().'.id')
+                ->leftJoin($therapistModel::getTableName(),$bookingMassageModel::getTableName().'.therapist_id', '=', $therapistModel::getTableName().'.id')
                 ->leftJoin($servicePriceModel::getTableName(), $bookingMassageModel::getTableName() . '.service_pricing_id', '=', $servicePriceModel::getTableName() . '.id')
                 ->leftJoin($serviceModel::getTableName(), $servicePriceModel::getTableName() . '.service_id', '=', $serviceModel::getTableName() . '.id')
                 ->leftJoin($serviceTimingModel::getTableName(), $servicePriceModel::getTableName() . '.service_timing_id', '=', $serviceTimingModel::getTableName() . '.id')
@@ -331,7 +331,7 @@ class Booking extends BaseModel
             $data->where($this::getTableName() . '.shop_id', (int)$shopId);
         }
         if (!empty($therapistId)) {
-            $data->where($bookingInfoModel::getTableName() . '.therapist_id', (int) $therapistId);
+            $data->where($bookingMassageModel::getTableName() . '.therapist_id', (int) $therapistId);
         }
         if (!empty($id)) {
             $data->where($bookingInfoModel::getTableName() . '.id', (int) $id);
@@ -345,7 +345,7 @@ class Booking extends BaseModel
             $data->where($this::getTableName() . '.booking_type', $type);
         }
         if ($therapist) {
-            $data->where($bookingInfoModel::getTableName() . '.therapist_id', $therapist);
+            $data->where($bookingMassageModel::getTableName() . '.therapist_id', $therapist);
         }
         if ($roomId) {
             $data->where($bookingMassageModel::getTableName() . '.room_id', $roomId);

@@ -31,7 +31,8 @@ class BookingMassage extends BaseModel
         'service_pricing_id',
         'is_confirm',
         'observation',
-        'language_id'
+        'language_id',
+        'therapist_id'
     ];
     
     const IS_CONFIRM = '1';
@@ -58,6 +59,7 @@ class BookingMassage extends BaseModel
             'focus_area_preference'                  => $focusAreaPreference,
             'room_id'                                => ['nullable', 'integer', 'exists:' . Room::getTableName() . ',id'],
             'language_id'                            => ['nullable', 'integer', 'exists:' . Language::getTableName() . ',id'],
+            'therapist_id'                           => ['nullable', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
         ]);
 
         return $validator;

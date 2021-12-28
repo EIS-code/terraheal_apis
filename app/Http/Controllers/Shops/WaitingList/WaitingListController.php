@@ -263,10 +263,10 @@ class WaitingListController extends BaseController {
     
     public function assignTherapist(Request $request) {
         
-        $bookingInfo = BookingInfo::find($request->booking_info_id);
+        $booking = BookingMassage::find($request->booking_massage_id);
         $therapist = Therapist::find($request->therapist_id);
         
-        if(empty($bookingInfo)) {
+        if(empty($booking)) {
             return $this->returnSuccess(__($this->successMsg['booking.not.found']));
         }
         
@@ -274,9 +274,9 @@ class WaitingListController extends BaseController {
             return $this->returnSuccess(__($this->successMsg['therapist.not.found']));
         }
         
-        $bookingInfo->update(['therapist_id' => $request->therapist_id]);
+        $booking->update(['therapist_id' => $request->therapist_id]);
         
-        return $this->returnSuccess(__($this->successMsg['assign.therapist']), $bookingInfo);
+        return $this->returnSuccess(__($this->successMsg['assign.therapist']), $booking);
     }
     
     public function addNewBooking(Request $request) {

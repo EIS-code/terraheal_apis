@@ -21,7 +21,6 @@ class BookingInfo extends BaseModel
         'is_done',
         'booking_currency_id',
         'shop_currency_id',
-        'therapist_id',
         'user_id',
         'room_id',
         'booking_id'
@@ -73,8 +72,7 @@ class BookingInfo extends BaseModel
             'location'             => ['nullable', 'max:255'],
             'is_cancelled'         => ['in:' . implode(",", array_keys(self::$isCancelled))],
             'cancelled_reason'     => ['mas:255'],
-            'imc_type'             => ['nullable', 'in:1,2'],
-            'therapist_id'         => ['nullable', 'integer', 'exists:' . Therapist::getTableName() . ',id'],
+            'imc_type'             => ['nullable', 'in:1,2'],            
             'booking_currency_id'  => ['nullable', 'integer', 'exists:' . Currency::getTableName() . ',id'],
             'shop_currency_id'     => ['nullable', 'integer', 'exists:' . Currency::getTableName() . ',id'],
             'booking_id'           => ['required', 'integer', 'exists:' . Booking::getTableName() . ',id'],
