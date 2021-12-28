@@ -177,6 +177,6 @@ $router->group(['prefix' => 'therapist', 'namespace' => 'Therapist', 'guard' => 
     $router->post('/getCities', 'TherapistController@getCities');
     $router->post('/searchClients', 'TherapistController@searchClients');
     $router->get('/complaintsSuggestion', 'TherapistController@getComplaintsSuggestion');
-    $router->get('/getSessionTypes', 'TherapistController@getSessionTypes');    
-    $router->post('/fcm/token/save', 'TherapistController@saveToken');    
+    $router->get('/getSessionTypes', 'TherapistController@getSessionTypes');
+    $router->post('/fcm/token/save', 'TherapistController@saveToken');
 });

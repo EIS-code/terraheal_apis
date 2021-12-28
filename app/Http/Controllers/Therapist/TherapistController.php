@@ -764,7 +764,7 @@ class TherapistController extends BaseController
         if (!empty($date) && $date > 0) {
             $date = Carbon::createFromTimestampMs($date)->format('Y-m-d H:i:s');
 
-            $therapist_shift = TherapistWorkingSchedule::where(['therapist_id' => $data['therapist_id'], 
+            $therapist_shift = TherapistWorkingSchedule::where(['therapist_id' => $data['id'], 
                 'date' => $date, "shift_id" => $data['shift_id'], "shop_id" => $data['shop_id']])->first();
 
             if(empty($therapist_shift)) {
@@ -784,7 +784,7 @@ class TherapistController extends BaseController
             
             $data = [
                 'date' => $date,
-                'therapist_id' => $data['therapist_id'],
+                'therapist_id' => $data['id'],
                 "with_therapist_id" => $data['with_therapist_id'],
                 "shift_id" => $data['shift_id'],
                 "with_shift_id" => $data['with_shift_id'],
@@ -849,8 +849,6 @@ class TherapistController extends BaseController
     }
     
     public function getComplaintsSuggestion(Request $request) {
-        $id = $request->get('id', false);
-
         $complaints     = TherapistComplaint::select(TherapistComplaint::getTableName() . '.id', TherapistComplaint::getTableName() . '.therapist_id', TherapistComplaint::getTableName() . '.receptionist_id', TherapistComplaint::getTableName() . '.complaint as text', Therapist::getTableName() . '.profile_photo as therapist_photo', Receptionist::getTableName() . '.photo as receptionist_photo', DB::raw("CONCAT(" . Therapist::getTableName() . ".name, ' ', " . Therapist::getTableName() . ".surname) as therapist_name"), DB::raw("UNIX_TIMESTAMP(" . TherapistComplaint::getTableName() . ".created_at) * 1000 as created_time"), DB::raw("'complaint' as type"), Receptionist::getTableName() . '.name as receptionist_name')
                                             ->leftJoin(Therapist::getTableName(), TherapistComplaint::getTableName() . '.therapist_id', '=', Therapist::getTableName() . '.id')
                                             ->leftJoin(Receptionist::getTableName(), TherapistComplaint::getTableName() . '.receptionist_id', '=', Receptionist::getTableName() . '.id')
@@ -956,7 +954,7 @@ class TherapistController extends BaseController
         $model          = new Therapist();
         $modelEmailOtp  = new TherapistEmailOtp();
 
-        $id      = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $id      = (!empty($data['id'])) ? $data['id'] : 0;
         $getTherapist = $model->find($id);
 
         if (!empty($getTherapist)) {
@@ -1021,7 +1019,7 @@ class TherapistController extends BaseController
         $model      = new TherapistEmailOtp();
         $modelUser  = new Therapist();
 
-        $therapistId = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $therapistId = (!empty($data['id'])) ? $data['id'] : 0;
         $otp    = (!empty($data['otp'])) ? $data['otp'] : NULL;
 
         if (empty($otp)) {
@@ -1066,7 +1064,7 @@ class TherapistController extends BaseController
         $model  = new Therapist();
 
         /* TODO all things like email otp compare after get sms gateway. */
-        $therapistId = (!empty($data['therapist_id'])) ? $data['therapist_id'] : 0;
+        $therapistId = (!empty($data['id'])) ? $data['id'] : 0;
         $otp    = (!empty($data['otp'])) ? $data['otp'] : NULL;
 
         if (strtolower(env('APP_ENV') != 'live') && $otp == '1234') {
@@ -1090,7 +1088,7 @@ class TherapistController extends BaseController
                 $data = [
                     'startTime' => $startTime->format('H:i:s'),
                     'endTime' => $endTime->format('H:i:s'),
-                    'therapist_id' => $request->therapist_id,
+                    'therapist_id' => $request->id,
                 ];
 
                 $slotModel = new TherapistFreeSlot();
@@ -1161,21 +1159,31 @@ class TherapistController extends BaseController
     }
     
     public function readNews(Request $request) {
-        
+        $request->request->add(['exclude_shop_id' => true]);
+
         $model = new TherapistNews();
-        $checks = $model->validator($request->all());
+
+        $data  = [
+            'therapist_id' => $request->id,
+            'news_id'      => $request->news_id
+        ];
+
+        $checks = $model->validator($data);
+
         if ($checks->fails()) {
             return $this->returnError($checks->errors()->first(), NULL, true);
         }
-        
-        $read = $model->updateOrCreate($request->all(), $request->all());
+
+        $read = $model->updateOrCreate($data, $data);
+
+        $request->request->add(['exclude_shop_id' => null]);
+
         return $this->returns('news.read', collect($read));
-    }        
+    }
 
     public function getList(Request $request) {
-
         $lists = TherapistExchange::with('therapist', 'withTherapist', 'shifts', 'withShifts', 'shop')
-                        ->where(['therapist_id' => $request->therapist_id, 'shop_id' => $request->shop_id,
+                        ->where(['therapist_id' => $request->id, 'shop_id' => $request->shop_id,
                                 'status' => TherapistExchange::NO_ACTION])->get();
 
         $shiftList = [];
@@ -1286,7 +1294,7 @@ class TherapistController extends BaseController
                     'title' => $news['title'],
                     'sub_title' => $news['sub_title'],
                     'description' => $news['description'],
-                    'created_at' => strtotime($news['created_at']) * 1000              
+                    'created_at' => strtotime($news['created_at']) * 1000
                 ];
                 if(in_array($news['id'], $readNews))
                 {
@@ -1300,16 +1308,11 @@ class TherapistController extends BaseController
         }
         return $this->returnSuccess(__($this->successMsg['news.get']), $allNews);
     }
-    
+
     public function deleteOtp(Request $request) {
-        
-        $otps = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Therapist::THERAPIST])->get();
-        foreach ($otps as $key => $otp) {
-            $otp->delete();
-        }
-        return true;
+        return ForgotOtp::where(['model_id' => $request->get('id', null), 'model' => Therapist::THERAPIST])->delete();
     }
-    
+
     public function forgotPassword(Request $request) {
 
         $therapist = Therapist::where('mobile_number', $request->mobile_number)->first();
@@ -1332,64 +1335,101 @@ class TherapistController extends BaseController
         ForgotOtp::create($data);
         return $this->returnSuccess(__($this->successMsg['success.otp']), ['user_id' => $therapist->id, 'otp' => 1234]);
     }
-    
+
     public function resetPassword(Request $request) {
-        
-        $therapist = Therapist::find($request->user_id);
+        $modal       = new Therapist();
+
+        $therapistId = $request->get('id', null);
+
+        if (empty($therapistId)) {
+            return $this->returnError($this->errorMsg['notFound']);
+        }
+
+        $data   = [
+            'password' => $request->get('password', null)
+        ];
+
+        $checks = $modal->validator($data, ['password' => ['required'], 'shop_id' => ['nullable']]);
+        if ($checks->fails()) {
+            return $this->returns($checks->errors()->first(), NULL, true);
+        }
+
+        $checkOTP = ForgotOtp::where(['model_id' => $therapistId, 'model' => Therapist::THERAPIST])->first();
+
+        if (empty($checkOTP)) {
+            return $this->returnError($this->errorMsg['otp.not.found']);
+        }
+
+        $therapist = $modal::find($therapistId);
 
         if (empty($therapist)) {
             return $this->returnError($this->errorMsg['notFound']);
         }
-        
+
         $therapist->update(['password' => Hash::make($request->password)]);
+
         $this->deleteOtp($request);
-        
-        return $this->returnSuccess(__($this->successMsg['success.reset.password']), $therapist);
+
+        $response = $this->getGlobalResponse($modal::IS_NOT_FREELANCER, $request, false);
+
+        // $response = (!empty($response) && !$response->isEmpty()) ? $response->first() : [];
+
+        return $this->returnSuccess(__($this->successMsg['success.reset.password']), $response);
     }
     
     public function verifyOtp(Request $request) {
-        
-        $is_exist = ForgotOtp::where(['model_id' => $request->user_id, 'model' => Therapist::THERAPIST, 'otp' => $request->otp])->first();
-        
-        if(empty($is_exist)) {
+        $is_exist = ForgotOtp::where(['model_id' => $request->id, 'model' => Therapist::THERAPIST, 'otp' => $request->otp])->first();
+
+        if (empty($is_exist)) {
             return $this->returnError($this->errorMsg['otp.not.found']);
         }
+
         return $this->returnSuccess(__($this->successMsg['success.otp.verified']), $is_exist);
     }
     
     public function getUnreadNotification(Request $request) {
-        
-        $user = Therapist::find($request->user_id);
-        if(empty($user)) {
+        $user = Therapist::find($request->get('id', null));
+
+        if (empty($user)) {
             return $this->returnError($this->errorMsg['notFound']);
         }
-        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_THERAPIST_APP, 'model_id' => $request->user_id])->get();
+
+        $notifications = Notification::where(['is_read' => Notification::IS_UNREAD, 'send_to' => Notification::SEND_TO_THERAPIST_APP, 'model_id' => $request->id])->get();
+
         return $this->returnSuccess(__($this->successMsg['success.unread.notification']), $notifications);
     }
     
     public function readNotification(Request $request) {
-        
-        $therapist = Therapist::find($request->user_id);
-        if(empty($therapist)) {
+        $therapist = Therapist::find($request->get('id', null));
+
+        if (empty($therapist)) {
             return $this->returnError($this->errorMsg['notFound']);
         }
-        $notification = Notification::where(['id' => $request->id, 'send_to' => Notification::SEND_TO_THERAPIST_APP, 'model_id' => $request->user_id])->first();
-        if(empty($notification)) {
+
+        $notification = Notification::where([
+            'id'       => $request->get('notification_id', null),
+            'send_to'  => Notification::SEND_TO_THERAPIST_APP,
+            'model_id' => $request->get('id', null)
+        ])->first();
+
+        if (empty($notification)) {
             return $this->returnError($this->errorMsg['error.notification.not.found']);
         }
+
         $notification->update(['is_read' => Notification::IS_READ]);
+
         return $this->returnSuccess(__($this->successMsg['success.read.notification']), $notification);
     }
-    
+
     public function saveToken(Request $request) {
-        
-        $therapist = Therapist::find($request->therapist_id);
-        if(empty($therapist)) {
+        $therapist = Therapist::find($request->get('id', null));
+
+        if (empty($therapist)) {
             return $this->returnError($this->errorMsg['notFound']);
         }
-        
+
         $therapist->update(['device_token' => $request->device_token]);
-        
-        return $this->returnSuccess(__($this->successMsg['success.token.save']),$therapist);
+
+        return $this->returnSuccess(__($this->successMsg['success.token.save']), $therapist);
     }
 }

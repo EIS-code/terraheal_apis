@@ -41,6 +41,8 @@ class AuthApi
                 $request->is('receptionist*') || 
                 $request->is('therapist/signin') || 
                 $request->is('therapist/freelancer/signin') || 
+                $request->is('therapist/signin/forgot') || 
+                $request->is('therapist/reset/password') || 
                 $request->is('waiting*') || 
                 $request->is('service*') || 
                 $request->is('manager*')
