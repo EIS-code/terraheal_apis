@@ -1125,6 +1125,8 @@ class TherapistController extends BaseController
         $now = Carbon::now();
         $date = Carbon::createFromTimestampMs($request->date);
         $date = strtotime($date) > 0 ? $date->format('Y-m-d') : $now->format('Y-m-d');
+
+        $therapistId = $request->get('id', null);
         
         $data = DB::table('therapists')
                 ->leftJoin('therapist_working_schedules', 'therapists.id', '=', 'therapist_working_schedules.therapist_id')
@@ -1133,7 +1135,8 @@ class TherapistController extends BaseController
                         'therapist_working_schedules.*', 'shop_shifts.from', 'shop_shifts.to')
                 ->where(['therapist_working_schedules.date' => $date, 
                     'therapist_working_schedules.is_working' => TherapistWorkingSchedule::WORKING,
-                    'therapist_working_schedules.shop_id' => $request->shop_id])->get()->groupBy('therapist_id');
+                    'therapist_working_schedules.shop_id' => $request->shop_id])
+                ->where('therapists.id', '!=', $therapistId)->get()->groupBy('therapist_id');
         
         $shiftData = [];
         if (!empty($data)) {
