@@ -904,7 +904,7 @@ class TherapistController extends BaseController
 
     public function takeBreaks(Request $request)
     {
-        $id = $request->get('id', false);
+        $id = $request->get('therapist_id', false);
 
         if ($id) {
             $date      = new Carbon($request->get('date', NULL) / 1000);

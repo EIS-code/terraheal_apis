@@ -117,28 +117,6 @@ class BookingInfo extends BaseModel
         return $this->hasOne('App\Therapist', 'id', 'therapist_id');
     }
 
-    public function therapistWhereShop()
-    {
-        $shopId = request()->get('shop_id', false);
-
-        return $this->hasOne('App\Therapist', 'id', 'therapist_id')->where('shop_id', (int)$shopId);
-    }
-
-    public function therapistWhereId()
-    {
-        $id = request()->get('therapist_id', false);
-
-        return $this->hasOne('App\Therapist', 'id', 'therapist_id')->where('therapist_id', (int)$id);
-    }
-
-    public function therapistWhereShopAndId()
-    {
-        $shopId = request()->get('shop_id', false);
-        $id     = request()->get('therapist_id', false);
-
-        return $this->hasOne('App\Therapist', 'id', 'therapist_id')->where('shop_id', (int)$shopId)->where('id', (int)$id);
-    }
-
     public function user()
     {
         return $this->hasOne('App\User', 'id', 'user_id');
@@ -195,7 +173,6 @@ class BookingInfo extends BaseModel
         $return = [];
 
         $data   = self::select('id as booking_info_id', 'id')
-                      ->has('therapistWhereShop')
                       ->has('bookingMassages')
                       ->with(['booking' => function($query) {
                           $query->select('id', 'booking_type');
@@ -204,12 +181,13 @@ class BookingInfo extends BaseModel
                           $query->select('massage_date_time', 'booking_info_id', 'service_pricing_id')
                                 ->with('servicePrices');
                       }])
-                      ->where('therapist_id', $therapistId)
-                        ->whereHas('bookingMassages', function($q) use($startDate, $endDate) {
-                            $q->whereBetween('massage_date_time', [$startDate, $endDate]);
+                        ->whereHas('bookingMassages', function($q) use($startDate, $endDate, $therapistId) {
+                            $q->whereBetween('massage_date_time', [$startDate, $endDate])
+                                    ->where('therapist_id', $therapistId);
                         })
                         ->whereHas('booking', function($q) use($type) {
-                            $q->where('booking_type', $type);
+                            $q->where('booking_type', $type)
+                                    ->where('shop_id', request()->get('shop_id', false));
                         })->get();
         if (!empty($data) && !$data->isEmpty()) {
             foreach ($data as $record) {

@@ -57,13 +57,20 @@ class Booking extends BaseModel
     const BOOKING_PLATFORM_WEB = '1';
     const MASSAGES = '0';
     const THERAPIES = '1';
+    const VOUCHERS = '2';
+    const PACKS = '3';
     const TODAY = '0';
     const YESTERDAY = '1';
     const THIS_WEEK = '2';
     const THIS_MONTH = '3';
     const TOMORROW = '4';
     const LAST_WEEK = 0;
-    const LAST_MONTH = 1;
+    const LAST_MONTH = 1;    
+    const LAST_7_DAYS = '4';
+    const LAST_14_DAYS = '5';
+    const LAST_30_DAYS = '6';
+    const CUSTOM = '7';
+    
 
     const BRING_TABLE_FUTON_NONE = '0';
     const BRING_TABLE_FUTON_TABLE = '1';

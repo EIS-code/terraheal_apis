@@ -222,6 +222,98 @@ class DashboardController extends BaseController {
         rsort($topServices);
         return $topServices;
     }
+    
+    public function getServices(Request $request, $type) {
+        
+        $modelBooking = new Booking();
+        $modelBookingMassage = new BookingMassage();
+        $modelBookingInfo = new BookingInfo();
+        $serviceModel = new Service();
+        $servicePriceModel = new ServicePricing();
+        
+        $filter_val = isset($request->filter) ? $request->filter : Booking::TODAY;
+        
+        $bookings = $modelBooking->select(DB::RAW($modelBooking::getTableName() . '.*, ' . $modelBookingInfo::getTableName() . '.*, ' . $modelBookingMassage::getTableName() . '.*, ' . $servicePriceModel::getTableName() . '.*, ' . $serviceModel::getTableName() . '.*'))
+                ->join($modelBookingInfo::getTableName(), $modelBooking::getTableName() . '.id', '=', $modelBookingInfo::getTableName() . '.booking_id')
+                ->join($modelBookingMassage::getTableName(), $modelBookingInfo::getTableName() . '.id', '=', $modelBookingMassage::getTableName() . '.booking_info_id')
+                ->leftJoin($servicePriceModel::getTableName(), $modelBookingMassage::getTableName() . '.service_pricing_id', '=', $servicePriceModel::getTableName() . '.id')
+                ->leftJoin($serviceModel::getTableName(), $servicePriceModel::getTableName() . '.service_id', '=', $serviceModel::getTableName() . '.id')
+                ->where($modelBooking::getTableName().'.shop_id', $request->get('shop_id'));
+        
+        if($type == Booking::MASSAGES) {
+            $bookings->where($serviceModel::getTableName() . '.service_type', Booking::MASSAGES)
+                    ->whereNull($modelBooking::getTableName() . '.pack_id')
+                    ->whereNull($modelBooking::getTableName() . '.voucher_id');
+        }
+        if($type == Booking::MASSAGES) {
+            $bookings->where($serviceModel::getTableName() . '.service_type', Booking::THERAPIES)
+                    ->whereNull($modelBooking::getTableName() . '.pack_id')
+                    ->whereNull($modelBooking::getTableName() . '.voucher_id');
+        }
+        if($type == Booking::PACKS) {
+            $bookings->whereNotNull($modelBooking::getTableName() . '.pack_id')
+                    ->whereNull($modelBooking::getTableName() . '.voucher_id');
+        }
+        if($type == Booking::VOUCHERS) {
+            $bookings->whereNull($modelBooking::getTableName() . '.pack_id')
+                    ->whereNotNull($modelBooking::getTableName() . '.voucher_id');
+        }
+        
+        if($filter_val == Booking::TODAY) {
+            $date = Carbon::now()->format('Y-m-d');
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', $date);
+        }
+        if($filter_val == Booking::YESTERDAY) {
+            $date = Carbon::yesterday()->format('Y-m-d');
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', $date);
+        }
+        if($filter_val == Booking::THIS_MONTH) {
+            $date = Carbon::now();
+            $bookings->whereMonth($modelBookingMassage::getTableName() . '.massage_date_time', $date->month)
+                    ->whereYear($modelBookingMassage::getTableName() . '.massage_date_time', $date->year);
+        }
+        if($filter_val == Booking::LAST_7_DAYS) {
+            
+            $now = Carbon::now();
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(7)->format('Y-m-d');
+            
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '<=' , $todayDate)
+                    ->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $agoDate);
+        }
+        if($filter_val == Booking::LAST_14_DAYS) {
+            
+            $now = Carbon::now();
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(14)->format('Y-m-d');
+            
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '<=' , $todayDate)
+                    ->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $agoDate);
+        }
+        if($filter_val == Booking::LAST_30_DAYS) {
+            
+            $now = Carbon::now();
+            $todayDate = $now->format('Y-m-d');
+            $agoDate = $now->subDays(30)->format('Y-m-d');
+            
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '<=' , $todayDate)
+                    ->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', '>=' , $agoDate);
+        }
+        if($filter_val == Booking::CUSTOM) {
+            
+            $date = $date = Carbon::createFromTimestampMs($request->date);
+            $bookings->whereDate($modelBookingMassage::getTableName() . '.massage_date_time', $date);
+        }
+        $bookings = $bookings->get();
+        
+//        dd($bookings);
+        $earnings = 0;
+        foreach ($bookings as $key => $value) {
+            $earnings += $value->price;
+        }
+        
+        return $earnings;
+    }
 
     public function salesInfo(Request $request) {
 
@@ -265,9 +357,23 @@ class DashboardController extends BaseController {
             }
         }
         
+        $massage_earnings = $this->getServices($request, Booking::MASSAGES);
+        $therapies_earnings = $this->getServices($request, Booking::THERAPIES);
+        $voucher_earnings = $this->getServices($request, Booking::VOUCHERS);
+        $pack_earnings = $this->getServices($request, Booking::PACKS);
+        $voucher_pack_earnings = $voucher_earnings + $pack_earnings;
+        $total = $massage_earnings + $therapies_earnings + $voucher_pack_earnings;
+        
+        $services = [
+            'total' => $total,
+            'massage' => $total > 0 ? round(($massage_earnings * 100) / $total): 0,
+            'therapies' => $total > 0 ? round(($therapies_earnings * 100) / $total) : 0,
+            'voucher_packs' => $total > 0 ? round(($voucher_pack_earnings * 100) / $total) : 0
+        ];
+        
         return $this->returnSuccess(__($this->successMsg['sales.data.found']), ['allBookings' => $allBookings->count(), 'cancelBooking' => $cancelBookings->groupBy('booking_id')->count(), 'pendingBooking' => $pendingBookings,
             'totalMassages' => $massages->count(), 'totalTherapies' => $therapies->count(), 'futureBookings' => $futureBookings, 'todayBookings' => $todayBookings,'topMassages' => $topMassages, 
-            'topTherapies' => $topTherapies, 'packEarnings' => $packs_earning, 'cancelBookingValues' => $cancel_earnings, 'paymentRecevied' => $recevied_amount, 'unpaidAmount' => $unpaid_amount]);
+            'topTherapies' => $topTherapies, 'packEarnings' => $packs_earning, 'cancelBookingValues' => $cancel_earnings, 'paymentRecevied' => $recevied_amount, 'unpaidAmount' => $unpaid_amount, 'services' => $services]);
     }
     
     public function getPacks(Request $request, $type) {
@@ -310,7 +416,7 @@ class DashboardController extends BaseController {
             $packs->whereDate('purchase_date', '>=', $agoDate)->whereDate('purchase_date', '<=', $todayDate);
         }
         if ($filter == UserPack::CUSTOM) {
-            $date = $date = Carbon::createFromTimestampMs($request->date);
+            $date = Carbon::createFromTimestampMs($request->date);
             $packs->whereDate('purchase_date', $date);
         }
 
