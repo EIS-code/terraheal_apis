@@ -151,6 +151,7 @@ class TherapistWorkingSchedule extends BaseModel
                 ->where(['therapist_working_schedules.date' => $date,
                     'therapist_working_schedules.is_working' => TherapistWorkingSchedule::WORKING,
                     'therapist_working_schedules.is_exchange' => TherapistWorkingSchedule::NOT_EXCHANGE])
+                ->where('therapist_working_schedules.therapist_id', $id)
                 ->get()->groupBy('shop_id');
                         
         $availability = $data = [];
