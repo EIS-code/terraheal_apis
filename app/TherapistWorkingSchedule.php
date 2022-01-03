@@ -188,7 +188,7 @@ class TherapistWorkingSchedule extends BaseModel
         $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
         $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
 
-        $data           = self::select(self::getTableName() . '.*')
+        $data           = self::select([self::getTableName() . '.id', self::getTableName() . '.date'])
                           ->where(self::getTableName() . '.therapist_id', $id)
                           ->whereBetween(self::getTableName() . '.date', [$startDate, $endDate])
                           ->leftJoin(BookingMassage::getTableName(), function($query) {
