@@ -187,6 +187,7 @@ class TherapistWorkingSchedule extends BaseModel
         $month          = empty($month) ? $currentMonth : new Carbon($month);
         $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
         $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
+        $now            = Carbon::now();
 
         $data           = self::select([self::getTableName() . '.id', self::getTableName() . '.date'])
                           ->where(self::getTableName() . '.therapist_id', $id)
@@ -196,6 +197,7 @@ class TherapistWorkingSchedule extends BaseModel
                                       ->whereRaw('DATE(' . self::getTableName() . '.date) = DATE(' . BookingMassage::getTableName() . '.massage_date_time)');
                           })
                           ->whereNull(BookingMassage::getTableName() . '.id')
+                          ->whereDate(self::getTableName() . '.date', '<=' ,$now->format('Y-m-d'))
                           ->get();
 
         return $data;
