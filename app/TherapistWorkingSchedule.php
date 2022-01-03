@@ -5,6 +5,7 @@ namespace App;
 use App\Therapist;
 use App\Shop;
 use App\ShopShift;
+use App\BookingMassage;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use DB;
@@ -187,8 +188,16 @@ class TherapistWorkingSchedule extends BaseModel
         $startDate      = $month->format('Y') . '-' . $month->format('m') . '-01';
         $endDate        = $month->format('Y') . '-' . $month->format('m') . '-' . $month->endOfMonth()->format('d');
 
-        $date = self::where('therapist_id', $id)->whereBetween('date', [$startDate, $endDate])->where('is_absent', self::ABSENT)->get();
+        $data           = self::select(self::getTableName() . '.*')
+                          ->where(self::getTableName() . '.therapist_id', $id)
+                          ->whereBetween(self::getTableName() . '.date', [$startDate, $endDate])
+                          ->leftJoin(BookingMassage::getTableName(), function($query) {
+                                $query->on(self::getTableName() . '.therapist_id', '=', BookingMassage::getTableName() . '.therapist_id')
+                                      ->whereRaw('DATE(' . self::getTableName() . '.date) = DATE(' . BookingMassage::getTableName() . '.massage_date_time)');
+                          })
+                          ->whereNull(BookingMassage::getTableName() . '.id')
+                          ->get();
 
-        return $date;
+        return $data;
     }
 }
