@@ -2435,7 +2435,7 @@ class UserController extends BaseController
             'design_id' => $voucher->design_id,
             'unique_id' => $voucher->unique_id,
             'payment_id' => $voucher->payment_id,
-            'expired_at' => $voucher->expired_at,
+            'expired_at' => $voucher->expired_date,
             'design' => $voucher->design,
             'theme' => $model->getTheme($voucher->design->theme_id)
         ];
