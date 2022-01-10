@@ -159,6 +159,27 @@ class BookingMassage extends BaseModel
             return ['isError' => true, 'message' => $checks->errors()->first()];
         }
 
+        // Deduct voucher price if use it.
+        $voucherId = $request->get('voucher_id', null);
+
+        if (!empty($voucherId)) {
+            $voucher = UserGiftVoucher::find($voucherId);
+
+            if (!empty($voucher)) {
+                $availableAmount    = (float)$voucher->available_amount;
+                $serviceRetailPrice = (float)$servicePrice->price;
+                if ($availableAmount < $serviceRetailPrice) {
+                    return ['isError' => true, 'message' => __('Service price more than voucher\'s available price.')];
+                } elseif ($voucher->expired_date < ($date->timestamp * 1000)) {
+                    return ['isError' => true, 'message' => __('Given voucher is expired.')];
+                } elseif ($serviceRetailPrice > 0) {
+                    $voucher->available_amount = $availableAmount - $serviceRetailPrice;
+
+                    $voucher->save();
+                }
+            }
+        }
+
         $is_done = BookingMassage::updateOrCreate(["service_pricing_id" => $servicePrice->id,"booking_info_id" => $bookingInfo->id], $bookingMassageData);
         return ['is_done' => $is_done, 'price' => $servicePrice->price];
     }
