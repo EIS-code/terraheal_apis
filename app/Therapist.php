@@ -787,8 +787,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         //0 for today, 1 for all therapist
         if ($filter == 0) {
             $therapists = DB::table('therapists')
-                ->leftJoin('booking_infos', 'booking_infos.therapist_id', '=', 'therapists.id')
-                ->leftJoin('booking_massages', 'booking_massages.booking_info_id', '=', 'booking_infos.id')
+                ->leftJoin('booking_massages', 'booking_massages.therapist_id', '=', 'therapists.id')
+                ->leftJoin('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->leftJoin('countries', 'therapists.country_id', '=', 'countries.id')
                 ->leftJoin('cities', 'therapists.city_id', '=', 'cities.id')
@@ -801,8 +801,8 @@ class Therapist extends BaseModel implements CanResetPasswordContract
         } else {
             $therapists = DB::table('therapists')
                 ->leftJoin('therapist_shops', 'therapist_shops.therapist_id', '=', 'therapists.id')
-                ->leftJoin('booking_infos', 'booking_infos.therapist_id', '=', 'therapists.id')
-                ->leftJoin('booking_massages', 'booking_massages.booking_info_id', '=', 'booking_infos.id')
+                ->leftJoin('booking_massages', 'booking_massages.therapist_id', '=', 'therapists.id')
+                ->leftJoin('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
                 ->leftJoin('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
                 ->leftJoin('countries', 'therapists.country_id', '=', 'countries.id')
                 ->leftJoin('cities', 'therapists.city_id', '=', 'cities.id')

@@ -169,7 +169,7 @@ class BookingMassage extends BaseModel
                 $availableAmount    = (float)$voucher->available_amount;
                 $serviceRetailPrice = (float)$servicePrice->price;
                 if ($availableAmount < $serviceRetailPrice) {
-                    return ['isError' => true, 'message' => __('Service price more than voucher\'s available price.')];
+                    return ['isError' => true, 'message' => __('Service is price more than voucher\'s available price.')];
                 } elseif ($voucher->expired_date < ($date->timestamp * 1000)) {
                     return ['isError' => true, 'message' => __('Given voucher is expired.')];
                 } elseif ($serviceRetailPrice > 0) {
