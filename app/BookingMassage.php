@@ -16,6 +16,8 @@ class BookingMassage extends BaseModel
     protected $fillable = [
         'massage_date_time',
         'actual_date_time',
+        'service_start_time',
+        'service_end_time',
         'price',
         'cost',
         'origional_price',
