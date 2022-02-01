@@ -103,7 +103,8 @@ class TherapistController extends BaseController {
 
                 $scheduleData = $data[] = [
                     'date' => $value->format('Y-m-d'),
-                    'therapist_id' => $request->therapist_id
+                    'therapist_id' => $request->therapist_id,
+                    'shop_id' => $request->shop_id
                 ];
                 $schedule = TherapistWorkingSchedule::create($scheduleData);
                 $timeData = [
