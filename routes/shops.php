@@ -80,6 +80,7 @@ $router->group(['prefix' => 'waiting', 'namespace' => 'Shops'], function () use(
     $router->post('/searchPacks', 'WaitingList\WaitingListController@searchPacks');
     $router->post('/searchVouchers', 'WaitingList\WaitingListController@searchVouchers');
     $router->post('/edit/booking', 'WaitingList\WaitingListController@editBooking');
+    $router->post('/service-time/add', 'WaitingList\WaitingListController@addServiceTime');
 });
 
 $router->group(['prefix' => 'dashboard', 'namespace' => 'Shops'], function () use($router) {

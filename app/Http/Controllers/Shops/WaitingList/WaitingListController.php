@@ -71,6 +71,11 @@ class WaitingListController extends BaseController {
         'single.users' => 'Please select only one user!',
         'couple.therapist.users' => 'Please select therapist!',
         'error.booking.select.user' => 'Please select at least one user.',
+        'edit.booking.service.time' => 'Service time updated.'
+    ];
+
+    public $errorMsg = [
+        'edit.booking.service.time' => 'Please provide proper service time.'
     ];
 
     public function ongoingMassage(Request $request) {
@@ -983,5 +988,41 @@ class WaitingListController extends BaseController {
             DB::rollback();
             throw $e;
         }
+    }
+
+    public function addServiceTime(Request $request)
+    {
+        $bookingMassageId = $request->get('booking_massage_id', null);
+        $serviceStartTime = $request->get('service_start_time', 0);
+
+        if ($serviceStartTime > 0) {
+            // Get service time.
+            $serviceTime = BookingMassage::getMassageTime($bookingMassageId);
+
+            if ($serviceTime > 0) {
+                // Get booking massage info.
+                $bookingMassage = BookingMassage::find($bookingMassageId);
+
+                if (!empty($bookingMassage)) {
+                    $massageDateTime  = Carbon::createFromTimestamp($bookingMassage->massage_date_time / 1000)->format('Y-m-d');
+
+                    $serviceStartTime = Carbon::createFromTimestamp($serviceStartTime / 1000)->format('H:i:s');
+
+                    $serviceStartTime = Carbon::createFromFormat('Y-m-d H:i:s', $massageDateTime . " " . $serviceStartTime);
+
+                    $tempStartTime    = clone $serviceStartTime;
+
+                    $bookingMassage->service_start_time = $tempStartTime;
+
+                    $bookingMassage->service_end_time   = $serviceStartTime->addMinutes($serviceTime);
+
+                    $bookingMassage->save();
+
+                    return $this->returnSuccess(__($this->successMsg['edit.booking.service.time']));
+                }
+            }
+        }
+
+        return $this->returnError(__($this->errorMsg['edit.booking.service.time']), NULL, true);
     }
 }
