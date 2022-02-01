@@ -285,8 +285,7 @@ class Booking extends BaseModel
                             $serviceModel::getTableName() . '.english_name as service_name,' . 
                             $serviceModel::getTableName() . '.service_type as service_type, UNIX_TIMESTAMP(' . 
                             $bookingMassageModel::getTableName() . '.massage_date_time) * 1000 as massage_date, UNIX_TIMESTAMP(' . 
-                            $bookingMassageModel::getTableName() . '.massage_date_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . 
-                            'DATE_ADD(' . $bookingMassageModel::getTableName() . '.massage_date_time, INTERVAL ' . $serviceTimingModel::getTableName() . '.time MINUTE)) * 1000 as massage_end_time, ' . 
+                            $bookingMassageModel::getTableName() . '.service_start_time) * 1000 as massage_start_time, UNIX_TIMESTAMP(' . $bookingMassageModel::getTableName() . '.service_end_time) * 1000 as massage_end_time, ' . 
                             'DATE_FORMAT(' . $bookingMassageModel::getTableName() . '.massage_date_time, "%a") as massage_day_name, ' . 
                             'CONCAT(' . $serviceTimingModel::getTableName() . '.time, " ", "Mins") as massage_duration, ' . 
                             $servicePriceModel::getTableName().'.price,'.
