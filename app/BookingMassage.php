@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\BookingInfo;
 use App\MassagePreferenceOption;
 use App\BookingMassageStart;
+use App\ShopShift;
 use Carbon\Carbon;
 
 class BookingMassage extends BaseModel
@@ -202,5 +203,43 @@ class BookingMassage extends BaseModel
 
         $is_done = BookingMassage::updateOrCreate(["service_pricing_id" => $servicePrice->id,"booking_info_id" => $bookingInfo->id], $bookingMassageData);
         return ['is_done' => $is_done, 'price' => $servicePrice->price];
+    }
+
+    public static function getShiftByTime(string $massageDate, int $therapistId):array
+    {
+        $returnShifts = [];
+
+        $bookingMassages = self::whereDate('massage_date_time', $massageDate)->where('therapist_id', $therapistId)->get();
+
+        if (!empty($bookingMassages) && !$bookingMassages->isEmpty()) {
+            // Get shop shifts.
+            $shopShifts = ShopShift::all();
+
+            if (!empty($shopShifts) && !empty($shopShifts)) {
+                $shiftTimes = [];
+
+                foreach ($shopShifts as $shopShift) {
+                    $shiftTimes[$shopShift->id] = [
+                        'from' => $shopShift->from,
+                        'to'   => $shopShift->to
+                    ];
+                }
+
+                foreach ($bookingMassages as $bookingMassage) {
+                    $serviceStartTime = Carbon::createFromTimestampMs($bookingMassage->service_start_time)->format('H:i:s');
+
+                    foreach ($shiftTimes as $shiftTimeId => $shiftTime) {
+                        $startTime = Carbon::createFromTimestampMs($shiftTime['from'])->format('H:i:s');
+                        $endTime   = Carbon::createFromTimestampMs($shiftTime['to'])->format('H:i:s');
+
+                        if ($serviceStartTime >= $startTime && $serviceStartTime <= $endTime) {
+                            $returnShifts[] = $shiftTimeId;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $returnShifts;
     }
 }

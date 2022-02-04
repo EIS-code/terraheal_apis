@@ -14,8 +14,8 @@ class AddServiceTimeToBookingMassagesTable extends Migration
     public function up()
     {
         Schema::table('booking_massages', function (Blueprint $table) {
-            $table->string('service_start_time')->nullable()->after('actual_date_time');
-            $table->string('service_end_time')->nullable()->after('service_start_time');
+            $table->timestamp('service_start_time')->nullable()->after('actual_date_time');
+            $table->timestamp('service_end_time')->nullable()->after('service_start_time');
         });
     }
 

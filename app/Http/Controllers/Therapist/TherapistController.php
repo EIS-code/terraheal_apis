@@ -1171,6 +1171,39 @@ class TherapistController extends BaseController
                 array_push($shiftData, $availability);
                 unset($availability);
             }
+
+            // Exclude therapist which has already assigned services.
+            $busyShifts = BookingMassage::getShiftByTime($date, $therapistId);
+
+            // Delete already assigned services shifts.
+            if (!empty($busyShifts)) {
+                foreach ($shiftData as $key => $shift) {
+                    foreach ($shift['shifts'] as $index => $sft) {
+                        foreach ($busyShifts as $shiftId) {
+                            if ($shiftId == $sft['shift_id']) {
+                                unset($shiftData[$key]['shifts'][$index]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Get service shifts.
+            /*if (!empty($bookingMassages) && !$bookingMassages->isEmpty()) {
+                $shopShifts = ShopShift::query();
+
+                foreach ($bookingMassages as $index => $bookingMassage) {
+                    $serviceHour = Carbon::createFromTimestampMs($bookingMassage->service_start_time)->format('H');
+
+                    if ($index == 0) {
+                        $shopShifts->whereRaw("'{$serviceHour}'' BETWEEN `from` AND `to`");
+                    } else {
+                        $shopShifts->orWhereRaw("'{$serviceHour}'' BETWEEN `from` AND `to`");
+                    }
+                }
+
+                echo $shopShifts->toSql();exit;
+            } */
         }
         return $this->returns('all.therapist.shifts', collect($shiftData));
     }
