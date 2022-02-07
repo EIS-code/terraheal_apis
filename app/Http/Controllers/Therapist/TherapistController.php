@@ -789,12 +789,12 @@ class TherapistController extends BaseController
             if(empty($check)) {
                 return $this->returnError($this->errorMsg['not.belong']);
             }
-            $therapist_with_shift = TherapistWorkingSchedule::where(['therapist_id' => $data['with_therapist_id'], 
+            /* $therapist_with_shift = TherapistWorkingSchedule::where(['therapist_id' => $data['with_therapist_id'], 
                 'date' => $date, "shift_id" => $data['with_shift_id'], "shop_id" => $data['shop_id']])->first();
 
             if(!empty($therapist_with_shift)) {
                 return $this->returnError($this->errorMsg['shift.receiver.error']);
-            }
+            } */
             
             $data = [
                 'date' => $date,
