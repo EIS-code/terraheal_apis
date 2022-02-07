@@ -1257,6 +1257,7 @@ class TherapistController extends BaseController
             ];
             
             $list = [
+                'id' => $value->id,
                 'date' => $value->date,
                 'status' => $value->status,
                 'shop_id' => $value->shop->id,
