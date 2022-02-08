@@ -1232,9 +1232,16 @@ class TherapistController extends BaseController
     }
 
     public function getList(Request $request) {
+        $therapistId = $request->get('id', null);
+
         $lists = TherapistExchange::with('therapist', 'withTherapist', 'shifts', 'withShifts', 'shop')
-                        ->where(['therapist_id' => $request->id, 'shop_id' => $request->shop_id,
-                                'status' => TherapistExchange::NO_ACTION])->get();
+                        ->where(['shop_id' => $request->shop_id,
+                                'status' => TherapistExchange::NO_ACTION])
+                        ->where(function($where) use($therapistId) {
+                            $where->where('therapist_id', $therapistId)
+                                  ->orWhere('with_therapist_id', $therapistId);
+                        })
+                        ->get();
 
         $shiftList = [];
         foreach ($lists as $key => $value) {
