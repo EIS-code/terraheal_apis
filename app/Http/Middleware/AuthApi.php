@@ -11,7 +11,7 @@ use DB;
 class AuthApi
 {
     private $excludedRoutes = [
-        
+        'superAdmin/signIn'
     ];
 
     private $isSuperadmin = false;
