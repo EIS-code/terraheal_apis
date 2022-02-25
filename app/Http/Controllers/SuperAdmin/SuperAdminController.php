@@ -283,7 +283,7 @@ class SuperAdminController extends BaseController {
 
         if (!empty($email) && !empty($password)) {
 
-            $user = Superadmin::with('country','city')->where(['email' => $email])->first();
+            $user = Superadmin::with('country','city', 'apiKey')->where(['email' => $email])->first();
             if (!empty($user) && Hash::check($password, $user->password)) {
                 return $this->returnSuccess(__($this->successMsg['login']), $user);
             } else {

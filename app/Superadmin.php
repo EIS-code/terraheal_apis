@@ -123,6 +123,11 @@ class Superadmin extends BaseModel implements CanResetPasswordContract
     {
         return $this->hasOne('App\City', 'id', 'city_id');
     }
+
+    public function apiKey()
+    {
+        return $this->hasOne('App\ApiKeyShop', 'superadmin_id', 'id');
+    }
     
     public function sendPasswordResetNotification($token)
     {
