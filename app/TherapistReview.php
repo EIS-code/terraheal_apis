@@ -10,6 +10,8 @@ use DB;
 
 class TherapistReview extends BaseModel
 {
+    const MAX_RATING = 5;
+
     public static $ratings = [
         '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'
     ];

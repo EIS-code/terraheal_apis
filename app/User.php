@@ -14,6 +14,7 @@ use App\Shop;
 use App\Booking;
 // use App\BaseModel;
 use App\TherapistUserRating;
+use App\TherapistReview;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\Libraries\QR;
@@ -493,5 +494,41 @@ class User extends BaseModel implements Authenticatable
         $row = self::find($id);
 
         return (!empty($row) && !empty($row->device_token)) ? $row->device_token : NULL;
+    }
+
+    public static function getStatisfactions(bool $isLastWeek = false, int $userId = 0)
+    {
+        $getGivenReviews = new TherapistReview();
+
+        if (!empty($userId)) {
+            $getGivenReviews = TherapistReview::where('user_id', (int)$userId);
+        }
+
+        if ($isLastWeek) {
+            $startOfWeek = Carbon::now()->subWeek()->startOfWeek();
+            $endOfWeek   = Carbon::now()->subWeek()->endOfWeek();
+
+            $getGivenReviews = $getGivenReviews->whereBetween('created_at', [$startOfWeek, $endOfWeek]);
+        }
+
+        $getGivenReviews = $getGivenReviews->get();
+
+        $totalReviews    = $getGivenReviews->count() * 5;
+
+        if ($totalReviews > 0) {
+            if (!empty($getGivenReviews) && !$getGivenReviews->isEmpty()) {
+                $givenReviews = 0;
+
+                foreach ($getGivenReviews as $getGivenReview) {
+                    $givenReviews = $givenReviews + (float)$getGivenReview->rating;
+                }
+            }
+
+            if ($givenReviews > 0) {
+                return (int)($givenReviews * 100 / $totalReviews);
+            }
+        }
+
+        return 0;
     }
 }

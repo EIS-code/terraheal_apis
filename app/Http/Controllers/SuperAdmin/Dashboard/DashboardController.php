@@ -30,8 +30,12 @@ class DashboardController extends BaseController {
         $therapists = Therapist::all()->count();
         $clients = User::all()->count();
 
+        // Get client satisfactions.
+        $clientStatisfaction         = User::getStatisfactions();
+        $clientStatisfactionLastWeek = User::getStatisfactions(true);
+
         return $this->returnSuccess(__($this->successMsg['dashboard.data.found']), ['massages' => $massages, 'therapies' => $therapies, 'shops' => $shops,
-                    'therapists' => $therapists, 'clients' => $clients]);
+                    'therapists' => $therapists, 'clients' => $clients, 'clientStatisfaction' => $clientStatisfaction, 'clientStatisfactionLastWeek' => $clientStatisfactionLastWeek]);
     }
 
     public function getSidebarDetails(Request $request) {
