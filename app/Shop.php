@@ -339,21 +339,23 @@ class Shop extends BaseModel implements CanResetPasswordContract
 
         $service = $request->service ? $request->service : Service::MASSAGE;
         $serviceModel->setMysqlStrictFalse();
-        $getTopServices = $serviceModel->select(Service::getTableName() . ".id", Service::getTableName() . ".english_name", Service::getTableName() . ".portugese_name",
-                BookingMassage::getTableName() . '.price', ShopService::getTableName() . ".shop_id", DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
-                ->with('imageFeatured')
-                ->join(Service::getTableName(), Service::getTableName() . '.id', '=', ShopService::getTableName() . '.service_id')
-                ->leftJoin(ServicePricing::getTableName(), Service::getTableName() . '.id', '=', ServicePricing::getTableName() . '.service_id')
-                ->leftJoin(BookingMassage::getTableName(), ServicePricing::getTableName() . '.id', '=', BookingMassage::getTableName() . '.service_pricing_id')
-                ->whereNotNull(BookingMassage::getTableName() . '.id')
-                ->where(Service::getTableName() . '.service_type', (string)$service);
+
+        // Get top services (Services).
+        $getTopServices = Service::selectRaw(Service::getTableName() . ".*, " . "SUM(" . BookingMassage::getTableName() . ".price)" . " AS sum_price")
+                            ->with('imageFeatured')
+                            ->join(ShopService::getTableName(), Service::getTableName() . '.id', '=', ShopService::getTableName() . '.service_id')
+                            ->leftJoin(ServicePricing::getTableName(), ShopService::getTableName() . '.service_id', '=', ServicePricing::getTableName() . '.service_id')
+                            ->leftJoin(BookingMassage::getTableName(), ServicePricing::getTableName() . '.id', '=', BookingMassage::getTableName() . '.service_pricing_id')
+                            ->whereNotNull(BookingMassage::getTableName() . '.id');
+
         if (!empty($request->shop_id)) {
             $getTopServices->where(ShopService::getTableName() . ".shop_id", $request->shop_id);
         }
-        $getTopServices = $getTopServices->groupBy(ShopService::getTableName() . '.service_id')
-                ->orderBy('totalEarning', 'DESC')
-                ->get();
+
+        $getTopServices = $getTopServices->groupBy(Service::getTableName() . '.id')->orderBy(DB::RAW('SUM(' . BookingMassage::getTableName() . '.price)'), 'DESC')->get();
+
         $serviceModel->setMysqlStrictTrue();
+
         return $getTopServices;
     }
     
