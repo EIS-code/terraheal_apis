@@ -341,6 +341,7 @@ class Shop extends BaseModel implements CanResetPasswordContract
         $serviceModel->setMysqlStrictFalse();
         $getTopServices = $serviceModel->select(Service::getTableName() . ".id", Service::getTableName() . ".english_name", Service::getTableName() . ".portugese_name",
                 BookingMassage::getTableName() . '.price', ShopService::getTableName() . ".shop_id", DB::raw('SUM(' . BookingMassage::getTableName() . '.price) As totalEarning'))
+                ->with('imageFeatured')
                 ->join(Service::getTableName(), Service::getTableName() . '.id', '=', ShopService::getTableName() . '.service_id')
                 ->leftJoin(ServicePricing::getTableName(), Service::getTableName() . '.id', '=', ServicePricing::getTableName() . '.service_id')
                 ->leftJoin(BookingMassage::getTableName(), ServicePricing::getTableName() . '.id', '=', BookingMassage::getTableName() . '.service_pricing_id')
