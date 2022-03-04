@@ -490,7 +490,7 @@ class Booking extends BaseModel
         $data = $data->orderBy($bookingMassageModel::getTableName().'.massage_date_time','DESC')->get();
 
         if (!empty($data) && !$data->isEmpty()) {
-            $data->map(function(&$record) use($userModel, $bookingMassageModel, $bookingMassageStartModel, $paymentModel) {
+            $data->map(function($record) use($userModel, $bookingMassageModel, $bookingMassageStartModel, $paymentModel) {
                 $record->qr_code_path = $userModel->getQrCodePathAttribute($record->qr_code_path);
                 
                 if (empty($record->qr_code_path)) {

@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Facades\Validator;
+use App\ServiceImage;
 
 class Service extends BaseModel
 {
@@ -52,7 +53,12 @@ class Service extends BaseModel
     {
         return $this->hasMany('App\ServiceImage', 'service_id', 'id');
     }
-    
+
+    public function imageFeatured()
+    {
+        return $this->hasOne('App\ServiceImage', 'service_id', 'id')->where('is_featured', ServiceImage::IS_FEATURED);
+    }
+
     public function requirement()
     {
         return $this->hasOne('App\ServiceRequirement', 'service_id');

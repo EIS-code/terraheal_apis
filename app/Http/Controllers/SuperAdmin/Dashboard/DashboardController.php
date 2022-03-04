@@ -9,9 +9,12 @@ use App\Shop;
 use App\User;
 use App\Booking;
 use App\BookingInfo;
-use DB;
+use App\BookingMassage;
 use App\Service;
 use App\ShopService;
+use App\ServicePricing;
+use App\ServiceImage;
+use DB;
 
 class DashboardController extends BaseController {
 
@@ -34,8 +37,30 @@ class DashboardController extends BaseController {
         $clientStatisfaction         = User::getStatisfactions();
         $clientStatisfactionLastWeek = User::getStatisfactions(true);
 
-        return $this->returnSuccess(__($this->successMsg['dashboard.data.found']), ['massages' => $massages, 'therapies' => $therapies, 'shops' => $shops,
-                    'therapists' => $therapists, 'clients' => $clients, 'clientStatisfaction' => $clientStatisfaction, 'clientStatisfactionLastWeek' => $clientStatisfactionLastWeek]);
+        // Get top items (Services).
+        $topItems = Service::selectRaw(Service::getTableName() . ".*, " . "SUM(" . BookingMassage::getTableName() . ".price)" . " AS sum_price")
+                            ->with('imageFeatured')
+                            ->join(ShopService::getTableName(), Service::getTableName() . '.id', '=', ShopService::getTableName() . '.service_id')
+                            ->leftJoin(ServicePricing::getTableName(), ShopService::getTableName() . '.service_id', '=', ServicePricing::getTableName() . '.service_id')
+                            ->leftJoin(BookingMassage::getTableName(), ServicePricing::getTableName() . '.id', '=', BookingMassage::getTableName() . '.service_pricing_id')
+                            ->whereNotNull(BookingMassage::getTableName() . '.id')
+                            ->groupBy(Service::getTableName() . '.id')
+                            ->orderBy(DB::RAW('SUM(' . BookingMassage::getTableName() . '.price)'), 'DESC')
+                            ->get();
+
+        return $this->returnSuccess(
+                __($this->successMsg['dashboard.data.found']),
+                [
+                    'massages' => $massages,
+                    'therapies' => $therapies,
+                    'shops' => $shops,
+                    'therapists' => $therapists,
+                    'clients' => $clients,
+                    'client_statisfaction' => $clientStatisfaction,
+                    'client_statisfaction_last_week' => $clientStatisfactionLastWeek,
+                    'top_items' => $topItems
+                ]
+            );
     }
 
     public function getSidebarDetails(Request $request) {
