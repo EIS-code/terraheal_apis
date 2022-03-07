@@ -37,6 +37,9 @@ class DashboardController extends BaseController {
         $clientStatisfaction         = User::getStatisfactions();
         $clientStatisfactionLastWeek = User::getStatisfactions(true);
 
+        // Get earnings.
+        $earnings = Shop::getEarnings();
+
         return $this->returnSuccess(
                 __($this->successMsg['dashboard.data.found']),
                 [
@@ -46,7 +49,8 @@ class DashboardController extends BaseController {
                     'therapists' => $therapists,
                     'clients' => $clients,
                     'client_statisfaction' => $clientStatisfaction,
-                    'client_statisfaction_last_week' => $clientStatisfactionLastWeek
+                    'client_statisfaction_last_week' => $clientStatisfactionLastWeek,
+                    'earnings' => $earnings
                 ]
             );
     }

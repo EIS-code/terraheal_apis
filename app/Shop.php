@@ -478,4 +478,71 @@ class Shop extends BaseModel implements CanResetPasswordContract
         
         return $bookingDetails;
     }
+
+    public static function getEarnings()
+    {
+        // Get one year data.
+        $startOfWeek  = Carbon::now()->subWeek()->startOfWeek();
+        $endOfWeek    = Carbon::now()->subWeek()->endOfWeek();
+        $startOfMonth = Carbon::now()->subWeek()->startOfMonth();
+        $endOfMonth   = Carbon::now()->subWeek()->endOfMonth();
+        $startOfYear  = Carbon::now()->startOfYear();
+        $endOfYear    = Carbon::now()->endOfYear();
+
+        $totalSales = DB::table('booking_massages')
+                        ->selectRaw("SUM(booking_massages.price) as price, DATE(booking_massages.massage_date_time) as massage_date_time")
+                        ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                        ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                        ->where('booking_infos.is_done', (string) BookingInfo::IS_DONE)
+                        ->whereBetween('booking_massages.massage_date_time', [$startOfYear, $endOfYear])
+                        ->groupBy(DB::raw('DATE(booking_massages.massage_date_time)'))
+                        ->get();
+
+        $totalCosts = DB::table('booking_massages')
+                        ->selectRaw("SUM(booking_massages.cost) as cost, DATE(booking_massages.massage_date_time) as massage_date_time")
+                        ->join('booking_infos', 'booking_infos.id', '=', 'booking_massages.booking_info_id')
+                        ->join('bookings', 'bookings.id', '=', 'booking_infos.booking_id')
+                        ->where('booking_infos.is_done', (string) BookingInfo::IS_DONE)
+                        ->whereBetween('booking_massages.massage_date_time', [$startOfYear, $endOfYear])
+                        ->groupBy(DB::raw('DATE(booking_massages.massage_date_time)'))
+                        ->get();
+
+        $totalEarningsWeek = $totalEarningsMonth = $totalEarningsYear = [
+            "Mon" => 0,
+            "Tue" => 0,
+            "Wed" => 0,
+            "Thu" => 0,
+            "Fri" => 0,
+            "Sat" => 0,
+            "Sun" => 0
+        ];
+
+        if (!empty($totalSales)) {
+            foreach ($totalSales as $totalSale) {
+                $salePriceDate = new Carbon($totalSale->massage_date_time);
+
+                foreach ($totalCosts as $totalCost) {
+                    $saleCostDate = new Carbon($totalCost->massage_date_time);
+
+                    if ($salePriceDate->equalTo($saleCostDate) && !empty($totalSale->price) && $totalSale->price >= $totalCost->cost) {
+                        $totalEarning = number_format(($totalSale->price - $totalCost->cost), 2);
+
+                        if ($salePriceDate->between($startOfWeek, $endOfWeek)) {
+                            $totalEarningsWeek[$salePriceDate->format('D')] += $totalEarning;
+                        }
+
+                        if ($salePriceDate->between($startOfMonth, $endOfMonth)) {
+                            $totalEarningsMonth[$salePriceDate->format('D')] += $totalEarning;
+                        }
+
+                        if ($salePriceDate->between($startOfYear, $endOfYear)) {
+                            $totalEarningsYear[$salePriceDate->format('D')] += $totalEarning;
+                        }
+                    }
+                }
+            }
+        }
+
+        return ['week' => $totalEarningsWeek, 'month' => $totalEarningsMonth, 'year' => $totalEarningsYear];
+    }
 }
