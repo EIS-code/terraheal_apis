@@ -44,7 +44,7 @@ $router->group(['prefix' => 'superAdmin', 'namespace' => 'SuperAdmin', 'guard' =
     $router->group(['prefix' => 'dashboard'], function () use($router) {
 
         $router->get('details/get', 'Dashboard\DashboardController@getDetails');
-        $router->get('centers/get', 'Dashboard\DashboardController@getCenters');
+        $router->post('centers/get', 'Dashboard\DashboardController@getCenters');
     });
     
     $router->group(['prefix' => 'center'], function () use($router) {

@@ -80,21 +80,38 @@ class DashboardController extends BaseController {
                     'totalSales' => $totalSales, 'totalEarning' => $totalEarning, 'topItems' => $topItems]);
     }
 
-    public function getCenters() {
+    public function getCenters(Request $request) {
+        $search = $request->get('search', null);
 
-        $centers = Shop::with('timetable')->get();
+        $centers = Shop::with('timetable');
+
+        if (!empty($search)) {
+            $centers->where(function($query) use($search) {
+                $query->where('name', 'LIKE', '%' . $search . '%')
+                      ->orWhere('owner_name', 'LIKE', '%' . $search . '%')
+                      ->orWhere('owner_mobile_number', 'LIKE', '%' . $search . '%')
+                      ->orWhere('owner_email', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        $centers = $centers->get();
+
         foreach ($centers as $key => $center) {
             $massages = ShopService::with('service')->where('shop_id', $center->id)
-                    ->whereHas('service', function($q) {
-                            $q->where('service_type', Service::MASSAGE);
-                        })->count();
+                                    ->whereHas('service', function($q) {
+                                        $q->where('service_type', Service::MASSAGE);
+                                    })->count();
+
             $center->total_massages = $massages;
+
             $therapies = ShopService::with('service')->where('shop_id', $center->id)
-                    ->whereHas('service', function($q) {
-                            $q->where('service_type', Service::THERAPY);
-                        })->count();
+                                    ->whereHas('service', function($q) {
+                                        $q->where('service_type', Service::THERAPY);
+                                    })->count();
+
             $center->total_therapies = $therapies;
         }
+
         return $this->returnSuccess(__($this->successMsg['centers']), $centers);
     }
 
