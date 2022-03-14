@@ -339,9 +339,11 @@ class CenterController extends BaseController {
             return $this->returnSuccess(__($this->successMsg['center.add.details']),$centerDetails);
         } catch (\Exception $e) {
             DB::rollback();
+            dd($e);
             throw $e;
         } catch (\Throwable $e) {
             DB::rollback();
+            dd($e);
             throw $e;
         }
     }
