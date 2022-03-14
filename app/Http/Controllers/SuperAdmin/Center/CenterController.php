@@ -335,15 +335,13 @@ class CenterController extends BaseController {
                 return $this->returnError($timetable->errors()->first(), NULL, true);
             }
             DB::commit();
-            $centerDetails = Shop::with('company','featuredImages','gallery','timetable')->where('id',$centerId)->get();
+            $centerDetails = Shop::with('company','featuredImages','gallery','timetable')->where('id',$centerId)->first();
             return $this->returnSuccess(__($this->successMsg['center.add.details']),$centerDetails);
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e);
             throw $e;
         } catch (\Throwable $e) {
             DB::rollback();
-            dd($e);
             throw $e;
         }
     }
