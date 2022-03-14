@@ -81,7 +81,7 @@ class DashboardController extends BaseController {
     }
 
     public function getCenters(Request $request) {
-        $search = $request->get('search', null);
+        $search  = $request->get('search', null);
 
         $centers = Shop::with('timetable');
 

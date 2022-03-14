@@ -299,17 +299,17 @@ class CenterController extends BaseController {
             $data = $request->all();
             $shopModel = new Shop();
 
-            $data['country_id'] = $data['location']['country_id'] ? $data['location']['country_id'] : null;
-            $data['province_id'] = $data['location']['province_id'] ? $data['location']['province_id'] : null;
-            $data['city_id'] = $data['location']['city_id'] ? $data['location']['city_id'] : null;
-            $data['longitude'] = $data['location']['longitude'] ? $data['location']['longitude'] : null;
-            $data['latitude'] = $data['location']['latitude'] ? $data['location']['latitude'] : null;
-            $data['zoom'] = $data['location']['zoom'] ? $data['location']['zoom'] : null;
-            $data['pin_code'] = $data['location']['pin_code'] ? $data['location']['pin_code'] : null;
-            $data['address'] = $data['location']['address'] ? $data['location']['address'] : null;
-            $data['address2'] = $data['location']['address2'] ? $data['location']['address2'] : null;
-            $data['shop_password'] = Hash::make($data['shop_password']);
-            $data['manager_password'] = Hash::make($data['manager_password']);
+            $data['country_id'] = !empty($data['location']['country_id']) ? $data['location']['country_id'] : null;
+            $data['province_id'] = !empty($data['location']['province_id']) ? $data['location']['province_id'] : null;
+            $data['city_id'] = !empty($data['location']['city_id']) ? $data['location']['city_id'] : null;
+            $data['longitude'] = !empty($data['location']['longitude']) ? $data['location']['longitude'] : null;
+            $data['latitude'] = !empty($data['location']['latitude']) ? $data['location']['latitude'] : null;
+            $data['zoom'] = !empty($data['location']['zoom']) ? $data['location']['zoom'] : 0;
+            $data['pin_code'] = !empty($data['location']['pin_code']) ? $data['location']['pin_code'] : null;
+            $data['address'] = !empty($data['location']['address']) ? $data['location']['address'] : null;
+            $data['address2'] = !empty($data['location']['address2']) ? $data['location']['address2'] : null;
+            $data['shop_password'] = !empty($data['shop_password']) ? Hash::make($data['shop_password']) : null;
+            $data['manager_password'] = !empty($data['manager_password']) ? Hash::make($data['manager_password']) : null;
             unset($data['location']);
 
             $checks = $shopModel->validator($data, $centerId);
