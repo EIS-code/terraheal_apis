@@ -376,13 +376,13 @@ class CenterController extends BaseController {
         $data = $request->all();
         $shopModel = new Shop();
         $ownerData = [
-            'owner_name' => $data['owner_name'],
-            'owner_surname' => $data['owner_surname'],
-            'owner_email' => $data['owner_email'],
-            'owner_mobile_number' => $data['owner_mobile_number'],
-            'owner_mobile_number_alternative' => $data['owner_mobile_number_alternative'],
-            'finacial_situation' => $data['finacial_situation'],
-            'shop_id' => $request->shop_id
+            'owner_name' => !empty($data['owner_name']) ? $data['owner_name'] : null,
+            'owner_surname' => !empty($data['owner_surname']) ? $data['owner_surname'] : null,
+            'owner_email' => !empty($data['owner_email']) ? $data['owner_email'] : null,
+            'owner_mobile_number' => !empty($data['owner_mobile_number']) ? $data['owner_mobile_number'] : null,
+            'owner_mobile_number_alternative' => !empty($data['owner_mobile_number_alternative']) ? $data['owner_mobile_number_alternative'] : null,
+            'finacial_situation' => !empty($data['finacial_situation']) ? $data['finacial_situation'] : null,
+            'shop_id' => !empty($request->shop_id) ? $request->shop_id : null
         ];
         
         $checks = $shopModel->validatorOwner($ownerData, $request->shop_id, true);
