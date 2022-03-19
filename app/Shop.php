@@ -116,8 +116,8 @@ class Shop extends BaseModel implements CanResetPasswordContract
         return Validator::make($data, [
             'address'     => ['required', 'string', 'max:255'],
             'address2'    => ['nullable', 'string', 'max:255'],
-            'longitude'   => ['required', 'string'],
-            'latitude'    => ['required', 'string'],
+            'longitude'   => ['required', 'between:0,99.99'],
+            'latitude'    => ['required', 'between:0,99.99'],
             'zoom'        => ['nullable', 'integer'],
             'city_id'     => ['required', 'integer'],
             'country_id'  => ['required', 'integer'],
