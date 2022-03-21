@@ -1168,7 +1168,7 @@ class UserController extends BaseController
 
     public function getMenus(Request $request)
     {
-        $data = UserMenu::all();
+        $data = UserMenu::select('id', 'name')->get();
 
         if (!empty($data) && !$data->isEmpty()) {
             return $this->returns('success.user.menu.found', $data);
