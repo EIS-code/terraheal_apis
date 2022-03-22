@@ -207,14 +207,29 @@ class Shop extends BaseModel implements CanResetPasswordContract
     
     public function company()
     {
-        return $this->hasOne('App\ShopCompany', 'id', 'shop_id');
+        return $this->hasOne('App\ShopCompany', 'shop_id', 'id');
     }
     
     public function payment()
     {
         return $this->hasOne('App\ShopPaymentDetail', 'shop_id');
     }
-    
+
+    public function shopKms()
+    {
+        return $this->hasMany('App\ShopKm', 'shop_id', 'id');
+    }
+
+    public function shopsEvents()
+    {
+        return $this->hasMany('App\ShopsEvents', 'shop_id', 'id');
+    }
+
+    public function shopShifts()
+    {
+        return $this->hasMany('App\ShopShift', 'shop_id', 'id');
+    }
+
     public function apiKey()
     {
         return $this->hasMany('App\ApiKeyShop', 'shop_id', 'id');

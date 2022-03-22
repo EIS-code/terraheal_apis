@@ -97,12 +97,12 @@ class CenterController extends BaseController {
     public function getCenterDetails(Request $request) {
 
         $shopModel = new Shop();
-        $shop = Shop::find($request->shop_id);
+        $shop = Shop::with(['company', 'documents', 'featuredImage', 'gallery', 'centerHours', 'shopKms', 'payment', 'services', 'shopsEvents', 'shopShifts'])->find($request->shop_id);
         if (empty($shop)) {
             return $this->returnError($this->errorMsg['center.not.found']);
         }
         $data = $shopModel->dashboardInfo($request);
-        
+        $data['shop'] = $shop;
         $data['homeBooking'] = Booking::where(['booking_type' => Booking::BOOKING_TYPE_HHV, 'shop_id' => $request->shop_id])->get()->count();
         $data['centerBooking'] = Booking::where(['booking_type' => Booking::BOOKING_TYPE_IMC, 'shop_id' => $request->shop_id])->get()->count();
         $data['vouchers'] = $this->getSoldVoucher($request)->count();
